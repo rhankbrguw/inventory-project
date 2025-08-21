@@ -17,11 +17,11 @@ export default function Sidebar({ sidebarOpen }) {
     const hasRole = (roleName) => auth.roles.includes(roleName);
 
     const navLinks = [
-        { name: 'Dashboard', href: route('dashboard'), icon: LayoutDashboard, current: route().current('dashboard'), roles: [] },
+        { name: 'Halaman Utama', href: route('dashboard'), icon: LayoutDashboard, current: route().current('dashboard'), roles: [] },
         { name: 'Produk', href: '#', icon: Package, current: false, roles: [] },
         { name: 'Stok', href: '#', icon: Warehouse, current: false, roles: [] },
         { name: 'Laporan', href: '#', icon: BarChart2, current: false, roles: [] },
-        { name: 'Manajemen User', href: '#', icon: Users, current: false, roles: ['Super Admin'] },
+        { name: 'Manajemen User', href: route('users.index'), icon: Users, current: route().current('users.index'), roles: ['Super Admin'] },
     ];
 
     const filteredNavLinks = navLinks.filter(link =>

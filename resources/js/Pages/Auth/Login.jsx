@@ -36,7 +36,7 @@ export default function Login({ status, canResetPassword }) {
                         <LogIn className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">
-                        Welcome Back
+                        Selamat Datang!
                     </h1>
                 </div>
 
@@ -124,7 +124,7 @@ export default function Login({ status, canResetPassword }) {
                                 href={route("password.request")}
                                 className="text-sm font-light text-primary hover:text-primary/50 transition-colors duration-200"
                             >
-                                Forgot password?
+                                Lupa password?
                             </Link>
                         )}
                     </div>
