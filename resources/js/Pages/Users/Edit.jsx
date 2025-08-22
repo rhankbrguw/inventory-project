@@ -21,7 +21,7 @@ export default function Edit({ auth, user, roles }) {
 
   const submit = (e) => {
     e.preventDefault();
-    // --- UBAH BARIS DI BAWAH INI ---
+
     patch(route('users.update', { user: user.data.id }), {
       preserveScroll: true,
     });
