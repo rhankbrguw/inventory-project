@@ -47,6 +47,8 @@ Route::middleware(['auth', 'role:Super Admin'])->group(function () {
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
     // Delete
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    Route::resource('products', App\Http\Controllers\ProductController::class);
 });
 
 require __DIR__ . '/auth.php';
