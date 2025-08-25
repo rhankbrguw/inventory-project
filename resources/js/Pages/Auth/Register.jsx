@@ -38,7 +38,7 @@ export default function Register() {
                         <User className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">
-                        Create an Account
+                        Buat Akun Baru
                     </h1>
                 </div>
 
@@ -48,7 +48,7 @@ export default function Register() {
                             htmlFor="name"
                             className="font-semibold block mb-2"
                         >
-                            Full Name
+                            Nama Lengkap
                         </Label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary/60" />
@@ -142,7 +142,7 @@ export default function Register() {
                             htmlFor="password_confirmation"
                             className="font-semibold block mb-2"
                         >
-                            Confirm Password
+                            Konfirmasi Password
                         </Label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary/60" />
