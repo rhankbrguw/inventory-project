@@ -15,10 +15,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $superAdmin = User::firstOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'raihanakbarg28@gmail.com')],
+            ['email' => env('ADMIN_EMAIL', 'admin@example.com')],
             [
-                'name' => env('ADMIN_NAME', 'Raihan Akbar Gunawan'),
-                'password' => Hash::make(env('ADMIN_PASSWORD', 'Raihan123')),
+                'name' => env('ADMIN_NAME', 'Super Admin'),
+                'password' => Hash::make(env('ADMIN_PASSWORD', 'password')),
             ]
         );
 
