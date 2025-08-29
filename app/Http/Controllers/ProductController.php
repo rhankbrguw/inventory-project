@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -19,12 +20,13 @@ class ProductController extends Controller
 
     public function create()
     {
-        //
+        return Inertia::render('Products/Create');
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        //
+        Product::create($request->validated());
+        return to_route('products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
 
     public function show(Product $product)
