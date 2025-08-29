@@ -18,7 +18,7 @@ export default function Sidebar({ sidebarOpen }) {
 
     const navLinks = [
         { name: 'Halaman Utama', href: route('dashboard'), icon: LayoutDashboard, current: route().current('dashboard'), roles: [] },
-        { name: 'Produk', href: route('products.index'), icon: Package, current: route().current('products.index'), roles: ['Super Admin'] },
+        { name: 'Produk', href: route('products.index'), icon: Package, current: route().current('products.index'), roles: ['Super Admin', 'Warehouse Manager'] },
         { name: 'Stok', href: '#', icon: Warehouse, current: false, roles: [] },
         { name: 'Laporan', href: '#', icon: BarChart2, current: false, roles: [] },
         { name: 'Manajemen User', href: route('users.index'), icon: Users, current: route().current('users.index'), roles: ['Super Admin'] },

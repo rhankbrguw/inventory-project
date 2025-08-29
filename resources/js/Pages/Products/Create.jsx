@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, Link } from "@inertiajs/react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
@@ -26,7 +26,9 @@ export default function Create({ auth }) {
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">Tambah Produk Baru</h2>
+        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+          Tambah Produk Baru
+        </h2>
       }
     >
       <Head title="Tambah Produk" />
@@ -47,6 +49,7 @@ export default function Create({ auth }) {
               />
               <InputError message={errors.name} className="mt-2" />
             </div>
+
             <div>
               <Label htmlFor="sku">SKU (Stock Keeping Unit)</Label>
               <Input
@@ -57,6 +60,7 @@ export default function Create({ auth }) {
               />
               <InputError message={errors.sku} className="mt-2" />
             </div>
+
             <div>
               <Label htmlFor="price">Harga</Label>
               <Input
@@ -68,6 +72,7 @@ export default function Create({ auth }) {
               />
               <InputError message={errors.price} className="mt-2" />
             </div>
+
             <div>
               <Label htmlFor="unit">Satuan (cth: kg, pcs, box)</Label>
               <Input
@@ -78,6 +83,7 @@ export default function Create({ auth }) {
               />
               <InputError message={errors.unit} className="mt-2" />
             </div>
+
             <div>
               <Label htmlFor="stock_quantity">Jumlah Stok Awal</Label>
               <Input
@@ -89,6 +95,7 @@ export default function Create({ auth }) {
               />
               <InputError message={errors.stock_quantity} className="mt-2" />
             </div>
+
             <div>
               <Label htmlFor="description">Deskripsi (Opsional)</Label>
               <Textarea
@@ -99,7 +106,11 @@ export default function Create({ auth }) {
               />
               <InputError message={errors.description} className="mt-2" />
             </div>
-            <div className="flex items-center justify-end">
+
+            <div className="flex items-center gap-4 justify-end">
+              <Link href={route('products.index')}>
+                <Button type="button" variant="outline">Batal</Button>
+              </Link>
               <Button disabled={processing}>Simpan Produk</Button>
             </div>
           </form>
