@@ -31,7 +31,7 @@ export default function Edit({ auth, user, roles }) {
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 className="font-semibold text-xl text-foreground leading-tight">
           Edit Pengguna: {user.data.name}
         </h2>
       }

@@ -4,6 +4,13 @@ import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Textarea } from "@/Components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/Components/ui/select";
 import InputError from "@/Components/InputError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 
@@ -17,6 +24,8 @@ export default function Create({ auth }) {
     description: "",
   });
 
+  const productUnits = ['kg', 'pcs', 'ekor', 'pack', 'box'];
+
   const submit = (e) => {
     e.preventDefault();
     post(route("products.store"));
@@ -26,7 +35,7 @@ export default function Create({ auth }) {
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 className="font-semibold text-xl text-foreground leading-tight">
           Tambah Produk Baru
         </h2>
       }
@@ -74,13 +83,19 @@ export default function Create({ auth }) {
             </div>
 
             <div>
-              <Label htmlFor="unit">Satuan (cth: kg, pcs, box)</Label>
-              <Input
-                id="unit"
-                name="unit"
-                value={data.unit}
-                onChange={(e) => setData("unit", e.target.value)}
-              />
+              <Label htmlFor="unit">Satuan</Label>
+              <Select onValueChange={(value) => setData('unit', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih satuan produk" />
+                </SelectTrigger>
+                <SelectContent>
+                  {productUnits.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit.charAt(0).toUpperCase() + unit.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <InputError message={errors.unit} className="mt-2" />
             </div>
 

@@ -1,4 +1,3 @@
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
 import Pagination from "@/Components/Pagination";
 import { Button } from "@/Components/ui/button";
@@ -10,13 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/Components/ui/table";
-import { Plus, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/Components/ui/card";
+import IndexPageLayout from "@/Components/IndexPageLayout";
 
 export default function Index({ auth, products }) {
   const formatCurrency = (amount) => {
@@ -28,27 +28,12 @@ export default function Index({ auth, products }) {
   };
 
   return (
-    <AuthenticatedLayout
-      user={auth.user}
-      header={
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">
-            Manajemen Produk
-          </h1>
-          <Link href={route("products.create")}>
-            <Button size="icon" className="sm:hidden rounded-full h-10 w-10">
-              <Plus className="h-5 w-5" />
-            </Button>
-            <Button className="hidden sm:flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              <span>Tambah Produk</span>
-            </Button>
-          </Link>
-        </div>
-      }
+    <IndexPageLayout
+      auth={auth}
+      title="Manajemen Produk"
+      createRoute="products.create"
+      buttonLabel="Tambah Produk"
     >
-      <Head title="Produk" />
-
       <div className="space-y-4">
         <div className="md:hidden space-y-4">
           {products.data.map((product) => (
@@ -92,12 +77,8 @@ export default function Index({ auth, products }) {
                 <TableRow key={product.id}>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{product.sku}</TableCell>
-                  <TableCell>
-                    {formatCurrency(product.price)}
-                  </TableCell>
-                  <TableCell>
-                    {product.stock_quantity} {product.unit}
-                  </TableCell>
+                  <TableCell>{formatCurrency(product.price)}</TableCell>
+                  <TableCell>{product.stock_quantity} {product.unit}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon">
                       <MoreVertical className="w-4 h-4" />
@@ -111,6 +92,6 @@ export default function Index({ auth, products }) {
 
         <Pagination links={products.meta.links} />
       </div>
-    </AuthenticatedLayout>
+    </IndexPageLayout>
   );
 }

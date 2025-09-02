@@ -6,7 +6,9 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules as ValidationRules;
+use App\Http\Requests\StoreUserRequest;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -35,19 +37,17 @@ class UserController extends Controller
     /**
      * Save a new user to the database.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', ValidationRules\Password::defaults()],
-            'role' => 'required|string|exists:roles,name',
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        $user = User::create($validated);
-        $user->assignRole($validated['role']);
+        $user->assignRole($request->role);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return to_route('users.index')->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
     /**

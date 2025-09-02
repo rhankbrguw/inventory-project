@@ -16,7 +16,7 @@ export default function AuthenticatedLayout({ user, header, children }) {
                 <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
                     <Header user={user} setSidebarOpen={setSidebarOpen} />
                     {header && (
-                        <header className="bg-white shadow-sm">
+                        <header className="bg-card shadow-sm">
                             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                                 {header}
                             </div>
@@ -25,7 +25,7 @@ export default function AuthenticatedLayout({ user, header, children }) {
                     <main className="flex-1">
                         <div className="py-8 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             {flash && flash.success && (
-                                <Alert className="mb-4 border-green-500 text-green-700">
+                                <Alert className="mb-4 border-green-500 bg-green-50 text-green-700">
                                     <CheckCircle2 className="h-4 w-4" />
                                     <AlertTitle>Success</AlertTitle>
                                     <AlertDescription>

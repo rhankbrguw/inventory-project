@@ -30,16 +30,16 @@ export default function VerifyOtp({ email, status }) {
         <GuestLayout>
             <Head title="Verifikasi OTP" />
 
-            <Card className="mx-auto max-w-sm">
+            <Card className="mx-auto max-w-sm backdrop-blur-sm bg-card/10 border border-border/20 shadow-xl text-foreground">
                 <CardHeader>
                     <CardTitle className="text-2xl">Verifikasi Akun</CardTitle>
                     <CardDescription>
-                        Kami telah mengirimkan kode 6 digit ke <strong>{email}</strong>. Masukkan kode tersebut di bawah ini.
+                        Kami telah mengirimkan kode 6 digit ke <span className="font-semibold text-foreground">{email}</span>. Masukkan kode tersebut di bawah ini.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {status && (
-                        <div className="mb-4 font-medium text-sm text-green-600">
+                        <div className="mb-4 font-medium text-sm text-green-600 bg-green-500/10 p-3 rounded-lg">
                             {status}
                         </div>
                     )}
@@ -70,14 +70,15 @@ export default function VerifyOtp({ email, status }) {
                     </form>
 
                     <div className="mt-4 text-center text-sm">
-                        Tidak menerima kode?{' '}
-                        <button
+                        <span className="text-muted-foreground">Tidak menerima kode? </span>
+                        <Button
+                            variant="link"
                             onClick={handleResend}
-                            className="underline disabled:text-gray-400"
+                            className="p-0 h-auto"
                             disabled={resendForm.processing}
                         >
                             Kirim ulang
-                        </button>
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
