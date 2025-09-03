@@ -64,7 +64,7 @@ export default function ResetPassword({ token, email }) {
                                 value={data.password}
                                 className="w-full pl-10 pr-4 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="new-password"
-                                onChange={(e) => setData('password', e.g.target.value)}
+                                onChange={(e) => setData('password', e.target.value)}
                                 required
                             />
                         </div>
