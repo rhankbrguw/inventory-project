@@ -8,13 +8,13 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
-    public function run(): void
-    {
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+   public function run(): void
+   {
+      app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        Role::firstOrCreate(['name' => 'Super Admin']);
-        Role::firstOrCreate(['name' => 'Warehouse Manager']);
-        Role::firstOrCreate(['name' => 'Branch Manager']);
-        Role::firstOrCreate(['name' => 'Cashier']);
-    }
+      Role::updateOrCreate(['name' => 'Super Admin'], ['code' => 'ADM']);
+      Role::updateOrCreate(['name' => 'Warehouse Manager'], ['code' => 'WHM']);
+      Role::updateOrCreate(['name' => 'Branch Manager'], ['code' => 'BRM']);
+      Role::updateOrCreate(['name' => 'Cashier'], ['code' => 'CSH']);
+   }
 }
