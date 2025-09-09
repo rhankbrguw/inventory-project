@@ -103,10 +103,6 @@ export default function Index({ auth, products }) {
                                 <div className="text-lg font-bold">
                                     {formatCurrency(product.price)}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Stok: {product.stock_quantity}{" "}
-                                    {product.unit}
-                                </p>
                             </CardContent>
                         </Card>
                     ))}

@@ -13,8 +13,18 @@ export default function AuthenticatedLayout({ user, header, children }) {
         <>
             <div className="flex h-screen bg-background overflow-hidden">
                 <Sidebar user={user} sidebarOpen={sidebarOpen} />
+
                 <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
                     <Header user={user} setSidebarOpen={setSidebarOpen} />
+
+                    {sidebarOpen && (
+                        <div
+                            onClick={() => setSidebarOpen(false)}
+                            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                            aria-hidden="true"
+                        ></div>
+                    )}
+
                     {header && (
                         <header className="bg-card shadow-sm">
                             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -37,7 +47,9 @@ export default function AuthenticatedLayout({ user, header, children }) {
                                 <Alert variant="destructive" className="mb-4">
                                     <XCircle className="h-4 w-4" />
                                     <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>{flash.error}</AlertDescription>
+                                    <AlertDescription>
+                                        {flash.error}
+                                    </AlertDescription>
                                 </Alert>
                             )}
                             {children}

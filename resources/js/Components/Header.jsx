@@ -60,14 +60,19 @@ const UserDropdownMenu = ({ user }) => (
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-1" />
-            <DropdownMenuItem className="group cursor-pointer rounded-lg px-3 py-2 text-sm">
-                <ProfileIcon className="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                <span className="font-medium text-foreground">
-                    Profile
-                </span>
-            </DropdownMenuItem>
+            <Link href={route("profile.edit")}>
+                <DropdownMenuItem className="group cursor-pointer rounded-lg px-3 py-2 text-sm">
+                    <ProfileIcon className="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                    <span className="font-medium text-foreground">Profile</span>
+                </DropdownMenuItem>
+            </Link>
             <DropdownMenuSeparator className="my-1" />
-            <Link href={route("logout")} method="post" as="button" className="w-full">
+            <Link
+                href={route("logout")}
+                method="post"
+                as="button"
+                className="w-full"
+            >
                 <DropdownMenuItem className="group cursor-pointer rounded-lg px-3 py-2 text-sm hover:!bg-destructive/10">
                     <LogOut className="mr-3 h-4 w-4 text-muted-foreground group-hover:text-destructive" />
                     <span className="font-medium text-foreground group-hover:text-destructive">
@@ -81,10 +86,12 @@ const UserDropdownMenu = ({ user }) => (
 
 export default function Header({ user, setSidebarOpen }) {
     return (
-        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/60">
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/60">
             <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    <MobileMenuButton onClick={() => setSidebarOpen(true)} />
+                    <MobileMenuButton
+                        onClick={() => setSidebarOpen((prev) => !prev)}
+                    />
                     <div className="flex-1"></div>
                     <div className="flex items-center space-x-4">
                         <UserDropdownMenu user={user} />
