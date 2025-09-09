@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
    Route::middleware(['role:Super Admin|Branch Manager'])->group(function () {
       Route::resource('products', ProductController::class);
+   });
+
+   Route::middleware(['role:Super Admin|Warehouse Manager'])->group(function () {
+      Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+      Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');
+      Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
    });
 });
 

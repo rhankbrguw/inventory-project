@@ -19,6 +19,15 @@ class ProductResource extends JsonResource
          'locations' => $this->whenLoaded('locations', function () {
             return $this->locations->pluck('id');
          }),
+         'inventories' => $this->whenLoaded('inventories', function () {
+            return $this->inventories->map(fn($inv) => [
+               'quantity' => $inv->quantity,
+               'location' => [
+                  'id' => $inv->location->id,
+                  'name' => $inv->location->name,
+               ],
+            ]);
+         }),
       ];
    }
 }

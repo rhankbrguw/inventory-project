@@ -40,7 +40,13 @@ export default function Sidebar({ sidebarOpen }) {
             current: route().current("products.*"),
             roles: ["Super Admin", "Branch Manager"],
         },
-        { name: "Stok", href: "#", icon: Warehouse, current: false, roles: [] },
+        {
+            name: "Stok",
+            href: route("stock.index"),
+            icon: Warehouse,
+            current: route().current("stock.*"),
+            roles: ["Super Admin", "Warehouse Manager"],
+        },
         {
             name: "Laporan",
             href: "#",
