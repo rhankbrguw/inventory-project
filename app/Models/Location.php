@@ -16,6 +16,11 @@ class Location extends Model
       'address',
    ];
 
+   public function inventories()
+   {
+      return $this->hasMany(Inventory::class);
+   }
+
    public function products(): BelongsToMany
    {
       return $this->belongsToMany(Product::class, 'location_product');

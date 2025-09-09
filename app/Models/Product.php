@@ -23,6 +23,11 @@ class Product extends Model
       'price' => 'decimal:2',
    ];
 
+   public function inventories()
+   {
+      return $this->hasMany(Inventory::class);
+   }
+
    public function locations(): BelongsToMany
    {
       return $this->belongsToMany(Location::class, 'location_product');
