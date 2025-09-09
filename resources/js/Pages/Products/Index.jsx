@@ -158,7 +158,7 @@ export default function Index({ auth, products }) {
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div className="hidden md:block bg-white shadow-sm sm:rounded-lg overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>

@@ -85,14 +85,13 @@ const RoleBadge = ({ role }) => {
 
         return roleClassMap[roleName] || "role-default";
     };
-
     return (
         <span
             className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${getRoleClass(
                 role.name
             )}`}
         >
-            {role.name} ({role.code})
+            {role.name}
         </span>
     );
 };
