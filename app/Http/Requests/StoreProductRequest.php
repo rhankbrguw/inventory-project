@@ -15,11 +15,11 @@ class StoreProductRequest extends FormRequest
    public function rules(): array
    {
       return [
-         'name' => ['required', 'string', 'max:255', 'regex:/[a-zA-Z]/'],
-         'sku' => 'required|string|max:255|unique:products,sku',
-         'price' => 'required|numeric|min:0',
+         'name' => ['required', 'string', 'max:50', 'regex:/[a-zA-Z]/'],
+         'sku' => 'required|string|max:50|unique:products,sku',
+         'price' => 'required|numeric|min:0|max:9999999999999.99',
          'unit' => ['required', Rule::in(['kg', 'pcs', 'ekor', 'pack', 'box'])],
-         'description' => 'nullable|string',
+         'description' => 'nullable|string|max:1000',
       ];
    }
 }
