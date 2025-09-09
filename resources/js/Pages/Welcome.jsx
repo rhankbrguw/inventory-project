@@ -43,8 +43,8 @@ export default function Welcome({ auth }) {
                 </div>
 
                 <div className="absolute bottom-6 text-xs text-muted-foreground">
-                    © {new Date().getFullYear()} Inventory.System - All rights
-                    reserved.
+                    © {new Date().getFullYear()} Inventory.System -{" "}
+                    <b>All rights reserved.</b>
                 </div>
             </div>
         </>

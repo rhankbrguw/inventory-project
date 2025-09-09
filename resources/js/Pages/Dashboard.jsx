@@ -8,7 +8,7 @@ export default function Dashboard({ auth }) {
             user={auth.user}
             header={
                 <h2 className="font-semibold text-xl text-foreground leading-tight">
-                    Dashboard
+                    Halaman Utama
                 </h2>
             }
         >
