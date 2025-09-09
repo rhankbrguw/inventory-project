@@ -1,11 +1,20 @@
-import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Package, Warehouse, BarChart2, Users } from 'lucide-react';
+import { Link, usePage } from "@inertiajs/react";
+import {
+    LayoutDashboard,
+    Package,
+    Warehouse,
+    BarChart2,
+    Users,
+} from "lucide-react";
 
 const NavLink = ({ href, active, children }) => (
     <Link
         href={href}
-        className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${active ? 'bg-secondary/20 text-primary font-semibold' : 'text-primary/70 hover:bg-secondary/10'
-            }`}
+        className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${
+            active
+                ? "bg-secondary/20 text-primary font-semibold"
+                : "text-primary/70 hover:bg-secondary/10"
+        }`}
     >
         {children}
     </Link>
@@ -14,28 +23,61 @@ const NavLink = ({ href, active, children }) => (
 export default function Sidebar({ sidebarOpen }) {
     const { auth } = usePage().props;
 
-    const hasRole = (roleName) => auth.roles.includes(roleName);
+    const hasRole = (roleName) => auth.user.roles.includes(roleName);
 
     const navLinks = [
-        { name: 'Halaman Utama', href: route('dashboard'), icon: LayoutDashboard, current: route().current('dashboard'), roles: [] },
-        { name: 'Produk', href: '#', icon: Package, current: false, roles: [] },
-        { name: 'Stok', href: '#', icon: Warehouse, current: false, roles: [] },
-        { name: 'Laporan', href: '#', icon: BarChart2, current: false, roles: [] },
-        { name: 'Manajemen User', href: route('users.index'), icon: Users, current: route().current('users.index'), roles: ['Super Admin'] },
+        {
+            name: "Dashboard",
+            href: route("dashboard"),
+            icon: LayoutDashboard,
+            current: route().current("dashboard"),
+            roles: [],
+        },
+        {
+            name: "Produk",
+            href: route("products.index"),
+            icon: Package,
+            current: route().current("products.*"),
+            roles: ["Super Admin", "Branch Manager"],
+        },
+        { name: "Stok", href: "#", icon: Warehouse, current: false, roles: [] },
+        {
+            name: "Laporan",
+            href: "#",
+            icon: BarChart2,
+            current: false,
+            roles: [],
+        },
+        {
+            name: "Manajemen User",
+            href: route("users.index"),
+            icon: Users,
+            current: route().current("users.*"),
+            roles: ["Super Admin"],
+        },
     ];
 
-    const filteredNavLinks = navLinks.filter(link =>
-        link.roles.length === 0 || link.roles.some(role => hasRole(role))
+    const filteredNavLinks = navLinks.filter(
+        (link) =>
+            link.roles.length === 0 || link.roles.some((role) => hasRole(role))
     );
 
     return (
-        <aside className={`w-64 bg-white shadow-lg flex-shrink-0 lg:block ${sidebarOpen ? 'block' : 'hidden'}`}>
+        <aside
+            className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+        >
             <div className="h-16 flex items-center justify-center border-b">
                 <h1 className="text-xl font-bold text-primary">Welcome!</h1>
             </div>
             <nav className="p-4 space-y-2">
                 {filteredNavLinks.map((link) => (
-                    <NavLink key={link.name} href={link.href} active={link.current}>
+                    <NavLink
+                        key={link.name}
+                        href={link.href}
+                        active={link.current}
+                    >
                         <link.icon className="w-5 h-5 mr-3" />
                         {link.name}
                     </NavLink>

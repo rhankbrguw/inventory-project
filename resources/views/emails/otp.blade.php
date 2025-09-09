@@ -10,7 +10,7 @@
         <h1 style="color: #845369">Inventory SAE RASA</h1>
         <h2 style="color: #555879;">Verifikasi Akun Anda</h2>
         <p>Halo {{ $user->name }},</p>
-        <p>Gunakan kode di bawah ini untuk memverifikasi alamat email Anda. Kode ini berlaku selama 10 menit.</p>
+        <p>Gunakan kode di bawah ini untuk memverifikasi alamat email Anda. Kode ini berlaku selama {{ $validityDuration }} menit.</p>
         <p style="font-size: 24px; font-weight: bold; letter-spacing: 5px; text-align: center; background-color: #f4f4f4; padding: 15px; border-radius: 4px; color: #555879;">
             {{ $otp }}
         </p>

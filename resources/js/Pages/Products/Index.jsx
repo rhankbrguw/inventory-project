@@ -1,6 +1,8 @@
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import IndexPageLayout from "@/Components/IndexPageLayout";
+import Pagination from "@/Components/Pagination";
+import { Button } from "@/Components/ui/button";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -26,55 +28,41 @@ import {
     TableRow,
 } from "@/Components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Button } from "@/Components/ui/button";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
-import Pagination from "@/Components/Pagination";
 
-const RoleBadge = ({ role }) => {
-    if (!role) {
-        return <span>-</span>;
-    }
-    const roleColors = {
-        "Super Admin": "bg-primary text-primary-foreground",
-        "Warehouse Manager": "bg-amber-500 text-white",
-        "Branch Manager": "bg-blue-500 text-white",
-        Cashier: "bg-gray-500 text-white",
+export default function Index({ auth, products }) {
+    const [confirmingProductDeletion, setConfirmingProductDeletion] =
+        useState(null);
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+        }).format(amount);
     };
-    return (
-        <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${
-                roleColors[role.name] || "bg-muted text-muted-foreground"
-            }`}
-        >
-            {role.name}
-        </span>
-    );
-};
 
-export default function Index({ auth, users }) {
-    const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
-
-    const deleteUser = () => {
-        router.delete(route("users.destroy", confirmingUserDeletion), {
+    const deleteProduct = () => {
+        router.delete(route("products.destroy", confirmingProductDeletion), {
             preserveScroll: true,
-            onSuccess: () => setConfirmingUserDeletion(null),
+            onSuccess: () => setConfirmingProductDeletion(null),
         });
     };
 
     return (
         <IndexPageLayout
             auth={auth}
-            title="Manajemen Pengguna"
-            createRoute="users.create"
-            buttonLabel="Tambah Pengguna"
+            title="Manajemen Produk"
+            createRoute="products.create"
+            buttonLabel="Tambah Produk"
         >
             <div className="space-y-4">
                 <div className="md:hidden space-y-4">
-                    {users.data.map((user) => (
-                        <Card key={user.id}>
+                    {products.data.map((product) => (
+                        <Card key={product.id}>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    {user.name}
+                                    {product.name}
                                 </CardTitle>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -84,7 +72,10 @@ export default function Index({ auth, users }) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <Link
-                                            href={route("users.edit", user.id)}
+                                            href={route(
+                                                "products.edit",
+                                                product.id
+                                            )}
                                         >
                                             <DropdownMenuItem className="cursor-pointer">
                                                 <Edit className="w-4 h-4 mr-2" />{" "}
@@ -94,11 +85,10 @@ export default function Index({ auth, users }) {
                                         <DropdownMenuItem
                                             className="text-destructive focus:text-destructive cursor-pointer"
                                             onClick={() =>
-                                                setConfirmingUserDeletion(
-                                                    user.id
+                                                setConfirmingProductDeletion(
+                                                    product.id
                                                 )
                                             }
-                                            disabled={user.id === auth.user.id}
                                         >
                                             <Trash2 className="w-4 h-4 mr-2" />{" "}
                                             Hapus
@@ -107,14 +97,11 @@ export default function Index({ auth, users }) {
                                 </DropdownMenu>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-xs text-muted-foreground">
-                                    {user.email}
-                                </p>
-                                <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                                        {user.role ? user.role.code : "-"}
-                                    </span>
-                                    <RoleBadge role={user.role} />
+                                <div className="text-xs text-muted-foreground">
+                                    SKU: {product.sku}
+                                </div>
+                                <div className="text-lg font-bold">
+                                    {formatCurrency(product.price)}
                                 </div>
                             </CardContent>
                         </Card>
@@ -126,16 +113,16 @@ export default function Index({ auth, users }) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="text-center">
-                                    Nama
+                                    Nama Produk
                                 </TableHead>
                                 <TableHead className="text-center">
-                                    Email
+                                    SKU
                                 </TableHead>
                                 <TableHead className="text-center">
-                                    Kode
+                                    Harga
                                 </TableHead>
                                 <TableHead className="text-center">
-                                    Jabatan
+                                    Satuan
                                 </TableHead>
                                 <TableHead className="text-center">
                                     Aksi
@@ -143,19 +130,19 @@ export default function Index({ auth, users }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.data.map((user) => (
-                                <TableRow key={user.id}>
+                            {products.data.map((product) => (
+                                <TableRow key={product.id}>
                                     <TableCell className="text-center">
-                                        {user.name}
+                                        {product.name}
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        {user.email}
-                                    </TableCell>
-                                    <TableCell className="text-center font-mono">
-                                        {user.role ? user.role.code : "-"}
+                                        {product.sku}
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        <RoleBadge role={user.role} />
+                                        {formatCurrency(product.price)}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {product.unit}
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <DropdownMenu>
@@ -170,8 +157,8 @@ export default function Index({ auth, users }) {
                                             <DropdownMenuContent align="end">
                                                 <Link
                                                     href={route(
-                                                        "users.edit",
-                                                        user.id
+                                                        "products.edit",
+                                                        product.id
                                                     )}
                                                 >
                                                     <DropdownMenuItem className="cursor-pointer">
@@ -182,12 +169,9 @@ export default function Index({ auth, users }) {
                                                 <DropdownMenuItem
                                                     className="text-destructive focus:text-destructive cursor-pointer"
                                                     onClick={() =>
-                                                        setConfirmingUserDeletion(
-                                                            user.id
+                                                        setConfirmingProductDeletion(
+                                                            product.id
                                                         )
-                                                    }
-                                                    disabled={
-                                                        user.id === auth.user.id
                                                     }
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />{" "}
@@ -202,28 +186,28 @@ export default function Index({ auth, users }) {
                     </Table>
                 </div>
 
-                <Pagination links={users.meta.links} />
+                <Pagination links={products.meta.links} />
             </div>
 
             <AlertDialog
-                open={confirmingUserDeletion !== null}
-                onOpenChange={() => setConfirmingUserDeletion(null)}
+                open={confirmingProductDeletion !== null}
+                onOpenChange={() => setConfirmingProductDeletion(null)}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan
-                            menghapus akun pengguna secara permanen dari sistem.
+                            Tindakan ini tidak dapat dibatalkan. Produk ini akan
+                            dihapus secara permanen.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Batal</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={deleteUser}
+                            onClick={deleteProduct}
                             className="bg-destructive hover:bg-destructive/90"
                         >
-                            Hapus Pengguna
+                            Hapus Produk
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
