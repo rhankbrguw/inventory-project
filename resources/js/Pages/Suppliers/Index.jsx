@@ -33,9 +33,14 @@ import Pagination from "@/Components/Pagination";
 const TABLE_COLUMNS = [
     {
         key: "name",
-        label: "Nama",
+        label: "Nama Supplier",
         align: "center",
         className: "font-medium",
+    },
+    {
+        key: "contact_person",
+        label: "Koordinator",
+        align: "center",
     },
     {
         key: "email",
@@ -44,14 +49,8 @@ const TABLE_COLUMNS = [
         className: "text-muted-foreground",
     },
     {
-        key: "role_code",
-        label: "Kode",
-        align: "center",
-        className: "font-mono text-xs",
-    },
-    {
-        key: "role_badge",
-        label: "Jabatan",
+        key: "phone",
+        label: "Telepon",
         align: "center",
     },
     {
@@ -70,43 +69,18 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-const RoleBadge = ({ role }) => {
-    if (!role) {
-        return <span>-</span>;
-    }
+export default function Index({ auth, suppliers }) {
+    const [confirmingSupplierDeletion, setConfirmingSupplierDeletion] =
+        useState(null);
 
-    const getRoleClass = (roleName) => {
-        const roleClassMap = {
-            "Super Admin": "role-super-admin",
-            "Warehouse Manager": "role-warehouse-manager",
-            "Branch Manager": "role-branch-manager",
-            Cashier: "role-cashier",
-        };
-
-        return roleClassMap[roleName] || "role-default";
-    };
-    return (
-        <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${getRoleClass(
-                role.name
-            )}`}
-        >
-            {role.name}
-        </span>
-    );
-};
-
-export default function Index({ auth, users }) {
-    const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
-
-    const deleteUser = () => {
-        router.delete(route("users.destroy", confirmingUserDeletion), {
+    const deleteSupplier = () => {
+        router.delete(route("suppliers.destroy", confirmingSupplierDeletion), {
             preserveScroll: true,
-            onSuccess: () => setConfirmingUserDeletion(null),
+            onSuccess: () => setConfirmingSupplierDeletion(null),
         });
     };
 
-    const renderActionDropdown = (user) => (
+    const renderActionDropdown = (supplier) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -114,15 +88,14 @@ export default function Index({ auth, users }) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <Link href={route("users.edit", user.id)}>
+                <Link href={route("suppliers.edit", supplier.id)}>
                     <DropdownMenuItem className="cursor-pointer">
                         <Edit className="w-4 h-4 mr-2" /> Edit
                     </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem
                     className="text-destructive focus:text-destructive cursor-pointer"
-                    onClick={() => setConfirmingUserDeletion(user.id)}
-                    disabled={user.id === auth.user.id}
+                    onClick={() => setConfirmingSupplierDeletion(supplier.id)}
                 >
                     <Trash2 className="w-4 h-4 mr-2" /> Hapus
                 </DropdownMenuItem>
@@ -130,18 +103,18 @@ export default function Index({ auth, users }) {
         </DropdownMenu>
     );
 
-    const renderCellContent = (column, user) => {
+    const renderCellContent = (column, supplier) => {
         switch (column.key) {
             case "name":
-                return user.name;
+                return supplier.name;
+            case "contact_person":
+                return supplier.contact_person || "-";
             case "email":
-                return user.email;
-            case "role_code":
-                return user.role ? user.role.code : "-";
-            case "role_badge":
-                return <RoleBadge role={user.role} />;
+                return supplier.email || "-";
+            case "phone":
+                return supplier.phone || "-";
             case "actions":
-                return renderActionDropdown(user);
+                return renderActionDropdown(supplier);
             default:
                 return "";
         }
@@ -150,36 +123,34 @@ export default function Index({ auth, users }) {
     return (
         <IndexPageLayout
             auth={auth}
-            title="Manajemen Pengguna"
-            createRoute="users.create"
-            buttonLabel="Tambah Pengguna"
+            title="Manajemen Supplier"
+            createRoute="suppliers.create"
+            buttonLabel="Tambah Supplier"
         >
             <div className="space-y-4">
                 <div className="md:hidden space-y-4">
-                    {users.data.map((user) => (
-                        <Card key={user.id}>
+                    {suppliers.data.map((supplier) => (
+                        <Card key={supplier.id}>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    {user.name}
+                                    {supplier.name}
                                 </CardTitle>
-                                {renderActionDropdown(user)}
+                                {renderActionDropdown(supplier)}
                             </CardHeader>
                             <CardContent>
                                 <p className="text-xs text-muted-foreground">
-                                    {user.email}
+                                    {supplier.contact_person || "No contact"}
                                 </p>
-                                <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                                        {user.role ? user.role.code : "-"}
-                                    </span>
-                                    <RoleBadge role={user.role} />
-                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {supplier.email || "-"} |{" "}
+                                    {supplier.phone || "-"}
+                                </p>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div className="hidden md:block bg-white shadow-sm sm:rounded-lg overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -196,8 +167,8 @@ export default function Index({ auth, users }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.data.map((user) => (
-                                <TableRow key={user.id}>
+                            {suppliers.data.map((supplier) => (
+                                <TableRow key={supplier.id}>
                                     {TABLE_COLUMNS.map((column) => (
                                         <TableCell
                                             key={column.key}
@@ -205,7 +176,10 @@ export default function Index({ auth, users }) {
                                                 column.align
                                             )} ${column.className || ""}`}
                                         >
-                                            {renderCellContent(column, user)}
+                                            {renderCellContent(
+                                                column,
+                                                supplier
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -214,28 +188,28 @@ export default function Index({ auth, users }) {
                     </Table>
                 </div>
 
-                <Pagination links={users.meta.links} />
+                <Pagination links={suppliers.meta.links} />
             </div>
 
             <AlertDialog
-                open={confirmingUserDeletion !== null}
-                onOpenChange={() => setConfirmingUserDeletion(null)}
+                open={confirmingSupplierDeletion !== null}
+                onOpenChange={() => setConfirmingSupplierDeletion(null)}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
                         <AlertDialogDescription>
                             Tindakan ini tidak dapat dibatalkan. Ini akan
-                            menghapus akun pengguna secara permanen dari sistem.
+                            menghapus data supplier secara permanen.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Batal</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={deleteUser}
+                            onClick={deleteSupplier}
                             className="bg-destructive hover:bg-destructive/90"
                         >
-                            Hapus Pengguna
+                            Hapus Supplier
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
