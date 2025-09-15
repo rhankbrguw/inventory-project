@@ -27,7 +27,7 @@ import {
     TableRow,
 } from "@/Components/ui/table";
 import { Link, router } from "@inertiajs/react";
-import { Edit, MoreVertical, Trash2 } from "lucide-react";
+import { Edit, MoreVertical, Trash2, Package } from "lucide-react";
 import { useState } from "react";
 
 const TABLE_COLUMNS = [
@@ -36,6 +36,11 @@ const TABLE_COLUMNS = [
         label: "Nama Produk",
         align: "center",
         className: "font-medium",
+    },
+    {
+        key: "image",
+        label: "Gambar",
+        align: "center",
     },
     {
         key: "sku",
@@ -114,6 +119,22 @@ export default function Index({ auth, products }) {
 
     const renderCellContent = (column, product) => {
         switch (column.key) {
+            case "image":
+                return (
+                    <div className="flex justify-center">
+                        {product.image_url ? (
+                            <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="h-12 w-12 rounded-md object-cover"
+                            />
+                        ) : (
+                            <div className="h-12 w-12 rounded-md bg-secondary flex items-center justify-center">
+                                <Package className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                        )}
+                    </div>
+                );
             case "name":
                 return product.name;
             case "sku":
@@ -140,18 +161,34 @@ export default function Index({ auth, products }) {
                 <div className="md:hidden space-y-4">
                     {products.data.map((product) => (
                         <Card key={product.id}>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    {product.name}
-                                </CardTitle>
+                            <CardHeader className="flex flex-row items-start justify-between pb-2">
+                                <div className="flex items-center gap-4">
+                                    {product.image_url ? (
+                                        <img
+                                            src={product.image_url}
+                                            alt={product.name}
+                                            className="h-14 w-14 rounded-md object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-14 w-14 rounded-md bg-secondary flex items-center justify-center">
+                                            <Package className="w-8 h-8 text-muted-foreground" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <CardTitle className="text-sm font-medium">
+                                            {product.name}
+                                        </CardTitle>
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                            SKU: {product.sku}
+                                        </div>
+                                    </div>
+                                </div>
                                 {renderActionDropdown(product)}
                             </CardHeader>
                             <CardContent>
-                                <div className="text-xs text-muted-foreground">
-                                    SKU: {product.sku}
-                                </div>
                                 <div className="text-lg font-bold">
-                                    {formatCurrency(product.price)}
+                                    {formatCurrency(product.price)} /{" "}
+                                    {product.unit}
                                 </div>
                             </CardContent>
                         </Card>

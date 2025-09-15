@@ -7,8 +7,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Location;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -31,14 +30,16 @@ class ProductController extends Controller
 
    public function store(StoreProductRequest $request)
    {
-      DB::transaction(function () use ($request) {
-         $product = Product::create($request->safe()->except('branches'));
-         if ($request->has('branches')) {
-            $product->locations()->attach($request->validated('branches'));
-         }
-      });
+      $validated = $request->validated();
 
-      return to_route('products.index')->with('success', 'Produk berhasil ditambahkan.');
+      if ($request->hasFile('image')) {
+         $path = $request->file('image')->store('products', 'public');
+         $validated['image_path'] = $path;
+      }
+
+      Product::create($validated);
+
+      return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
    }
 
    public function show(Product $product)
@@ -59,21 +60,19 @@ class ProductController extends Controller
 
    public function update(UpdateProductRequest $request, Product $product)
    {
-      DB::transaction(function () use ($request, $product) {
-         $product->update($request->safe()->except('branches'));
-         if ($request->has('branches')) {
-            $product->locations()->sync($request->validated('branches'));
-         } else {
-            $product->locations()->detach();
+      $validated = $request->validated();
+
+      if ($request->hasFile('image')) {
+         if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
          }
-      });
 
-      return to_route('products.index')->with('success', 'Produk berhasil diperbarui.');
-   }
+         $path = $request->file('image')->store('products', 'public');
+         $validated['image_path'] = $path;
+      }
 
-   public function destroy(Product $product)
-   {
-      $product->delete();
-      return to_route('products.index')->with('success', 'Produk berhasil dihapus.');
+      $product->update($validated);
+
+      return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
    }
 }

@@ -4,9 +4,15 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ProductResource extends JsonResource
 {
+   /**
+    *
+    *
+    * @return array<string, mixed>
+    */
    public function toArray(Request $request): array
    {
       return [
@@ -16,18 +22,8 @@ class ProductResource extends JsonResource
          'price' => $this->price,
          'unit' => $this->unit,
          'description' => $this->description,
-         'locations' => $this->whenLoaded('locations', function () {
-            return $this->locations->pluck('id');
-         }),
-         'inventories' => $this->whenLoaded('inventories', function () {
-            return $this->inventories->map(fn($inv) => [
-               'quantity' => $inv->quantity,
-               'location' => [
-                  'id' => $inv->location->id,
-                  'name' => $inv->location->name,
-               ],
-            ]);
-         }),
+         'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
+         'locations' => $this->whenLoaded('locations'),
       ];
    }
 }
