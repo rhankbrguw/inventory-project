@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -12,6 +11,8 @@ class Product extends Model
    use HasFactory, SoftDeletes;
 
    protected $fillable = [
+      'type_id',
+      'default_supplier_id',
       'name',
       'sku',
       'description',
@@ -20,17 +21,23 @@ class Product extends Model
       'image_path',
    ];
 
-   protected $casts = [
-      'price' => 'decimal:2',
-   ];
+   public function type()
+   {
+      return $this->belongsTo(Type::class);
+   }
+
+   public function defaultSupplier()
+   {
+      return $this->belongsTo(Supplier::class, 'default_supplier_id');
+   }
+
+   public function suppliers()
+   {
+      return $this->belongsToMany(Supplier::class, 'product_supplier');
+   }
 
    public function inventories()
    {
       return $this->hasMany(Inventory::class);
-   }
-
-   public function locations(): BelongsToMany
-   {
-      return $this->belongsToMany(Location::class, 'location_product');
    }
 }

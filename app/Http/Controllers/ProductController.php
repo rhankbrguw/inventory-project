@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\Type;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -22,9 +24,9 @@ class ProductController extends Controller
 
    public function create()
    {
-      $branches = Location::where('type', 'branch')->get();
       return Inertia::render('Products/Create', [
-         'branches' => $branches,
+         'types' => Type::where('group', 'product_type')->get(),
+         'suppliers' => Supplier::all(['id', 'name']),
       ]);
    }
 
