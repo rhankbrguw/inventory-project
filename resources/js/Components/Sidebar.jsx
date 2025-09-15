@@ -5,6 +5,7 @@ import {
     Warehouse,
     BarChart2,
     Users,
+    Truck,
 } from "lucide-react";
 
 const NavLink = ({ href, active, children }) => (
@@ -45,6 +46,13 @@ export default function Sidebar({ sidebarOpen }) {
             href: route("stock.index"),
             icon: Warehouse,
             current: route().current("stock.*"),
+            roles: ["Super Admin", "Warehouse Manager"],
+        },
+        {
+            name: "Supplier",
+            href: route("suppliers.index"),
+            icon: Truck,
+            current: route().current("suppliers.*"),
             roles: ["Super Admin", "Warehouse Manager"],
         },
         {
