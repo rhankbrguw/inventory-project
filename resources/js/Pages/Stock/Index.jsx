@@ -9,7 +9,6 @@ import {
     TableRow,
 } from "@/Components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import {
     Select,
     SelectContent,
@@ -19,31 +18,26 @@ import {
 } from "@/Components/ui/select";
 import { Input } from "@/Components/ui/input";
 import Pagination from "@/Components/Pagination";
-import { SlidersHorizontal } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Button } from "@/Components/ui/button";
+import { Package, Warehouse, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
 
 const TABLE_COLUMNS = [
     {
-        key: "name",
+        key: "product_name",
         label: "Nama Item",
         align: "center",
         className: "font-medium",
     },
-    {
-        key: "sku",
-        label: "SKU",
-        align: "center",
-    },
-    {
-        key: "total_stock",
-        label: "Total Stok",
-        align: "center",
-    },
-    {
-        key: "locations",
-        label: "Rincian per Lokasi",
-        align: "center",
-    },
+    { key: "location_name", label: "Lokasi", align: "center" },
+    { key: "quantity", label: "Kuantitas", align: "center" },
+];
+
+const sortOptions = [
+    { value: "name_asc", label: "Nama (A-Z)" },
+    { value: "name_desc", label: "Nama (Z-A)" },
+    { value: "quantity_desc", label: "Stok Terbanyak" },
+    { value: "quantity_asc", label: "Stok Terdikit" },
 ];
 
 const getAlignmentClass = (align) => {
@@ -55,248 +49,214 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-const StockList = ({ items }) => {
-    const renderLocationDetails = (inventories, unit) => {
-        if (inventories.length === 0) {
-            return (
-                <span className="text-muted-foreground text-sm italic">
-                    Tidak ada stok tercatat
-                </span>
-            );
-        }
+export default function Index({
+    auth,
+    inventories = { data: [], meta: { links: [] } },
+    locations = [],
+    productTypes = [],
+    filters = {},
+}) {
+    const [search, setSearch] = useState(filters.search || "");
+    const [location, setLocation] = useState(filters.location_id || "all");
+    const [type, setType] = useState(filters.type_id || "all");
+    const [sort, setSort] = useState(filters.sort || "name_asc");
 
-        return (
-            <ul className="list-disc list-inside space-y-1">
-                {inventories.map((inv) => (
-                    <li key={inv.location.id} className="text-sm">
-                        {inv.location.name}:{" "}
-                        <span className="font-semibold">
-                            {inv.quantity} {unit}
-                        </span>
-                    </li>
-                ))}
-            </ul>
-        );
+    const applyFilters = () => {
+        const params = {
+            search: search || undefined,
+            location_id: location === "all" ? undefined : location,
+            type_id: type === "all" ? undefined : type,
+            sort: sort,
+        };
+        router.get(route("stock.index"), params, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
     };
 
-    const renderTotalStock = (totalStock, unit) => (
-        <>
-            <span className="font-medium">{totalStock}</span>
-            <span className="text-muted-foreground text-sm"> {unit}</span>
-        </>
-    );
+    const renderLocationIcon = (locType) => {
+        if (locType === "warehouse") {
+            return <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />;
+        }
+        return <Package className="w-4 h-4 mr-2 text-muted-foreground" />;
+    };
 
-    const renderCellContent = (column, product, totalStock) => {
+    const renderCellContent = (column, item) => {
         switch (column.key) {
-            case "name":
-                return product.name;
-            case "sku":
-                return product.sku;
-            case "total_stock":
-                return renderTotalStock(totalStock, product.unit);
-            case "locations":
-                return renderLocationDetails(product.inventories, product.unit);
+            case "product_name":
+                return item.product.name;
+            case "location_name":
+                return (
+                    <div className="flex items-center justify-center">
+                        {renderLocationIcon(item.location.type)}
+                        {item.location.name}
+                    </div>
+                );
+            case "quantity":
+                return (
+                    <>
+                        <span className="font-semibold">
+                            {parseFloat(item.quantity).toLocaleString("id-ID")}
+                        </span>
+                        <span className="ml-2 text-muted-foreground">
+                            {item.product.unit}
+                        </span>
+                    </>
+                );
             default:
                 return "";
         }
     };
 
     return (
-        <Card>
-            <CardContent className="p-0">
-                <div className="md:hidden space-y-4 p-4">
-                    {items.data.map((product) => {
-                        const totalStock = product.inventories.reduce(
-                            (sum, inv) => sum + inv.quantity,
-                            0
-                        );
-                        return (
-                            <Card
-                                key={product.id}
-                                className="shadow-none border"
-                            >
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        {product.name}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-xs text-muted-foreground">
-                                        SKU: {product.sku}
-                                    </div>
-                                    <div className="text-lg font-bold">
-                                        {totalStock} {product.unit}
-                                    </div>
-                                    <ul className="mt-2 space-y-1">
-                                        {product.inventories.map((inv) => (
-                                            <li
-                                                key={inv.location.id}
-                                                className="text-xs text-muted-foreground"
-                                            >
-                                                {inv.location.name}:{" "}
-                                                <span className="font-semibold">
-                                                    {inv.quantity}{" "}
-                                                    {product.unit}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
+        <IndexPageLayout
+            auth={auth}
+            title="Manajemen Stok"
+            buttonLabel="Input Stok Masuk"
+            createRoute="stock.adjust.form"
+        >
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Filter & Urutkan Stok</CardTitle>
+                        <Button
+                            onClick={applyFilters}
+                            className="w-auto hidden sm:flex"
+                        >
+                            <SlidersHorizontal className="w-4 h-4 mr-2" />
+                            Terapkan
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap items-center gap-2">
+                        <Input
+                            type="search"
+                            placeholder="Cari produk..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-auto sm:flex-grow"
+                        />
+                        <Select value={location} onValueChange={setLocation}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Semua Lokasi" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Lokasi
+                                </SelectItem>
+                                {locations.map((loc) => (
+                                    <SelectItem
+                                        key={loc.id}
+                                        value={loc.id.toString()}
+                                    >
+                                        {loc.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={type} onValueChange={setType}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Semua Tipe" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Semua Tipe</SelectItem>
+                                {productTypes.map((pType) => (
+                                    <SelectItem
+                                        key={pType.id}
+                                        value={pType.id.toString()}
+                                    >
+                                        {pType.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={sort} onValueChange={setSort}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Urutkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            onClick={applyFilters}
+                            className="w-full sm:hidden"
+                        >
+                            <SlidersHorizontal className="w-4 h-4 mr-2" />
+                            Terapkan
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                <div className="md:hidden space-y-4">
+                    {inventories.data.map((item) => (
+                        <Card key={item.id}>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium">
+                                    {item.product.name}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center text-sm text-muted-foreground">
+                                    {renderLocationIcon(item.location.type)}
+                                    {item.location.name}
+                                </div>
+                                <div className="text-lg font-bold mt-2">
+                                    {parseFloat(item.quantity).toLocaleString(
+                                        "id-ID"
+                                    )}
+                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                        {item.product.unit}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
 
-                <div className="hidden md:block">
+                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                {TABLE_COLUMNS.map((column) => (
+                                {TABLE_COLUMNS.map((col) => (
                                     <TableHead
-                                        key={column.key}
-                                        className={getAlignmentClass(
-                                            column.align
-                                        )}
+                                        key={col.key}
+                                        className={getAlignmentClass(col.align)}
                                     >
-                                        {column.label}
+                                        {col.label}
                                     </TableHead>
                                 ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {items.data.map((product) => {
-                                const totalStock = product.inventories.reduce(
-                                    (sum, inv) => sum + inv.quantity,
-                                    0
-                                );
-                                return (
-                                    <TableRow key={product.id}>
-                                        {TABLE_COLUMNS.map((column) => (
-                                            <TableCell
-                                                key={column.key}
-                                                className={`${getAlignmentClass(
-                                                    column.align
-                                                )} ${column.className || ""}`}
-                                            >
-                                                {renderCellContent(
-                                                    column,
-                                                    product,
-                                                    totalStock
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                );
-                            })}
+                            {inventories.data.map((item) => (
+                                <TableRow key={item.id}>
+                                    {TABLE_COLUMNS.map((col) => (
+                                        <TableCell
+                                            key={col.key}
+                                            className={`${getAlignmentClass(
+                                                col.align
+                                            )} ${col.className || ""}`}
+                                        >
+                                            {renderCellContent(col, item)}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </div>
-            </CardContent>
-            <Pagination links={items.meta.links} className="p-4" />
-        </Card>
-    );
-};
 
-export default function Index({
-    auth,
-    rawMaterials,
-    finishedGoods,
-    locations,
-    filters,
-}) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [location, setLocation] = useState(filters.location_id || "all");
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            const currentParams = route().params;
-            const params = {
-                ...currentParams,
-                search: search || undefined,
-                location_id: location === "all" ? undefined : location,
-            };
-            router.get(route("stock.index"), params, {
-                preserveState: true,
-                replace: true,
-            });
-        }, 500);
-        return () => clearTimeout(handler);
-    }, [search, location]);
-
-    const activeTab = route().params.tab || "raw_materials";
-
-    return (
-        <IndexPageLayout
-            auth={auth}
-            title="Manajemen Stok"
-            createRoute="stock.adjust.form"
-            buttonLabel="Penyesuaian Stok"
-            icon={SlidersHorizontal}
-        >
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filter Data Stok</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <Input
-                                type="search"
-                                placeholder="Cari nama atau SKU..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full sm:max-w-sm"
-                            />
-                            <Select
-                                value={location}
-                                onValueChange={(value) => setLocation(value)}
-                            >
-                                <SelectTrigger className="w-full sm:w-[200px]">
-                                    <SelectValue placeholder="Semua Lokasi" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">
-                                        Semua Lokasi
-                                    </SelectItem>
-                                    {locations.map((loc) => (
-                                        <SelectItem
-                                            key={loc.id}
-                                            value={loc.id.toString()}
-                                        >
-                                            {loc.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Tabs
-                    defaultValue={activeTab}
-                    onValueChange={(tab) =>
-                        router.get(
-                            route("stock.index"),
-                            { ...route().params, tab },
-                            { preserveState: true, replace: true }
-                        )
-                    }
-                >
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="raw_materials">
-                            Stok Bahan Baku
-                        </TabsTrigger>
-                        <TabsTrigger value="finished_goods">
-                            Stok Menu Jadi
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="raw_materials" className="mt-4">
-                        <StockList items={rawMaterials} />
-                    </TabsContent>
-                    <TabsContent value="finished_goods" className="mt-4">
-                        <StockList items={finishedGoods} />
-                    </TabsContent>
-                </Tabs>
+                {inventories.data.length > 0 && (
+                    <Pagination links={inventories.meta.links} />
+                )}
             </div>
         </IndexPageLayout>
     );

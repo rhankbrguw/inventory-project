@@ -15,7 +15,7 @@ import InputError from "@/Components/InputError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Textarea } from "@/Components/ui/textarea";
 
-export default function Edit({ auth, product }) {
+export default function Edit({ auth, product, types, suppliers }) {
     const [imagePreview, setImagePreview] = useState(
         product.data.image_url || null
     );
@@ -27,7 +27,9 @@ export default function Edit({ auth, product }) {
         unit: product.data.unit || "",
         description: product.data.description || "",
         image: null,
-        _method: "patch", // Method spoofing untuk update dengan file
+        type_id: product.data.type?.id || "",
+        default_supplier_id: product.data.default_supplier?.id || "",
+        _method: "patch",
     });
 
     const productUnits = ["kg", "pcs", "ekor", "pack", "box"];
@@ -42,8 +44,9 @@ export default function Edit({ auth, product }) {
 
     const submit = (e) => {
         e.preventDefault();
-        // Gunakan post karena ada file upload
-        post(route("products.update", product.data.id));
+        post(route("products.update", product.data.id), {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -98,8 +101,7 @@ export default function Edit({ auth, product }) {
                             </div>
 
                             {imagePreview && (
-                                <div>
-                                    <Label>Preview Gambar</Label>
+                                <div className="w-full flex justify-center">
                                     <img
                                         src={imagePreview}
                                         alt="Product Preview"
@@ -108,27 +110,94 @@ export default function Edit({ auth, product }) {
                                 </div>
                             )}
 
-                            <div>
-                                <Label htmlFor="sku">
-                                    SKU (Stock Keeping Unit)
-                                </Label>
-                                <Input
-                                    id="sku"
-                                    value={data.sku}
-                                    onChange={(e) =>
-                                        setData("sku", e.target.value)
-                                    }
-                                    className="mt-1"
-                                />
-                                <InputError
-                                    message={errors.sku}
-                                    className="mt-2"
-                                />
-                            </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <Label htmlFor="price">Harga</Label>
+                                    <Label htmlFor="type_id">Tipe Produk</Label>
+                                    <Select
+                                        value={
+                                            data.type_id
+                                                ? data.type_id.toString()
+                                                : ""
+                                        }
+                                        onValueChange={(value) =>
+                                            setData("type_id", value)
+                                        }
+                                    >
+                                        <SelectTrigger className="mt-1">
+                                            <SelectValue placeholder="Pilih tipe" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {types.map((type) => (
+                                                <SelectItem
+                                                    key={type.id}
+                                                    value={type.id.toString()}
+                                                >
+                                                    {type.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={errors.type_id}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="default_supplier_id">
+                                        Supplier Andalan (Opsional)
+                                    </Label>
+                                    <Select
+                                        value={
+                                            data.default_supplier_id
+                                                ? data.default_supplier_id.toString()
+                                                : ""
+                                        }
+                                        onValueChange={(value) =>
+                                            setData(
+                                                "default_supplier_id",
+                                                value
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger className="mt-1">
+                                            <SelectValue placeholder="Pilih supplier" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {suppliers.map((supplier) => (
+                                                <SelectItem
+                                                    key={supplier.id}
+                                                    value={supplier.id.toString()}
+                                                >
+                                                    {supplier.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={errors.default_supplier_id}
+                                        className="mt-2"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <Label htmlFor="sku">SKU</Label>
+                                    <Input
+                                        id="sku"
+                                        value={data.sku}
+                                        onChange={(e) =>
+                                            setData("sku", e.target.value)
+                                        }
+                                        className="mt-1"
+                                    />
+                                    <InputError
+                                        message={errors.sku}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="price">Harga Jual</Label>
                                     <Input
                                         id="price"
                                         type="number"
@@ -152,7 +221,7 @@ export default function Edit({ auth, product }) {
                                         }
                                     >
                                         <SelectTrigger className="mt-1">
-                                            <SelectValue placeholder="Pilih satuan produk" />
+                                            <SelectValue placeholder="Pilih satuan" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {productUnits.map((unit) => (
@@ -176,14 +245,6 @@ export default function Edit({ auth, product }) {
                             </div>
 
                             <div>
-                                <Label>Ketersediaan di Cabang</Label>
-                                <div className="mt-2 p-4 border rounded-md text-sm text-muted-foreground italic">
-                                    Fitur ketersediaan per cabang telah
-                                    dinonaktifkan.
-                                </div>
-                            </div>
-
-                            <div>
                                 <Label htmlFor="description">
                                     Deskripsi (Opsional)
                                 </Label>
@@ -201,7 +262,7 @@ export default function Edit({ auth, product }) {
                                 />
                             </div>
 
-                            <div className="flex items-center gap-4 justify-end">
+                            <div className="flex items-center gap-4 justify-end pt-2">
                                 <Link href={route("products.index")}>
                                     <Button type="button" variant="outline">
                                         Batal

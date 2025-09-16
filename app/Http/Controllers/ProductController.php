@@ -5,20 +5,31 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
-use App\Models\Location;
 use App\Models\Product;
-use App\Models\Type;
 use App\Models\Supplier;
+use App\Models\Type;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-   public function index()
+   public function index(Request $request)
    {
-      $products = Product::latest()->paginate(10);
+      $products = Product::with(['type', 'defaultSupplier'])
+         ->when($request->input('supplier_id'), function ($query, $supplierId) {
+            $query->where('default_supplier_id', $supplierId);
+         })
+         ->latest()
+         ->paginate(10)
+         ->withQueryString();
+
       return Inertia::render('Products/Index', [
          'products' => ProductResource::collection($products),
+         'suppliers' => Supplier::all(['id', 'name']),
+         'productTypes' => Type::where('group', 'product_type')->get(['id', 'name']),
+         'filters' => (object) $request->only(['supplier_id']),
       ]);
    }
 
@@ -44,19 +55,14 @@ class ProductController extends Controller
       return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
    }
 
-   public function show(Product $product)
-   {
-      //
-   }
-
    public function edit(Product $product)
    {
-      $product->load('locations');
-      $branches = Location::where('type', 'branch')->get();
+      $product->load(['type', 'defaultSupplier']);
 
       return Inertia::render('Products/Edit', [
-         'product' => new ProductResource($product),
-         'branches' => $branches,
+         'product' => ProductResource::make($product),
+         'types' => Type::where('group', 'product_type')->get(),
+         'suppliers' => Supplier::all(['id', 'name']),
       ]);
    }
 
@@ -68,7 +74,6 @@ class ProductController extends Controller
          if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
          }
-
          $path = $request->file('image')->store('products', 'public');
          $validated['image_path'] = $path;
       }
@@ -76,5 +81,16 @@ class ProductController extends Controller
       $product->update($validated);
 
       return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
+   }
+
+   public function destroy(Product $product)
+   {
+      if ($product->image_path) {
+         Storage::disk('public')->delete($product->image_path);
+      }
+
+      $product->delete();
+
+      return Redirect::route('products.index')->with('success', 'Produk berhasil dihapus.');
    }
 }

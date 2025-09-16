@@ -179,7 +179,7 @@ export default function Index({ auth, users }) {
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div className="hidden md:block bg-card text-card-foreground overflow-hidden shadow-sm sm:rounded-lg">
                     <Table>
                         <TableHeader>
                             <TableRow>

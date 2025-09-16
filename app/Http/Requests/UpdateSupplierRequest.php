@@ -7,17 +7,11 @@ use Illuminate\Validation\Rule;
 
 class UpdateSupplierRequest extends FormRequest
 {
-
    public function authorize(): bool
    {
       return true;
    }
 
-   /**
-    *
-    *
-    * @return array<string,
-    */
    public function rules(): array
    {
       $supplierId = $this->supplier->id;
@@ -25,10 +19,10 @@ class UpdateSupplierRequest extends FormRequest
       return [
          'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
          'contact_person' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
-         'email' => ['required', 'email', 'max:255', Rule::unique('suppliers')->ignore($supplierId)],
+         'email' => ['required', 'email', 'max:50', Rule::unique('suppliers')->ignore($supplierId)],
          'phone' => ['required', 'string', 'max:25', Rule::unique('suppliers')->ignore($supplierId)],
-         'address' => ['required', 'string', 'max:1000'],
-         'notes' => ['nullable', 'string', 'max:1000'],
+         'address' => ['required', 'string', 'max:100'],
+         'notes' => ['nullable', 'string', 'max:20'],
       ];
    }
 

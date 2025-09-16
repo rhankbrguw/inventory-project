@@ -6,26 +6,20 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSupplierRequest extends FormRequest
 {
-
    public function authorize(): bool
    {
       return true;
    }
 
-   /**
-    *
-    *
-    * @return array<string,
-    */
    public function rules(): array
    {
       return [
          'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
          'contact_person' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
-         'email' => ['required', 'email', 'max:255', 'unique:suppliers,email'],
+         'email' => ['required', 'email', 'max:50', 'unique:suppliers,email'],
          'phone' => ['required', 'string', 'max:25', 'unique:suppliers,phone'],
-         'address' => ['required', 'string', 'max:1000'],
-         'notes' => ['nullable', 'string', 'max:1000'],
+         'address' => ['required', 'string', 'max:100'],
+         'notes' => ['nullable', 'string', 'max:20'],
       ];
    }
 

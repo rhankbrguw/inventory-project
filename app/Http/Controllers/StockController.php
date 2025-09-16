@@ -2,48 +2,54 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ProductResource;
+use App\Http\Requests\AdjustStockRequest;
 use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\Type;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class StockController extends Controller
 {
    public function index(Request $request)
    {
-      $query = Product::query()->with(['inventories.location']);
-
-      $query->when($request->input('search'), function ($q, $search) {
-         $q->where(function ($inner_q) use ($search) {
-            $inner_q->where('name', 'like', "%{$search}%")
-               ->orWhere('sku', 'like', "%{$search}%");
-         });
-      });
-
-      $query->when($request->input('location_id'), function ($q, $location_id) {
-         $q->whereHas('inventories', fn($inv_q) => $inv_q->where('location_id', $location_id));
-      });
-
-      $query->orderBy(
-         $request->input('sort_by', 'created_at'),
-         $request->input('sort_direction', 'desc')
-      );
-
-      $rawMaterials = (clone $query)->where('type', 'raw_material')
-         ->paginate(10, ['*'], 'raw_materials_page')
-         ->withQueryString();
-
-      $finishedGoods = (clone $query)->where('type', 'finished_good')
-         ->paginate(10, ['*'], 'finished_goods_page')
+      $inventories = Inventory::with(['product.type', 'location'])
+         ->join('products', 'inventories.product_id', '=', 'products.id')
+         ->select('inventories.*')
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+               $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.sku', 'like', "%{$search}%");
+            });
+         })
+         ->when($request->input('location_id'), function ($query, $locationId) {
+            $query->where('inventories.location_id', $locationId);
+         })
+         ->when($request->input('type_id'), function ($query, $typeId) {
+            $query->whereHas('product', function ($q) use ($typeId) {
+               $q->where('type_id', $typeId);
+            });
+         })
+         ->when($request->input('sort'), function ($query, $sort) {
+            if ($sort === 'name_asc') $query->orderBy('products.name', 'asc');
+            if ($sort === 'name_desc') $query->orderBy('products.name', 'desc');
+            if ($sort === 'quantity_asc') $query->orderBy('inventories.quantity', 'asc');
+            if ($sort === 'quantity_desc') $query->orderBy('inventories.quantity', 'desc');
+         }, function ($query) {
+            $query->orderBy('products.name', 'asc');
+         })
+         ->paginate(15)
          ->withQueryString();
 
       return Inertia::render('Stock/Index', [
-         'rawMaterials' => ProductResource::collection($rawMaterials),
-         'finishedGoods' => ProductResource::collection($finishedGoods),
-         'locations' => Location::all(['id', 'name']),
-         'filters' => $request->only(['search', 'location_id', 'sort_by', 'sort_direction']),
+         'inventories' => $inventories,
+         'locations' => Location::all(),
+         'productTypes' => Type::where('group', 'product_type')->get(),
+         'filters' => (object) $request->only(['search', 'location_id', 'type_id', 'sort']),
       ]);
    }
 
@@ -51,23 +57,36 @@ class StockController extends Controller
    {
       return Inertia::render('Stock/Adjust', [
          'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
-         'locations' => Location::orderBy('name')->get(['id', 'name', 'type']),
+         'locations' => Location::orderBy('name')->get(['id', 'name']),
       ]);
    }
-
-   public function adjust(Request $request)
+   public function adjust(AdjustStockRequest $request)
    {
-      $request->validate([
-         'product_id' => 'required|integer|exists:products,id',
-         'location_id' => 'required|integer|exists:locations,id',
-         'quantity' => 'required|integer|min:0',
-      ]);
+      $validated = $request->validated();
 
-      Inventory::updateOrCreate(
-         ['product_id' => $request->product_id, 'location_id' => $request->location_id],
-         ['quantity' => $request->quantity]
-      );
+      DB::transaction(function () use ($validated) {
+         $inventory = Inventory::firstOrCreate([
+            'product_id' => $validated['product_id'],
+            'location_id' => $validated['location_id'],
+         ]);
 
-      return to_route('stock.index')->with('success', 'Stok berhasil disesuaikan.');
+         $currentQuantity = $inventory->quantity;
+         $newQuantity = $validated['quantity'];
+         $quantityChange = $newQuantity - $currentQuantity;
+
+         if ($quantityChange !== 0) {
+            $inventory->stockMovements()->create([
+               'quantity_change' => $quantityChange,
+               'type' => 'adjustment',
+               'notes' => $validated['notes'],
+               'source_id' => auth()->id(),
+               'source_type' => User::class,
+            ]);
+
+            $inventory->update(['quantity' => $newQuantity]);
+         }
+      });
+
+      return Redirect::route('stock.index')->with('success', 'Stok berhasil disesuaikan.');
    }
 }

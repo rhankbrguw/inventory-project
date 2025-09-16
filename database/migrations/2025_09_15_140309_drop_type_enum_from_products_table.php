@@ -6,17 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+   /**
+    * Run the migrations.
+    */
    public function up(): void
    {
       Schema::table('products', function (Blueprint $table) {
-         $table->enum('type', ['finished_good', 'raw_material'])->default('finished_good')->after('name');
+         if (Schema::hasColumn('products', 'type')) {
+            $table->dropColumn('type');
+         }
       });
    }
 
+   /**
+    * Reverse the migrations.
+    */
    public function down(): void
    {
       Schema::table('products', function (Blueprint $table) {
-         $table->dropColumn('type');
+         if (!Schema::hasColumn('products', 'type')) {
+            $table->enum('type', ['some_value'])->nullable();
+         }
       });
    }
 };

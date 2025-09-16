@@ -24,6 +24,6 @@ class DatabaseSeeder extends Seeder
          ]
       );
 
-      $superAdmin->assignRole('Super Admin');
+      $superAdmin->syncRoles(['Super Admin']);
    }
 }

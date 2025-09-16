@@ -31,33 +31,10 @@ import { Edit, Trash2, MoreVertical } from "lucide-react";
 import Pagination from "@/Components/Pagination";
 
 const TABLE_COLUMNS = [
-    {
-        key: "name",
-        label: "Nama Supplier",
-        align: "center",
-        className: "font-medium",
-    },
-    {
-        key: "contact_person",
-        label: "Koordinator",
-        align: "center",
-    },
-    {
-        key: "email",
-        label: "Email",
-        align: "center",
-        className: "text-muted-foreground",
-    },
-    {
-        key: "phone",
-        label: "Telepon",
-        align: "center",
-    },
-    {
-        key: "actions",
-        label: "Aksi",
-        align: "center",
-    },
+    { key: "group", label: "Grup", align: "center", className: "font-medium" },
+    { key: "name", label: "Nama", align: "center" },
+    { key: "code", label: "Kode", align: "center" },
+    { key: "actions", label: "Aksi", align: "center" },
 ];
 
 const getAlignmentClass = (align) => {
@@ -69,18 +46,24 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-export default function Index({ auth, suppliers }) {
-    const [confirmingSupplierDeletion, setConfirmingSupplierDeletion] =
-        useState(null);
+export default function Index({ auth, types }) {
+    const [confirmingTypeDeletion, setConfirmingTypeDeletion] = useState(null);
 
-    const deleteSupplier = () => {
-        router.delete(route("suppliers.destroy", confirmingSupplierDeletion), {
+    const deleteType = () => {
+        router.delete(route("types.destroy", confirmingTypeDeletion), {
             preserveScroll: true,
-            onSuccess: () => setConfirmingSupplierDeletion(null),
+            onSuccess: () => setConfirmingTypeDeletion(null),
         });
     };
 
-    const renderActionDropdown = (supplier) => (
+    const formatGroupName = (groupName) => {
+        return groupName
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+    };
+
+    const renderActionDropdown = (type) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -88,14 +71,14 @@ export default function Index({ auth, suppliers }) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <Link href={route("suppliers.edit", supplier.id)}>
+                <Link href={route("types.edit", type.id)}>
                     <DropdownMenuItem className="cursor-pointer">
                         <Edit className="w-4 h-4 mr-2" /> Edit
                     </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem
                     className="text-destructive focus:text-destructive cursor-pointer"
-                    onClick={() => setConfirmingSupplierDeletion(supplier.id)}
+                    onClick={() => setConfirmingTypeDeletion(type.id)}
                 >
                     <Trash2 className="w-4 h-4 mr-2" /> Hapus
                 </DropdownMenuItem>
@@ -103,18 +86,16 @@ export default function Index({ auth, suppliers }) {
         </DropdownMenu>
     );
 
-    const renderCellContent = (column, supplier) => {
+    const renderCellContent = (column, type) => {
         switch (column.key) {
+            case "group":
+                return formatGroupName(type.group);
             case "name":
-                return supplier.name;
-            case "contact_person":
-                return supplier.contact_person || "-";
-            case "email":
-                return supplier.email || "-";
-            case "phone":
-                return supplier.phone || "-";
+                return type.name;
+            case "code":
+                return type.code || "-";
             case "actions":
-                return renderActionDropdown(supplier);
+                return renderActionDropdown(type);
             default:
                 return "";
         }
@@ -123,28 +104,29 @@ export default function Index({ auth, suppliers }) {
     return (
         <IndexPageLayout
             auth={auth}
-            title="Manajemen Supplier"
-            createRoute="suppliers.create"
-            buttonLabel="Tambah Supplier"
+            title="Manajemen Tipe"
+            createRoute="types.create"
+            buttonLabel="Tambah Tipe Baru"
         >
             <div className="space-y-4">
                 <div className="md:hidden space-y-4">
-                    {suppliers.data.map((supplier) => (
-                        <Card key={supplier.id}>
+                    {types.map((type) => (
+                        <Card key={type.id}>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    {supplier.name}
+                                    {type.name}
                                 </CardTitle>
-                                {renderActionDropdown(supplier)}
+                                {renderActionDropdown(type)}
                             </CardHeader>
                             <CardContent>
                                 <p className="text-xs text-muted-foreground">
-                                    {supplier.contact_person || "No contact"}
+                                    {formatGroupName(type.group)}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {supplier.email || "-"} |{" "}
-                                    {supplier.phone || "-"}
-                                </p>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                                        {type.code || "NO CODE"}
+                                    </span>
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
@@ -167,8 +149,8 @@ export default function Index({ auth, suppliers }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {suppliers.data.map((supplier) => (
-                                <TableRow key={supplier.id}>
+                            {types.map((type) => (
+                                <TableRow key={type.id}>
                                     {TABLE_COLUMNS.map((column) => (
                                         <TableCell
                                             key={column.key}
@@ -176,10 +158,7 @@ export default function Index({ auth, suppliers }) {
                                                 column.align
                                             )} ${column.className || ""}`}
                                         >
-                                            {renderCellContent(
-                                                column,
-                                                supplier
-                                            )}
+                                            {renderCellContent(column, type)}
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -187,29 +166,27 @@ export default function Index({ auth, suppliers }) {
                         </TableBody>
                     </Table>
                 </div>
-
-                <Pagination links={suppliers.meta.links} />
             </div>
 
             <AlertDialog
-                open={confirmingSupplierDeletion !== null}
-                onOpenChange={() => setConfirmingSupplierDeletion(null)}
+                open={confirmingTypeDeletion !== null}
+                onOpenChange={() => setConfirmingTypeDeletion(null)}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan
-                            menghapus data supplier secara permanen.
+                            Tindakan ini tidak dapat dibatalkan. Menghapus tipe
+                            dapat mempengaruhi data lain yang terkait.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Batal</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={deleteSupplier}
+                            onClick={deleteType}
                             className="bg-destructive hover:bg-destructive/90"
                         >
-                            Hapus Supplier
+                            Hapus Tipe
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
