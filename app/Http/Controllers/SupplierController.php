@@ -12,12 +12,28 @@ use Inertia\Inertia;
 
 class SupplierController extends Controller
 {
-   public function index()
+   public function index(Request $request)
    {
-      $suppliers = Supplier::latest()->paginate(10);
+      $suppliers = Supplier::query()
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+               $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('contact_person', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+         })
+         ->when($request->input('sort'), function ($query, $sort) {
+            if ($sort === 'name_asc') $query->orderBy('name', 'asc');
+            if ($sort === 'name_desc') $query->orderBy('name', 'desc');
+         }, function ($query) {
+            $query->orderBy('name', 'asc');
+         })
+         ->paginate(10)
+         ->withQueryString();
 
       return Inertia::render('Suppliers/Index', [
          'suppliers' => SupplierResource::collection($suppliers),
+         'filters' => (object) $request->only(['search', 'sort']),
       ]);
    }
 
@@ -30,7 +46,7 @@ class SupplierController extends Controller
    {
       Supplier::create($request->validated());
 
-      return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
+      return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
    }
 
    public function show(Supplier $supplier)
@@ -49,13 +65,13 @@ class SupplierController extends Controller
    {
       $supplier->update($request->validated());
 
-      return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
+      return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
    }
 
    public function destroy(Supplier $supplier)
    {
       $supplier->delete();
 
-      return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil dihapus.');
+      return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dihapus.');
    }
 }

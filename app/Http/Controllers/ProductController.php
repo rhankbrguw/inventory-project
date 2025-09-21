@@ -18,10 +18,23 @@ class ProductController extends Controller
    public function index(Request $request)
    {
       $products = Product::with(['type', 'defaultSupplier'])
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+               $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+         })
          ->when($request->input('supplier_id'), function ($query, $supplierId) {
             $query->where('default_supplier_id', $supplierId);
          })
-         ->latest()
+         ->when($request->input('sort'), function ($query, $sort) {
+            if ($sort === 'price_asc') $query->orderBy('price', 'asc');
+            if ($sort === 'price_desc') $query->orderBy('price', 'desc');
+            if ($sort === 'newest') $query->orderBy('created_at', 'desc');
+            if ($sort === 'oldest') $query->orderBy('created_at', 'asc');
+         }, function ($query) {
+            $query->latest('id');
+         })
          ->paginate(10)
          ->withQueryString();
 
@@ -29,7 +42,7 @@ class ProductController extends Controller
          'products' => ProductResource::collection($products),
          'suppliers' => Supplier::all(['id', 'name']),
          'productTypes' => Type::where('group', 'product_type')->get(['id', 'name']),
-         'filters' => (object) $request->only(['supplier_id']),
+         'filters' => (object) $request->only(['search', 'supplier_id', 'sort']),
       ]);
    }
 

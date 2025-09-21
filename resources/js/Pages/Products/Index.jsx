@@ -1,5 +1,6 @@
 import { Link, router, useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useDebounce } from "use-debounce";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import {
     AlertDialog,
@@ -58,19 +59,18 @@ import {
     Info,
 } from "lucide-react";
 import Pagination from "@/Components/Pagination";
-import { toast } from "sonner";
 
 const TABLE_COLUMNS = [
     { key: "image", label: "Gambar", align: "center" },
     {
         key: "name",
         label: "Nama Produk",
-        align: "left",
+        align: "center",
         className: "font-medium",
     },
     { key: "sku", label: "SKU", align: "center", className: "font-mono" },
     { key: "type", label: "Tipe", align: "center" },
-    { key: "supplier", label: "Supplier Andalan", align: "center" },
+    { key: "created_at", label: "Tgl. Dibuat", align: "center" },
     {
         key: "price",
         label: "Harga",
@@ -80,13 +80,16 @@ const TABLE_COLUMNS = [
     { key: "actions", label: "Aksi", align: "center" },
 ];
 
-const getAlignmentClass = (align) => ({
-    "text-center": align === "center",
-    "text-left": align === "left",
-    "text-right": align === "right",
-});
+const getAlignmentClass = (align) => {
+    const alignmentMap = {
+        left: "text-left",
+        center: "text-center",
+        right: "text-right",
+    };
+    return alignmentMap[align] || "text-left";
+};
 
-const QuickAddTypeModal = ({ productTypes = [] }) => {
+const QuickAddTypeModal = ({ productTypes = [], trigger }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         code: "",
@@ -101,133 +104,82 @@ const QuickAddTypeModal = ({ productTypes = [] }) => {
             onSuccess: () => {
                 setOpen(false);
                 reset();
-                router.reload();
-                toast.success("Tipe produk baru telah berhasil ditambahkan.");
             },
         });
     };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                >
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Tambah Tipe
-                </Button>
-            </DialogTrigger>
+            <DialogTrigger asChild>{trigger}</DialogTrigger>
             <DialogContent className="sm:max-w-md">
-                <DialogHeader className="pb-3">
-                    <DialogTitle className="text-lg">
-                        Tambah Tipe Produk
-                    </DialogTitle>
-                    <DialogDescription className="sr-only">
-                        Form untuk menambahkan tipe produk baru
+                <DialogHeader>
+                    <DialogTitle>Tambah Tipe Produk Cepat</DialogTitle>
+                    <DialogDescription>
+                        Tipe yang baru dibuat akan langsung tersedia di dropdown
+                        pada form.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={submit} className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <Label htmlFor="typeName" className="text-sm">
-                                Nama Tipe
-                            </Label>
-                            <Input
-                                id="typeName"
-                                value={data.name}
-                                onChange={(e) =>
-                                    setData("name", e.target.value)
-                                }
-                                className="mt-1 h-9"
-                                placeholder="Contoh: Electronics"
-                            />
-                            <InputError
-                                message={errors.name}
-                                className="mt-1 text-xs"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="typeCode" className="text-sm">
-                                Kode
-                            </Label>
-                            <Input
-                                id="typeCode"
-                                value={data.code}
-                                onChange={(e) =>
-                                    setData("code", e.target.value)
-                                }
-                                className="mt-1 h-9"
-                                placeholder="ELC"
-                            />
-                            <InputError
-                                message={errors.code}
-                                className="mt-1 text-xs"
-                            />
-                        </div>
+                <form onSubmit={submit} className="space-y-4 py-4">
+                    <div>
+                        <Label htmlFor="typeName">Nama Tipe</Label>
+                        <Input
+                            id="typeName"
+                            value={data.name}
+                            onChange={(e) => setData("name", e.target.value)}
+                            className="mt-1"
+                        />
+                        <InputError message={errors.name} className="mt-2" />
                     </div>
-
+                    <div>
+                        <Label htmlFor="typeCode">Kode (Opsional)</Label>
+                        <Input
+                            id="typeCode"
+                            value={data.code}
+                            onChange={(e) => setData("code", e.target.value)}
+                            className="mt-1"
+                        />
+                        <InputError message={errors.code} className="mt-2" />
+                    </div>
                     {productTypes.length > 0 && (
-                        <div className="bg-muted/50 p-3 rounded-lg">
-                            <p className="text-xs font-medium mb-2 text-muted-foreground">
-                                Tipe Tersedia:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                                {productTypes.slice(0, 5).map((type) => (
-                                    <Badge
-                                        key={type.id}
-                                        variant="secondary"
-                                        className="text-xs px-2 py-0.5"
-                                    >
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>Tipe yang Sudah Ada</AlertTitle>
+                            <AlertDescription className="flex flex-wrap gap-2 pt-2">
+                                {productTypes.map((type) => (
+                                    <Badge key={type.id} variant="secondary">
                                         {type.name}
                                     </Badge>
                                 ))}
-                                {productTypes.length > 5 && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger>
-                                            <span className="inline-flex items-center rounded-md border border-input bg-background px-2 py-0.5 text-xs font-semibold text-foreground hover:bg-accent cursor-pointer">
-                                                +{productTypes.length - 5}{" "}
-                                                lainnya
-                                            </span>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                            align="start"
-                                            className="max-h-48 overflow-y-auto"
-                                        >
-                                            {productTypes
-                                                .slice(5)
-                                                .map((type) => (
-                                                    <DropdownMenuItem
-                                                        key={type.id}
-                                                        className="text-xs"
-                                                    >
-                                                        {type.name}{" "}
-                                                        {type.code &&
-                                                            `(${type.code})`}
-                                                    </DropdownMenuItem>
-                                                ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
-                            </div>
-                        </div>
+                            </AlertDescription>
+                        </Alert>
                     )}
-
-                    <DialogFooter className="gap-2 pt-2">
+                    <DialogFooter>
                         <DialogClose asChild>
-                            <Button type="button" variant="outline" size="sm">
+                            <Button type="button" variant="outline">
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing} size="sm">
-                            {processing ? "Menyimpan..." : "Simpan"}
-                        </Button>
+                        <Button disabled={processing}>Simpan</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     );
+};
+
+const sortOptions = [
+    { value: "newest", label: "Produk Terbaru" },
+    { value: "oldest", label: "Produk Terlama" },
+    { value: "price_desc", label: "Harga Tertinggi" },
+    { value: "price_asc", label: "Harga Terendah" },
+];
+
+const formatDate = (isoString) => {
+    return new Date(isoString).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
 };
 
 export default function Index({
@@ -237,23 +189,30 @@ export default function Index({
     productTypes,
     filters = {},
 }) {
+    const [search, setSearch] = useState(filters.search || "");
+    const [supplier, setSupplier] = useState(filters.supplier_id || "all");
+    const [sort, setSort] = useState(filters.sort || "newest");
+    const [debouncedSearch] = useDebounce(search, 500);
     const [confirmingProductDeletion, setConfirmingProductDeletion] =
         useState(null);
-    const [supplierFilter, setSupplierFilter] = useState(
-        filters.supplier_id || "all"
-    );
+    const isInitialMount = useRef(true);
 
-    const handleFilterChange = (value) => {
-        setSupplierFilter(value);
-        router.get(
-            route("products.index"),
-            { supplier_id: value === "all" ? undefined : value },
-            {
-                preserveState: true,
-                replace: true,
-            }
-        );
-    };
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        const params = {
+            search: debouncedSearch || undefined,
+            supplier_id: supplier === "all" ? undefined : supplier,
+            sort: sort,
+        };
+        router.get(route("products.index"), params, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [debouncedSearch, supplier, sort]);
 
     const formatCurrency = (amount) =>
         new Intl.NumberFormat("id-ID", {
@@ -316,10 +275,12 @@ export default function Index({
                 return product.sku;
             case "type":
                 return product.type ? product.type.name : "-";
-            case "supplier":
-                return product.default_supplier
-                    ? product.default_supplier.name
-                    : "-";
+            case "created_at":
+                return (
+                    <div className="text-xs text-muted-foreground">
+                        {formatDate(product.created_at)}
+                    </div>
+                );
             case "price":
                 return formatCurrency(product.price);
             case "actions":
@@ -335,37 +296,78 @@ export default function Index({
             title="Manajemen Produk"
             createRoute="products.create"
             buttonLabel="Tambah Produk"
+            headerActions={
+                <QuickAddTypeModal
+                    productTypes={productTypes}
+                    trigger={
+                        <Button
+                            variant="outline"
+                            className="hidden sm:flex items-center gap-2"
+                        >
+                            <PlusCircle className="w-4 h-4" />
+                            Tambah Tipe
+                        </Button>
+                    }
+                />
+            }
         >
             <div className="space-y-4">
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Filter & Aksi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                        <div className="flex-grow">
-                            <Select
-                                value={supplierFilter}
-                                onValueChange={handleFilterChange}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Filter berdasarkan supplier..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">
-                                        Tampilkan Semua Supplier
+                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                        <Input
+                            type="search"
+                            placeholder="Cari nama atau sku..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-auto sm:flex-grow"
+                        />
+                        <Select value={supplier} onValueChange={setSupplier}>
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Semua Supplier" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Supplier
+                                </SelectItem>
+                                {suppliers.map((s) => (
+                                    <SelectItem
+                                        key={s.id}
+                                        value={s.id.toString()}
+                                    >
+                                        {s.name}
                                     </SelectItem>
-                                    {suppliers.map((supplier) => (
-                                        <SelectItem
-                                            key={supplier.id}
-                                            value={supplier.id.toString()}
-                                        >
-                                            {supplier.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={sort} onValueChange={setSort}>
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Urutkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <div className="sm:hidden">
+                            <QuickAddTypeModal
+                                productTypes={productTypes}
+                                trigger={
+                                    <Button
+                                        variant="outline"
+                                        className="w-full flex items-center gap-2"
+                                    >
+                                        <PlusCircle className="w-4 h-4" />
+                                        Tambah Tipe
+                                    </Button>
+                                }
+                            />
                         </div>
-                        <QuickAddTypeModal productTypes={productTypes} />
                     </CardContent>
                 </Card>
 
@@ -407,17 +409,15 @@ export default function Index({
                                     {product.unit}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-2">
-                                    Supplier:{" "}
-                                    {product.default_supplier
-                                        ? product.default_supplier.name
-                                        : "-"}
+                                    Ditambahkan:{" "}
+                                    {formatDate(product.created_at)}
                                 </p>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-white shadow-sm sm:rounded-lg overflow-x-auto">
+                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -437,9 +437,9 @@ export default function Index({
                                     {TABLE_COLUMNS.map((col) => (
                                         <TableCell
                                             key={col.key}
-                                            className={getAlignmentClass(
+                                            className={`${getAlignmentClass(
                                                 col.align
-                                            )}
+                                            )} ${col.className || ""}`}
                                         >
                                             {renderCellContent(col, product)}
                                         </TableCell>

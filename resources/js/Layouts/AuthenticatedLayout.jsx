@@ -40,7 +40,7 @@ export default function AuthenticatedLayout({ children }) {
                     ></div>
                 )}
             </div>
-            <Toaster richColors position="top-center" />
+            <Toaster richColors position="top-right" />
         </>
     );
 }

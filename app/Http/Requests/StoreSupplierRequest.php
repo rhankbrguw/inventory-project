@@ -18,8 +18,8 @@ class StoreSupplierRequest extends FormRequest
          'contact_person' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
          'email' => ['required', 'email', 'max:50', 'unique:suppliers,email'],
          'phone' => ['required', 'string', 'max:25', 'unique:suppliers,phone'],
-         'address' => ['required', 'string', 'max:100'],
-         'notes' => ['nullable', 'string', 'max:20'],
+         'address' => ['required', 'string', 'max:150'],
+         'notes' => ['nullable', 'string', 'max:100'],
       ];
    }
 

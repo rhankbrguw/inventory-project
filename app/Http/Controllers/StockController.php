@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AdjustStockRequest;
+use App\Http\Resources\InventoryResource;
 use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\Type;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -39,6 +40,8 @@ class StockController extends Controller
             if ($sort === 'name_desc') $query->orderBy('products.name', 'desc');
             if ($sort === 'quantity_asc') $query->orderBy('inventories.quantity', 'asc');
             if ($sort === 'quantity_desc') $query->orderBy('inventories.quantity', 'desc');
+            if ($sort === 'last_moved_desc') $query->orderBy('inventories.updated_at', 'desc');
+            if ($sort === 'last_moved_asc') $query->orderBy('inventories.updated_at', 'asc');
          }, function ($query) {
             $query->orderBy('products.name', 'asc');
          })
@@ -46,7 +49,7 @@ class StockController extends Controller
          ->withQueryString();
 
       return Inertia::render('Stock/Index', [
-         'inventories' => $inventories,
+         'inventories' => InventoryResource::collection($inventories),
          'locations' => Location::all(),
          'productTypes' => Type::where('group', 'product_type')->get(),
          'filters' => (object) $request->only(['search', 'location_id', 'type_id', 'sort']),
@@ -74,13 +77,13 @@ class StockController extends Controller
          $newQuantity = $validated['quantity'];
          $quantityChange = $newQuantity - $currentQuantity;
 
-         if ($quantityChange !== 0) {
-            $inventory->stockMovements()->create([
-               'quantity_change' => $quantityChange,
+         if ($quantityChange != 0) {
+            StockMovement::create([
+               'product_id' => $validated['product_id'],
+               'location_id' => $validated['location_id'],
                'type' => 'adjustment',
+               'quantity' => $quantityChange,
                'notes' => $validated['notes'],
-               'source_id' => auth()->id(),
-               'source_type' => User::class,
             ]);
 
             $inventory->update(['quantity' => $newQuantity]);

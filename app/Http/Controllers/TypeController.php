@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTypeRequest;
 use App\Http\Requests\UpdateTypeRequest;
+use App\Http\Resources\TypeResource;
 use App\Models\Type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -11,12 +12,24 @@ use Inertia\Inertia;
 
 class TypeController extends Controller
 {
-   public function index()
+   public function index(Request $request)
    {
-      $types = Type::orderBy('group')->orderBy('name')->get();
+      $types = Type::query()
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where('name', 'like', "%{$search}%")
+               ->orWhere('code', 'like', "%{$search}%");
+         })
+         ->when($request->input('group'), function ($query, $group) {
+            $query->where('group', 'like', "%{$group}%");
+         })
+         ->orderBy('group')->orderBy('name')
+         ->paginate(15)
+         ->withQueryString();
 
       return Inertia::render('Types/Index', [
-         'types' => $types
+         'types' => TypeResource::collection($types),
+         'filters' => (object) $request->only(['search', 'group']),
+         'groups' => Type::distinct()->pluck('group'),
       ]);
    }
 
@@ -31,8 +44,7 @@ class TypeController extends Controller
    public function store(StoreTypeRequest $request)
    {
       Type::create($request->validated());
-
-      return Redirect::back()->with('success', 'Tipe baru berhasil ditambahkan.');
+      return Redirect::route('types.index')->with('success', 'Tipe baru berhasil ditambahkan.');
    }
 
    public function edit(Type $type)

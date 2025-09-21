@@ -15,4 +15,9 @@ class Location extends Model
    {
       return $this->hasMany(Inventory::class);
    }
+
+   public function stockMovements()
+   {
+      return $this->hasMany(StockMovement::class);
+   }
 }

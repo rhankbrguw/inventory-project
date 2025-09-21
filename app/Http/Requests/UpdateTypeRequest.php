@@ -20,11 +20,11 @@ class UpdateTypeRequest extends FormRequest
          'name' => [
             'required',
             'string',
-            'max:255',
+            'max:50',
             Rule::unique('types')->where('group', $this->group)->ignore($typeId)
          ],
-         'group' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9_]+$/'],
-         'code' => ['nullable', 'string', 'max:10', Rule::unique('types')->ignore($typeId)],
+         'group' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9_]+$/'],
+         'code' => ['nullable', 'string', 'max:50', Rule::unique('types')->ignore($typeId)],
       ];
    }
 }

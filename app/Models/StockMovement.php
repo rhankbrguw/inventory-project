@@ -4,22 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
    use HasFactory;
 
-   protected $fillable = [
-      'inventory_id',
-      'quantity_change',
-      'type',
-      'source_id',
-      'source_type',
-      'notes',
-   ];
+   protected $guarded = [];
 
-   public function source()
+   public function product(): BelongsTo
    {
-      return $this->morphTo();
+      return $this->belongsTo(Product::class);
+   }
+
+   public function location(): BelongsTo
+   {
+      return $this->belongsTo(Location::class);
+   }
+
+   public function purchase(): BelongsTo
+   {
+      return $this->belongsTo(Purchase::class);
    }
 }

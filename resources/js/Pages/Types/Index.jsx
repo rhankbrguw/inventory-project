@@ -1,5 +1,6 @@
 import { Link, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useDebounce } from "use-debounce";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import {
     AlertDialog,
@@ -27,13 +28,21 @@ import {
 } from "@/Components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
 import Pagination from "@/Components/Pagination";
 
 const TABLE_COLUMNS = [
     { key: "group", label: "Grup", align: "center", className: "font-medium" },
     { key: "name", label: "Nama", align: "center" },
-    { key: "code", label: "Kode", align: "center" },
+    { key: "code", label: "Kode", align: "center", className: "font-mono" },
     { key: "actions", label: "Aksi", align: "center" },
 ];
 
@@ -46,8 +55,32 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-export default function Index({ auth, types }) {
+export default function Index({
+    auth,
+    types = { data: [], meta: { links: [] } },
+    filters = {},
+    groups = [],
+}) {
     const [confirmingTypeDeletion, setConfirmingTypeDeletion] = useState(null);
+    const [search, setSearch] = useState(filters.search || "");
+    const [group, setGroup] = useState(filters.group || "all");
+    const [debouncedSearch] = useDebounce(search, 500);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        router.get(
+            route("types.index"),
+            {
+                search: debouncedSearch || undefined,
+                group: group === "all" ? undefined : group,
+            },
+            { preserveState: true, replace: true }
+        );
+    }, [debouncedSearch, group]);
 
     const deleteType = () => {
         router.delete(route("types.destroy", confirmingTypeDeletion), {
@@ -56,12 +89,11 @@ export default function Index({ auth, types }) {
         });
     };
 
-    const formatGroupName = (groupName) => {
-        return groupName
+    const formatGroupName = (groupName) =>
+        groupName
             .split("_")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
-    };
 
     const renderActionDropdown = (type) => (
         <DropdownMenu>
@@ -77,8 +109,8 @@ export default function Index({ auth, types }) {
                     </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem
-                    className="text-destructive focus:text-destructive cursor-pointer"
                     onClick={() => setConfirmingTypeDeletion(type.id)}
+                    className="text-destructive focus:text-destructive cursor-pointer"
                 >
                     <Trash2 className="w-4 h-4 mr-2" /> Hapus
                 </DropdownMenuItem>
@@ -109,8 +141,36 @@ export default function Index({ auth, types }) {
             buttonLabel="Tambah Tipe Baru"
         >
             <div className="space-y-4">
+                <Card>
+                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                        <Input
+                            type="search"
+                            placeholder="Cari nama atau kode..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-auto sm:flex-grow"
+                        />
+                        <Select value={group} onValueChange={setGroup}>
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Semua Grup" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Semua Grup</SelectItem>
+                                {groups.map((groupName) => (
+                                    <SelectItem
+                                        key={groupName}
+                                        value={groupName}
+                                    >
+                                        {formatGroupName(groupName)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
                 <div className="md:hidden space-y-4">
-                    {types.map((type) => (
+                    {types.data.map((type) => (
                         <Card key={type.id}>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">
@@ -122,7 +182,7 @@ export default function Index({ auth, types }) {
                                 <p className="text-xs text-muted-foreground">
                                     {formatGroupName(type.group)}
                                 </p>
-                                <div className="mt-2 flex items-center gap-2">
+                                <div className="mt-2">
                                     <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
                                         {type.code || "NO CODE"}
                                     </span>
@@ -136,29 +196,27 @@ export default function Index({ auth, types }) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                {TABLE_COLUMNS.map((column) => (
+                                {TABLE_COLUMNS.map((col) => (
                                     <TableHead
-                                        key={column.key}
-                                        className={getAlignmentClass(
-                                            column.align
-                                        )}
+                                        key={col.key}
+                                        className={getAlignmentClass(col.align)}
                                     >
-                                        {column.label}
+                                        {col.label}
                                     </TableHead>
                                 ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {types.map((type) => (
+                            {types.data.map((type) => (
                                 <TableRow key={type.id}>
-                                    {TABLE_COLUMNS.map((column) => (
+                                    {TABLE_COLUMNS.map((col) => (
                                         <TableCell
-                                            key={column.key}
+                                            key={col.key}
                                             className={`${getAlignmentClass(
-                                                column.align
-                                            )} ${column.className || ""}`}
+                                                col.align
+                                            )} ${col.className || ""}`}
                                         >
-                                            {renderCellContent(column, type)}
+                                            {renderCellContent(col, type)}
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -166,6 +224,10 @@ export default function Index({ auth, types }) {
                         </TableBody>
                     </Table>
                 </div>
+
+                {types.data.length > 0 && (
+                    <Pagination links={types.meta.links} />
+                )}
             </div>
 
             <AlertDialog
@@ -177,7 +239,7 @@ export default function Index({ auth, types }) {
                         <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
                         <AlertDialogDescription>
                             Tindakan ini tidak dapat dibatalkan. Menghapus tipe
-                            dapat mempengaruhi data lain yang terkait.
+                            dapat mempengaruhi data lain.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -14,12 +14,32 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-   public function index(): Response
+   public function index(Request $request): Response
    {
+      $users = User::query()
+         ->with('roles')
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+               $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+         })
+         ->when($request->input('role'), function ($query, $role) {
+            $query->whereHas('roles', fn($q) => $q->where('name', $role));
+         })
+         ->when($request->input('sort'), function ($query, $sort) {
+            if ($sort === 'name_asc') $query->orderBy('name', 'asc');
+            if ($sort === 'name_desc') $query->orderBy('name', 'desc');
+         }, function ($query) {
+            $query->orderBy('name', 'asc');
+         })
+         ->paginate(10)
+         ->withQueryString();
+
       return Inertia::render('Users/Index', [
-         'users' => UserResource::collection(
-            User::with('roles')->paginate(10)
-         ),
+         'users' => UserResource::collection($users),
+         'roles' => Role::all(['name']),
+         'filters' => (object) $request->only(['search', 'sort', 'role']),
       ]);
    }
 
@@ -66,17 +86,17 @@ class UserController extends Controller
 
       $user->syncRoles($validated['role']);
 
-      return redirect()->route('users.index')->with('success', 'User updated successfully.');
+      return redirect()->route('users.index')->with('success', 'Pengguna berhasil diperbarui.');
    }
 
    public function destroy(User $user)
    {
       if ($user->id === auth()->id()) {
-         return redirect()->route('users.index')->with('error', 'You cannot delete your own account.');
+         return redirect()->route('users.index')->with('error', 'Anda tidak bisa menghapus akun sendiri.');
       }
 
       $user->delete();
 
-      return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+      return redirect()->route('users.index')->with('success', 'Pengguna berhasil dihapus.');
    }
 }

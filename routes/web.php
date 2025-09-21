@@ -4,6 +4,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\Transaction\PurchaseController;
+use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -41,9 +43,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
    Route::middleware(['role:Super Admin|Warehouse Manager|Branch Manager'])->group(function () {
       Route::resource('products', ProductController::class);
       Route::resource('suppliers', SupplierController::class);
+
+      // TRANSACTIONS MODULE
+      Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+      Route::post('/transactions/purchases', [PurchaseController::class, 'store'])->name('transactions.purchases.store');
+      Route::get('/transactions/purchases/create', [PurchaseController::class, 'create'])->name('transactions.purchases.create');
+      Route::get('/transactions/purchases/{purchase}', [PurchaseController::class, 'show'])->name('transactions.purchases.show');
    });
 
-   // Stock Management (Higher Level)
+   // Stock Management
    Route::middleware(['role:Super Admin|Warehouse Manager'])->group(function () {
       Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
       Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');

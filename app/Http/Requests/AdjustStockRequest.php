@@ -17,7 +17,7 @@ class AdjustStockRequest extends FormRequest
          'product_id' => 'required|exists:products,id',
          'location_id' => 'required|exists:locations,id',
          'quantity' => 'required|numeric|min:0',
-         'notes' => 'required|string|max:1000',
+         'notes' => 'required|string|max:100',
       ];
    }
 }

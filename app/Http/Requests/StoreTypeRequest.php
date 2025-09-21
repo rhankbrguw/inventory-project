@@ -28,11 +28,11 @@ class StoreTypeRequest extends FormRequest
          'name' => [
             'required',
             'string',
-            'max:255',
+            'max:50',
             Rule::unique('types')->where('group', $this->group),
          ],
-         'group' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9_]+$/'],
-         'code' => 'nullable|string|max:255|unique:types,code',
+         'group' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9_]+$/'],
+         'code' => 'nullable|string|max:50|unique:types,code',
       ];
    }
 }
