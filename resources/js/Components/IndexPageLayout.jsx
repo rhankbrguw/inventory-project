@@ -4,23 +4,25 @@ import { Button } from "@/Components/ui/button";
 import { Plus } from "lucide-react";
 
 export default function IndexPageLayout({
-    auth,
     title,
     createRoute,
     buttonLabel,
     icon,
+    headerActions,
     children,
 }) {
     const ButtonIcon = icon || Plus;
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-foreground leading-tight">
-                        {title}
-                    </h2>
+        <AuthenticatedLayout>
+            <Head title={title} />
+
+            <div className="mb-6 flex items-center justify-between">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                    {title}
+                </h1>
+                <div className="flex items-center gap-2">
+                    {headerActions}
                     {createRoute && (
                         <Link href={route(createRoute)}>
                             <Button
@@ -36,9 +38,7 @@ export default function IndexPageLayout({
                         </Link>
                     )}
                 </div>
-            }
-        >
-            <Head title={title} />
+            </div>
             {children}
         </AuthenticatedLayout>
     );

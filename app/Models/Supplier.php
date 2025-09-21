@@ -19,6 +19,11 @@ class Supplier extends Model
       'notes',
    ];
 
+   public function products()
+   {
+      return $this->belongsToMany(Product::class, 'product_supplier');
+   }
+
    public function setPhoneAttribute($value)
    {
       if (empty($value)) {

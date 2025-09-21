@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductResource extends JsonResource
 {
-   /**
-    *
-    *
-    * @return array<string, mixed>
-    */
    public function toArray(Request $request): array
    {
       return [
@@ -22,8 +17,10 @@ class ProductResource extends JsonResource
          'price' => $this->price,
          'unit' => $this->unit,
          'description' => $this->description,
+         'created_at' => $this->created_at->toISOString(),
          'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
-         'locations' => $this->whenLoaded('locations'),
+         'type' => $this->whenLoaded('type'),
+         'default_supplier' => $this->whenLoaded('defaultSupplier'),
       ];
    }
 }

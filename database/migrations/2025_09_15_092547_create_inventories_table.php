@@ -10,12 +10,13 @@ return new class extends Migration
    {
       Schema::create('inventories', function (Blueprint $table) {
          $table->id();
-         $table->foreignId('product_id')->constrained()->onDelete('cascade');
          $table->foreignId('location_id')->constrained()->onDelete('cascade');
-         $table->unsignedBigInteger('quantity');
+         $table->foreignId('product_id')->constrained()->onDelete('cascade');
+         $table->decimal('quantity', 15, 4)->default(0);
+         $table->decimal('average_cost', 15, 4)->default(0);
          $table->timestamps();
 
-         $table->unique(['product_id', 'location_id']);
+         $table->unique(['location_id', 'product_id']);
       });
    }
 

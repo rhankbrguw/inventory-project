@@ -15,12 +15,14 @@ class StoreProductRequest extends FormRequest
    public function rules(): array
    {
       return [
-         'name' => ['required', 'string', 'max:50', 'regex:/[a-zA-Z]/'],
+         'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
+         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+         'type_id' => 'required|exists:types,id',
+         'default_supplier_id' => 'nullable|exists:suppliers,id',
          'sku' => 'required|string|max:50|unique:products,sku',
-         'price' => 'required|numeric|min:0|max:9999999999999.99',
+         'price' => 'required|numeric|min:0',
          'unit' => ['required', Rule::in(['kg', 'pcs', 'ekor', 'pack', 'box'])],
          'description' => 'nullable|string|max:1000',
-         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
       ];
    }
 }

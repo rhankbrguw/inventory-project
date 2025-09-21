@@ -1,5 +1,6 @@
 import { Link, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDebounce } from "use-debounce";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import {
     AlertDialog,
@@ -25,8 +26,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/Components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
 import Pagination from "@/Components/Pagination";
 
@@ -69,9 +78,35 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-export default function Index({ auth, suppliers }) {
+const sortOptions = [
+    { value: "name_asc", label: "Nama (A-Z)" },
+    { value: "name_desc", label: "Nama (Z-A)" },
+];
+
+export default function Index({ auth, suppliers, filters = {} }) {
+    const [search, setSearch] = useState(filters.search || "");
+    const [sort, setSort] = useState(filters.sort || "name_asc");
+    const [debouncedSearch] = useDebounce(search, 500);
     const [confirmingSupplierDeletion, setConfirmingSupplierDeletion] =
         useState(null);
+
+    useEffect(() => {
+        if (debouncedSearch !== (filters.search || "")) {
+            handleFilterChange({ search: debouncedSearch });
+        }
+    }, [debouncedSearch]);
+
+    const handleFilterChange = (newFilter) => {
+        const currentParams = {
+            search: search || undefined,
+            sort: sort,
+            ...newFilter,
+        };
+        router.get(route("suppliers.index"), currentParams, {
+            preserveState: true,
+            replace: true,
+        });
+    };
 
     const deleteSupplier = () => {
         router.delete(route("suppliers.destroy", confirmingSupplierDeletion), {
@@ -128,6 +163,39 @@ export default function Index({ auth, suppliers }) {
             buttonLabel="Tambah Supplier"
         >
             <div className="space-y-4">
+                <Card>
+                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                        <Input
+                            type="search"
+                            placeholder="Cari nama, koordinator, atau email..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-auto sm:flex-grow"
+                        />
+                        <Select
+                            value={sort}
+                            onValueChange={(value) => {
+                                setSort(value);
+                                handleFilterChange({ sort: value });
+                            }}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Urutkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
                 <div className="md:hidden space-y-4">
                     {suppliers.data.map((supplier) => (
                         <Card key={supplier.id}>
@@ -150,7 +218,7 @@ export default function Index({ auth, suppliers }) {
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-white shadow-sm sm:rounded-lg overflow-x-auto">
+                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -187,8 +255,9 @@ export default function Index({ auth, suppliers }) {
                         </TableBody>
                     </Table>
                 </div>
-
-                <Pagination links={suppliers.meta.links} />
+                {suppliers.data.length > 0 && (
+                    <Pagination links={suppliers.meta.links} />
+                )}
             </div>
 
             <AlertDialog
