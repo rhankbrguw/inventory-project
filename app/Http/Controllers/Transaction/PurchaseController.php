@@ -20,7 +20,7 @@ class PurchaseController extends Controller
       return inertia('Transactions/Purchases/Create', [
          'locations' => Location::all(['id', 'name']),
          'suppliers' => Supplier::all(['id', 'name']),
-         'products' => Product::all(['id', 'name', 'sku', 'unit']),
+         'products' => Product::all(['id', 'name', 'sku', 'unit', 'price', 'default_supplier_id']),
       ]);
    }
 
@@ -55,13 +55,13 @@ class PurchaseController extends Controller
                'cost_per_unit' => $item['cost_per_unit'],
             ]);
 
-            $inventory = Inventory::firstOrNew([
-               'product_id' => $item['product_id'],
-               'location_id' => $validated['location_id'],
-            ]);
+            $inventory = Inventory::firstOrCreate(
+               ['product_id' => $item['product_id'], 'location_id' => $validated['location_id']],
+               ['quantity' => 0, 'average_cost' => 0]
+            );
 
-            $oldQty = $inventory->quantity ?? 0;
-            $oldAvgCost = $inventory->average_cost ?? 0;
+            $oldQty = $inventory->quantity;
+            $oldAvgCost = $inventory->average_cost;
             $newQty = $item['quantity'];
             $newCost = $item['cost_per_unit'];
 

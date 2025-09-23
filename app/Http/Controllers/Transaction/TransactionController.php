@@ -12,7 +12,6 @@ class TransactionController extends Controller
 {
    public function index(Request $request)
    {
-      // Untuk sementara
       $transactions = Purchase::with(['location', 'supplier', 'user'])
          ->latest('transaction_date')
          ->paginate(10);

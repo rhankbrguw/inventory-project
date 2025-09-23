@@ -17,6 +17,24 @@ export default function AuthenticatedLayout({ children }) {
         }
     }, [flash]);
 
+    useEffect(() => {
+        const handleWheelOnNumberInput = (event) => {
+            if (
+                document.activeElement === event.target &&
+                event.target.type === "number"
+            ) {
+                event.target.blur();
+                event.preventDefault();
+            }
+        };
+
+        document.addEventListener("wheel", handleWheelOnNumberInput);
+
+        return () => {
+            document.removeEventListener("wheel", handleWheelOnNumberInput);
+        };
+    }, []);
+
     return (
         <>
             <div className="relative min-h-screen lg:flex">

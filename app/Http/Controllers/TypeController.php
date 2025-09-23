@@ -44,7 +44,7 @@ class TypeController extends Controller
    public function store(StoreTypeRequest $request)
    {
       Type::create($request->validated());
-      return Redirect::route('types.index')->with('success', 'Tipe baru berhasil ditambahkan.');
+      return Redirect::back()->with('success', 'Tipe baru berhasil ditambahkan.');
    }
 
    public function edit(Type $type)
