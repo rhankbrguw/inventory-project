@@ -1,62 +1,64 @@
-import { useState } from "react";
-import { Head, usePage } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import { usePage } from "@inertiajs/react";
 import Sidebar from "@/Components/Sidebar";
 import Header from "@/Components/Header";
-import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { Toaster, toast } from "sonner";
 
-export default function AuthenticatedLayout({ user, header, children }) {
+export default function AuthenticatedLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { flash } = usePage().props;
 
+    useEffect(() => {
+        if (flash && flash.success) {
+            toast.success(flash.success);
+        }
+        if (flash && flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
+
+    useEffect(() => {
+        const handleWheelOnNumberInput = (event) => {
+            if (
+                document.activeElement === event.target &&
+                event.target.type === "number"
+            ) {
+                event.target.blur();
+                event.preventDefault();
+            }
+        };
+
+        document.addEventListener("wheel", handleWheelOnNumberInput);
+
+        return () => {
+            document.removeEventListener("wheel", handleWheelOnNumberInput);
+        };
+    }, []);
+
     return (
         <>
-            <div className="flex h-screen bg-background overflow-hidden">
-                <Sidebar user={user} sidebarOpen={sidebarOpen} />
+            <div className="relative min-h-screen lg:flex">
+                <Sidebar
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                />
 
-                <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-                    <Header user={user} setSidebarOpen={setSidebarOpen} />
-
-                    {sidebarOpen && (
-                        <div
-                            onClick={() => setSidebarOpen(false)}
-                            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-                            aria-hidden="true"
-                        ></div>
-                    )}
-
-                    {header && (
-                        <header className="bg-card shadow-sm">
-                            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                                {header}
-                            </div>
-                        </header>
-                    )}
-                    <main className="flex-1">
-                        <div className="py-8 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            {flash && flash.success && (
-                                <Alert className="mb-4 border-green-500 bg-green-50 text-green-700">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    <AlertTitle>Success</AlertTitle>
-                                    <AlertDescription>
-                                        {flash.success}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                            {flash && flash.error && (
-                                <Alert variant="destructive" className="mb-4">
-                                    <XCircle className="h-4 w-4" />
-                                    <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>
-                                        {flash.error}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                            {children}
-                        </div>
+                <div className="flex-1 flex flex-col lg:ml-64">
+                    <Header setSidebarOpen={setSidebarOpen} />
+                    <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto">
+                        {children}
                     </main>
                 </div>
+
+                {sidebarOpen && (
+                    <div
+                        onClick={() => setSidebarOpen(false)}
+                        className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
+                        aria-hidden="true"
+                    ></div>
+                )}
             </div>
+            <Toaster richColors position="top-right" />
         </>
     );
 }

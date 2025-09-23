@@ -1,5 +1,6 @@
-import { Head, Link, router } from "@inertiajs/react";
-import { useState } from "react";
+import { Link, router } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import { useDebounce } from "use-debounce";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import {
     AlertDialog,
@@ -25,40 +26,162 @@ import {
     TableHeader,
     TableRow,
 } from "@/Components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
 import Pagination from "@/Components/Pagination";
+
+const TABLE_COLUMNS = [
+    {
+        key: "name",
+        label: "Nama",
+        align: "center",
+        className: "font-medium",
+    },
+    {
+        key: "email",
+        label: "Email",
+        align: "center",
+        className: "text-muted-foreground",
+    },
+    {
+        key: "role_code",
+        label: "Kode",
+        align: "center",
+        className: "font-mono text-xs",
+    },
+    {
+        key: "role_badge",
+        label: "Jabatan",
+        align: "center",
+    },
+    {
+        key: "actions",
+        label: "Aksi",
+        align: "center",
+    },
+];
+
+const getAlignmentClass = (align) => {
+    const alignmentMap = {
+        left: "text-left",
+        center: "text-center",
+        right: "text-right",
+    };
+    return alignmentMap[align] || "text-left";
+};
 
 const RoleBadge = ({ role }) => {
     if (!role) {
         return <span>-</span>;
     }
-    const roleColors = {
-        "Super Admin": "bg-primary text-primary-foreground",
-        "Warehouse Manager": "bg-amber-500 text-white",
-        "Branch Manager": "bg-blue-500 text-white",
-        Cashier: "bg-gray-500 text-white",
+
+    const getRoleClass = (roleName) => {
+        const roleClassMap = {
+            "Super Admin": "role-super-admin",
+            "Warehouse Manager": "role-warehouse-manager",
+            "Branch Manager": "role-branch-manager",
+            Cashier: "role-cashier",
+        };
+
+        return roleClassMap[roleName] || "role-default";
     };
     return (
         <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${
-                roleColors[role.name] || "bg-muted text-muted-foreground"
-            }`}
+            className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${getRoleClass(
+                role.name
+            )}`}
         >
             {role.name}
         </span>
     );
 };
 
-export default function Index({ auth, users }) {
+const sortOptions = [
+    { value: "name_asc", label: "Nama (A-Z)" },
+    { value: "name_desc", label: "Nama (Z-A)" },
+];
+
+export default function Index({ auth, users, roles, filters = {} }) {
+    const [search, setSearch] = useState(filters.search || "");
+    const [sort, setSort] = useState(filters.sort || "name_asc");
+    const [role, setRole] = useState(filters.role || "all");
+    const [debouncedSearch] = useDebounce(search, 500);
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
+
+    useEffect(() => {
+        if (debouncedSearch !== (filters.search || "")) {
+            handleFilterChange({ search: debouncedSearch });
+        }
+    }, [debouncedSearch]);
+
+    const handleFilterChange = (newFilter) => {
+        const currentParams = {
+            search: search || undefined,
+            sort: sort,
+            role: role === "all" ? undefined : role,
+            ...newFilter,
+        };
+        router.get(route("users.index"), currentParams, {
+            preserveState: true,
+            replace: true,
+        });
+    };
 
     const deleteUser = () => {
         router.delete(route("users.destroy", confirmingUserDeletion), {
             preserveScroll: true,
             onSuccess: () => setConfirmingUserDeletion(null),
         });
+    };
+
+    const renderActionDropdown = (user) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <MoreVertical className="w-4 h-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <Link href={route("users.edit", user.id)}>
+                    <DropdownMenuItem className="cursor-pointer">
+                        <Edit className="w-4 h-4 mr-2" /> Edit
+                    </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                    onClick={() => setConfirmingUserDeletion(user.id)}
+                    disabled={user.id === auth.user.id}
+                >
+                    <Trash2 className="w-4 h-4 mr-2" /> Hapus
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
+    const renderCellContent = (column, user) => {
+        switch (column.key) {
+            case "name":
+                return user.name;
+            case "email":
+                return user.email;
+            case "role_code":
+                return user.role ? user.role.code : "-";
+            case "role_badge":
+                return <RoleBadge role={user.role} />;
+            case "actions":
+                return renderActionDropdown(user);
+            default:
+                return "";
+        }
     };
 
     return (
@@ -69,6 +192,60 @@ export default function Index({ auth, users }) {
             buttonLabel="Tambah Pengguna"
         >
             <div className="space-y-4">
+                <Card>
+                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                        <Input
+                            type="search"
+                            placeholder="Cari nama atau email..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-auto sm:flex-grow"
+                        />
+                        <Select
+                            value={role}
+                            onValueChange={(value) => {
+                                setRole(value);
+                                handleFilterChange({ role: value });
+                            }}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Semua Jabatan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Jabatan
+                                </SelectItem>
+                                {roles.map((r) => (
+                                    <SelectItem key={r.name} value={r.name}>
+                                        {r.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={sort}
+                            onValueChange={(value) => {
+                                setSort(value);
+                                handleFilterChange({ sort: value });
+                            }}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Urutkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
                 <div className="md:hidden space-y-4">
                     {users.data.map((user) => (
                         <Card key={user.id}>
@@ -76,35 +253,7 @@ export default function Index({ auth, users }) {
                                 <CardTitle className="text-sm font-medium">
                                     {user.name}
                                 </CardTitle>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <MoreVertical className="w-4 h-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <Link
-                                            href={route("users.edit", user.id)}
-                                        >
-                                            <DropdownMenuItem className="cursor-pointer">
-                                                <Edit className="w-4 h-4 mr-2" />{" "}
-                                                Edit
-                                            </DropdownMenuItem>
-                                        </Link>
-                                        <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive cursor-pointer"
-                                            onClick={() =>
-                                                setConfirmingUserDeletion(
-                                                    user.id
-                                                )
-                                            }
-                                            disabled={user.id === auth.user.id}
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-2" />{" "}
-                                            Hapus
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                {renderActionDropdown(user)}
                             </CardHeader>
                             <CardContent>
                                 <p className="text-xs text-muted-foreground">
@@ -121,88 +270,43 @@ export default function Index({ auth, users }) {
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div className="hidden md:block bg-card text-card-foreground overflow-hidden shadow-sm sm:rounded-lg">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="text-center">
-                                    Nama
-                                </TableHead>
-                                <TableHead className="text-center">
-                                    Email
-                                </TableHead>
-                                <TableHead className="text-center">
-                                    Kode
-                                </TableHead>
-                                <TableHead className="text-center">
-                                    Jabatan
-                                </TableHead>
-                                <TableHead className="text-center">
-                                    Aksi
-                                </TableHead>
+                                {TABLE_COLUMNS.map((column) => (
+                                    <TableHead
+                                        key={column.key}
+                                        className={getAlignmentClass(
+                                            column.align
+                                        )}
+                                    >
+                                        {column.label}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {users.data.map((user) => (
                                 <TableRow key={user.id}>
-                                    <TableCell className="text-center">
-                                        {user.name}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        {user.email}
-                                    </TableCell>
-                                    <TableCell className="text-center font-mono">
-                                        {user.role ? user.role.code : "-"}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <RoleBadge role={user.role} />
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                >
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <Link
-                                                    href={route(
-                                                        "users.edit",
-                                                        user.id
-                                                    )}
-                                                >
-                                                    <DropdownMenuItem className="cursor-pointer">
-                                                        <Edit className="w-4 h-4 mr-2" />{" "}
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                </Link>
-                                                <DropdownMenuItem
-                                                    className="text-destructive focus:text-destructive cursor-pointer"
-                                                    onClick={() =>
-                                                        setConfirmingUserDeletion(
-                                                            user.id
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        user.id === auth.user.id
-                                                    }
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" />{" "}
-                                                    Hapus
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                                    {TABLE_COLUMNS.map((column) => (
+                                        <TableCell
+                                            key={column.key}
+                                            className={`${getAlignmentClass(
+                                                column.align
+                                            )} ${column.className || ""}`}
+                                        >
+                                            {renderCellContent(column, user)}
+                                        </TableCell>
+                                    ))}
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </div>
-
-                <Pagination links={users.meta.links} />
+                {users.data.length > 0 && (
+                    <Pagination links={users.meta.links} />
+                )}
             </div>
 
             <AlertDialog

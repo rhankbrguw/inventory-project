@@ -5,75 +5,105 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
-use App\Models\Location;
 use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\Type;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-   public function index()
+   public function index(Request $request)
    {
-      $products = Product::latest()->paginate(10);
+      $products = Product::with(['type', 'defaultSupplier'])
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+               $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+         })
+         ->when($request->input('supplier_id'), function ($query, $supplierId) {
+            $query->where('default_supplier_id', $supplierId);
+         })
+         ->when($request->input('sort'), function ($query, $sort) {
+            if ($sort === 'price_asc') $query->orderBy('price', 'asc');
+            if ($sort === 'price_desc') $query->orderBy('price', 'desc');
+            if ($sort === 'newest') $query->orderBy('created_at', 'desc');
+            if ($sort === 'oldest') $query->orderBy('created_at', 'asc');
+         }, function ($query) {
+            $query->latest('id');
+         })
+         ->paginate(10)
+         ->withQueryString();
+
       return Inertia::render('Products/Index', [
          'products' => ProductResource::collection($products),
+         'suppliers' => Supplier::all(['id', 'name']),
+         'productTypes' => Type::where('group', 'product_type')->get(['id', 'name']),
+         'filters' => (object) $request->only(['search', 'supplier_id', 'sort']),
       ]);
    }
 
    public function create()
    {
-      $branches = Location::where('type', 'branch')->get();
       return Inertia::render('Products/Create', [
-         'branches' => $branches,
+         'types' => Type::where('group', 'product_type')->get(),
+         'suppliers' => Supplier::all(['id', 'name']),
       ]);
    }
 
    public function store(StoreProductRequest $request)
    {
-      DB::transaction(function () use ($request) {
-         $product = Product::create($request->safe()->except('branches'));
-         if ($request->has('branches')) {
-            $product->locations()->attach($request->validated('branches'));
-         }
-      });
+      $validated = $request->validated();
 
-      return to_route('products.index')->with('success', 'Produk berhasil ditambahkan.');
-   }
+      if ($request->hasFile('image')) {
+         $path = $request->file('image')->store('products', 'public');
+         $validated['image_path'] = $path;
+      }
 
-   public function show(Product $product)
-   {
-      //
+      Product::create($validated);
+
+      return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
    }
 
    public function edit(Product $product)
    {
-      $product->load('locations');
-      $branches = Location::where('type', 'branch')->get();
+      $product->load(['type', 'defaultSupplier']);
 
       return Inertia::render('Products/Edit', [
-         'product' => new ProductResource($product),
-         'branches' => $branches,
+         'product' => ProductResource::make($product),
+         'types' => Type::where('group', 'product_type')->get(),
+         'suppliers' => Supplier::all(['id', 'name']),
       ]);
    }
 
    public function update(UpdateProductRequest $request, Product $product)
    {
-      DB::transaction(function () use ($request, $product) {
-         $product->update($request->safe()->except('branches'));
-         if ($request->has('branches')) {
-            $product->locations()->sync($request->validated('branches'));
-         } else {
-            $product->locations()->detach();
-         }
-      });
+      $validated = $request->validated();
 
-      return to_route('products.index')->with('success', 'Produk berhasil diperbarui.');
+      if ($request->hasFile('image')) {
+         if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+         }
+         $path = $request->file('image')->store('products', 'public');
+         $validated['image_path'] = $path;
+      }
+
+      $product->update($validated);
+
+      return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
    }
 
    public function destroy(Product $product)
    {
+      if ($product->image_path) {
+         Storage::disk('public')->delete($product->image_path);
+      }
+
       $product->delete();
-      return to_route('products.index')->with('success', 'Produk berhasil dihapus.');
+
+      return Redirect::route('products.index')->with('success', 'Produk berhasil dihapus.');
    }
 }

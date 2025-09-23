@@ -14,16 +14,17 @@ class UpdateProductRequest extends FormRequest
 
    public function rules(): array
    {
-      $productId = $this->route('product')->id;
+      $productId = $this->product->id;
 
       return [
-         'name' => ['required', 'string', 'max:50', 'regex:/[a-zA-Z]/'],
+         'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
+         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+         'type_id' => 'required|exists:types,id',
+         'default_supplier_id' => 'nullable|exists:suppliers,id',
          'sku' => ['required', 'string', 'max:50', Rule::unique('products')->ignore($productId)],
-         'price' => 'required|numeric|min:0|max:9999999999999.99',
+         'price' => 'required|numeric|min:0',
          'unit' => ['required', Rule::in(['kg', 'pcs', 'ekor', 'pack', 'box'])],
-         'description' => 'nullable|string|max:1000',
-         'branches' => 'present|array',
-         'branches.*' => 'integer|exists:locations,id',
+         'description' => 'nullable|string|max:50',
       ];
    }
 }
