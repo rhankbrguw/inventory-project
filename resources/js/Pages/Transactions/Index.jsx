@@ -1,23 +1,10 @@
-import { Link, router } from "@inertiajs/react";
-import { useState, useEffect, useRef } from "react";
-import { useDebounce } from "use-debounce";
+import { router } from "@inertiajs/react";
+import { useState } from "react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/Components/ui/alert-dialog";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/Components/ui/dropdown-menu";
+import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
+import Pagination from "@/Components/Pagination";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import {
     Table,
     TableBody,
@@ -28,6 +15,12 @@ import {
 } from "@/Components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Badge } from "@/Components/ui/badge";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/Components/ui/dropdown-menu";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import {
@@ -38,8 +31,7 @@ import {
     SelectValue,
 } from "@/Components/ui/select";
 import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
-import { Edit, Trash2, MoreVertical } from "lucide-react";
-import Pagination from "@/Components/Pagination";
+import { Eye, MoreVertical, Trash2, Plus } from "lucide-react";
 
 const TABLE_COLUMNS = [
     { key: "reference_code", label: "Referensi", align: "center" },
@@ -52,7 +44,7 @@ const TABLE_COLUMNS = [
     { key: "actions", label: "Aksi", align: "center" },
 ];
 
-const getAlignmentClass = (align) => {
+const getAlignmentClass = (align = "left") => {
     const alignmentMap = {
         left: "text-left",
         center: "text-center",
@@ -61,54 +53,29 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-const formatCurrency = (amount) =>
-    new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        minimumFractionDigits: 0,
-    }).format(amount);
-
-const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleString("id-ID", options);
-};
+const sortOptions = [
+    { value: "newest", label: "Transaksi Terbaru" },
+    { value: "oldest", label: "Transaksi Terlama" },
+    { value: "total_desc", label: "Total Terbesar" },
+    { value: "total_asc", label: "Total Terkecil" },
+];
 
 export default function Index({
     auth,
-    transactions = { data: [], meta: { links: [] } },
+    transactions,
     filters = {},
     types = [],
 }) {
+    const { params, setFilter } = useIndexPageFilters(
+        "transactions.index",
+        filters
+    );
     const [confirmingTransactionDeletion, setConfirmingTransactionDeletion] =
         useState(null);
-    const [search, setSearch] = useState(filters.search || "");
-    const [type, setType] = useState(filters.type || "all");
-    const [debouncedSearch] = useDebounce(search, 500);
-    const isInitialMount = useRef(true);
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-        router.get(
-            route("transactions.index"),
-            {
-                search: debouncedSearch || undefined,
-                type: type === "all" ? undefined : type,
-            },
-            { preserveState: true, replace: true }
-        );
-    }, [debouncedSearch, type]);
 
     const deleteTransaction = () => {
-        router.delete(
-            route("transactions.destroy", confirmingTransactionDeletion),
-            {
-                preserveScroll: true,
-                onSuccess: () => setConfirmingTransactionDeletion(null),
-            }
-        );
+        console.log("Deleting transaction:", confirmingTransactionDeletion);
+        setConfirmingTransactionDeletion(null);
     };
 
     const renderActionDropdown = (transaction) => (
@@ -119,18 +86,22 @@ export default function Index({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <Link
-                    href={route("transactions.purchases.show", transaction.id)}
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() =>
+                        router.get(
+                            route("transactions.purchases.show", transaction.id)
+                        )
+                    }
                 >
-                    <DropdownMenuItem className="cursor-pointer">
-                        <Edit className="w-4 h-4 mr-2" /> Lihat
-                    </DropdownMenuItem>
-                </Link>
+                    <Eye className="w-4 h-4 mr-2" /> Lihat
+                </DropdownMenuItem>
                 <DropdownMenuItem
                     onClick={() =>
                         setConfirmingTransactionDeletion(transaction.id)
                     }
                     className="text-destructive focus:text-destructive cursor-pointer"
+                    disabled
                 >
                     <Trash2 className="w-4 h-4 mr-2" /> Hapus
                 </DropdownMenuItem>
@@ -191,8 +162,39 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Riwayat Transaksi"
-            createRoute="transactions.purchases.create"
             buttonLabel="Tambah Transaksi"
+            headerActions={
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <div>
+                            <Button
+                                size="icon"
+                                className="sm:hidden rounded-full h-10 w-10"
+                            >
+                                <Plus className="h-5 w-5" />
+                            </Button>
+                            <Button className="hidden sm:flex items-center gap-2">
+                                <Plus className="w-4 h-4" />
+                                <span>Tambah Transaksi</span>
+                            </Button>
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                            onSelect={() =>
+                                router.get(
+                                    route("transactions.purchases.create")
+                                )
+                            }
+                        >
+                            Pembelian (Purchase)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled>
+                            Transfer Stok (Coming Soon)
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            }
         >
             <div className="space-y-4">
                 <Card>
@@ -200,11 +202,16 @@ export default function Index({
                         <Input
                             type="search"
                             placeholder="Cari referensi atau supplier..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
-                        <Select value={type} onValueChange={setType}>
+                        <Select
+                            value={params.type || "all"}
+                            onValueChange={(value) => setFilter("type", value)}
+                        >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Tipe" />
                             </SelectTrigger>
@@ -213,6 +220,24 @@ export default function Index({
                                 {types.map((typeName) => (
                                     <SelectItem key={typeName} value={typeName}>
                                         {typeName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={params.sort || "newest"}
+                            onValueChange={(value) => setFilter("sort", value)}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Urutkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -239,7 +264,17 @@ export default function Index({
                                     {renderActionDropdown(trx)}
                                 </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent
+                                onClick={() =>
+                                    router.get(
+                                        route(
+                                            "transactions.purchases.show",
+                                            trx.id
+                                        )
+                                    )
+                                }
+                                className="cursor-pointer"
+                            >
                                 <div className="text-lg font-bold mb-2">
                                     {formatCurrency(trx.total_cost)}
                                 </div>
@@ -268,42 +303,58 @@ export default function Index({
                     ))}
                 </div>
 
-                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg">
-                    <ScrollArea className="w-full">
-                        <Table className="min-w-full">
-                            <TableHeader>
-                                <TableRow>
-                                    {TABLE_COLUMNS.map((col) => (
-                                        <TableHead
-                                            key={col.key}
-                                            className={getAlignmentClass(
-                                                col.align
-                                            )}
-                                        >
-                                            {col.label}
-                                        </TableHead>
-                                    ))}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {transactions.data.map((trx) => (
-                                    <TableRow key={trx.id}>
+                <div className="hidden md:block">
+                    <div className="bg-card text-card-foreground shadow-sm sm:rounded-lg">
+                        <ScrollArea className="w-full">
+                            <Table className="min-w-full">
+                                <TableHeader>
+                                    <TableRow>
                                         {TABLE_COLUMNS.map((col) => (
-                                            <TableCell
+                                            <TableHead
                                                 key={col.key}
                                                 className={getAlignmentClass(
                                                     col.align
                                                 )}
                                             >
-                                                {renderCellContent(col, trx)}
-                                            </TableCell>
+                                                {col.label}
+                                            </TableHead>
                                         ))}
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
+                                </TableHeader>
+                                <TableBody>
+                                    {transactions.data.map((trx) => (
+                                        <TableRow
+                                            key={trx.id}
+                                            onClick={() =>
+                                                router.get(
+                                                    route(
+                                                        "transactions.purchases.show",
+                                                        trx.id
+                                                    )
+                                                )
+                                            }
+                                            className="cursor-pointer"
+                                        >
+                                            {TABLE_COLUMNS.map((col) => (
+                                                <TableCell
+                                                    key={col.key}
+                                                    className={getAlignmentClass(
+                                                        col.align
+                                                    )}
+                                                >
+                                                    {renderCellContent(
+                                                        col,
+                                                        trx
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
+                    </div>
                 </div>
 
                 {transactions.data.length > 0 && (
@@ -311,29 +362,13 @@ export default function Index({
                 )}
             </div>
 
-            <AlertDialog
+            <DeleteConfirmationDialog
                 open={confirmingTransactionDeletion !== null}
                 onOpenChange={() => setConfirmingTransactionDeletion(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Menghapus
-                            transaksi dapat mempengaruhi data lain.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteTransaction}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            Hapus Transaksi
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={deleteTransaction}
+                confirmText="Hapus Transaksi"
+                description="Tindakan ini tidak dapat dibatalkan. Menghapus transaksi dapat mempengaruhi data lain."
+            />
         </IndexPageLayout>
     );
 }

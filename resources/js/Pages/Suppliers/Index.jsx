@@ -1,17 +1,8 @@
 import { Link, router } from "@inertiajs/react";
-import { useState, useEffect } from "react";
-import { useDebounce } from "use-debounce";
+import { useState } from "react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/Components/ui/alert-dialog";
+import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -46,27 +37,15 @@ const TABLE_COLUMNS = [
         align: "center",
         className: "font-medium",
     },
-    {
-        key: "contact_person",
-        label: "Koordinator",
-        align: "center",
-    },
+    { key: "contact_person", label: "Koordinator", align: "center" },
     {
         key: "email",
         label: "Email",
         align: "center",
         className: "text-muted-foreground",
     },
-    {
-        key: "phone",
-        label: "Telepon",
-        align: "center",
-    },
-    {
-        key: "actions",
-        label: "Aksi",
-        align: "center",
-    },
+    { key: "phone", label: "Telepon", align: "center" },
+    { key: "actions", label: "Aksi", align: "center" },
 ];
 
 const getAlignmentClass = (align) => {
@@ -84,29 +63,13 @@ const sortOptions = [
 ];
 
 export default function Index({ auth, suppliers, filters = {} }) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [sort, setSort] = useState(filters.sort || "name_asc");
-    const [debouncedSearch] = useDebounce(search, 500);
+    const { params, setFilter } = useIndexPageFilters(
+        "suppliers.index",
+        filters,
+        "name_asc"
+    );
     const [confirmingSupplierDeletion, setConfirmingSupplierDeletion] =
         useState(null);
-
-    useEffect(() => {
-        if (debouncedSearch !== (filters.search || "")) {
-            handleFilterChange({ search: debouncedSearch });
-        }
-    }, [debouncedSearch]);
-
-    const handleFilterChange = (newFilter) => {
-        const currentParams = {
-            search: search || undefined,
-            sort: sort,
-            ...newFilter,
-        };
-        router.get(route("suppliers.index"), currentParams, {
-            preserveState: true,
-            replace: true,
-        });
-    };
 
     const deleteSupplier = () => {
         router.delete(route("suppliers.destroy", confirmingSupplierDeletion), {
@@ -168,16 +131,15 @@ export default function Index({ auth, suppliers, filters = {} }) {
                         <Input
                             type="search"
                             placeholder="Cari nama, koordinator, atau email..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
                         <Select
-                            value={sort}
-                            onValueChange={(value) => {
-                                setSort(value);
-                                handleFilterChange({ sort: value });
-                            }}
+                            value={params.sort || "name_asc"}
+                            onValueChange={(value) => setFilter("sort", value)}
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Urutkan" />
@@ -255,34 +217,19 @@ export default function Index({ auth, suppliers, filters = {} }) {
                         </TableBody>
                     </Table>
                 </div>
+
                 {suppliers.data.length > 0 && (
                     <Pagination links={suppliers.meta.links} />
                 )}
             </div>
 
-            <AlertDialog
+            <DeleteConfirmationDialog
                 open={confirmingSupplierDeletion !== null}
                 onOpenChange={() => setConfirmingSupplierDeletion(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan
-                            menghapus data supplier secara permanen.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteSupplier}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            Hapus Supplier
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={deleteSupplier}
+                confirmText="Hapus Supplier"
+                description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data supplier secara permanen."
+            />
         </IndexPageLayout>
     );
 }

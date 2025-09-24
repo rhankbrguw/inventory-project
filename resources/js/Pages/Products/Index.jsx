@@ -1,17 +1,9 @@
 import { Link, router, useForm } from "@inertiajs/react";
-import { useState, useEffect, useRef } from "react";
-import { useDebounce } from "use-debounce";
+import { useState } from "react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/Components/ui/alert-dialog";
+import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import {
     Dialog,
     DialogContent,
@@ -44,7 +36,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import { Badge } from "@/Components/ui/badge";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
@@ -90,11 +81,13 @@ const getAlignmentClass = (align) => {
 };
 
 const QuickAddTypeModal = ({ productTypes = [], trigger }) => {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: "",
-        code: "",
-        group: "product_type",
-    });
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
+        {
+            name: "",
+            code: "",
+            group: "product_type",
+        }
+    );
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
@@ -111,55 +104,103 @@ const QuickAddTypeModal = ({ productTypes = [], trigger }) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Tambah Tipe Produk Cepat</DialogTitle>
-                    <DialogDescription>
-                        Tipe yang baru dibuat akan langsung tersedia di dropdown
-                        pada form.
+            <DialogContent className="sm:max-w-[420px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader className="space-y-2">
+                    <DialogTitle className="text-lg">
+                        Tambah Tipe Produk
+                    </DialogTitle>
+                    <DialogDescription className="text-sm">
+                        Tipe baru akan langsung tersedia di form.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={submit} className="space-y-4 py-4">
-                    <div>
-                        <Label htmlFor="typeName">Nama Tipe</Label>
+
+                <form onSubmit={submit} className="space-y-3">
+                    <div className="space-y-1">
+                        <Label
+                            htmlFor="typeName"
+                            className="text-sm font-medium"
+                        >
+                            Nama Tipe
+                        </Label>
                         <Input
                             id="typeName"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
-                            className="mt-1"
+                            placeholder="Contoh: Makanan, Minuman"
+                            className="h-9"
+                            autoFocus
                         />
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.name} className="text-xs" />
                     </div>
-                    <div>
-                        <Label htmlFor="typeCode">Kode (Opsional)</Label>
+
+                    <div className="space-y-1">
+                        <Label
+                            htmlFor="typeCode"
+                            className="text-sm font-medium"
+                        >
+                            Kode{" "}
+                            <span className="text-xs text-muted-foreground">
+                                (opsional)
+                            </span>
+                        </Label>
                         <Input
                             id="typeCode"
                             value={data.code}
                             onChange={(e) => setData("code", e.target.value)}
-                            className="mt-1"
+                            placeholder="Contoh: MKN, MNM"
+                            className="h-9"
                         />
-                        <InputError message={errors.code} className="mt-2" />
+                        <InputError message={errors.code} className="text-xs" />
                     </div>
+
                     {productTypes.length > 0 && (
-                        <Alert>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle>Tipe yang Sudah Ada</AlertTitle>
-                            <AlertDescription className="flex flex-wrap gap-2 pt-2">
-                                {productTypes.map((type) => (
-                                    <Badge key={type.id} variant="secondary">
+                        <div className="bg-muted/50 p-3 rounded-md space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Info className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs font-medium text-muted-foreground">
+                                    Tipe yang sudah ada ({productTypes.length})
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+                                {productTypes.slice(0, 8).map((type) => (
+                                    <Badge
+                                        key={type.id}
+                                        variant="secondary"
+                                        className="text-xs px-2 py-0.5 h-6"
+                                    >
                                         {type.name}
                                     </Badge>
                                 ))}
-                            </AlertDescription>
-                        </Alert>
+                                {productTypes.length > 8 && (
+                                    <Badge
+                                        variant="outline"
+                                        className="text-xs px-2 py-0.5 h-6"
+                                    >
+                                        +{productTypes.length - 8} lainnya
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
                     )}
-                    <DialogFooter>
+
+                    <DialogFooter className="gap-2 pt-2">
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-9"
+                            >
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing}>Simpan</Button>
+                        <Button
+                            disabled={processing || !isDirty}
+                            size="sm"
+                            className="h-9"
+                        >
+                            {processing ? "Menyimpan..." : "Simpan"}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -174,14 +215,6 @@ const sortOptions = [
     { value: "price_asc", label: "Harga Terendah" },
 ];
 
-const formatDate = (isoString) => {
-    return new Date(isoString).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
-};
-
 export default function Index({
     auth,
     products,
@@ -189,37 +222,12 @@ export default function Index({
     productTypes,
     filters = {},
 }) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [supplier, setSupplier] = useState(filters.supplier_id || "all");
-    const [sort, setSort] = useState(filters.sort || "newest");
-    const [debouncedSearch] = useDebounce(search, 500);
+    const { params, setFilter } = useIndexPageFilters(
+        "products.index",
+        filters
+    );
     const [confirmingProductDeletion, setConfirmingProductDeletion] =
         useState(null);
-    const isInitialMount = useRef(true);
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-
-        const params = {
-            search: debouncedSearch || undefined,
-            supplier_id: supplier === "all" ? undefined : supplier,
-            sort: sort,
-        };
-        router.get(route("products.index"), params, {
-            preserveState: true,
-            replace: true,
-        });
-    }, [debouncedSearch, supplier, sort]);
-
-    const formatCurrency = (amount) =>
-        new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-        }).format(amount);
 
     const deleteProduct = () => {
         router.delete(route("products.destroy", confirmingProductDeletion), {
@@ -317,11 +325,18 @@ export default function Index({
                         <Input
                             type="search"
                             placeholder="Cari nama atau sku..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
-                        <Select value={supplier} onValueChange={setSupplier}>
+                        <Select
+                            value={params.supplier_id || "all"}
+                            onValueChange={(value) =>
+                                setFilter("supplier_id", value)
+                            }
+                        >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Supplier" />
                             </SelectTrigger>
@@ -339,7 +354,10 @@ export default function Index({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={sort} onValueChange={setSort}>
+                        <Select
+                            value={params.sort || "newest"}
+                            onValueChange={(value) => setFilter("sort", value)}
+                        >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Urutkan" />
                             </SelectTrigger>
@@ -455,29 +473,13 @@ export default function Index({
                 )}
             </div>
 
-            <AlertDialog
+            <DeleteConfirmationDialog
                 open={confirmingProductDeletion !== null}
                 onOpenChange={() => setConfirmingProductDeletion(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Produk ini akan
-                            dihapus secara permanen.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteProduct}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            Hapus Produk
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={deleteProduct}
+                description="Tindakan ini tidak dapat dibatalkan. Produk ini akan dihapus secara permanen."
+                confirmText="Hapus Produk"
+            />
         </IndexPageLayout>
     );
 }

@@ -1,6 +1,4 @@
-import { useEffect, useState, useRef } from "react";
-import { router } from "@inertiajs/react";
-import { useDebounce } from "use-debounce";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import {
     Table,
@@ -21,6 +19,7 @@ import {
 import { Input } from "@/Components/ui/input";
 import Pagination from "@/Components/Pagination";
 import { Package, Warehouse, Plus } from "lucide-react";
+import { formatRelativeTime } from "@/lib/utils";
 
 const TABLE_COLUMNS = [
     {
@@ -53,20 +52,6 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-const formatRelativeTime = (isoString) => {
-    const date = new Date(isoString);
-    const now = new Date();
-    const seconds = Math.round((now - date) / 1000);
-    const minutes = Math.round(seconds / 60);
-    const hours = Math.round(minutes / 60);
-    const days = Math.round(hours / 24);
-
-    if (seconds < 60) return `${seconds} detik lalu`;
-    if (minutes < 60) return `${minutes} menit lalu`;
-    if (hours < 24) return `${hours} jam lalu`;
-    return `${days} hari lalu`;
-};
-
 export default function Index({
     auth,
     inventories,
@@ -74,32 +59,7 @@ export default function Index({
     productTypes = [],
     filters = {},
 }) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [location, setLocation] = useState(filters.location_id || "all");
-    const [type, setType] = useState(filters.type_id || "all");
-    const [sort, setSort] = useState(filters.sort || "name_asc");
-    const [debouncedSearch] = useDebounce(search, 500);
-    const isInitialMount = useRef(true);
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-
-        const params = {
-            search: debouncedSearch || undefined,
-            location_id: location === "all" ? undefined : location,
-            type_id: type === "all" ? undefined : type,
-            sort: sort,
-        };
-
-        router.get(route("stock.index"), params, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
-    }, [debouncedSearch, location, type, sort]);
+    const { params, setFilter } = useIndexPageFilters("stock.index", filters);
 
     const renderLocationIcon = (locType) => {
         if (locType === "warehouse") {
@@ -157,12 +117,19 @@ export default function Index({
                         <Input
                             type="search"
                             placeholder="Cari nama atau sku..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full sm:flex-1 min-w-[180px]"
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
+                            className="w-full sm:w-auto sm:flex-grow"
                         />
-                        <Select value={location} onValueChange={setLocation}>
-                            <SelectTrigger className="w-full sm:flex-1 min-w-[160px]">
+                        <Select
+                            value={params.location_id || "all"}
+                            onValueChange={(value) =>
+                                setFilter("location_id", value)
+                            }
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Lokasi" />
                             </SelectTrigger>
                             <SelectContent>
@@ -179,8 +146,13 @@ export default function Index({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={type} onValueChange={setType}>
-                            <SelectTrigger className="w-full sm:flex-1 min-w-[160px]">
+                        <Select
+                            value={params.type_id || "all"}
+                            onValueChange={(value) =>
+                                setFilter("type_id", value)
+                            }
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Tipe" />
                             </SelectTrigger>
                             <SelectContent>
@@ -195,8 +167,11 @@ export default function Index({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={sort} onValueChange={setSort}>
-                            <SelectTrigger className="w-full sm:flex-1 min-w-[160px]">
+                        <Select
+                            value={params.sort || "name_asc"}
+                            onValueChange={(value) => setFilter("sort", value)}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Urutkan" />
                             </SelectTrigger>
                             <SelectContent>

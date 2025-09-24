@@ -1,17 +1,8 @@
 import { Link, router } from "@inertiajs/react";
-import { useState, useEffect } from "react";
-import { useDebounce } from "use-debounce";
+import { useState } from "react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/Components/ui/alert-dialog";
+import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -111,30 +102,12 @@ const sortOptions = [
 ];
 
 export default function Index({ auth, users, roles, filters = {} }) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [sort, setSort] = useState(filters.sort || "name_asc");
-    const [role, setRole] = useState(filters.role || "all");
-    const [debouncedSearch] = useDebounce(search, 500);
+    const { params, setFilter } = useIndexPageFilters(
+        "users.index",
+        filters,
+        "name_asc"
+    );
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
-
-    useEffect(() => {
-        if (debouncedSearch !== (filters.search || "")) {
-            handleFilterChange({ search: debouncedSearch });
-        }
-    }, [debouncedSearch]);
-
-    const handleFilterChange = (newFilter) => {
-        const currentParams = {
-            search: search || undefined,
-            sort: sort,
-            role: role === "all" ? undefined : role,
-            ...newFilter,
-        };
-        router.get(route("users.index"), currentParams, {
-            preserveState: true,
-            replace: true,
-        });
-    };
 
     const deleteUser = () => {
         router.delete(route("users.destroy", confirmingUserDeletion), {
@@ -197,16 +170,15 @@ export default function Index({ auth, users, roles, filters = {} }) {
                         <Input
                             type="search"
                             placeholder="Cari nama atau email..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
                         <Select
-                            value={role}
-                            onValueChange={(value) => {
-                                setRole(value);
-                                handleFilterChange({ role: value });
-                            }}
+                            value={params.role || "all"}
+                            onValueChange={(value) => setFilter("role", value)}
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Jabatan" />
@@ -223,11 +195,8 @@ export default function Index({ auth, users, roles, filters = {} }) {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={sort}
-                            onValueChange={(value) => {
-                                setSort(value);
-                                handleFilterChange({ sort: value });
-                            }}
+                            value={params.sort || "name_asc"}
+                            onValueChange={(value) => setFilter("sort", value)}
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Urutkan" />
@@ -304,34 +273,19 @@ export default function Index({ auth, users, roles, filters = {} }) {
                         </TableBody>
                     </Table>
                 </div>
+
                 {users.data.length > 0 && (
                     <Pagination links={users.meta.links} />
                 )}
             </div>
 
-            <AlertDialog
+            <DeleteConfirmationDialog
                 open={confirmingUserDeletion !== null}
-                onOpenChange={() => setConfirmingUserDeletion(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan
-                            menghapus akun pengguna secara permanen dari sistem.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteUser}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            Hapus Pengguna
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                 onOpenChange={() => setConfirmingUserDeletion(null)}
+                onConfirm={deleteUser}
+                confirmText="Hapus Pengguna"
+                description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus akun pengguna secara permanen dari sistem."
+            />
         </IndexPageLayout>
     );
 }

@@ -1,17 +1,8 @@
 import { Link, router } from "@inertiajs/react";
-import { useState, useEffect, useRef } from "react";
-import { useDebounce } from "use-debounce";
+import { useState } from "react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/Components/ui/alert-dialog";
+import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -55,32 +46,9 @@ const getAlignmentClass = (align) => {
     return alignmentMap[align] || "text-left";
 };
 
-export default function Index({
-    auth,
-    types = { data: [], meta: { links: [] } },
-    filters = {},
-    groups = [],
-}) {
+export default function Index({ auth, types, filters = {}, groups = [] }) {
+    const { params, setFilter } = useIndexPageFilters("types.index", filters);
     const [confirmingTypeDeletion, setConfirmingTypeDeletion] = useState(null);
-    const [search, setSearch] = useState(filters.search || "");
-    const [group, setGroup] = useState(filters.group || "all");
-    const [debouncedSearch] = useDebounce(search, 500);
-    const isInitialMount = useRef(true);
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-        router.get(
-            route("types.index"),
-            {
-                search: debouncedSearch || undefined,
-                group: group === "all" ? undefined : group,
-            },
-            { preserveState: true, replace: true }
-        );
-    }, [debouncedSearch, group]);
 
     const deleteType = () => {
         router.delete(route("types.destroy", confirmingTypeDeletion), {
@@ -146,11 +114,16 @@ export default function Index({
                         <Input
                             type="search"
                             placeholder="Cari nama atau kode..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
-                        <Select value={group} onValueChange={setGroup}>
+                        <Select
+                            value={params.group || "all"}
+                            onValueChange={(value) => setFilter("group", value)}
+                        >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Grup" />
                             </SelectTrigger>
@@ -230,29 +203,13 @@ export default function Index({
                 )}
             </div>
 
-            <AlertDialog
+            <DeleteConfirmationDialog
                 open={confirmingTypeDeletion !== null}
-                onOpenChange={() => setConfirmingTypeDeletion(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Menghapus tipe
-                            dapat mempengaruhi data lain.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteType}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            Hapus Tipe
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                 onOpenChange={() => setConfirmingTypeDeletion(null)}
+                onConfirm={deleteType}
+                confirmText="Hapus Tipe"
+                description="Tindakan ini tidak dapat dibatalkan. Menghapus tipe dapat mempengaruhi data lain."
+            />
         </IndexPageLayout>
     );
 }
