@@ -34,3 +34,11 @@ export function formatRelativeTime(isoString) {
     if (hours < 24) return `${hours} jam lalu`;
     return `${days} hari lalu`;
 }
+
+export function formatGroupName(groupName) {
+    if (!groupName) return "";
+    return groupName
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}

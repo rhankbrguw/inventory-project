@@ -1,23 +1,21 @@
-import { Link, router } from "@inertiajs/react";
+import { router } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import { typeColumns } from "@/Constants/tableColumns.jsx";
+import { formatGroupName } from "@/lib/utils";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
+import DataTable from "@/Components/DataTable";
+import MobileCardList from "@/Components/MobileCardList";
+import TypeMobileCard from "./Partials/TypeMobileCard";
+import Pagination from "@/Components/Pagination";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import { Card, CardContent } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import {
@@ -28,23 +26,11 @@ import {
     SelectValue,
 } from "@/Components/ui/select";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
-import Pagination from "@/Components/Pagination";
 
-const TABLE_COLUMNS = [
-    { key: "group", label: "Grup", align: "center", className: "font-medium" },
-    { key: "name", label: "Nama", align: "center" },
-    { key: "code", label: "Kode", align: "center", className: "font-mono" },
-    { key: "actions", label: "Aksi", align: "center" },
+const sortOptions = [
+    { value: "name_asc", label: "Nama (A-Z)" },
+    { value: "name_desc", label: "Nama (Z-A)" },
 ];
-
-const getAlignmentClass = (align) => {
-    const alignmentMap = {
-        left: "text-left",
-        center: "text-center",
-        right: "text-right",
-    };
-    return alignmentMap[align] || "text-left";
-};
 
 export default function Index({ auth, types, filters = {}, groups = [] }) {
     const { params, setFilter } = useIndexPageFilters("types.index", filters);
@@ -57,12 +43,6 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
         });
     };
 
-    const formatGroupName = (groupName) =>
-        groupName
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-
     const renderActionDropdown = (type) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -71,11 +51,12 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <Link href={route("types.edit", type.id)}>
-                    <DropdownMenuItem className="cursor-pointer">
-                        <Edit className="w-4 h-4 mr-2" /> Edit
-                    </DropdownMenuItem>
-                </Link>
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => router.get(route("types.edit", type.id))}
+                >
+                    <Edit className="w-4 h-4 mr-2" /> Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem
                     onClick={() => setConfirmingTypeDeletion(type.id)}
                     className="text-destructive focus:text-destructive cursor-pointer"
@@ -85,21 +66,6 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
             </DropdownMenuContent>
         </DropdownMenu>
     );
-
-    const renderCellContent = (column, type) => {
-        switch (column.key) {
-            case "group":
-                return formatGroupName(type.group);
-            case "name":
-                return type.name;
-            case "code":
-                return type.code || "-";
-            case "actions":
-                return renderActionDropdown(type);
-            default:
-                return "";
-        }
-    };
 
     return (
         <IndexPageLayout
@@ -139,63 +105,44 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Select
+                            value={params.sort || "name_asc"}
+                            onValueChange={(value) => setFilter("sort", value)}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Urutkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </CardContent>
                 </Card>
 
-                <div className="md:hidden space-y-4">
-                    {types.data.map((type) => (
-                        <Card key={type.id}>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    {type.name}
-                                </CardTitle>
-                                {renderActionDropdown(type)}
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-xs text-muted-foreground">
-                                    {formatGroupName(type.group)}
-                                </p>
-                                <div className="mt-2">
-                                    <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                                        {type.code || "NO CODE"}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <MobileCardList
+                    data={types.data}
+                    renderItem={(type) => (
+                        <TypeMobileCard
+                            key={type.id}
+                            type={type}
+                            renderActionDropdown={renderActionDropdown}
+                        />
+                    )}
+                />
 
                 <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {TABLE_COLUMNS.map((col) => (
-                                    <TableHead
-                                        key={col.key}
-                                        className={getAlignmentClass(col.align)}
-                                    >
-                                        {col.label}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {types.data.map((type) => (
-                                <TableRow key={type.id}>
-                                    {TABLE_COLUMNS.map((col) => (
-                                        <TableCell
-                                            key={col.key}
-                                            className={`${getAlignmentClass(
-                                                col.align
-                                            )} ${col.className || ""}`}
-                                        >
-                                            {renderCellContent(col, type)}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <DataTable
+                        columns={typeColumns}
+                        data={types.data}
+                        actions={renderActionDropdown}
+                    />
                 </div>
 
                 {types.data.length > 0 && (
@@ -205,7 +152,7 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
 
             <DeleteConfirmationDialog
                 open={confirmingTypeDeletion !== null}
-                 onOpenChange={() => setConfirmingTypeDeletion(null)}
+                onOpenChange={() => setConfirmingTypeDeletion(null)}
                 onConfirm={deleteType}
                 confirmText="Hapus Tipe"
                 description="Tindakan ini tidak dapat dibatalkan. Menghapus tipe dapat mempengaruhi data lain."

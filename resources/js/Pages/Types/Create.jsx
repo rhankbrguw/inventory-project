@@ -1,9 +1,8 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
+import FormField from "@/Components/FormField";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { Button } from "@/Components/ui/button";
-import InputError from "@/Components/InputError";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import { Badge } from "@/Components/ui/badge";
 import { Info } from "lucide-react";
@@ -50,31 +49,32 @@ export default function Create({ auth, availableGroups, allTypes }) {
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <Label htmlFor="name">Nama Tipe</Label>
+                            <FormField
+                                label="Nama Tipe"
+                                htmlFor="name"
+                                error={errors.name}
+                            >
                                 <Input
                                     id="name"
                                     value={data.name}
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    className="mt-1"
                                     placeholder="Contoh: Bahan Baku"
                                 />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="group">Grup Tipe</Label>
+                            </FormField>
+                            <FormField
+                                label="Grup Tipe"
+                                htmlFor="group"
+                                error={errors.group}
+                            >
                                 <Select
                                     value={data.group}
                                     onValueChange={(value) =>
                                         setData("group", value)
                                     }
                                 >
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Pilih grup..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -90,11 +90,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                         )}
                                     </SelectContent>
                                 </Select>
-                                <InputError
-                                    message={errors.group}
-                                    className="mt-2"
-                                />
-                            </div>
+                            </FormField>
                         </div>
 
                         {data.group && allTypes[data.group] && (
@@ -116,22 +112,20 @@ export default function Create({ auth, availableGroups, allTypes }) {
                             </Alert>
                         )}
 
-                        <div>
-                            <Label htmlFor="code">Kode (Opsional)</Label>
+                        <FormField
+                            label="Kode (Opsional)"
+                            htmlFor="code"
+                            error={errors.code}
+                        >
                             <Input
                                 id="code"
                                 value={data.code}
                                 onChange={(e) =>
                                     setData("code", e.target.value)
                                 }
-                                className="mt-1"
                                 placeholder="Contoh: BB"
                             />
-                            <InputError
-                                message={errors.code}
-                                className="mt-2"
-                            />
-                        </div>
+                        </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
                             <Link href={route("types.index")}>

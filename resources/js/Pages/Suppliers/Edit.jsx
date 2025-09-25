@@ -1,26 +1,21 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
+import FormField from "@/Components/FormField";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { Textarea } from "@/Components/ui/textarea";
 import { Button } from "@/Components/ui/button";
-import InputError from "@/Components/InputError";
 import { InputWithPrefix } from "@/Components/InputWithPrefix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-
-const getLocalPhoneNumber = (phone) => {
-    if (phone && phone.startsWith("+62")) {
-        return phone.substring(3);
-    }
-    return phone || "";
-};
 
 export default function Edit({ auth, supplier }) {
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: supplier.data.name,
         contact_person: supplier.data.contact_person || "",
         email: supplier.data.email || "",
-        phone: getLocalPhoneNumber(supplier.data.phone),
+        phone:
+            supplier.data.phone && supplier.data.phone.startsWith("+62")
+                ? supplier.data.phone.substring(3)
+                : supplier.data.phone || "",
         address: supplier.data.address || "",
         notes: supplier.data.notes || "",
     });
@@ -28,11 +23,6 @@ export default function Edit({ auth, supplier }) {
     const submit = (e) => {
         e.preventDefault();
         patch(route("suppliers.update", supplier.data.id));
-    };
-
-    const handlePhoneChange = (e) => {
-        const rawValue = e.target.value.replace(/\D/g, "");
-        setData("phone", rawValue);
     };
 
     return (
@@ -48,29 +38,26 @@ export default function Edit({ auth, supplier }) {
                 <CardContent>
                     <form onSubmit={submit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="name">Nama Supplier</Label>
+                            <FormField
+                                label="Nama Supplier"
+                                htmlFor="name"
+                                error={errors.name}
+                            >
                                 <Input
                                     id="name"
-                                    name="name"
                                     value={data.name}
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="contact_person">
-                                    Narahubung
-                                </Label>
+                            </FormField>
+                            <FormField
+                                label="Narahubung"
+                                htmlFor="contact_person"
+                                error={errors.contact_person}
+                            >
                                 <Input
                                     id="contact_person"
-                                    name="contact_person"
                                     value={data.contact_person}
                                     onChange={(e) =>
                                         setData(
@@ -78,81 +65,69 @@ export default function Edit({ auth, supplier }) {
                                             e.target.value
                                         )
                                     }
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.contact_person}
-                                    className="mt-1"
-                                />
-                            </div>
+                            </FormField>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="email">Email</Label>
+                            <FormField
+                                label="Email"
+                                htmlFor="email"
+                                error={errors.email}
+                            >
                                 <Input
                                     id="email"
-                                    name="email"
                                     type="email"
                                     value={data.email}
                                     onChange={(e) =>
                                         setData("email", e.target.value)
                                     }
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.email}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="phone">Telepon</Label>
+                            </FormField>
+                            <FormField
+                                label="Telepon"
+                                htmlFor="phone"
+                                error={errors.phone}
+                            >
                                 <InputWithPrefix
                                     prefix="+62"
                                     id="phone"
-                                    name="phone"
                                     value={data.phone}
-                                    onChange={handlePhoneChange}
+                                    onChange={(e) =>
+                                        setData(
+                                            "phone",
+                                            e.target.value.replace(/\D/g, "")
+                                        )
+                                    }
                                     placeholder="81234567890"
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.phone}
-                                    className="mt-1"
-                                />
-                            </div>
+                            </FormField>
                         </div>
-                        <div>
-                            <Label htmlFor="address">Alamat</Label>
+                        <FormField
+                            label="Alamat"
+                            htmlFor="address"
+                            error={errors.address}
+                        >
                             <Textarea
                                 id="address"
-                                name="address"
                                 value={data.address}
                                 onChange={(e) =>
                                     setData("address", e.target.value)
                                 }
-                                className="mt-1"
                             />
-                            <InputError
-                                message={errors.address}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="notes">Catatan (Opsional)</Label>
+                        </FormField>
+                        <FormField
+                            label="Catatan (Opsional)"
+                            htmlFor="notes"
+                            error={errors.notes}
+                        >
                             <Textarea
                                 id="notes"
-                                name="notes"
                                 value={data.notes}
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
-                                className="mt-1"
                             />
-                            <InputError
-                                message={errors.notes}
-                                className="mt-1"
-                            />
-                        </div>
+                        </FormField>
                         <div className="flex items-center justify-end gap-4 pt-2">
                             <Link href={route("suppliers.index")}>
                                 <Button type="button" variant="outline">
