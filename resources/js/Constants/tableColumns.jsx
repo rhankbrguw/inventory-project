@@ -6,44 +6,88 @@ import {
     formatGroupName,
 } from "@/lib/utils";
 import RoleBadge from "@/Components/RoleBadge";
-
-const renderProductName = (item) => (
-    <div>
-        <p className="font-medium">{item.product.name}</p>
-        <p className="text-xs text-muted-foreground font-mono">
-            {item.product.sku}
-        </p>
-    </div>
-);
+import { Package, Warehouse } from "lucide-react";
 
 export const productColumns = [
-    { accessorKey: "image_url", header: "Gambar" },
-    { accessorKey: "name", header: "Nama Produk" },
-    { accessorKey: "sku", header: "SKU" },
-    { accessorKey: "type.name", header: "Tipe" },
+    {
+        accessorKey: "image_url",
+        header: "Gambar",
+        cell: ({ row }) => (
+            <div className="flex justify-center">
+                {row.image_url ? (
+                    <img
+                        src={row.image_url}
+                        alt={row.name}
+                        className="h-12 w-12 rounded-md object-cover"
+                    />
+                ) : (
+                    <div className="h-12 w-12 rounded-md bg-secondary flex items-center justify-center">
+                        <Package className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                )}
+            </div>
+        ),
+        className: "text-center",
+    },
+    {
+        accessorKey: "name",
+        header: "Nama Produk",
+        className: "text-center font-medium",
+    },
+    { accessorKey: "sku", header: "SKU", className: "text-center font-mono" },
+    {
+        accessorKey: "type",
+        header: "Tipe",
+        cell: ({ row }) => row.type?.name || "-",
+        className: "text-center",
+    },
     {
         accessorKey: "created_at",
         header: "Tgl. Dibuat",
         cell: ({ row }) => formatDate(row.created_at),
+        className: "text-center",
     },
     {
         accessorKey: "price",
         header: "Harga",
         cell: ({ row }) => formatCurrency(row.price),
+        className: "text-center font-semibold",
     },
 ];
 
 export const stockColumns = [
     {
-        accessorKey: "product",
+        accessorKey: "product.name",
         header: "Nama Item",
-        cell: ({ row }) => renderProductName(row),
+        cell: ({ row }) => row.product.name,
+        className: "text-center font-medium",
     },
-    { accessorKey: "location.name", header: "Lokasi" },
+    {
+        accessorKey: "product.sku",
+        header: "SKU",
+        cell: ({ row }) => row.product.sku,
+        className: "text-center font-mono",
+    },
+    {
+        accessorKey: "location.name",
+        header: "Lokasi",
+        cell: ({ row }) => (
+            <div className="flex items-center justify-center">
+                {row.location.type === "warehouse" ? (
+                    <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />
+                ) : (
+                    <Package className="w-4 h-4 mr-2 text-muted-foreground" />
+                )}
+                {row.location.name}
+            </div>
+        ),
+        className: "text-center",
+    },
     {
         accessorKey: "updated_at",
         header: "Aktivitas Terakhir",
         cell: ({ row }) => formatRelativeTime(row.updated_at),
+        className: "text-center",
     },
     {
         accessorKey: "quantity",
@@ -52,6 +96,7 @@ export const stockColumns = [
             `${parseFloat(row.quantity).toLocaleString("id-ID")} ${
                 row.product.unit
             }`,
+        className: "text-center font-semibold",
     },
 ];
 

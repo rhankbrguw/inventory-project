@@ -1,14 +1,11 @@
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import { stockColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import DataTable from "@/Components/DataTable";
+import MobileCardList from "@/Components/MobileCardList";
+import StockMobileCard from "./Partials/StockMobileCard";
+import Pagination from "@/Components/Pagination";
+import { Card, CardContent } from "@/Components/ui/card";
 import {
     Select,
     SelectContent,
@@ -17,22 +14,7 @@ import {
     SelectValue,
 } from "@/Components/ui/select";
 import { Input } from "@/Components/ui/input";
-import Pagination from "@/Components/Pagination";
-import { Package, Warehouse, Plus } from "lucide-react";
-import { formatRelativeTime } from "@/lib/utils";
-
-const TABLE_COLUMNS = [
-    {
-        key: "product_name",
-        label: "Nama Item",
-        align: "center",
-        className: "font-medium",
-    },
-    { key: "sku", label: "SKU", align: "center", className: "font-mono" },
-    { key: "location_name", label: "Lokasi", align: "center" },
-    { key: "last_moved", label: "Aktivitas Terakhir", align: "center" },
-    { key: "quantity", label: "Kuantitas", align: "center" },
-];
+import { Package, Warehouse, Wrench } from "lucide-react";
 
 const sortOptions = [
     { value: "name_asc", label: "Nama (A-Z)" },
@@ -43,15 +25,6 @@ const sortOptions = [
     { value: "last_moved_asc", label: "Aktivitas Terlama" },
 ];
 
-const getAlignmentClass = (align) => {
-    const alignmentMap = {
-        left: "text-left",
-        center: "text-center",
-        right: "text-right",
-    };
-    return alignmentMap[align] || "text-left";
-};
-
 export default function Index({
     auth,
     inventories,
@@ -61,55 +34,13 @@ export default function Index({
 }) {
     const { params, setFilter } = useIndexPageFilters("stock.index", filters);
 
-    const renderLocationIcon = (locType) => {
-        if (locType === "warehouse") {
-            return <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />;
-        }
-        return <Package className="w-4 h-4 mr-2 text-muted-foreground" />;
-    };
-
-    const renderCellContent = (column, item) => {
-        switch (column.key) {
-            case "product_name":
-                return item.product.name;
-            case "sku":
-                return item.product.sku;
-            case "location_name":
-                return (
-                    <div className="flex items-center justify-center">
-                        {renderLocationIcon(item.location.type)}
-                        {item.location.name}
-                    </div>
-                );
-            case "last_moved":
-                return (
-                    <div className="text-xs text-muted-foreground">
-                        {formatRelativeTime(item.updated_at)}
-                    </div>
-                );
-            case "quantity":
-                return (
-                    <>
-                        <span className="font-semibold text-lg">
-                            {parseFloat(item.quantity).toLocaleString("id-ID")}
-                        </span>
-                        <span className="ml-2 text-muted-foreground">
-                            {item.product.unit}
-                        </span>
-                    </>
-                );
-            default:
-                return "";
-        }
-    };
-
     return (
         <IndexPageLayout
             auth={auth}
             title="Manajemen Stok"
             createRoute="stock.adjust.form"
-            buttonLabel="Input Stok Masuk"
-            icon={Plus}
+            buttonLabel="Penyesuaian Stok"
+            icon={Wrench}
         >
             <div className="space-y-4">
                 <Card>
@@ -188,71 +119,15 @@ export default function Index({
                     </CardContent>
                 </Card>
 
-                <div className="md:hidden space-y-4">
-                    {inventories.data.map((item) => (
-                        <Card key={item.id}>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    {item.product.name}
-                                </CardTitle>
-                                <p className="text-xs text-muted-foreground font-mono">
-                                    {item.product.sku}
-                                </p>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center text-sm text-muted-foreground">
-                                    {renderLocationIcon(item.location.type)}
-                                    {item.location.name}
-                                </div>
-                                <div className="text-lg font-bold mt-2">
-                                    {parseFloat(item.quantity).toLocaleString(
-                                        "id-ID"
-                                    )}
-                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                        {item.product.unit}
-                                    </span>
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-2">
-                                    Aktivitas Terakhir:{" "}
-                                    {formatRelativeTime(item.updated_at)}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <MobileCardList
+                    data={inventories.data}
+                    renderItem={(item) => (
+                        <StockMobileCard key={item.id} item={item} />
+                    )}
+                />
 
-                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {TABLE_COLUMNS.map((col) => (
-                                    <TableHead
-                                        key={col.key}
-                                        className={getAlignmentClass(col.align)}
-                                    >
-                                        {col.label}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {inventories.data.map((item) => (
-                                <TableRow key={item.id}>
-                                    {TABLE_COLUMNS.map((col) => (
-                                        <TableCell
-                                            key={col.key}
-                                            className={
-                                                getAlignmentClass(col.align) +
-                                                ` ${col.className || ""}`
-                                            }
-                                        >
-                                            {renderCellContent(col, item)}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <div className="hidden md:block">
+                    <DataTable columns={stockColumns} data={inventories.data} />
                 </div>
 
                 {inventories.data.length > 0 && (

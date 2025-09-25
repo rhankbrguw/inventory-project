@@ -1,11 +1,16 @@
-import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import FormField from "@/Components/FormField";
-import { Input } from "@/Components/ui/input";
-import { Button } from "@/Components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import { Badge } from "@/Components/ui/badge";
-import { Info } from "lucide-react";
+import { Button } from "@/Components/ui/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/Components/ui/card";
+import { Input } from "@/Components/ui/input";
 import {
     Select,
     SelectContent,
@@ -13,13 +18,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from "@/Components/ui/card";
+import { Link, useForm } from "@inertiajs/react";
+import { Info } from "lucide-react";
 
 export default function Edit({ auth, type, availableGroups, allTypes }) {
     const { data, setData, patch, processing, errors, isDirty } = useForm({

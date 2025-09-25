@@ -1,10 +1,9 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
+import FormField from "@/Components/FormField";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import { Textarea } from "@/Components/ui/textarea";
 import { Button } from "@/Components/ui/button";
-import InputError from "@/Components/InputError";
 import ProductCombobox from "@/Components/ProductCombobox";
 import {
     Select,
@@ -51,26 +50,31 @@ export default function Adjust({ auth, products, locations }) {
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <Label htmlFor="product_id">Produk</Label>
+                            <FormField
+                                label="Produk"
+                                htmlFor="product_id"
+                                error={errors.product_id}
+                            >
                                 <ProductCombobox
                                     products={products}
                                     value={data.product_id}
                                     onChange={(product) =>
                                         setData("product_id", product.id)
                                     }
-                                    error={errors.product_id}
                                 />
-                            </div>
-                            <div>
-                                <Label htmlFor="location_id">Lokasi</Label>
+                            </FormField>
+                            <FormField
+                                label="Lokasi"
+                                htmlFor="location_id"
+                                error={errors.location_id}
+                            >
                                 <Select
                                     value={data.location_id}
                                     onValueChange={(value) =>
                                         setData("location_id", value)
                                     }
                                 >
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Pilih lokasi..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -84,15 +88,14 @@ export default function Adjust({ auth, products, locations }) {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError
-                                    message={errors.location_id}
-                                    className="mt-2"
-                                />
-                            </div>
+                            </FormField>
                         </div>
 
-                        <div>
-                            <Label htmlFor="quantity">Jumlah Fisik Baru</Label>
+                        <FormField
+                            label="Jumlah Fisik Baru"
+                            htmlFor="quantity"
+                            error={errors.quantity}
+                        >
                             <Input
                                 id="quantity"
                                 type="number"
@@ -100,31 +103,24 @@ export default function Adjust({ auth, products, locations }) {
                                 onChange={(e) =>
                                     setData("quantity", e.target.value)
                                 }
-                                className="mt-1"
                                 placeholder="Masukkan jumlah stok fisik saat ini"
                             />
-                            <InputError
-                                message={errors.quantity}
-                                className="mt-2"
-                            />
-                        </div>
+                        </FormField>
 
-                        <div>
-                            <Label htmlFor="notes">Catatan Penyesuaian</Label>
+                        <FormField
+                            label="Catatan Penyesuaian"
+                            htmlFor="notes"
+                            error={errors.notes}
+                        >
                             <Textarea
                                 id="notes"
                                 value={data.notes}
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
-                                className="mt-1"
                                 placeholder="Contoh: Koreksi hasil stock opname 24 Sept 2025"
                             />
-                            <InputError
-                                message={errors.notes}
-                                className="mt-2"
-                            />
-                        </div>
+                        </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
                             <Link href={route("stock.index")}>
