@@ -7,6 +7,9 @@ export const useIndexPageFilters = (routeName, filters = {}) => {
     const [debouncedSearch] = useDebounce(params.search, 500);
     const isInitialMount = useRef(true);
 
+    const otherFilters = { ...params };
+    delete otherFilters.search;
+
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -30,7 +33,7 @@ export const useIndexPageFilters = (routeName, filters = {}) => {
             preserveState: true,
             replace: true,
         });
-    }, [debouncedSearch, params.sort, params.location_id, params.type_id, params.group, params.role]);
+    }, [debouncedSearch, JSON.stringify(otherFilters)]);
 
     const setFilter = (key, value) => {
         setParams((prevParams) => ({ ...prevParams, [key]: value }));

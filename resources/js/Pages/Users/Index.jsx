@@ -8,6 +8,7 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import UserMobileCard from "./Partials/UserMobileCard";
 import Pagination from "@/Components/Pagination";
+import RoleBadge from "@/Components/RoleBadge";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -49,7 +50,11 @@ export default function Index({ auth, users, roles, filters = {} }) {
     const renderActionDropdown = (user) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <MoreVertical className="w-4 h-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -131,19 +136,21 @@ export default function Index({ auth, users, roles, filters = {} }) {
                 <MobileCardList
                     data={users.data}
                     renderItem={(user) => (
-                        <UserMobileCard
-                            key={user.id}
-                            user={user}
-                            renderActionDropdown={renderActionDropdown}
-                        />
+                        <Link href={route("users.edit", user.id)} key={user.id}>
+                            <UserMobileCard
+                                user={user}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
                     )}
                 />
 
-                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
+                <div className="hidden md:block">
                     <DataTable
                         columns={userColumns}
                         data={users.data}
                         actions={renderActionDropdown}
+                        showRoute={"users.edit"}
                     />
                 </div>
 

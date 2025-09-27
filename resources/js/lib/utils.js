@@ -14,7 +14,11 @@ export function formatCurrency(amount) {
 }
 
 export function formatDate(isoString) {
-    return new Date(isoString).toLocaleDateString("id-ID", {
+    if (!isoString) return "-";
+    const date = new Date(isoString);
+    if (isNaN(date)) return "-";
+
+    return date.toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -41,4 +45,16 @@ export function formatGroupName(groupName) {
         .split("_")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
+}
+
+export function formatNumber(value) {
+    const numberValue = Number(value);
+    if (isNaN(numberValue)) {
+        return value;
+    }
+
+    const options = {
+        maximumFractionDigits: 3,
+    };
+    return numberValue.toLocaleString("id-ID", options);
 }

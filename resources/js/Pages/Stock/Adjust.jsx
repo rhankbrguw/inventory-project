@@ -1,4 +1,6 @@
 import { Link, useForm } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import FormField from "@/Components/FormField";
 import { Input } from "@/Components/ui/input";
@@ -19,6 +21,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/Components/ui/card";
+import { formatNumber } from "@/lib/utils";
 
 export default function Adjust({ auth, products, locations }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
@@ -28,6 +31,30 @@ export default function Adjust({ auth, products, locations }) {
         notes: "",
     });
 
+    const [currentStock, setCurrentStock] = useState(null);
+    const [isLoadingStock, setIsLoadingStock] = useState(false);
+
+    useEffect(() => {
+        if (data.product_id && data.location_id) {
+            setIsLoadingStock(true);
+            axios
+                .get(
+                    route("api.inventory.quantity", {
+                        product_id: data.product_id,
+                        location_id: data.location_id,
+                    })
+                )
+                .then((response) => {
+                    setCurrentStock(response.data.quantity);
+                })
+                .finally(() => {
+                    setIsLoadingStock(false);
+                });
+        } else {
+            setCurrentStock(null);
+        }
+    }, [data.product_id, data.location_id]);
+
     const submit = (e) => {
         e.preventDefault();
         post(route("stock.adjust"));
@@ -36,7 +63,7 @@ export default function Adjust({ auth, products, locations }) {
     return (
         <ContentPageLayout
             auth={auth}
-            title="Formulir Penyesuaian Stok"
+            title="Penyesuaian Stok"
             backRoute="stock.index"
         >
             <Card>
@@ -91,6 +118,30 @@ export default function Adjust({ auth, products, locations }) {
                             </FormField>
                         </div>
 
+                        {(isLoadingStock || currentStock !== null) && (
+                            <FormField
+                                label="Stok Sistem Saat Ini"
+                                htmlFor="current_stock"
+                            >
+                                <Input
+                                    id="current_stock"
+                                    readOnly
+                                    value={
+                                        isLoadingStock
+                                            ? "Memuat..."
+                                            : `${formatNumber(currentStock)} ${
+                                                  products.find(
+                                                      (p) =>
+                                                          p.id ===
+                                                          data.product_id
+                                                  )?.unit || ""
+                                              }`
+                                    }
+                                    className="bg-muted"
+                                />
+                            </FormField>
+                        )}
+
                         <FormField
                             label="Jumlah Fisik Baru"
                             htmlFor="quantity"
@@ -104,6 +155,7 @@ export default function Adjust({ auth, products, locations }) {
                                     setData("quantity", e.target.value)
                                 }
                                 placeholder="Masukkan jumlah stok fisik saat ini"
+                                disabled={currentStock === null}
                             />
                         </FormField>
 
@@ -119,6 +171,7 @@ export default function Adjust({ auth, products, locations }) {
                                     setData("notes", e.target.value)
                                 }
                                 placeholder="Contoh: Koreksi hasil stock opname 24 Sept 2025"
+                                disabled={currentStock === null}
                             />
                         </FormField>
 
@@ -128,7 +181,13 @@ export default function Adjust({ auth, products, locations }) {
                                     Batal
                                 </Button>
                             </Link>
-                            <Button disabled={processing || !isDirty}>
+                            <Button
+                                disabled={
+                                    processing ||
+                                    !isDirty ||
+                                    currentStock === null
+                                }
+                            >
                                 Simpan Penyesuaian
                             </Button>
                         </div>

@@ -1,4 +1,4 @@
-import { Link, router } from "@inertiajs/react";
+import { Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { productColumns } from "@/Constants/tableColumns.jsx";
@@ -34,9 +34,19 @@ const sortOptions = [
     { value: "price_asc", label: "Harga Terendah" },
 ];
 
-export default function Index({ auth, products, suppliers, productTypes, filters = {} }) {
-    const { params, setFilter } = useIndexPageFilters("products.index", filters);
-    const [confirmingProductDeletion, setConfirmingProductDeletion] = useState(null);
+export default function Index({
+    auth,
+    products,
+    suppliers,
+    productTypes,
+    filters = {},
+}) {
+    const { params, setFilter } = useIndexPageFilters(
+        "products.index",
+        filters
+    );
+    const [confirmingProductDeletion, setConfirmingProductDeletion] =
+        useState(null);
 
     const deleteProduct = () => {
         router.delete(route("products.destroy", confirmingProductDeletion), {
@@ -48,7 +58,11 @@ export default function Index({ auth, products, suppliers, productTypes, filters
     const renderActionDropdown = (product) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <MoreVertical className="w-4 h-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -81,7 +95,10 @@ export default function Index({ auth, products, suppliers, productTypes, filters
                     description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
                     existingTypes={productTypes}
                     trigger={
-                        <Button variant="outline" className="hidden sm:flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            className="hidden sm:flex items-center gap-2"
+                        >
                             <PlusCircle className="w-4 h-4" /> Tambah Tipe
                         </Button>
                     }
@@ -95,20 +112,29 @@ export default function Index({ auth, products, suppliers, productTypes, filters
                             type="search"
                             placeholder="Cari nama atau sku..."
                             value={params.search || ""}
-                            onChange={(e) => setFilter("search", e.target.value)}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
                         <Select
                             value={params.supplier_id || "all"}
-                            onValueChange={(value) => setFilter("supplier_id", value)}
+                            onValueChange={(value) =>
+                                setFilter("supplier_id", value)
+                            }
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Supplier" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Semua Supplier</SelectItem>
+                                <SelectItem value="all">
+                                    Semua Supplier
+                                </SelectItem>
                                 {suppliers.map((s) => (
-                                    <SelectItem key={s.id} value={s.id.toString()}>
+                                    <SelectItem
+                                        key={s.id}
+                                        value={s.id.toString()}
+                                    >
                                         {s.name}
                                     </SelectItem>
                                 ))}
@@ -123,7 +149,10 @@ export default function Index({ auth, products, suppliers, productTypes, filters
                             </SelectTrigger>
                             <SelectContent>
                                 {sortOptions.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>
+                                    <SelectItem
+                                        key={opt.value}
+                                        value={opt.value}
+                                    >
                                         {opt.label}
                                     </SelectItem>
                                 ))}
@@ -136,8 +165,12 @@ export default function Index({ auth, products, suppliers, productTypes, filters
                                 description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
                                 existingTypes={productTypes}
                                 trigger={
-                                    <Button variant="outline" className="w-full flex items-center gap-2">
-                                        <PlusCircle className="w-4 h-4" /> Tambah Tipe
+                                    <Button
+                                        variant="outline"
+                                        className="w-full flex items-center gap-2"
+                                    >
+                                        <PlusCircle className="w-4 h-4" />{" "}
+                                        Tambah Tipe
                                     </Button>
                                 }
                             />
@@ -147,7 +180,13 @@ export default function Index({ auth, products, suppliers, productTypes, filters
 
                 <MobileCardList
                     data={products.data}
-                    renderItem={(product) => <ProductMobileCard key={product.id} product={product} renderActionDropdown={renderActionDropdown} />}
+                    renderItem={(product) => (
+                        <ProductMobileCard
+                            key={product.id}
+                            product={product}
+                            renderActionDropdown={renderActionDropdown}
+                        />
+                    )}
                 />
 
                 <div className="hidden md:block">
@@ -159,7 +198,9 @@ export default function Index({ auth, products, suppliers, productTypes, filters
                     />
                 </div>
 
-                {products.data.length > 0 && <Pagination links={products.meta.links} />}
+                {products.data.length > 0 && (
+                    <Pagination links={products.meta.links} />
+                )}
             </div>
 
             <DeleteConfirmationDialog

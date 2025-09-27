@@ -1,3 +1,4 @@
+import { Link, router } from "@inertiajs/react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { stockColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
@@ -5,6 +6,7 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import StockMobileCard from "./Partials/StockMobileCard";
 import Pagination from "@/Components/Pagination";
+import ProductCombobox from "@/Components/ProductCombobox";
 import { Card, CardContent } from "@/Components/ui/card";
 import {
     Select,
@@ -13,8 +15,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/Components/ui/dropdown-menu";
 import { Input } from "@/Components/ui/input";
-import { Package, Warehouse, Wrench } from "lucide-react";
+import { Button } from "@/Components/ui/button";
+import { Wrench, Eye, MoreVertical } from "lucide-react";
 
 const sortOptions = [
     { value: "name_asc", label: "Nama (A-Z)" },
@@ -29,10 +38,33 @@ export default function Index({
     auth,
     inventories,
     locations = [],
+    products = [],
     productTypes = [],
     filters = {},
 }) {
     const { params, setFilter } = useIndexPageFilters("stock.index", filters);
+
+    const renderActionDropdown = (item) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MoreVertical className="w-4 h-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => router.get(route("stock.show", item.id))}
+                >
+                    <Eye className="w-4 h-4 mr-2" />Lihat
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     return (
         <IndexPageLayout
@@ -44,15 +76,23 @@ export default function Index({
         >
             <div className="space-y-4">
                 <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                    <CardContent className="flex flex-col md:flex-row md:items-center gap-2 pt-6">
                         <Input
                             type="search"
-                            placeholder="Cari nama atau sku..."
+                            placeholder="Cari..."
                             value={params.search || ""}
                             onChange={(e) =>
                                 setFilter("search", e.target.value)
                             }
-                            className="w-full sm:w-auto sm:flex-grow"
+                            className="w-full md:w-auto md:flex-grow"
+                        />
+                        <ProductCombobox
+                            products={products}
+                            value={params.product_id}
+                            onChange={(product) =>
+                                setFilter("product_id", product.id)
+                            }
+                            containerClassName="w-full md:w-[200px]"
                         />
                         <Select
                             value={params.location_id || "all"}
@@ -60,7 +100,7 @@ export default function Index({
                                 setFilter("location_id", value)
                             }
                         >
-                            <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectTrigger className="w-full md:w-[180px]">
                                 <SelectValue placeholder="Semua Lokasi" />
                             </SelectTrigger>
                             <SelectContent>
@@ -78,31 +118,10 @@ export default function Index({
                             </SelectContent>
                         </Select>
                         <Select
-                            value={params.type_id || "all"}
-                            onValueChange={(value) =>
-                                setFilter("type_id", value)
-                            }
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Semua Tipe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua Tipe</SelectItem>
-                                {productTypes.map((pType) => (
-                                    <SelectItem
-                                        key={pType.id}
-                                        value={pType.id.toString()}
-                                    >
-                                        {pType.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select
                             value={params.sort || "name_asc"}
                             onValueChange={(value) => setFilter("sort", value)}
                         >
-                            <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectTrigger className="w-full md:w-[180px]">
                                 <SelectValue placeholder="Urutkan" />
                             </SelectTrigger>
                             <SelectContent>
@@ -122,12 +141,23 @@ export default function Index({
                 <MobileCardList
                     data={inventories.data}
                     renderItem={(item) => (
-                        <StockMobileCard key={item.id} item={item} />
+                        <Link href={route("stock.show", item.id)} key={item.id}>
+                            <StockMobileCard
+                                item={item}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
                     )}
                 />
 
                 <div className="hidden md:block">
-                    <DataTable columns={stockColumns} data={inventories.data} />
+                    <DataTable
+                        columns={stockColumns}
+                        data={inventories.data}
+                        actions={renderActionDropdown}
+                        showRoute="stock.show"
+                        showRouteKey="id"
+                    />
                 </div>
 
                 {inventories.data.length > 0 && (

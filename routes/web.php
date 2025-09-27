@@ -56,6 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
       Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
       Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');
       Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+      Route::get('/stock/{inventory}', [StockController::class, 'show'])->name('stock.show');
+      Route::get('/api/inventory/quantity', [StockController::class, 'getQuantity'])->name('api.inventory.quantity');
    });
 });
 

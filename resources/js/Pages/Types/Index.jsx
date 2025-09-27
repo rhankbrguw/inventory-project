@@ -1,4 +1,4 @@
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { typeColumns } from "@/Constants/tableColumns.jsx";
@@ -46,7 +46,11 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
     const renderActionDropdown = (type) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <MoreVertical className="w-4 h-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -129,19 +133,21 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
                 <MobileCardList
                     data={types.data}
                     renderItem={(type) => (
-                        <TypeMobileCard
-                            key={type.id}
-                            type={type}
-                            renderActionDropdown={renderActionDropdown}
-                        />
+                        <Link href={route("types.edit", type.id)} key={type.id}>
+                            <TypeMobileCard
+                                type={type}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
                     )}
                 />
 
-                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
+                <div className="hidden md:block">
                     <DataTable
                         columns={typeColumns}
                         data={types.data}
                         actions={renderActionDropdown}
+                        showRoute={"types.edit"}
                     />
                 </div>
 

@@ -56,7 +56,10 @@ export default function DataTable({
                             </TableCell>
                         ))}
                         {actions && (
-                            <TableCell className="text-center">
+                            <TableCell
+                                className="text-center"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 {actions(row)}
                             </TableCell>
                         )}

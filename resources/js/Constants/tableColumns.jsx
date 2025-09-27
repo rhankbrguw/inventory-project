@@ -4,6 +4,7 @@ import {
     formatDate,
     formatRelativeTime,
     formatGroupName,
+    formatNumber,
 } from "@/lib/utils";
 import RoleBadge from "@/Components/RoleBadge";
 import { Package, Warehouse } from "lucide-react";
@@ -92,10 +93,7 @@ export const stockColumns = [
     {
         accessorKey: "quantity",
         header: "Kuantitas",
-        cell: ({ row }) =>
-            `${parseFloat(row.quantity).toLocaleString("id-ID")} ${
-                row.product.unit
-            }`,
+        cell: ({ row }) => `${formatNumber(row.quantity)} ${row.product.unit}`,
         className: "text-center font-semibold",
     },
 ];

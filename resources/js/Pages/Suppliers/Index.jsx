@@ -1,7 +1,7 @@
 import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
-import { supplierColumns } from "@/Constants/tableColumns";
+import { supplierColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import DataTable from "@/Components/DataTable";
@@ -50,7 +50,11 @@ export default function Index({ auth, suppliers, filters = {} }) {
     const renderActionDropdown = (supplier) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <MoreVertical className="w-4 h-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -113,19 +117,24 @@ export default function Index({ auth, suppliers, filters = {} }) {
                 <MobileCardList
                     data={suppliers.data}
                     renderItem={(supplier) => (
-                        <SupplierMobileCard
+                        <Link
+                            href={route("suppliers.edit", supplier.id)}
                             key={supplier.id}
-                            supplier={supplier}
-                            renderActionDropdown={renderActionDropdown}
-                        />
+                        >
+                            <SupplierMobileCard
+                                supplier={supplier}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
                     )}
                 />
 
-                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
+                <div className="hidden md:block">
                     <DataTable
                         columns={supplierColumns}
                         data={suppliers.data}
                         actions={renderActionDropdown}
+                        showRoute={"suppliers.edit"}
                     />
                 </div>
 
