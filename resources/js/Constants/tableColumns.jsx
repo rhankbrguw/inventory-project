@@ -99,25 +99,48 @@ export const stockColumns = [
 ];
 
 export const transactionColumns = [
-    { accessorKey: "reference_code", header: "Referensi" },
+    {
+        accessorKey: "reference_code",
+        header: "Referensi",
+        className: "text-center font-mono text-xs whitespace-nowrap",
+    },
     {
         accessorKey: "type",
         header: "Tipe",
-        cell: ({ row }) => <Badge variant="secondary">{row.type}</Badge>,
+        cell: ({ row }) => (
+            <div className="flex justify-center">
+                <Badge variant="secondary">{row.type}</Badge>
+            </div>
+        ),
+        className: "text-center whitespace-nowrap",
     },
-    { accessorKey: "location", header: "Lokasi" },
-    { accessorKey: "supplier", header: "Pihak Terkait" },
+    {
+        accessorKey: "location",
+        header: "Lokasi",
+        className: "text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "supplier",
+        header: "Pihak Terkait",
+        className: "text-center whitespace-nowrap",
+    },
     {
         accessorKey: "transaction_date",
         header: "Tanggal",
         cell: ({ row }) => formatDate(row.transaction_date),
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "total_cost",
         header: "Total",
         cell: ({ row }) => formatCurrency(row.total_cost),
+        className: "text-center font-semibold whitespace-nowrap",
     },
-    { accessorKey: "user", header: "PIC" },
+    {
+        accessorKey: "user",
+        header: "PIC",
+        className: "text-center whitespace-nowrap",
+    },
 ];
 
 export const supplierColumns = [

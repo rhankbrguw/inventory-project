@@ -19,18 +19,7 @@ import {
 } from "@/Components/ui/table";
 import { Badge } from "@/Components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
-
-const formatCurrency = (amount) =>
-    new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        minimumFractionDigits: 0,
-    }).format(amount);
-
-const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
-};
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function Show({ auth, purchase }) {
     const { data } = purchase;
@@ -40,12 +29,6 @@ export default function Show({ auth, purchase }) {
             auth={auth}
             title="Detail Transaksi"
             backRoute="transactions.index"
-            action={
-                <Button variant="outline" className="flex items-center gap-2">
-                    <Printer className="w-4 h-4" />
-                    <span className="hidden sm:inline">Cetak</span>
-                </Button>
-            }
         >
             <Card>
                 <CardHeader>
@@ -89,8 +72,15 @@ export default function Show({ auth, purchase }) {
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
                     <CardTitle>Rincian Item</CardTitle>
+                    <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        <Printer className="w-4 h-4" />
+                        <span className="hidden sm:inline">Cetak</span>
+                    </Button>
                 </CardHeader>
                 <CardContent>
                     <div className="md:hidden space-y-3">

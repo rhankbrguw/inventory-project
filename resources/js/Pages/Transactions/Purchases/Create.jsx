@@ -1,5 +1,7 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
+import FormField from "@/Components/FormField";
+import PurchaseItemManager from "./Partials/PurchaseItemManager";
 import {
     Card,
     CardContent,
@@ -7,7 +9,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/Components/ui/card";
-import { Label } from "@/Components/ui/label";
 import {
     Select,
     SelectContent,
@@ -17,56 +18,16 @@ import {
 } from "@/Components/ui/select";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
-import { PlusCircle, Trash2 } from "lucide-react";
-import InputError from "@/Components/InputError";
-import ProductCombobox from "@/Components/ProductCombobox";
 import { formatCurrency } from "@/lib/utils";
 
 export default function Create({ auth, locations, suppliers, products }) {
-    const { data, setData, post, processing, errors, isDirty  } = useForm({
+    const { data, setData, post, processing, errors, isDirty } = useForm({
         location_id: "",
         supplier_id: "",
         transaction_date: new Date().toISOString().slice(0, 10),
         notes: "",
         items: [{ product_id: "", quantity: 1, cost_per_unit: "" }],
     });
-
-    const handleItemChange = (index, field, value) => {
-        const updatedItems = [...data.items];
-        updatedItems[index][field] = value;
-        setData("items", updatedItems);
-    };
-
-    const handleProductSelect = (index, product) => {
-        const updatedItems = [...data.items];
-        updatedItems[index].product_id = product.id;
-        updatedItems[index].cost_per_unit = product.price || "";
-
-        const updatePayload = { items: updatedItems };
-
-        if (product.default_supplier_id) {
-            updatePayload.supplier_id = product.default_supplier_id.toString();
-        }
-
-        setData((data) => ({
-            ...data,
-            ...updatePayload,
-        }));
-    };
-
-    const addItem = () => {
-        setData("items", [
-            ...data.items,
-            { product_id: "", quantity: 1, cost_per_unit: "" },
-        ]);
-    };
-
-    const removeItem = (index) => {
-        setData(
-            "items",
-            data.items.filter((_, i) => i !== index)
-        );
-    };
 
     const calculateTotal = () => {
         return data.items.reduce((total, item) => {
@@ -86,117 +47,12 @@ export default function Create({ auth, locations, suppliers, products }) {
             backRoute="transactions.index"
         >
             <form onSubmit={submit} className="space-y-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Item Pembelian</CardTitle>
-                            <CardDescription>
-                                Pilih produk dan masukan jumlah.
-                            </CardDescription>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addItem}
-                            className="flex items-center justify-center w-10 h-10 rounded-full sm:w-auto sm:h-auto sm:rounded-md sm:px-4 sm:py-2 gap-2"
-                        >
-                            <PlusCircle className="h-4 w-4" />
-                            <span className="hidden sm:inline">
-                                Tambah Item
-                            </span>
-                        </Button>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {data.items.map((item, index) => (
-                            <div
-                                key={index}
-                                className="grid grid-cols-1 sm:grid-cols-[1fr_120px_180px_auto] gap-x-4 gap-y-2 items-end p-4 border rounded-lg"
-                            >
-                                <div className="space-y-2 w-full">
-                                    <Label className="sm:hidden">Produk</Label>
-                                    <ProductCombobox
-                                        products={products}
-                                        value={item.product_id}
-                                        onChange={(product) =>
-                                            handleProductSelect(index, product)
-                                        }
-                                        error={
-                                            errors[`items.${index}.product_id`]
-                                        }
-                                    />
-                                </div>
-                                <div className="space-y-2 w-full">
-                                    <Label
-                                        htmlFor={`quantity-${index}`}
-                                        className="sm:hidden"
-                                    >
-                                        Jumlah
-                                    </Label>
-                                    <Input
-                                        id={`quantity-${index}`}
-                                        type="number"
-                                        value={item.quantity}
-                                        onChange={(e) =>
-                                            handleItemChange(
-                                                index,
-                                                "quantity",
-                                                e.target.value
-                                            )
-                                        }
-                                        min="1"
-                                        placeholder="Jumlah"
-                                    />
-                                    <InputError
-                                        message={
-                                            errors[`items.${index}.quantity`]
-                                        }
-                                    />
-                                </div>
-                                <div className="space-y-2 w-full">
-                                    <Label
-                                        htmlFor={`cost-${index}`}
-                                        className="sm:hidden"
-                                    >
-                                        Harga Beli / Satuan
-                                    </Label>
-                                    <Input
-                                        id={`cost-${index}`}
-                                        type="number"
-                                        value={item.cost_per_unit}
-                                        onChange={(e) =>
-                                            handleItemChange(
-                                                index,
-                                                "cost_per_unit",
-                                                e.target.value
-                                            )
-                                        }
-                                        placeholder="Harga Beli"
-                                        min="0"
-                                    />
-                                    <InputError
-                                        message={
-                                            errors[
-                                                `items.${index}.cost_per_unit`
-                                            ]
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeItem(index)}
-                                        disabled={data.items.length <= 1}
-                                        className="text-destructive hover:text-destructive"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
+                <PurchaseItemManager
+                    items={data.items}
+                    products={products}
+                    setData={setData}
+                    errors={errors}
+                />
 
                 <Card>
                     <CardHeader>
@@ -206,8 +62,11 @@ export default function Create({ auth, locations, suppliers, products }) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid sm:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="location_id">Lokasi Penerima</Label>
+                        <FormField
+                            label="Lokasi Penerima"
+                            htmlFor="location_id"
+                            error={errors.location_id}
+                        >
                             <Select
                                 value={data.location_id}
                                 onValueChange={(value) =>
@@ -228,12 +87,12 @@ export default function Create({ auth, locations, suppliers, products }) {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <InputError message={errors.location_id} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="transaction_date">
-                                Tanggal Transaksi
-                            </Label>
+                        </FormField>
+                        <FormField
+                            label="Tanggal Transaksi"
+                            htmlFor="transaction_date"
+                            error={errors.transaction_date}
+                        >
                             <Input
                                 id="transaction_date"
                                 type="date"
@@ -242,10 +101,12 @@ export default function Create({ auth, locations, suppliers, products }) {
                                     setData("transaction_date", e.target.value)
                                 }
                             />
-                            <InputError message={errors.transaction_date} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="supplier_id">Supplier</Label>
+                        </FormField>
+                        <FormField
+                            label="Supplier"
+                            htmlFor="supplier_id"
+                            error={errors.supplier_id}
+                        >
                             <Select
                                 value={data.supplier_id}
                                 onValueChange={(value) =>
@@ -266,10 +127,12 @@ export default function Create({ auth, locations, suppliers, products }) {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <InputError message={errors.supplier_id} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="notes">Catatan (Opsional)</Label>
+                        </FormField>
+                        <FormField
+                            label="Catatan (Opsional)"
+                            htmlFor="notes"
+                            error={errors.notes}
+                        >
                             <Input
                                 id="notes"
                                 value={data.notes}
@@ -278,8 +141,7 @@ export default function Create({ auth, locations, suppliers, products }) {
                                 }
                                 placeholder="Contoh: Nomor referensi faktur"
                             />
-                            <InputError message={errors.notes} />
-                        </div>
+                        </FormField>
                     </CardContent>
                 </Card>
 

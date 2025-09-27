@@ -1,20 +1,14 @@
 import { router } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import { transactionColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
+import DataTable from "@/Components/DataTable";
+import MobileCardList from "@/Components/MobileCardList";
+import TransactionMobileCard from "./Partials/TransactionMobileCard";
 import Pagination from "@/Components/Pagination";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
+import { Card, CardContent } from "@/Components/ui/card";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,28 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
-import { Eye, MoreVertical, Trash2, Plus } from "lucide-react";
-
-const TABLE_COLUMNS = [
-    { key: "reference_code", label: "Referensi", align: "center" },
-    { key: "type", label: "Tipe", align: "center" },
-    { key: "location", label: "Lokasi", align: "center" },
-    { key: "counterparty", label: "Pihak Terkait", align: "center" },
-    { key: "transaction_date", label: "Tanggal", align: "center" },
-    { key: "total", label: "Total", align: "center" },
-    { key: "user", label: "PIC", align: "center" },
-    { key: "actions", label: "Aksi", align: "center" },
-];
-
-const getAlignmentClass = (align = "left") => {
-    const alignmentMap = {
-        left: "text-left",
-        center: "text-center",
-        right: "text-right",
-    };
-    return alignmentMap[align] || "text-left";
-};
+import { Eye, MoreVertical, Plus } from "lucide-react";
 
 const sortOptions = [
     { value: "newest", label: "Transaksi Terbaru" },
@@ -70,13 +43,6 @@ export default function Index({
         "transactions.index",
         filters
     );
-    const [confirmingTransactionDeletion, setConfirmingTransactionDeletion] =
-        useState(null);
-
-    const deleteTransaction = () => {
-        console.log("Deleting transaction:", confirmingTransactionDeletion);
-        setConfirmingTransactionDeletion(null);
-    };
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
@@ -96,67 +62,9 @@ export default function Index({
                 >
                     <Eye className="w-4 h-4 mr-2" /> Lihat
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                    onClick={() =>
-                        setConfirmingTransactionDeletion(transaction.id)
-                    }
-                    className="text-destructive focus:text-destructive cursor-pointer"
-                    disabled
-                >
-                    <Trash2 className="w-4 h-4 mr-2" /> Hapus
-                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
-
-    const renderCellContent = (column, transaction) => {
-        switch (column.key) {
-            case "reference_code":
-                return (
-                    <div className="font-mono text-xs whitespace-nowrap">
-                        {transaction.reference_code}
-                    </div>
-                );
-            case "type":
-                return (
-                    <div className="flex justify-center">
-                        <Badge variant="secondary">{transaction.type}</Badge>
-                    </div>
-                );
-            case "location":
-                return (
-                    <div className="whitespace-nowrap">
-                        {transaction.location}
-                    </div>
-                );
-            case "counterparty":
-                return (
-                    <div className="whitespace-nowrap">
-                        {transaction.supplier || "-"}
-                    </div>
-                );
-            case "transaction_date":
-                return (
-                    <div className="whitespace-nowrap text-center">
-                        {formatDate(transaction.transaction_date)}
-                    </div>
-                );
-            case "total":
-                return (
-                    <div className="font-semibold whitespace-nowrap text-right">
-                        {formatCurrency(transaction.total_cost)}
-                    </div>
-                );
-            case "user":
-                return (
-                    <div className="whitespace-nowrap">{transaction.user}</div>
-                );
-            case "actions":
-                return renderActionDropdown(transaction);
-            default:
-                return "";
-        }
-    };
 
     return (
         <IndexPageLayout
@@ -245,130 +153,30 @@ export default function Index({
                     </CardContent>
                 </Card>
 
-                <div className="md:hidden space-y-4">
-                    {transactions.data.map((trx) => (
-                        <Card key={trx.id}>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <div className="space-y-1">
-                                    <CardTitle className="text-sm font-mono">
-                                        {trx.reference_code}
-                                    </CardTitle>
-                                    <p className="text-xs text-muted-foreground">
-                                        {formatDate(trx.transaction_date)}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="secondary">
-                                        {trx.type}
-                                    </Badge>
-                                    {renderActionDropdown(trx)}
-                                </div>
-                            </CardHeader>
-                            <CardContent
-                                onClick={() =>
-                                    router.get(
-                                        route(
-                                            "transactions.purchases.show",
-                                            trx.id
-                                        )
-                                    )
-                                }
-                                className="cursor-pointer"
-                            >
-                                <div className="text-lg font-bold mb-2">
-                                    {formatCurrency(trx.total_cost)}
-                                </div>
-                                <div className="text-xs space-y-1">
-                                    <p>
-                                        Lokasi:{" "}
-                                        <span className="font-medium">
-                                            {trx.location}
-                                        </span>
-                                    </p>
-                                    <p>
-                                        Supplier:{" "}
-                                        <span className="font-medium">
-                                            {trx.supplier}
-                                        </span>
-                                    </p>
-                                    <p>
-                                        PIC:{" "}
-                                        <span className="font-medium">
-                                            {trx.user}
-                                        </span>
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <MobileCardList
+                    data={transactions.data}
+                    renderItem={(transaction) => (
+                        <TransactionMobileCard
+                            key={transaction.id}
+                            transaction={transaction}
+                            renderActionDropdown={renderActionDropdown}
+                        />
+                    )}
+                />
 
                 <div className="hidden md:block">
-                    <div className="bg-card text-card-foreground shadow-sm sm:rounded-lg">
-                        <ScrollArea className="w-full">
-                            <Table className="min-w-full">
-                                <TableHeader>
-                                    <TableRow>
-                                        {TABLE_COLUMNS.map((col) => (
-                                            <TableHead
-                                                key={col.key}
-                                                className={getAlignmentClass(
-                                                    col.align
-                                                )}
-                                            >
-                                                {col.label}
-                                            </TableHead>
-                                        ))}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {transactions.data.map((trx) => (
-                                        <TableRow
-                                            key={trx.id}
-                                            onClick={() =>
-                                                router.get(
-                                                    route(
-                                                        "transactions.purchases.show",
-                                                        trx.id
-                                                    )
-                                                )
-                                            }
-                                            className="cursor-pointer"
-                                        >
-                                            {TABLE_COLUMNS.map((col) => (
-                                                <TableCell
-                                                    key={col.key}
-                                                    className={getAlignmentClass(
-                                                        col.align
-                                                    )}
-                                                >
-                                                    {renderCellContent(
-                                                        col,
-                                                        trx
-                                                    )}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
-                    </div>
+                    <DataTable
+                        columns={transactionColumns}
+                        data={transactions.data}
+                        actions={renderActionDropdown}
+                        showRoute="transactions.purchases.show"
+                    />
                 </div>
 
                 {transactions.data.length > 0 && (
                     <Pagination links={transactions.meta.links} />
                 )}
             </div>
-
-            <DeleteConfirmationDialog
-                open={confirmingTransactionDeletion !== null}
-                onOpenChange={() => setConfirmingTransactionDeletion(null)}
-                onConfirm={deleteTransaction}
-                confirmText="Hapus Transaksi"
-                description="Tindakan ini tidak dapat dibatalkan. Menghapus transaksi dapat mempengaruhi data lain."
-            />
         </IndexPageLayout>
     );
 }

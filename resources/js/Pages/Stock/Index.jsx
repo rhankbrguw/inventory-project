@@ -79,7 +79,7 @@ export default function Index({
                     <CardContent className="flex flex-col md:flex-row md:items-center gap-2 pt-6">
                         <Input
                             type="search"
-                            placeholder="Cari..."
+                            placeholder="Cari nama atau sku..."
                             value={params.search || ""}
                             onChange={(e) =>
                                 setFilter("search", e.target.value)
