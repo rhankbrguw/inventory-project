@@ -1,17 +1,14 @@
 import { Link, router } from "@inertiajs/react";
-import { useState, useEffect } from "react";
-import { useDebounce } from "use-debounce";
+import { useState } from "react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import { userColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/Components/ui/alert-dialog";
+import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
+import DataTable from "@/Components/DataTable";
+import MobileCardList from "@/Components/MobileCardList";
+import UserMobileCard from "./Partials/UserMobileCard";
+import Pagination from "@/Components/Pagination";
+import RoleBadge from "@/Components/RoleBadge";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,91 +16,16 @@ import {
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import { Card, CardContent } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
-import Pagination from "@/Components/Pagination";
-
-const TABLE_COLUMNS = [
-    {
-        key: "name",
-        label: "Nama",
-        align: "center",
-        className: "font-medium",
-    },
-    {
-        key: "email",
-        label: "Email",
-        align: "center",
-        className: "text-muted-foreground",
-    },
-    {
-        key: "role_code",
-        label: "Kode",
-        align: "center",
-        className: "font-mono text-xs",
-    },
-    {
-        key: "role_badge",
-        label: "Jabatan",
-        align: "center",
-    },
-    {
-        key: "actions",
-        label: "Aksi",
-        align: "center",
-    },
-];
-
-const getAlignmentClass = (align) => {
-    const alignmentMap = {
-        left: "text-left",
-        center: "text-center",
-        right: "text-right",
-    };
-    return alignmentMap[align] || "text-left";
-};
-
-const RoleBadge = ({ role }) => {
-    if (!role) {
-        return <span>-</span>;
-    }
-
-    const getRoleClass = (roleName) => {
-        const roleClassMap = {
-            "Super Admin": "role-super-admin",
-            "Warehouse Manager": "role-warehouse-manager",
-            "Branch Manager": "role-branch-manager",
-            Cashier: "role-cashier",
-        };
-
-        return roleClassMap[roleName] || "role-default";
-    };
-    return (
-        <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${getRoleClass(
-                role.name
-            )}`}
-        >
-            {role.name}
-        </span>
-    );
-};
 
 const sortOptions = [
     { value: "name_asc", label: "Nama (A-Z)" },
@@ -111,30 +33,12 @@ const sortOptions = [
 ];
 
 export default function Index({ auth, users, roles, filters = {} }) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [sort, setSort] = useState(filters.sort || "name_asc");
-    const [role, setRole] = useState(filters.role || "all");
-    const [debouncedSearch] = useDebounce(search, 500);
+    const { params, setFilter } = useIndexPageFilters(
+        "users.index",
+        filters,
+        "name_asc"
+    );
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
-
-    useEffect(() => {
-        if (debouncedSearch !== (filters.search || "")) {
-            handleFilterChange({ search: debouncedSearch });
-        }
-    }, [debouncedSearch]);
-
-    const handleFilterChange = (newFilter) => {
-        const currentParams = {
-            search: search || undefined,
-            sort: sort,
-            role: role === "all" ? undefined : role,
-            ...newFilter,
-        };
-        router.get(route("users.index"), currentParams, {
-            preserveState: true,
-            replace: true,
-        });
-    };
 
     const deleteUser = () => {
         router.delete(route("users.destroy", confirmingUserDeletion), {
@@ -146,7 +50,11 @@ export default function Index({ auth, users, roles, filters = {} }) {
     const renderActionDropdown = (user) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <MoreVertical className="w-4 h-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -167,23 +75,6 @@ export default function Index({ auth, users, roles, filters = {} }) {
         </DropdownMenu>
     );
 
-    const renderCellContent = (column, user) => {
-        switch (column.key) {
-            case "name":
-                return user.name;
-            case "email":
-                return user.email;
-            case "role_code":
-                return user.role ? user.role.code : "-";
-            case "role_badge":
-                return <RoleBadge role={user.role} />;
-            case "actions":
-                return renderActionDropdown(user);
-            default:
-                return "";
-        }
-    };
-
     return (
         <IndexPageLayout
             auth={auth}
@@ -197,16 +88,15 @@ export default function Index({ auth, users, roles, filters = {} }) {
                         <Input
                             type="search"
                             placeholder="Cari nama atau email..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
                             className="w-full sm:w-auto sm:flex-grow"
                         />
                         <Select
-                            value={role}
-                            onValueChange={(value) => {
-                                setRole(value);
-                                handleFilterChange({ role: value });
-                            }}
+                            value={params.role || "all"}
+                            onValueChange={(value) => setFilter("role", value)}
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Semua Jabatan" />
@@ -223,11 +113,8 @@ export default function Index({ auth, users, roles, filters = {} }) {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={sort}
-                            onValueChange={(value) => {
-                                setSort(value);
-                                handleFilterChange({ sort: value });
-                            }}
+                            value={params.sort || "name_asc"}
+                            onValueChange={(value) => setFilter("sort", value)}
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="Urutkan" />
@@ -246,92 +133,39 @@ export default function Index({ auth, users, roles, filters = {} }) {
                     </CardContent>
                 </Card>
 
-                <div className="md:hidden space-y-4">
-                    {users.data.map((user) => (
-                        <Card key={user.id}>
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    {user.name}
-                                </CardTitle>
-                                {renderActionDropdown(user)}
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-xs text-muted-foreground">
-                                    {user.email}
-                                </p>
-                                <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                                        {user.role ? user.role.code : "-"}
-                                    </span>
-                                    <RoleBadge role={user.role} />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                <MobileCardList
+                    data={users.data}
+                    renderItem={(user) => (
+                        <Link href={route("users.edit", user.id)} key={user.id}>
+                            <UserMobileCard
+                                user={user}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
+                    )}
+                />
+
+                <div className="hidden md:block">
+                    <DataTable
+                        columns={userColumns}
+                        data={users.data}
+                        actions={renderActionDropdown}
+                        showRoute={"users.edit"}
+                    />
                 </div>
 
-                <div className="hidden md:block bg-card text-card-foreground overflow-hidden shadow-sm sm:rounded-lg">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {TABLE_COLUMNS.map((column) => (
-                                    <TableHead
-                                        key={column.key}
-                                        className={getAlignmentClass(
-                                            column.align
-                                        )}
-                                    >
-                                        {column.label}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.data.map((user) => (
-                                <TableRow key={user.id}>
-                                    {TABLE_COLUMNS.map((column) => (
-                                        <TableCell
-                                            key={column.key}
-                                            className={`${getAlignmentClass(
-                                                column.align
-                                            )} ${column.className || ""}`}
-                                        >
-                                            {renderCellContent(column, user)}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
                 {users.data.length > 0 && (
                     <Pagination links={users.meta.links} />
                 )}
             </div>
 
-            <AlertDialog
+            <DeleteConfirmationDialog
                 open={confirmingUserDeletion !== null}
                 onOpenChange={() => setConfirmingUserDeletion(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan
-                            menghapus akun pengguna secara permanen dari sistem.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={deleteUser}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            Hapus Pengguna
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={deleteUser}
+                confirmText="Hapus Pengguna"
+                description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus akun pengguna secara permanen dari sistem."
+            />
         </IndexPageLayout>
     );
 }

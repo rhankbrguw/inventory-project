@@ -1,16 +1,13 @@
-import { useEffect, useState, useRef } from "react";
-import { router } from "@inertiajs/react";
-import { useDebounce } from "use-debounce";
+import { Link, router } from "@inertiajs/react";
+import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import { stockColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import DataTable from "@/Components/DataTable";
+import MobileCardList from "@/Components/MobileCardList";
+import StockMobileCard from "./Partials/StockMobileCard";
+import Pagination from "@/Components/Pagination";
+import ProductCombobox from "@/Components/ProductCombobox";
+import { Card, CardContent } from "@/Components/ui/card";
 import {
     Select,
     SelectContent,
@@ -18,22 +15,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/Components/ui/dropdown-menu";
 import { Input } from "@/Components/ui/input";
-import Pagination from "@/Components/Pagination";
-import { Package, Warehouse, Plus } from "lucide-react";
-
-const TABLE_COLUMNS = [
-    {
-        key: "product_name",
-        label: "Nama Item",
-        align: "center",
-        className: "font-medium",
-    },
-    { key: "sku", label: "SKU", align: "center", className: "font-mono" },
-    { key: "location_name", label: "Lokasi", align: "center" },
-    { key: "last_moved", label: "Aktivitas Terakhir", align: "center" },
-    { key: "quantity", label: "Kuantitas", align: "center" },
-];
+import { Button } from "@/Components/ui/button";
+import { Wrench, Eye, MoreVertical } from "lucide-react";
 
 const sortOptions = [
     { value: "name_asc", label: "Nama (A-Z)" },
@@ -44,125 +34,73 @@ const sortOptions = [
     { value: "last_moved_asc", label: "Aktivitas Terlama" },
 ];
 
-const getAlignmentClass = (align) => {
-    const alignmentMap = {
-        left: "text-left",
-        center: "text-center",
-        right: "text-right",
-    };
-    return alignmentMap[align] || "text-left";
-};
-
-const formatRelativeTime = (isoString) => {
-    const date = new Date(isoString);
-    const now = new Date();
-    const seconds = Math.round((now - date) / 1000);
-    const minutes = Math.round(seconds / 60);
-    const hours = Math.round(minutes / 60);
-    const days = Math.round(hours / 24);
-
-    if (seconds < 60) return `${seconds} detik lalu`;
-    if (minutes < 60) return `${minutes} menit lalu`;
-    if (hours < 24) return `${hours} jam lalu`;
-    return `${days} hari lalu`;
-};
-
 export default function Index({
     auth,
     inventories,
     locations = [],
+    products = [],
     productTypes = [],
     filters = {},
 }) {
-    const [search, setSearch] = useState(filters.search || "");
-    const [location, setLocation] = useState(filters.location_id || "all");
-    const [type, setType] = useState(filters.type_id || "all");
-    const [sort, setSort] = useState(filters.sort || "name_asc");
-    const [debouncedSearch] = useDebounce(search, 500);
-    const isInitialMount = useRef(true);
+    const { params, setFilter } = useIndexPageFilters("stock.index", filters);
 
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-
-        const params = {
-            search: debouncedSearch || undefined,
-            location_id: location === "all" ? undefined : location,
-            type_id: type === "all" ? undefined : type,
-            sort: sort,
-        };
-
-        router.get(route("stock.index"), params, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
-    }, [debouncedSearch, location, type, sort]);
-
-    const renderLocationIcon = (locType) => {
-        if (locType === "warehouse") {
-            return <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />;
-        }
-        return <Package className="w-4 h-4 mr-2 text-muted-foreground" />;
-    };
-
-    const renderCellContent = (column, item) => {
-        switch (column.key) {
-            case "product_name":
-                return item.product.name;
-            case "sku":
-                return item.product.sku;
-            case "location_name":
-                return (
-                    <div className="flex items-center justify-center">
-                        {renderLocationIcon(item.location.type)}
-                        {item.location.name}
-                    </div>
-                );
-            case "last_moved":
-                return (
-                    <div className="text-xs text-muted-foreground">
-                        {formatRelativeTime(item.updated_at)}
-                    </div>
-                );
-            case "quantity":
-                return (
-                    <>
-                        <span className="font-semibold text-lg">
-                            {parseFloat(item.quantity).toLocaleString("id-ID")}
-                        </span>
-                        <span className="ml-2 text-muted-foreground">
-                            {item.product.unit}
-                        </span>
-                    </>
-                );
-            default:
-                return "";
-        }
-    };
+    const renderActionDropdown = (item) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MoreVertical className="w-4 h-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => router.get(route("stock.show", item.id))}
+                >
+                    <Eye className="w-4 h-4 mr-2" />Lihat
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     return (
         <IndexPageLayout
             auth={auth}
             title="Manajemen Stok"
             createRoute="stock.adjust.form"
-            buttonLabel="Input Stok Masuk"
-            icon={Plus}
+            buttonLabel="Penyesuaian Stok"
+            icon={Wrench}
         >
             <div className="space-y-4">
                 <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                    <CardContent className="flex flex-col md:flex-row md:items-center gap-2 pt-6">
                         <Input
                             type="search"
                             placeholder="Cari nama atau sku..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full sm:flex-1 min-w-[180px]"
+                            value={params.search || ""}
+                            onChange={(e) =>
+                                setFilter("search", e.target.value)
+                            }
+                            className="w-full md:w-auto md:flex-grow"
                         />
-                        <Select value={location} onValueChange={setLocation}>
-                            <SelectTrigger className="w-full sm:flex-1 min-w-[160px]">
+                        <ProductCombobox
+                            products={products}
+                            value={params.product_id}
+                            onChange={(product) =>
+                                setFilter("product_id", product.id)
+                            }
+                            containerClassName="w-full md:w-[200px]"
+                        />
+                        <Select
+                            value={params.location_id || "all"}
+                            onValueChange={(value) =>
+                                setFilter("location_id", value)
+                            }
+                        >
+                            <SelectTrigger className="w-full md:w-[180px]">
                                 <SelectValue placeholder="Semua Lokasi" />
                             </SelectTrigger>
                             <SelectContent>
@@ -179,24 +117,11 @@ export default function Index({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={type} onValueChange={setType}>
-                            <SelectTrigger className="w-full sm:flex-1 min-w-[160px]">
-                                <SelectValue placeholder="Semua Tipe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua Tipe</SelectItem>
-                                {productTypes.map((pType) => (
-                                    <SelectItem
-                                        key={pType.id}
-                                        value={pType.id.toString()}
-                                    >
-                                        {pType.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={sort} onValueChange={setSort}>
-                            <SelectTrigger className="w-full sm:flex-1 min-w-[160px]">
+                        <Select
+                            value={params.sort || "name_asc"}
+                            onValueChange={(value) => setFilter("sort", value)}
+                        >
+                            <SelectTrigger className="w-full md:w-[180px]">
                                 <SelectValue placeholder="Urutkan" />
                             </SelectTrigger>
                             <SelectContent>
@@ -213,71 +138,26 @@ export default function Index({
                     </CardContent>
                 </Card>
 
-                <div className="md:hidden space-y-4">
-                    {inventories.data.map((item) => (
-                        <Card key={item.id}>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    {item.product.name}
-                                </CardTitle>
-                                <p className="text-xs text-muted-foreground font-mono">
-                                    {item.product.sku}
-                                </p>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center text-sm text-muted-foreground">
-                                    {renderLocationIcon(item.location.type)}
-                                    {item.location.name}
-                                </div>
-                                <div className="text-lg font-bold mt-2">
-                                    {parseFloat(item.quantity).toLocaleString(
-                                        "id-ID"
-                                    )}
-                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                        {item.product.unit}
-                                    </span>
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-2">
-                                    Aktivitas Terakhir:{" "}
-                                    {formatRelativeTime(item.updated_at)}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <MobileCardList
+                    data={inventories.data}
+                    renderItem={(item) => (
+                        <Link href={route("stock.show", item.id)} key={item.id}>
+                            <StockMobileCard
+                                item={item}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
+                    )}
+                />
 
-                <div className="hidden md:block bg-card text-card-foreground shadow-sm sm:rounded-lg overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                {TABLE_COLUMNS.map((col) => (
-                                    <TableHead
-                                        key={col.key}
-                                        className={getAlignmentClass(col.align)}
-                                    >
-                                        {col.label}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {inventories.data.map((item) => (
-                                <TableRow key={item.id}>
-                                    {TABLE_COLUMNS.map((col) => (
-                                        <TableCell
-                                            key={col.key}
-                                            className={
-                                                getAlignmentClass(col.align) +
-                                                ` ${col.className || ""}`
-                                            }
-                                        >
-                                            {renderCellContent(col, item)}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <div className="hidden md:block">
+                    <DataTable
+                        columns={stockColumns}
+                        data={inventories.data}
+                        actions={renderActionDropdown}
+                        showRoute="stock.show"
+                        showRouteKey="id"
+                    />
                 </div>
 
                 {inventories.data.length > 0 && (
