@@ -20,6 +20,9 @@ class TransactionResource extends JsonResource
          'location' => $this->whenLoaded('location', fn() => $this->location->name),
          'supplier' => $this->whenLoaded('supplier', fn() => $this->supplier->name),
          'user' => $this->whenLoaded('user', fn() => $this->user->name),
+         'items_preview' => $this->whenLoaded('stockMovements', function () {
+            return $this->stockMovements->take(2)->map(fn($item) => $item->product->name)->join(', ');
+         }),
       ];
    }
 }

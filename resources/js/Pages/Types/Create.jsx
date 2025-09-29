@@ -43,7 +43,8 @@ export default function Create({ auth, availableGroups, allTypes }) {
                 <CardHeader>
                     <CardTitle>Informasi Tipe</CardTitle>
                     <CardDescription>
-                        Isi detail untuk tipe baru yang akan dibuat.
+                        Isi detail untuk tipe baru yang akan dibuat. Tipe ini
+                        akan muncul sebagai pilihan di dropdown pada modul lain.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -67,6 +68,10 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                 label="Grup Tipe"
                                 htmlFor="group"
                                 error={errors.group}
+                                description={
+                                    data.group &&
+                                    availableGroups[data.group]?.description
+                                }
                             >
                                 <Select
                                     value={data.group}
@@ -79,7 +84,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(availableGroups).map(
-                                            ([value, label]) => (
+                                            ([value, { label }]) => (
                                                 <SelectItem
                                                     key={value}
                                                     value={value}
@@ -116,6 +121,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                             label="Kode (Opsional)"
                             htmlFor="code"
                             error={errors.code}
+                            description="Kode unik singkat untuk referensi cepat jika diperlukan."
                         >
                             <Input
                                 id="code"

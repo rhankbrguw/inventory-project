@@ -9,18 +9,20 @@ use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
-use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Models\Type;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PurchaseController extends Controller
 {
    public function create()
    {
-      return inertia('Transactions/Purchases/Create', [
-         'locations' => Location::all(['id', 'name']),
-         'suppliers' => Supplier::all(['id', 'name']),
-         'products' => Product::all(['id', 'name', 'sku', 'unit', 'price', 'default_supplier_id']),
+      return Inertia::render('Transactions/Purchases/Create', [
+         'locations' => Location::orderBy('name')->get(['id', 'name']),
+         'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+         'products' => Product::with('defaultSupplier')->orderBy('name')->get(),
+         'paymentMethods' => Type::where('group', Type::GROUP_PAYMENT)->orderBy('name')->get(['id', 'name']),
       ]);
    }
 
@@ -36,23 +38,24 @@ class PurchaseController extends Controller
       DB::transaction(function () use ($validated, $totalCost) {
          $purchase = Purchase::create([
             'location_id' => $validated['location_id'],
-            'supplier_id' => $validated['supplier_id'],
             'user_id' => auth()->id(),
             'reference_code' => 'PO-' . now()->format('Ymd-His'),
             'transaction_date' => $validated['transaction_date'],
             'notes' => $validated['notes'],
+            'payment_method_type_id' => $validated['payment_method_type_id'] ?? null,
             'status' => 'completed',
             'total_cost' => $totalCost,
          ]);
 
          foreach ($validated['items'] as $item) {
-            StockMovement::create([
-               'purchase_id' => $purchase->id,
+            $purchase->stockMovements()->create([
                'product_id' => $item['product_id'],
+               'supplier_id' => $item['supplier_id'] ?? null,
                'location_id' => $validated['location_id'],
                'type' => 'purchase',
                'quantity' => $item['quantity'],
                'cost_per_unit' => $item['cost_per_unit'],
+               'notes' => $validated['notes'],
             ]);
 
             $inventory = Inventory::firstOrCreate(
@@ -68,9 +71,10 @@ class PurchaseController extends Controller
             $newTotalQty = $oldQty + $newQty;
             $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $newCost)) / $newTotalQty;
 
-            $inventory->quantity = $newTotalQty;
-            $inventory->average_cost = $newAvgCost;
-            $inventory->save();
+            $inventory->update([
+               'quantity' => $newTotalQty,
+               'average_cost' => $newAvgCost
+            ]);
          }
       });
 
@@ -81,7 +85,7 @@ class PurchaseController extends Controller
    {
       $purchase->load(['location', 'supplier', 'user', 'stockMovements.product']);
 
-      return inertia('Transactions/Purchases/Show', [
+      return Inertia::render('Transactions/Purchases/Show', [
          'purchase' => PurchaseResource::make($purchase)
       ]);
    }

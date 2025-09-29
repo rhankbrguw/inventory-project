@@ -121,7 +121,7 @@ export const transactionColumns = [
     },
     {
         accessorKey: "supplier",
-        header: "Pihak Terkait",
+        header: "Supplier",
         className: "text-center whitespace-nowrap",
     },
     {
@@ -202,5 +202,25 @@ export const typeColumns = [
         header: "Kode",
         cell: ({ row }) => <span className="font-mono">{row.code || "-"}</span>,
         className: "text-center",
+    },
+];
+
+export const locationColumns = [
+    {
+        accessorKey: "name",
+        header: "Nama Lokasi",
+        className: "font-medium",
+    },
+    {
+        accessorKey: "type",
+        header: "Tipe",
+        cell: ({ row }) => (
+            <span className="capitalize">{row.original.type}</span>
+        ),
+    },
+    {
+        accessorKey: "address",
+        header: "Alamat",
+        cell: ({ row }) => row.original.address || "-",
     },
 ];

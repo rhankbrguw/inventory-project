@@ -12,9 +12,18 @@ class RoleSeeder extends Seeder
    {
       app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-      Role::updateOrCreate(['name' => 'Super Admin', 'guard_name' => 'web'], ['code' => 'ADM']);
-      Role::updateOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web'], ['code' => 'WHM']);
-      Role::updateOrCreate(['name' => 'Branch Manager', 'guard_name' => 'web'], ['code' => 'BRM']);
-      Role::updateOrCreate(['name' => 'Cashier', 'guard_name' => 'web'], ['code' => 'CSH']);
+      $roles = [
+         ['name' => 'Super Admin', 'code' => 'ADM'],
+         ['name' => 'Warehouse Manager', 'code' => 'WHM'],
+         ['name' => 'Branch Manager', 'code' => 'BRM'],
+         ['name' => 'Cashier', 'code' => 'CSH'],
+      ];
+
+      foreach ($roles as $role) {
+         Role::updateOrCreate(
+            ['name' => $role['name'], 'guard_name' => 'web'],
+            ['code' => $role['code']]
+         );
+      }
    }
 }

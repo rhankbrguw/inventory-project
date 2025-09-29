@@ -1,9 +1,7 @@
 import { router } from "@inertiajs/react";
-import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { transactionColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import TransactionMobileCard from "./Partials/TransactionMobileCard";
@@ -36,8 +34,9 @@ const sortOptions = [
 export default function Index({
     auth,
     transactions,
+    locations,
+    transactionTypes,
     filters = {},
-    types = [],
 }) {
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
@@ -47,7 +46,11 @@ export default function Index({
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <MoreVertical className="w-4 h-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -106,7 +109,7 @@ export default function Index({
         >
             <div className="space-y-4">
                 <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
+                    <CardContent className="flex flex-col md:flex-row items-center gap-2 pt-6">
                         <Input
                             type="search"
                             placeholder="Cari referensi atau supplier..."
@@ -114,20 +117,46 @@ export default function Index({
                             onChange={(e) =>
                                 setFilter("search", e.target.value)
                             }
-                            className="w-full sm:w-auto sm:flex-grow"
+                            className="w-full md:w-auto md:flex-grow"
                         />
+                        <Select
+                            value={params.location_id || "all"}
+                            onValueChange={(value) =>
+                                setFilter("location_id", value)
+                            }
+                        >
+                            <SelectTrigger className="w-full md:w-[180px]">
+                                <SelectValue placeholder="Semua Lokasi" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Lokasi
+                                </SelectItem>
+                                {locations.map((loc) => (
+                                    <SelectItem
+                                        key={loc.id}
+                                        value={loc.id.toString()}
+                                    >
+                                        {loc.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <Select
                             value={params.type || "all"}
                             onValueChange={(value) => setFilter("type", value)}
                         >
-                            <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectTrigger className="w-full md:w-[180px]">
                                 <SelectValue placeholder="Semua Tipe" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua Tipe</SelectItem>
-                                {types.map((typeName) => (
-                                    <SelectItem key={typeName} value={typeName}>
-                                        {typeName}
+                                {transactionTypes.map((type) => (
+                                    <SelectItem
+                                        key={type.id}
+                                        value={type.id.toString()}
+                                    >
+                                        {type.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -136,7 +165,7 @@ export default function Index({
                             value={params.sort || "newest"}
                             onValueChange={(value) => setFilter("sort", value)}
                         >
-                            <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectTrigger className="w-full md:w-[180px]">
                                 <SelectValue placeholder="Urutkan" />
                             </SelectTrigger>
                             <SelectContent>

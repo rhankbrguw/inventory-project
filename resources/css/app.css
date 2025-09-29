@@ -82,4 +82,21 @@
     .role-default {
         @apply bg-muted text-muted-foreground;
     }
+    @media print {
+        .print-hidden {
+            display: none !important;
+        }
+        .print-full-width {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important; /* Override max-w-7xl */
+        }
+        body {
+            background-color: white !important;
+        }
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Type;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,7 @@ class StoreTypeRequest extends FormRequest
       }
 
       if ($user->hasRole('Branch Manager')) {
-         return $this->input('group') === 'product_type';
+         return $this->input('group') === Type::GROUP_PRODUCT;
       }
 
       return false;
@@ -31,8 +32,16 @@ class StoreTypeRequest extends FormRequest
             'max:50',
             Rule::unique('types')->where('group', $this->group),
          ],
-         'group' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9_]+$/'],
-         'code' => 'nullable|string|max:50|unique:types,code',
+         'group' => [
+            'required',
+            Rule::in(array_keys(Type::getAvailableGroups())),
+         ],
+         'code' => [
+            'nullable',
+            'string',
+            'max:50',
+            Rule::unique('types', 'code')->whereNull('deleted_at'),
+         ],
       ];
    }
 }

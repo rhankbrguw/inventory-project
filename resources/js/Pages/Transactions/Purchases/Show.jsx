@@ -1,4 +1,5 @@
 import ContentPageLayout from "@/Components/ContentPageLayout";
+import PrintButton from "@/Components/PrintButton";
 import {
     Card,
     CardContent,
@@ -6,8 +7,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/Components/ui/card";
-import { Button } from "@/Components/ui/button";
-import { Printer } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -23,6 +22,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function Show({ auth, purchase }) {
     const { data } = purchase;
+
+    const tableFooterColSpan = 4;
 
     return (
         <ContentPageLayout
@@ -74,13 +75,9 @@ export default function Show({ auth, purchase }) {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
                     <CardTitle>Rincian Item</CardTitle>
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                    >
-                        <Printer className="w-4 h-4" />
+                    <PrintButton>
                         <span className="hidden sm:inline">Cetak</span>
-                    </Button>
+                    </PrintButton>
                 </CardHeader>
                 <CardContent>
                     <div className="md:hidden space-y-3">
@@ -172,12 +169,12 @@ export default function Show({ auth, purchase }) {
                                 </TableBody>
                                 <TableFooter>
                                     <TableRow>
-                                        <TableCell className="text-center font-bold">
+                                        <TableCell
+                                            colSpan={tableFooterColSpan}
+                                            className="text-right font-bold"
+                                        >
                                             Total Pembelian
                                         </TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
                                         <TableCell className="text-center font-bold">
                                             {formatCurrency(data.total_cost)}
                                         </TableCell>

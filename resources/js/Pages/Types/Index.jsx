@@ -32,7 +32,7 @@ const sortOptions = [
     { value: "name_desc", label: "Nama (Z-A)" },
 ];
 
-export default function Index({ auth, types, filters = {}, groups = [] }) {
+export default function Index({ auth, types, filters = {}, groups = {} }) {
     const { params, setFilter } = useIndexPageFilters("types.index", filters);
     const [confirmingTypeDeletion, setConfirmingTypeDeletion] = useState(null);
 
@@ -99,14 +99,13 @@ export default function Index({ auth, types, filters = {}, groups = [] }) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua Grup</SelectItem>
-                                {groups.map((groupName) => (
-                                    <SelectItem
-                                        key={groupName}
-                                        value={groupName}
-                                    >
-                                        {formatGroupName(groupName)}
-                                    </SelectItem>
-                                ))}
+                                {Object.entries(groups).map(
+                                    ([value, { label }]) => (
+                                        <SelectItem key={value} value={value}>
+                                            {label}
+                                        </SelectItem>
+                                    )
+                                )}
                             </SelectContent>
                         </Select>
                         <Select

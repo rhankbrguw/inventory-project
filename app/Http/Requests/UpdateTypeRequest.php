@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Type;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,10 +22,18 @@ class UpdateTypeRequest extends FormRequest
             'required',
             'string',
             'max:50',
-            Rule::unique('types')->where('group', $this->group)->ignore($typeId)
+            Rule::unique('types')->where('group', $this->group)->ignore($typeId),
          ],
-         'group' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9_]+$/'],
-         'code' => ['nullable', 'string', 'max:50', Rule::unique('types')->ignore($typeId)],
+         'group' => [
+            'required',
+            Rule::in(array_keys(Type::getAvailableGroups())),
+         ],
+         'code' => [
+            'nullable',
+            'string',
+            'max:50',
+            Rule::unique('types', 'code')->ignore($typeId)->whereNull('deleted_at'),
+         ],
       ];
    }
 }

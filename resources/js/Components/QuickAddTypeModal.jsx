@@ -25,11 +25,14 @@ export default function QuickAddTypeModal({
     existingTypes = [],
     trigger,
 }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
-        name: "",
-        code: "",
-        group: group,
-    });
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
+        {
+            name: "",
+            code: "",
+            group: group,
+            _from_modal: true,
+        }
+    );
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
@@ -91,7 +94,9 @@ export default function QuickAddTypeModal({
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing  || !isDirty}>Simpan</Button>
+                        <Button disabled={processing || !isDirty}>
+                            Simpan
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
