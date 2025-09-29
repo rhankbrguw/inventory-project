@@ -1,9 +1,10 @@
 import { useForm, Link } from "@inertiajs/react";
 import { useState } from "react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
+import FormField from "@/Components/FormField";
+import CurrencyInput from "@/Components/CurrencyInput";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
 import {
     Select,
     SelectContent,
@@ -11,24 +12,27 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import InputError from "@/Components/InputError";
 import { Textarea } from "@/Components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 
-export default function Edit({ auth, product, types, suppliers }) {
-    const [imagePreview, setImagePreview] = useState(
-        product.data.image_url || null
-    );
+export default function Edit({
+    auth,
+    product: productResource,
+    types,
+    suppliers,
+}) {
+    const { data: product } = productResource;
+    const [imagePreview, setImagePreview] = useState(product.image_url || null);
 
     const { data, setData, post, errors, processing, isDirty } = useForm({
-        name: product.data.name || "",
-        sku: product.data.sku || "",
-        price: product.data.price || "",
-        unit: product.data.unit || "",
-        description: product.data.description || "",
+        name: product.name || "",
+        sku: product.sku || "",
+        price: product.price || "",
+        unit: product.unit || "",
+        description: product.description || "",
         image: null,
-        type_id: product.data.type?.id || "",
-        default_supplier_id: product.data.default_supplier?.id || "",
+        type_id: product.type?.id || "",
+        default_supplier_id: product.default_supplier?.id || "",
         _method: "patch",
     });
 
@@ -44,7 +48,7 @@ export default function Edit({ auth, product, types, suppliers }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("products.update", product.data.id), {
+        post(route("products.update", product.id), {
             forceFormData: true,
         });
     };
@@ -57,41 +61,36 @@ export default function Edit({ auth, product, types, suppliers }) {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{product.data.name}</CardTitle>
+                    <CardTitle>{product.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <Label htmlFor="name">Nama Produk</Label>
+                            <FormField
+                                label="Nama Produk"
+                                htmlFor="name"
+                                error={errors.name}
+                            >
                                 <Input
                                     id="name"
                                     value={data.name}
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="image">
-                                    Ganti Gambar Produk
-                                </Label>
+                            </FormField>
+                            <FormField
+                                label="Ganti Gambar Produk"
+                                htmlFor="image"
+                                error={errors.image}
+                            >
                                 <Input
                                     id="image"
                                     type="file"
                                     onChange={handleImageChange}
-                                    className="mt-1 file:text-foreground"
+                                    className="file:text-foreground"
                                 />
-                                <InputError
-                                    message={errors.image}
-                                    className="mt-2"
-                                />
-                            </div>
+                            </FormField>
                         </div>
 
                         {imagePreview && (
@@ -105,19 +104,18 @@ export default function Edit({ auth, product, types, suppliers }) {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <Label htmlFor="type_id">Tipe Produk</Label>
+                            <FormField
+                                label="Tipe Produk"
+                                htmlFor="type_id"
+                                error={errors.type_id}
+                            >
                                 <Select
-                                    value={
-                                        data.type_id
-                                            ? data.type_id.toString()
-                                            : ""
-                                    }
+                                    defaultValue={data.type_id.toString()}
                                     onValueChange={(value) =>
                                         setData("type_id", value)
                                     }
                                 >
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Pilih tipe" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -131,26 +129,19 @@ export default function Edit({ auth, product, types, suppliers }) {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError
-                                    message={errors.type_id}
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="default_supplier_id">
-                                    Supplier Andalan (Opsional)
-                                </Label>
+                            </FormField>
+                            <FormField
+                                label="Supplier Andalan (Opsional)"
+                                htmlFor="default_supplier_id"
+                                error={errors.default_supplier_id}
+                            >
                                 <Select
-                                    value={
-                                        data.default_supplier_id
-                                            ? data.default_supplier_id.toString()
-                                            : ""
-                                    }
+                                    defaultValue={data.default_supplier_id?.toString()}
                                     onValueChange={(value) =>
                                         setData("default_supplier_id", value)
                                     }
                                 >
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Pilih supplier" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -164,54 +155,49 @@ export default function Edit({ auth, product, types, suppliers }) {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError
-                                    message={errors.default_supplier_id}
-                                    className="mt-2"
-                                />
-                            </div>
+                            </FormField>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <Label htmlFor="sku">SKU</Label>
+                            <FormField
+                                label="SKU"
+                                htmlFor="sku"
+                                error={errors.sku}
+                            >
                                 <Input
                                     id="sku"
                                     value={data.sku}
                                     onChange={(e) =>
                                         setData("sku", e.target.value)
                                     }
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.sku}
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="price">Harga Jual</Label>
-                                <Input
+                            </FormField>
+                            <FormField
+                                label="Harga Jual"
+                                htmlFor="price"
+                                error={errors.price}
+                            >
+                                <CurrencyInput
                                     id="price"
-                                    type="number"
+                                    placeholder="Contoh: 30000"
                                     value={data.price}
-                                    onChange={(e) =>
-                                        setData("price", e.target.value)
+                                    onValueChange={(value) =>
+                                        setData("price", value)
                                     }
-                                    className="mt-1"
                                 />
-                                <InputError
-                                    message={errors.price}
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="unit">Satuan</Label>
+                            </FormField>
+                            <FormField
+                                label="Satuan"
+                                htmlFor="unit"
+                                error={errors.unit}
+                            >
                                 <Select
                                     value={data.unit}
                                     onValueChange={(value) =>
                                         setData("unit", value)
                                     }
                                 >
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger>
                                         <SelectValue placeholder="Pilih satuan" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -223,30 +209,22 @@ export default function Edit({ auth, product, types, suppliers }) {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError
-                                    message={errors.unit}
-                                    className="mt-2"
-                                />
-                            </div>
+                            </FormField>
                         </div>
 
-                        <div>
-                            <Label htmlFor="description">
-                                Deskripsi (Opsional)
-                            </Label>
+                        <FormField
+                            label="Deskripsi (Opsional)"
+                            htmlFor="description"
+                            error={errors.description}
+                        >
                             <Textarea
                                 id="description"
                                 value={data.description}
                                 onChange={(e) =>
                                     setData("description", e.target.value)
                                 }
-                                className="mt-1"
                             />
-                            <InputError
-                                message={errors.description}
-                                className="mt-2"
-                            />
-                        </div>
+                        </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
                             <Link href={route("products.index")}>

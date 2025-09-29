@@ -28,7 +28,12 @@ class UpdateTypeRequest extends FormRequest
             'required',
             Rule::in(array_keys(Type::getAvailableGroups())),
          ],
-         'code' => ['nullable', 'string', 'max:50', Rule::unique('types')->ignore($typeId)],
+         'code' => [
+            'nullable',
+            'string',
+            'max:50',
+            Rule::unique('types', 'code')->ignore($typeId)->whereNull('deleted_at'),
+         ],
       ];
    }
 }

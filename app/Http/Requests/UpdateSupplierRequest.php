@@ -17,10 +17,10 @@ class UpdateSupplierRequest extends FormRequest
       $supplierId = $this->supplier->id;
 
       return [
-         'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
+         'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u', Rule::unique('suppliers')->ignore($supplierId)],
          'contact_person' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
          'email' => ['required', 'email', 'max:50', Rule::unique('suppliers')->ignore($supplierId)],
-         'phone' => ['required', 'string', 'max:25', Rule::unique('suppliers')->ignore($supplierId)],
+         'phone' => ['required', 'string', 'min:10', 'max:15', Rule::unique('suppliers')->ignore($supplierId)],
          'address' => ['required', 'string', 'max:150'],
          'notes' => ['nullable', 'string', 'max:100'],
       ];
@@ -29,8 +29,12 @@ class UpdateSupplierRequest extends FormRequest
    protected function prepareForValidation()
    {
       if ($this->phone) {
+         $cleanedPhone = preg_replace('/\D/', '', $this->phone);
+         if (substr($cleanedPhone, 0, 1) === '0') {
+            $cleanedPhone = substr($cleanedPhone, 1);
+         }
          $this->merge([
-            'phone' => '+62' . preg_replace('/\D/', '', $this->phone)
+            'phone' => '+62' . $cleanedPhone
          ]);
       }
    }

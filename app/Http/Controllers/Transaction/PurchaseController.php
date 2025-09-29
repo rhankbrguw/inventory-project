@@ -9,8 +9,8 @@ use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
-use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Models\Type;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -21,7 +21,8 @@ class PurchaseController extends Controller
       return Inertia::render('Transactions/Purchases/Create', [
          'locations' => Location::orderBy('name')->get(['id', 'name']),
          'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
-         'products' => Product::orderBy('name')->get(['id', 'name', 'sku', 'unit', 'price', 'default_supplier_id']),
+         'products' => Product::with('defaultSupplier')->orderBy('name')->get(),
+         'paymentMethods' => Type::where('group', Type::GROUP_PAYMENT)->orderBy('name')->get(['id', 'name']),
       ]);
    }
 
@@ -37,11 +38,11 @@ class PurchaseController extends Controller
       DB::transaction(function () use ($validated, $totalCost) {
          $purchase = Purchase::create([
             'location_id' => $validated['location_id'],
-            'supplier_id' => $validated['supplier_id'],
             'user_id' => auth()->id(),
             'reference_code' => 'PO-' . now()->format('Ymd-His'),
             'transaction_date' => $validated['transaction_date'],
             'notes' => $validated['notes'],
+            'payment_method_type_id' => $validated['payment_method_type_id'] ?? null,
             'status' => 'completed',
             'total_cost' => $totalCost,
          ]);
@@ -49,10 +50,12 @@ class PurchaseController extends Controller
          foreach ($validated['items'] as $item) {
             $purchase->stockMovements()->create([
                'product_id' => $item['product_id'],
+               'supplier_id' => $item['supplier_id'] ?? null,
                'location_id' => $validated['location_id'],
                'type' => 'purchase',
                'quantity' => $item['quantity'],
                'cost_per_unit' => $item['cost_per_unit'],
+               'notes' => $validated['notes'],
             ]);
 
             $inventory = Inventory::firstOrCreate(

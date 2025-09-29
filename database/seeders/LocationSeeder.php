@@ -10,13 +10,8 @@ class LocationSeeder extends Seeder
 {
    public function run(): void
    {
-      $warehouseType = Type::firstOrCreate(
-         ['group' => Type::GROUP_LOCATION, 'name' => 'Warehouse']
-      );
-
-      $branchType = Type::firstOrCreate(
-         ['group' => Type::GROUP_LOCATION, 'name' => 'Branch']
-      );
+      $warehouseType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Warehouse')->firstOrFail();
+      $branchType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Branch')->firstOrFail();
 
       $warehouses = [
          ['name' => 'Gudang Pusat A', 'type_id' => $warehouseType->id],

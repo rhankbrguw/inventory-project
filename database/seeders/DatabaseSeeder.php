@@ -11,9 +11,9 @@ class DatabaseSeeder extends Seeder
    public function run(): void
    {
       $this->call([
+         TypeSeeder::class,
          RoleSeeder::class,
          LocationSeeder::class,
-         TypeSeeder::class,
       ]);
 
       $superAdmin = User::firstOrCreate(

@@ -19,15 +19,34 @@ import {
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import DatePicker from "@/Components/DatePicker";
+import { format } from "date-fns";
 
-export default function Create({ auth, locations, suppliers, products }) {
+export default function Create({
+    auth,
+    locations,
+    suppliers,
+    products,
+    paymentMethods,
+}) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         location_id: "",
-        supplier_id: "",
-        transaction_date: new Date().toISOString().slice(0, 10),
+        transaction_date: new Date(),
         notes: "",
-        items: [{ product_id: "", quantity: 1, cost_per_unit: "" }],
+        payment_method_type_id: "",
+        items: [
+            {
+                product_id: "",
+                supplier_id: null,
+                quantity: 1,
+                cost_per_unit: "",
+            },
+        ],
     });
+
+    const handleDateSelect = (selectedDate) => {
+        setData("transaction_date", selectedDate);
+    };
 
     const calculateTotal = () => {
         return data.items.reduce((total, item) => {
@@ -37,19 +56,26 @@ export default function Create({ auth, locations, suppliers, products }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("transactions.purchases.store"));
+        const submissionData = {
+            ...data,
+            transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
+        };
+        post(route("transactions.purchases.store"), {
+            data: submissionData,
+        });
     };
 
     return (
         <ContentPageLayout
             auth={auth}
-            title="Buat Transaksi Pembelian"
+            title="Buat Pembelian Item"
             backRoute="transactions.index"
         >
             <form onSubmit={submit} className="space-y-4">
                 <PurchaseItemManager
                     items={data.items}
                     products={products}
+                    suppliers={suppliers}
                     setData={setData}
                     errors={errors}
                 />
@@ -58,7 +84,7 @@ export default function Create({ auth, locations, suppliers, products }) {
                     <CardHeader>
                         <CardTitle>Detail Transaksi</CardTitle>
                         <CardDescription>
-                            Pilih lokasi, supplier, dan tanggal transaksi.
+                            Pilih lokasi, tanggal, dan detail transaksi lainnya.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid sm:grid-cols-2 gap-6">
@@ -90,39 +116,34 @@ export default function Create({ auth, locations, suppliers, products }) {
                         </FormField>
                         <FormField
                             label="Tanggal Transaksi"
-                            htmlFor="transaction_date"
                             error={errors.transaction_date}
                         >
-                            <Input
-                                id="transaction_date"
-                                type="date"
+                            <DatePicker
                                 value={data.transaction_date}
-                                onChange={(e) =>
-                                    setData("transaction_date", e.target.value)
-                                }
+                                onSelect={handleDateSelect}
                             />
                         </FormField>
                         <FormField
-                            label="Supplier"
-                            htmlFor="supplier_id"
-                            error={errors.supplier_id}
+                            label="Metode Pembayaran (Opsional)"
+                            htmlFor="payment_method_type_id"
+                            error={errors.payment_method_type_id}
                         >
                             <Select
-                                value={data.supplier_id}
+                                value={data.payment_method_type_id}
                                 onValueChange={(value) =>
-                                    setData("supplier_id", value)
+                                    setData("payment_method_type_id", value)
                                 }
                             >
-                                <SelectTrigger id="supplier_id">
-                                    <SelectValue placeholder="Pilih supplier (otomatis jika produk dipilih)" />
+                                <SelectTrigger id="payment_method_type_id">
+                                    <SelectValue placeholder="Pilih metode pembayaran" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {suppliers.map((sup) => (
+                                    {paymentMethods.map((method) => (
                                         <SelectItem
-                                            key={sup.id}
-                                            value={sup.id.toString()}
+                                            key={method.id}
+                                            value={method.id.toString()}
                                         >
-                                            {sup.name}
+                                            {method.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

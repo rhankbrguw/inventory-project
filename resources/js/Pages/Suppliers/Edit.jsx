@@ -12,10 +12,9 @@ export default function Edit({ auth, supplier }) {
         name: supplier.data.name,
         contact_person: supplier.data.contact_person || "",
         email: supplier.data.email || "",
-        phone:
-            supplier.data.phone && supplier.data.phone.startsWith("+62")
-                ? supplier.data.phone.substring(3)
-                : supplier.data.phone || "",
+        phone: supplier.data.phone
+            ? supplier.data.phone.replace("+62", "")
+            : "",
         address: supplier.data.address || "",
         notes: supplier.data.notes || "",
     });

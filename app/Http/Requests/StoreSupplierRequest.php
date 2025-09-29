@@ -14,7 +14,7 @@ class StoreSupplierRequest extends FormRequest
    public function rules(): array
    {
       return [
-         'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
+         'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u', 'unique:suppliers,name'],
          'contact_person' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
          'email' => ['required', 'email', 'max:50', 'unique:suppliers,email'],
          'phone' => ['required', 'string', 'max:25', 'unique:suppliers,phone'],
@@ -26,8 +26,12 @@ class StoreSupplierRequest extends FormRequest
    protected function prepareForValidation()
    {
       if ($this->phone) {
+         $cleanedPhone = preg_replace('/\D/', '', $this->phone);
+         if (substr($cleanedPhone, 0, 1) === '0') {
+            $cleanedPhone = substr($cleanedPhone, 1);
+         }
          $this->merge([
-            'phone' => '+62' . preg_replace('/\D/', '', $this->phone)
+            'phone' => '+62' . $cleanedPhone
          ]);
       }
    }

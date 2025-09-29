@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\Type;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +26,7 @@ class UserController extends Controller
             });
          })
          ->when($request->input('role'), function ($query, $role) {
-            $query->whereHas('roles', fn($q) => $q->where('name', $role));
+            $query->whereHas('roles', fn($q) => $q->where('name', 'like', "%{$role}%"));
          })
          ->when($request->input('sort'), function ($query, $sort) {
             if ($sort === 'name_asc') $query->orderBy('name', 'asc');
@@ -38,7 +39,7 @@ class UserController extends Controller
 
       return Inertia::render('Users/Index', [
          'users' => UserResource::collection($users),
-         'roles' => Role::all(['name']),
+         'roles' => Role::orderBy('name')->get(['name']),
          'filters' => (object) $request->only(['search', 'sort', 'role']),
       ]);
    }
@@ -46,7 +47,7 @@ class UserController extends Controller
    public function create()
    {
       return inertia('Users/Create', [
-         'roles' => Role::orderBy('name')->pluck('name')->toArray(),
+         'roles' => Type::where('group', Type::GROUP_USER_ROLE)->orderBy('name')->pluck('name')->toArray(),
       ]);
    }
 
@@ -67,7 +68,7 @@ class UserController extends Controller
    {
       return inertia('Users/Edit', [
          'user' => UserResource::make($user->load('roles')),
-         'roles' => Role::orderBy('name')->pluck('name')->toArray(),
+         'roles' => Type::where('group', Type::GROUP_USER_ROLE)->orderBy('name')->pluck('name')->toArray(),
       ]);
    }
 
