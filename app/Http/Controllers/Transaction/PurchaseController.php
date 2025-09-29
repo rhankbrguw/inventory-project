@@ -12,15 +12,16 @@ use App\Models\Purchase;
 use App\Models\StockMovement;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PurchaseController extends Controller
 {
    public function create()
    {
-      return inertia('Transactions/Purchases/Create', [
-         'locations' => Location::all(['id', 'name']),
-         'suppliers' => Supplier::all(['id', 'name']),
-         'products' => Product::all(['id', 'name', 'sku', 'unit', 'price', 'default_supplier_id']),
+      return Inertia::render('Transactions/Purchases/Create', [
+         'locations' => Location::orderBy('name')->get(['id', 'name']),
+         'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+         'products' => Product::orderBy('name')->get(['id', 'name', 'sku', 'unit', 'price', 'default_supplier_id']),
       ]);
    }
 
@@ -46,8 +47,7 @@ class PurchaseController extends Controller
          ]);
 
          foreach ($validated['items'] as $item) {
-            StockMovement::create([
-               'purchase_id' => $purchase->id,
+            $purchase->stockMovements()->create([
                'product_id' => $item['product_id'],
                'location_id' => $validated['location_id'],
                'type' => 'purchase',
@@ -68,9 +68,10 @@ class PurchaseController extends Controller
             $newTotalQty = $oldQty + $newQty;
             $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $newCost)) / $newTotalQty;
 
-            $inventory->quantity = $newTotalQty;
-            $inventory->average_cost = $newAvgCost;
-            $inventory->save();
+            $inventory->update([
+               'quantity' => $newTotalQty,
+               'average_cost' => $newAvgCost
+            ]);
          }
       });
 
@@ -81,7 +82,7 @@ class PurchaseController extends Controller
    {
       $purchase->load(['location', 'supplier', 'user', 'stockMovements.product']);
 
-      return inertia('Transactions/Purchases/Show', [
+      return Inertia::render('Transactions/Purchases/Show', [
          'purchase' => PurchaseResource::make($purchase)
       ]);
    }

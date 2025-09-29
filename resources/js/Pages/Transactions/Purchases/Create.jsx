@@ -1,7 +1,7 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import FormField from "@/Components/FormField";
-import PurchaseItemManager from "./Partials/PurchaseItemManager";
+import PurchaseItemManager from "../Partials/PurchaseItemManager";
 import {
     Card,
     CardContent,

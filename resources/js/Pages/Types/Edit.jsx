@@ -21,7 +21,13 @@ import {
 import { Link, useForm } from "@inertiajs/react";
 import { Info } from "lucide-react";
 
-export default function Edit({ auth, type, availableGroups, allTypes }) {
+export default function Edit({
+    auth,
+    type: typeResource,
+    availableGroups,
+    allTypes,
+}) {
+    const { data: type } = typeResource;
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: type.name || "",
         group: type.group || "",
@@ -66,6 +72,10 @@ export default function Edit({ auth, type, availableGroups, allTypes }) {
                                 label="Grup Tipe"
                                 htmlFor="group"
                                 error={errors.group}
+                                description={
+                                    data.group &&
+                                    availableGroups[data.group]?.description
+                                }
                             >
                                 <Select
                                     value={data.group}
@@ -78,7 +88,7 @@ export default function Edit({ auth, type, availableGroups, allTypes }) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(availableGroups).map(
-                                            ([value, label]) => (
+                                            ([value, { label }]) => (
                                                 <SelectItem
                                                     key={value}
                                                     value={value}
@@ -99,14 +109,16 @@ export default function Edit({ auth, type, availableGroups, allTypes }) {
                                     Tipe yang Sudah Ada di Grup Ini:
                                 </AlertTitle>
                                 <AlertDescription className="flex flex-wrap gap-2 pt-2">
-                                    {allTypes[data.group].map((type) => (
-                                        <Badge
-                                            key={type.id}
-                                            variant="secondary"
-                                        >
-                                            {type.name}
-                                        </Badge>
-                                    ))}
+                                    {allTypes[data.group]
+                                        .filter((t) => t.id !== type.id)
+                                        .map((t) => (
+                                            <Badge
+                                                key={t.id}
+                                                variant="secondary"
+                                            >
+                                                {t.name}
+                                            </Badge>
+                                        ))}
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -115,6 +127,7 @@ export default function Edit({ auth, type, availableGroups, allTypes }) {
                             label="Kode (Opsional)"
                             htmlFor="code"
                             error={errors.code}
+                            description="Kode unik singkat untuk referensi cepat jika diperlukan."
                         >
                             <Input
                                 id="code"

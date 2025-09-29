@@ -29,7 +29,7 @@ class TypeController extends Controller
       return Inertia::render('Types/Index', [
          'types' => TypeResource::collection($types),
          'filters' => (object) $request->only(['search', 'group']),
-         'groups' => Type::distinct()->pluck('group'),
+         'groups' => Type::getAvailableGroups(),
       ]);
    }
 
@@ -44,13 +44,18 @@ class TypeController extends Controller
    public function store(StoreTypeRequest $request)
    {
       Type::create($request->validated());
-      return Redirect::back()->with('success', 'Tipe baru berhasil ditambahkan.');
+
+      if ($request->input('_from_modal')) {
+         return Redirect::back()->with('success', 'Tipe baru berhasil ditambahkan.');
+      }
+
+      return Redirect::route('types.index')->with('success', 'Tipe baru berhasil ditambahkan.');
    }
 
    public function edit(Type $type)
    {
       return Inertia::render('Types/Edit', [
-         'type' => $type,
+         'type' => TypeResource::make($type),
          'availableGroups' => Type::getAvailableGroups(),
          'allTypes' => Type::all()->groupBy('group'),
       ]);
@@ -59,7 +64,6 @@ class TypeController extends Controller
    public function update(UpdateTypeRequest $request, Type $type)
    {
       $type->update($request->validated());
-
       return Redirect::route('types.index')->with('success', 'Tipe berhasil diperbarui.');
    }
 
@@ -70,7 +74,6 @@ class TypeController extends Controller
       }
 
       $type->delete();
-
       return Redirect::route('types.index')->with('success', 'Tipe berhasil dihapus.');
    }
 }

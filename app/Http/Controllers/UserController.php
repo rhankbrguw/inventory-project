@@ -46,7 +46,7 @@ class UserController extends Controller
    public function create()
    {
       return inertia('Users/Create', [
-         'roles' => Role::pluck('name')->toArray(),
+         'roles' => Role::orderBy('name')->pluck('name')->toArray(),
       ]);
    }
 
@@ -66,8 +66,8 @@ class UserController extends Controller
    public function edit(User $user)
    {
       return inertia('Users/Edit', [
-         'user' => UserResource::make($user),
-         'roles' => Role::pluck('name')->toArray(),
+         'user' => UserResource::make($user->load('roles')),
+         'roles' => Role::orderBy('name')->pluck('name')->toArray(),
       ]);
    }
 

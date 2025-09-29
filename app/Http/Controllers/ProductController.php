@@ -49,7 +49,7 @@ class ProductController extends Controller
    public function create()
    {
       return Inertia::render('Products/Create', [
-         'types' => Type::where('group', 'product_type')->get(),
+         'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
          'suppliers' => Supplier::all(['id', 'name']),
       ]);
    }
@@ -74,7 +74,7 @@ class ProductController extends Controller
 
       return Inertia::render('Products/Edit', [
          'product' => ProductResource::make($product),
-         'types' => Type::where('group', 'product_type')->get(),
+         'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
          'suppliers' => Supplier::all(['id', 'name']),
       ]);
    }
