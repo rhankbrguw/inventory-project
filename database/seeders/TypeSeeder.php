@@ -18,12 +18,10 @@ class TypeSeeder extends Seeder
          ['group' => Type::GROUP_USER_ROLE, 'name' => 'Warehouse Manager', 'code' => 'WHM'],
          ['group' => Type::GROUP_USER_ROLE, 'name' => 'Branch Manager', 'code' => 'BRM'],
          ['group' => Type::GROUP_USER_ROLE, 'name' => 'Cashier', 'code' => 'CSH'],
+         ['group' => Type::GROUP_USER_ROLE, 'name' => 'Staff', 'code' => 'STF'],
 
          ['group' => Type::GROUP_LOCATION, 'name' => 'Warehouse'],
          ['group' => Type::GROUP_LOCATION, 'name' => 'Branch'],
-
-         ['group' => Type::GROUP_PAYMENT, 'name' => 'Cash'],
-         ['group' => Type::GROUP_PAYMENT, 'name' => 'Bank Transfer'],
       ];
 
       foreach ($types as $type) {

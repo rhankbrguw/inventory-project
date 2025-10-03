@@ -209,18 +209,31 @@ export const locationColumns = [
     {
         accessorKey: "name",
         header: "Nama Lokasi",
-        className: "font-medium",
+        className: "font-medium text-center",
     },
     {
         accessorKey: "type",
         header: "Tipe",
-        cell: ({ row }) => (
-            <span className="capitalize">{row.original.type}</span>
-        ),
+        cell: ({ row }) => row.type?.name || "-",
+        className: "text-center",
     },
     {
-        accessorKey: "address",
-        header: "Alamat",
-        cell: ({ row }) => row.original.address || "-",
+        accessorKey: "users",
+        header: "Pengguna Ditugaskan",
+        cell: ({ row }) =>
+            row.users.length > 0
+                ? row.users.map((user) => user.name).join(", ")
+                : "-",
+        className: "text-center",
+    },
+    {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+            <Badge variant={row.deleted_at ? "destructive" : "success"}>
+                {row.deleted_at ? "Nonaktif" : "Aktif"}
+            </Badge>
+        ),
+        className: "text-center",
     },
 ];

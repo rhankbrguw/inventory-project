@@ -17,8 +17,6 @@ Route::get('/', function () {
    return Inertia::render('Welcome', [
       'canLogin' => Route::has('login'),
       'canRegister' => Route::has('register'),
-      'laravelVersion' => Application::VERSION,
-      'phpVersion' => PHP_VERSION,
    ]);
 });
 
@@ -30,9 +28,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
    Route::middleware(['role:Super Admin'])->group(function () {
-      Route::resource('users', UserController::class);
-      Route::resource('types', TypeController::class)->except(['store']);
-      Route::resource('locations', LocationsController::class);
+      Route::resource('users', UserController::class)->except(['destroy']);
+      Route::resource('types', TypeController::class)->except(['destroy']);
+
+      Route::get('/locations/create', [LocationsController::class, 'create'])->name('locations.create');
+      Route::post('/locations', [LocationsController::class, 'store'])->name('locations.store');
+      Route::get('/locations/{location}/edit', [LocationsController::class, 'edit'])->name('locations.edit');
+      Route::patch('/locations/{location}', [LocationsController::class, 'update'])->name('locations.update');
+      Route::delete('/locations/{location}', [LocationsController::class, 'destroy'])->name('locations.destroy');
+      Route::post('/locations/{location}/restore', [LocationsController::class, 'restore'])->name('locations.restore');
    });
 
    Route::post('/types', [TypeController::class, 'store'])
@@ -42,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
    Route::middleware(['role:Super Admin|Warehouse Manager|Branch Manager'])->group(function () {
       Route::resource('products', ProductController::class);
       Route::resource('suppliers', SupplierController::class);
+      Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
 
       Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
       Route::post('/transactions/purchases', [PurchaseController::class, 'store'])->name('transactions.purchases.store');
@@ -54,7 +59,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
       Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');
       Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
       Route::get('/stock/{inventory}', [StockController::class, 'show'])->name('stock.show');
-      Route::get('/api/inventory/quantity', [StockController::class, 'getQuantity'])->name('api.inventory.quantity');
    });
 });
 

@@ -22,6 +22,7 @@ class StoreLocationRequest extends FormRequest
             'integer',
             Rule::exists('types', 'id')->where('group', Type::GROUP_LOCATION),
          ],
+         'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
          'address' => 'nullable|string|max:1000',
       ];
    }
