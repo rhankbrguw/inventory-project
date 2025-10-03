@@ -13,24 +13,12 @@ import {
 } from "@/Components/ui/select";
 import { Textarea } from "@/Components/ui/textarea";
 
-export default function Create({
-    auth,
-    locationTypes,
-    branchManagers,
-    warehouseManagers,
-}) {
+export default function Create({ auth, locationTypes }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         type_id: "",
-        manager_id: "",
         address: "",
     });
-
-    const selectedType = locationTypes.find(
-        (type) => type.id.toString() === data.type_id
-    );
-    const availableManagers =
-        selectedType?.name === "Warehouse" ? warehouseManagers : branchManagers;
 
     const submit = (e) => {
         e.preventDefault();
@@ -62,67 +50,32 @@ export default function Create({
                                 }
                             />
                         </FormField>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                                label="Tipe Lokasi"
-                                htmlFor="type_id"
-                                error={errors.type_id}
+                        <FormField
+                            label="Tipe Lokasi"
+                            htmlFor="type_id"
+                            error={errors.type_id}
+                        >
+                            <Select
+                                value={data.type_id}
+                                onValueChange={(value) =>
+                                    setData("type_id", value)
+                                }
                             >
-                                <Select
-                                    value={data.type_id}
-                                    onValueChange={(value) =>
-                                        setData("type_id", value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih tipe..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {locationTypes.map((type) => (
-                                            <SelectItem
-                                                key={type.id}
-                                                value={type.id.toString()}
-                                            >
-                                                {type.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-                            <FormField
-                                label="Manajer (Opsional)"
-                                htmlFor="manager_id"
-                                error={errors.manager_id}
-                            >
-                                <Select
-                                    value={data.manager_id}
-                                    onValueChange={(value) => {
-                                        setData(
-                                            "manager_id",
-                                            value === "none" ? "" : value
-                                        );
-                                    }}
-                                    disabled={!data.type_id}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih tipe lokasi dulu..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            Tanpa Manajer
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih tipe..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {locationTypes.map((type) => (
+                                        <SelectItem
+                                            key={type.id}
+                                            value={type.id.toString()}
+                                        >
+                                            {type.name}
                                         </SelectItem>
-                                        {availableManagers.map((manager) => (
-                                            <SelectItem
-                                                key={manager.id}
-                                                value={manager.id.toString()}
-                                            >
-                                                {manager.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-                        </div>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
                         <FormField
                             label="Alamat (Opsional)"
                             htmlFor="address"

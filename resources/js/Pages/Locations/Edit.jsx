@@ -12,26 +12,27 @@ import {
     SelectValue,
 } from "@/Components/ui/select";
 import { Textarea } from "@/Components/ui/textarea";
+import AssignmentManager from "./Partials/AssignmentManager";
 
 export default function Edit({
     auth,
-    location,
+    location: locationResource,
     locationTypes,
-    branchManagers,
-    warehouseManagers,
+    allUsers,
+    allRoles,
 }) {
+    const { data: location } = locationResource;
+
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: location.name || "",
         type_id: location.type_id?.toString() || "",
-        manager_id: location.manager_id?.toString() || "",
         address: location.address || "",
+        assignments:
+            location.users?.map((user) => ({
+                user_id: user.pivot.user_id.toString(),
+                role_id: user.pivot.role_id.toString(),
+            })) || [],
     });
-
-    const selectedType = locationTypes.find(
-        (type) => type.id.toString() === data.type_id
-    );
-    const availableManagers =
-        selectedType?.name === "Warehouse" ? warehouseManagers : branchManagers;
 
     const submit = (e) => {
         e.preventDefault();
@@ -44,12 +45,12 @@ export default function Edit({
             title="Edit Lokasi"
             backRoute="locations.index"
         >
-            <Card>
-                <CardHeader>
-                    <CardTitle>{location.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={submit} className="space-y-6">
+            <form onSubmit={submit} className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Detail Lokasi</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
                         <FormField
                             label="Nama Lokasi"
                             htmlFor="name"
@@ -58,72 +59,35 @@ export default function Edit({
                             <Input
                                 id="name"
                                 value={data.name}
-                                onChange={(e) =>
-                                    setData("name", e.target.value)
-                                }
+                                onChange={(e) => setData("name", e.g.et.value)}
                             />
                         </FormField>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                                label="Tipe Lokasi"
-                                htmlFor="type_id"
-                                error={errors.type_id}
+                        <FormField
+                            label="Tipe Lokasi"
+                            htmlFor="type_id"
+                            error={errors.type_id}
+                        >
+                            <Select
+                                value={data.type_id}
+                                onValueChange={(value) =>
+                                    setData("type_id", value)
+                                }
                             >
-                                <Select
-                                    value={data.type_id}
-                                    onValueChange={(value) =>
-                                        setData("type_id", value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih tipe..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {locationTypes.map((type) => (
-                                            <SelectItem
-                                                key={type.id}
-                                                value={type.id.toString()}
-                                            >
-                                                {type.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-                            <FormField
-                                label="Manajer (Opsional)"
-                                htmlFor="manager_id"
-                                error={errors.manager_id}
-                            >
-                                <Select
-                                    value={data.manager_id}
-                                    onValueChange={(value) => {
-                                        setData(
-                                            "manager_id",
-                                            value === "none" ? "" : value
-                                        );
-                                    }}
-                                    disabled={!data.type_id}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih tipe lokasi dulu..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            Tanpa Manajer
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih tipe..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {locationTypes.map((type) => (
+                                        <SelectItem
+                                            key={type.id}
+                                            value={type.id.toString()}
+                                        >
+                                            {type.name}
                                         </SelectItem>
-                                        {availableManagers.map((manager) => (
-                                            <SelectItem
-                                                key={manager.id}
-                                                value={manager.id.toString()}
-                                            >
-                                                {manager.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-                        </div>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
                         <FormField
                             label="Alamat (Opsional)"
                             htmlFor="address"
@@ -137,19 +101,28 @@ export default function Edit({
                                 }
                             />
                         </FormField>
-                        <div className="flex items-center justify-end gap-4">
-                            <Link href={route("locations.index")}>
-                                <Button type="button" variant="outline">
-                                    Batal
-                                </Button>
-                            </Link>
-                            <Button disabled={processing || !isDirty}>
-                                Simpan Perubahan
-                            </Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                <AssignmentManager
+                    assignments={data.assignments}
+                    allUsers={allUsers}
+                    allRoles={allRoles}
+                    errors={errors}
+                    setData={setData}
+                />
+
+                <div className="flex items-center justify-end gap-4">
+                    <Link href={route("locations.index")}>
+                        <Button type="button" variant="outline">
+                            Batal
+                        </Button>
+                    </Link>
+                    <Button disabled={processing || !isDirty}>
+                        Simpan Perubahan
+                    </Button>
+                </div>
+            </form>
         </ContentPageLayout>
     );
 }

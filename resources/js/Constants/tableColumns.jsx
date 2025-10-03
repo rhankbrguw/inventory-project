@@ -219,7 +219,7 @@ export const locationColumns = [
     },
     {
         accessorKey: "users",
-        header: "Pengguna Ditugaskan",
+        header: "Petugas",
         cell: ({ row }) =>
             row.users.length > 0
                 ? row.users.map((user) => user.name).join(", ")

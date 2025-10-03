@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, router } from "@inertiajs/react";
 import IndexPageLayout from "@/Components/IndexPageLayout";
-import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import LocationMobileCard from "./Partials/LocationMobileCard";
@@ -25,22 +24,24 @@ import {
 } from "@/Components/ui/dropdown-menu";
 import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
 
-export default function Index({ auth, locations, locationTypes, filters }) {
+export default function Index({
+    auth,
+    locations: locationsResource,
+    locationTypes,
+    filters,
+}) {
+    const { data: locations } = locationsResource;
     const { params, setFilter } = useIndexPageFilters(
         "locations.index",
         filters
     );
 
-    const handleDeactivate = (id) => {
-        router.delete(route("locations.destroy", id), { preserveScroll: true });
+    const handleDeactivate = (url) => {
+        router.delete(url, { preserveScroll: true });
     };
 
-    const handleActivate = (id) => {
-        router.post(
-            route("locations.restore", id),
-            {},
-            { preserveScroll: true }
-        );
+    const handleActivate = (url) => {
+        router.post(url, {}, { preserveScroll: true });
     };
 
     const renderActionDropdown = (location) => (
@@ -57,23 +58,21 @@ export default function Index({ auth, locations, locationTypes, filters }) {
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
                     className="cursor-pointer"
-                    onSelect={() =>
-                        router.get(route("locations.edit", location.id))
-                    }
+                    onSelect={() => router.get(location.urls.edit)}
                 >
                     <Edit className="w-4 h-4 mr-2" /> Edit
                 </DropdownMenuItem>
                 {location.deleted_at ? (
                     <DropdownMenuItem
                         className="cursor-pointer"
-                        onSelect={() => handleActivate(location.id)}
+                        onSelect={() => handleActivate(location.urls.restore)}
                     >
                         <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
                     </DropdownMenuItem>
                 ) : (
                     <DropdownMenuItem
                         className="text-destructive focus:text-destructive cursor-pointer"
-                        onSelect={() => handleDeactivate(location.id)}
+                        onSelect={() => handleDeactivate(location.urls.destroy)}
                     >
                         <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
                     </DropdownMenuItem>
@@ -99,7 +98,7 @@ export default function Index({ auth, locations, locationTypes, filters }) {
                             onChange={(e) =>
                                 setFilter("search", e.target.value)
                             }
-                            className="w-full sm:flex-grow"
+                            className="w-full sm:w-auto sm:flex-grow"
                         />
                         <Select
                             value={params.type_id || "all"}
@@ -107,7 +106,7 @@ export default function Index({ auth, locations, locationTypes, filters }) {
                                 setFilter("type_id", value)
                             }
                         >
-                            <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectTrigger className="w-full sm:w-[180px]">
                                 <SelectValue placeholder="Semua Tipe" />
                             </SelectTrigger>
                             <SelectContent>
@@ -148,15 +147,16 @@ export default function Index({ auth, locations, locationTypes, filters }) {
             <MobileCardList
                 data={locations}
                 renderItem={(location) => (
-                    <Link
-                        href={route("locations.edit", location.id)}
+                    <div
+                        onClick={() => router.get(location.urls.edit)}
                         key={location.id}
+                        className="cursor-pointer"
                     >
                         <LocationMobileCard
                             location={location}
                             renderActionDropdown={renderActionDropdown}
                         />
-                    </Link>
+                    </div>
                 )}
             />
 
@@ -165,7 +165,6 @@ export default function Index({ auth, locations, locationTypes, filters }) {
                     columns={locationColumns}
                     data={locations}
                     actions={renderActionDropdown}
-                    showRoute={"locations.edit"}
                     rowClassName={(row) => (row.deleted_at ? "opacity-50" : "")}
                 />
             </div>

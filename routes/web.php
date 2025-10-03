@@ -33,10 +33,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
       Route::get('/locations/create', [LocationsController::class, 'create'])->name('locations.create');
       Route::post('/locations', [LocationsController::class, 'store'])->name('locations.store');
-      Route::get('/locations/{location}/edit', [LocationsController::class, 'edit'])->name('locations.edit');
-      Route::patch('/locations/{location}', [LocationsController::class, 'update'])->name('locations.update');
+      Route::get('/locations/{location}/edit', [LocationsController::class, 'edit'])->name('locations.edit')->withTrashed();
+      Route::patch('/locations/{location}', [LocationsController::class, 'update'])->name('locations.update')->withTrashed();
       Route::delete('/locations/{location}', [LocationsController::class, 'destroy'])->name('locations.destroy');
-      Route::post('/locations/{location}/restore', [LocationsController::class, 'restore'])->name('locations.restore');
+      Route::post('/locations/{location}/restore', [LocationsController::class, 'restore'])->name('locations.restore')->withTrashed();
    });
 
    Route::post('/types', [TypeController::class, 'store'])

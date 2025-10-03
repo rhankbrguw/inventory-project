@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLocationRequest;
+use App\Http\Requests\UpdateLocationRequest;
+use App\Http\Resources\LocationResource;
 use App\Models\Location;
 use App\Models\Type;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
@@ -17,8 +20,7 @@ class LocationsController extends Controller
       $locations = Location::with(['type', 'users'])
          ->withTrashed()
          ->when($request->input('search'), function ($query, $search) {
-            $query->where('name', 'like', "%{$search}%")
-               ->orWhereHas('users', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $query->where('name', 'like', "%{$search}%");
          })
          ->when($request->input('status'), function ($query, $status) {
             if ($status === 'active') $query->whereNull('deleted_at');
@@ -28,33 +30,17 @@ class LocationsController extends Controller
          ->get();
 
       return Inertia::render('Locations/Index', [
-         'locations' => $locations,
+         'locations' => LocationResource::collection($locations),
          'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->get(['id', 'name']),
-         'filters' => (object) $request->only(['search', 'type_id', 'status']),
+         'filters' => (object) $request->only(['search', 'status']),
       ]);
-   }
-
-   public function restore(Location $location)
-   {
-      $location->restore();
-      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diaktifkan kembali.');
-   }
-
-   private function getFormData()
-   {
-      $branchManagerRole = Role::where('name', 'Branch Manager')->first();
-      $warehouseManagerRole = Role::where('name', 'Warehouse Manager')->first();
-
-      return [
-         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->orderBy('name')->get(['id', 'name']),
-         'branchManagers' => $branchManagerRole ? $branchManagerRole->users()->get(['id', 'name']) : [],
-         'warehouseManagers' => $warehouseManagerRole ? $warehouseManagerRole->users()->get(['id', 'name']) : [],
-      ];
    }
 
    public function create()
    {
-      return Inertia::render('Locations/Create', $this->getFormData());
+      return Inertia::render('Locations/Create', [
+         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->orderBy('name')->get(['id', 'name']),
+      ]);
    }
 
    public function store(StoreLocationRequest $request)
@@ -65,24 +51,44 @@ class LocationsController extends Controller
 
    public function edit(Location $location)
    {
-      return Inertia::render('Locations/Edit', array_merge($this->getFormData(), [
-         'location' => $location->load('type'),
-      ]));
+      return Inertia::render('Locations/Edit', [
+         'location' => new LocationResource($location->load('type', 'users.roles')),
+         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->orderBy('name')->get(['id', 'name']),
+         'allUsers' => User::orderBy('name')->get(['id', 'name']),
+         'allRoles' => Role::orderBy('name')->get(['id', 'name']),
+      ]);
    }
 
-   public function update(StoreLocationRequest $request, Location $location)
+   public function update(UpdateLocationRequest $request, Location $location)
    {
-      $location->update($request->validated());
+      $validated = $request->validated();
+      $location->update([
+         'name' => $validated['name'],
+         'type_id' => $validated['type_id'],
+         'address' => $validated['address'],
+      ]);
+
+      if (isset($validated['assignments'])) {
+         $syncData = collect($validated['assignments'])->mapWithKeys(function ($assignment) {
+            return [$assignment['user_id'] => ['role_id' => $assignment['role_id']]];
+         });
+         $location->users()->sync($syncData);
+      } else {
+         $location->users()->sync([]);
+      }
+
       return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diperbarui.');
    }
 
    public function destroy(Location $location)
    {
-      if ($location->inventories()->where('quantity', '>', 0)->exists()) {
-         return Redirect::back()->with('error', 'Lokasi tidak dapat dihapus karena masih ada stok.');
-      }
-
       $location->delete();
-      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil dihapus.');
+      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil dinonaktifkan.');
+   }
+
+   public function restore(Location $location)
+   {
+      $location->restore();
+      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diaktifkan kembali.');
    }
 }
