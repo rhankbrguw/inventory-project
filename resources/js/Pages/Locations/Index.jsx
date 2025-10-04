@@ -98,7 +98,7 @@ export default function Index({
                             onChange={(e) =>
                                 setFilter("search", e.target.value)
                             }
-                            className="w-full sm:w-auto sm:flex-grow"
+                            className="w-full sm:flex-grow"
                         />
                         <Select
                             value={params.type_id || "all"}
@@ -165,6 +165,7 @@ export default function Index({
                     columns={locationColumns}
                     data={locations}
                     actions={renderActionDropdown}
+                    showRoute={"locations.edit"}
                     rowClassName={(row) => (row.deleted_at ? "opacity-50" : "")}
                 />
             </div>

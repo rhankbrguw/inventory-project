@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\Auth\UpdatePasswordRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,6 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-
    public function edit(Request $request): Response
    {
       return Inertia::render('Profile/Edit', [
@@ -33,6 +33,15 @@ class ProfileController extends Controller
       $request->user()->save();
 
       return Redirect::route('profile.edit');
+   }
+
+   public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
+   {
+      $request->user()->update([
+         'password' => $request->validated('password'),
+      ]);
+
+      return back();
    }
 
    public function destroy(Request $request): RedirectResponse
