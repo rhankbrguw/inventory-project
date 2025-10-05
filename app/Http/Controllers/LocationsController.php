@@ -9,8 +9,8 @@ use App\Models\Location;
 use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
 class LocationsController extends Controller
@@ -52,7 +52,7 @@ class LocationsController extends Controller
    public function edit(Location $location)
    {
       return Inertia::render('Locations/Edit', [
-         'location' => new LocationResource($location->load('type', 'users.roles')),
+         'location' => LocationResource::make($location->load('type', 'users.roles')),
          'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->orderBy('name')->get(['id', 'name']),
          'allUsers' => User::orderBy('name')->get(['id', 'name']),
          'allRoles' => Role::orderBy('name')->get(['id', 'name']),
@@ -62,6 +62,7 @@ class LocationsController extends Controller
    public function update(UpdateLocationRequest $request, Location $location)
    {
       $validated = $request->validated();
+
       $location->update([
          'name' => $validated['name'],
          'type_id' => $validated['type_id'],

@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\UserResource;
-use App\Models\User;
-use App\Models\Type;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Resources\UserResource;
+use App\Models\Type;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-   public function index(Request $request): Response
+   public function index(Request $request)
    {
       $users = User::query()
          ->with('roles')
@@ -46,27 +46,29 @@ class UserController extends Controller
 
    public function create()
    {
-      return inertia('Users/Create', [
+      return Inertia::render('Users/Create', [
          'roles' => Type::where('group', Type::GROUP_USER_ROLE)->orderBy('name')->pluck('name')->toArray(),
       ]);
    }
 
    public function store(StoreUserRequest $request)
    {
+      $validated = $request->validated();
+
       $user = User::create([
-         'name' => $request->name,
-         'email' => $request->email,
-         'password' => Hash::make($request->password),
+         'name' => $validated['name'],
+         'email' => $validated['email'],
+         'password' => Hash::make($validated['password']),
       ]);
 
-      $user->assignRole($request->role);
+      $user->assignRole($validated['role']);
 
-      return to_route('users.index')->with('success', 'Pengguna berhasil ditambahkan.');
+      return Redirect::route('users.index')->with('success', 'Pengguna berhasil ditambahkan.');
    }
 
    public function edit(User $user)
    {
-      return inertia('Users/Edit', [
+      return Inertia::render('Users/Edit', [
          'user' => UserResource::make($user->load('roles')),
          'roles' => Type::where('group', Type::GROUP_USER_ROLE)->orderBy('name')->pluck('name')->toArray(),
       ]);
@@ -87,17 +89,17 @@ class UserController extends Controller
 
       $user->syncRoles($validated['role']);
 
-      return redirect()->route('users.index')->with('success', 'Pengguna berhasil diperbarui.');
+      return Redirect::route('users.index')->with('success', 'Pengguna berhasil diperbarui.');
    }
 
    public function destroy(User $user)
    {
       if ($user->id === auth()->id()) {
-         return redirect()->route('users.index')->with('error', 'Anda tidak bisa menghapus akun sendiri.');
+         return Redirect::route('users.index')->with('error', 'Anda tidak bisa menghapus akun sendiri.');
       }
 
       $user->delete();
 
-      return redirect()->route('users.index')->with('success', 'Pengguna berhasil dihapus.');
+      return Redirect::route('users.index')->with('success', 'Pengguna berhasil dihapus.');
    }
 }

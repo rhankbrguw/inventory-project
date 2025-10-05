@@ -17,10 +17,11 @@ class ProductResource extends JsonResource
          'price' => $this->price,
          'unit' => $this->unit,
          'description' => $this->description,
-         'created_at' => $this->created_at->toISOString(),
          'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
          'type' => $this->whenLoaded('type'),
          'default_supplier' => $this->whenLoaded('defaultSupplier'),
+         'created_at' => $this->created_at?->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
       ];
    }
 }

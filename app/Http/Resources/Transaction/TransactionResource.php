@@ -17,12 +17,14 @@ class TransactionResource extends JsonResource
          'notes' => $this->notes,
          'status' => $this->status,
          'type' => 'Pembelian',
-         'location' => $this->whenLoaded('location', fn() => $this->location->name),
-         'supplier' => $this->whenLoaded('supplier', fn() => $this->supplier->name),
-         'user' => $this->whenLoaded('user', fn() => $this->user->name),
+         'location' => $this->whenLoaded('location', fn() => $this->location?->name),
+         'supplier' => $this->whenLoaded('supplier', fn() => $this->supplier?->name),
+         'user' => $this->whenLoaded('user', fn() => $this->user?->name),
          'items_preview' => $this->whenLoaded('stockMovements', function () {
             return $this->stockMovements->take(2)->map(fn($item) => $item->product->name)->join(', ');
          }),
+         'created_at' => $this->created_at?->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
       ];
    }
 }

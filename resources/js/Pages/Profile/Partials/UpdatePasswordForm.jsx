@@ -24,6 +24,7 @@ export default function UpdatePasswordForm({ className = "" }) {
         reset,
         processing,
         recentlySuccessful,
+        isDirty,
     } = useForm({
         current_password: "",
         password: "",
@@ -32,17 +33,20 @@ export default function UpdatePasswordForm({ className = "" }) {
 
     const updatePassword = (e) => {
         e.preventDefault();
+
         put(route("password.update"), {
             preserveScroll: true,
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset();
+            },
             onError: (errors) => {
                 if (errors.password) {
                     reset("password", "password_confirmation");
-                    passwordInput.current.focus();
+                    passwordInput.current?.focus();
                 }
                 if (errors.current_password) {
                     reset("current_password");
-                    currentPasswordInput.current.focus();
+                    currentPasswordInput.current?.focus();
                 }
             },
         });
@@ -59,8 +63,8 @@ export default function UpdatePasswordForm({ className = "" }) {
             </CardHeader>
 
             <CardContent>
-                <form onSubmit={updatePassword} className="mt-6 space-y-6">
-                    <div>
+                <form onSubmit={updatePassword} className="space-y-6">
+                    <div className="space-y-2">
                         <Label htmlFor="current_password">
                             Password Saat Ini
                         </Label>
@@ -71,8 +75,9 @@ export default function UpdatePasswordForm({ className = "" }) {
                             onChange={(e) =>
                                 setData("current_password", e.target.value)
                             }
-                            className="mt-1 block w-full"
+                            className="w-full"
                             autoComplete="current-password"
+                            required
                         />
                         <InputError
                             message={errors.current_password}
@@ -80,7 +85,7 @@ export default function UpdatePasswordForm({ className = "" }) {
                         />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                         <Label htmlFor="password">Password Baru</Label>
                         <PasswordInput
                             id="password"
@@ -89,8 +94,9 @@ export default function UpdatePasswordForm({ className = "" }) {
                             onChange={(e) =>
                                 setData("password", e.target.value)
                             }
-                            className="mt-1 block w-full"
+                            className="w-full"
                             autoComplete="new-password"
+                            required
                         />
                         <InputError
                             message={errors.password}
@@ -98,7 +104,7 @@ export default function UpdatePasswordForm({ className = "" }) {
                         />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                         <Label htmlFor="password_confirmation">
                             Konfirmasi Password
                         </Label>
@@ -108,8 +114,9 @@ export default function UpdatePasswordForm({ className = "" }) {
                             onChange={(e) =>
                                 setData("password_confirmation", e.target.value)
                             }
-                            className="mt-1 block w-full"
+                            className="w-full"
                             autoComplete="new-password"
+                            required
                         />
                         <InputError
                             message={errors.password_confirmation}
@@ -118,18 +125,18 @@ export default function UpdatePasswordForm({ className = "" }) {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <Button disabled={processing}>Simpan</Button>
+                        <Button type="submit" disabled={processing || !isDirty}>
+                            {processing ? "Menyimpan..." : "Simpan"}
+                        </Button>
+
                         <Transition
                             show={recentlySuccessful}
-                            enter="transition ease-in-out"
+                            enter="transition ease-in-out duration-300"
                             enterFrom="opacity-0"
-                            leave="transition ease-in-out"
+                            enterTo="opacity-100"
+                            leave="transition ease-in-out duration-300"
                             leaveTo="opacity-0"
-                        >
-                            <p className="text-sm text-muted-foreground">
-                                Tersimpan.
-                            </p>
-                        </Transition>
+                        ></Transition>
                     </div>
                 </form>
             </CardContent>

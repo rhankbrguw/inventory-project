@@ -59,21 +59,18 @@ class ProductController extends Controller
       $validated = $request->validated();
 
       if ($request->hasFile('image')) {
-         $path = $request->file('image')->store('products', 'public');
-         $validated['image_path'] = $path;
+         $validated['image_path'] = $request->file('image')->store('products', 'public');
       }
 
       Product::create($validated);
 
-      return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
+      return Redirect::route('products.index')->with('success', 'Produk berhasil ditambahkan.');
    }
 
    public function edit(Product $product)
    {
-      $product->load(['type', 'defaultSupplier']);
-
       return Inertia::render('Products/Edit', [
-         'product' => ProductResource::make($product),
+         'product' => ProductResource::make($product->load('type', 'defaultSupplier')),
          'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
          'suppliers' => Supplier::all(['id', 'name']),
       ]);
@@ -87,13 +84,12 @@ class ProductController extends Controller
          if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
          }
-         $path = $request->file('image')->store('products', 'public');
-         $validated['image_path'] = $path;
+         $validated['image_path'] = $request->file('image')->store('products', 'public');
       }
 
       $product->update($validated);
 
-      return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
+      return Redirect::route('products.index')->with('success', 'Produk berhasil diperbarui.');
    }
 
    public function destroy(Product $product)

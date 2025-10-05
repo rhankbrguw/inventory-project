@@ -10,8 +10,8 @@ use App\Models\Location;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\Type;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -64,8 +64,6 @@ class StockController extends Controller
 
    public function show(Inventory $inventory)
    {
-      $inventory->load(['product', 'location']);
-
       $stockMovements = StockMovement::where('product_id', $inventory->product_id)
          ->where('location_id', $inventory->location_id)
          ->with('purchase')
@@ -73,7 +71,7 @@ class StockController extends Controller
          ->paginate(20);
 
       return Inertia::render('Stock/Show', [
-         'inventory' => $inventory,
+         'inventory' => InventoryResource::make($inventory->load('product', 'location')),
          'stockMovements' => StockMovementResource::collection($stockMovements),
       ]);
    }

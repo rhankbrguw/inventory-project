@@ -20,6 +20,8 @@ class PurchaseResource extends JsonResource
          'supplier' => $this->whenLoaded('supplier'),
          'user' => $this->whenLoaded('user'),
          'items' => StockMovementResource::collection($this->whenLoaded('stockMovements')),
+         'created_at' => $this->created_at?->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
       ];
    }
 }

@@ -17,6 +17,8 @@ class UserResource extends JsonResource
             'name' => $this->roles->first()->name,
             'code' => $this->roles->first()->code,
          ] : null,
+         'created_at' => $this->created_at?->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
       ];
    }
 }

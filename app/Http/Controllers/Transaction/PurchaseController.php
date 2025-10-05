@@ -12,6 +12,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class PurchaseController extends Controller
@@ -78,15 +79,13 @@ class PurchaseController extends Controller
          }
       });
 
-      return redirect()->route('transactions.index')->with('success', 'Transaksi pembelian berhasil disimpan.');
+      return Redirect::route('transactions.index')->with('success', 'Transaksi pembelian berhasil disimpan.');
    }
 
    public function show(Purchase $purchase)
    {
-      $purchase->load(['location', 'supplier', 'user', 'stockMovements.product']);
-
       return Inertia::render('Transactions/Purchases/Show', [
-         'purchase' => PurchaseResource::make($purchase)
+         'purchase' => PurchaseResource::make($purchase->load(['location', 'supplier', 'user', 'stockMovements.product']))
       ]);
    }
 }

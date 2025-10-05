@@ -13,7 +13,7 @@ class InventoryResource extends JsonResource
          'id' => $this->id,
          'quantity' => $this->quantity,
          'average_cost' => $this->average_cost,
-         'updated_at' => $this->updated_at->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
          'product' => $this->whenLoaded('product', fn() => [
             'name' => $this->product->name,
             'sku' => $this->product->sku,

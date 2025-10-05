@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Type;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Type;
 
 class UpdateLocationRequest extends FormRequest
 {
@@ -17,15 +17,11 @@ class UpdateLocationRequest extends FormRequest
    {
       return [
          'name' => ['required', 'string', 'max:100', Rule::unique('locations')->ignore($this->location)],
-         'type_id' => [
-            'required',
-            'integer',
-            Rule::exists('types', 'id')->where('group', Type::GROUP_LOCATION),
-         ],
-         'address' => 'nullable|string|max:100',
-         'assignments' => 'nullable|array',
-         'assignments.*.user_id' => 'required|exists:users,id',
-         'assignments.*.role_id' => 'required|exists:roles,id',
+         'type_id' => ['required', 'integer', Rule::exists('types', 'id')->where('group', Type::GROUP_LOCATION)],
+         'address' => ['nullable', 'string', 'max:100'],
+         'assignments' => ['nullable', 'array'],
+         'assignments.*.user_id' => ['required', 'exists:users,id'],
+         'assignments.*.role_id' => ['required', 'exists:roles,id'],
       ];
    }
 }
