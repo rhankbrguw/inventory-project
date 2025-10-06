@@ -2,7 +2,6 @@ import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { typeColumns } from "@/Constants/tableColumns.jsx";
-import { formatGroupName } from "@/lib/utils";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
 import DataTable from "@/Components/DataTable";

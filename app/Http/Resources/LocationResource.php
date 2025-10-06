@@ -15,19 +15,13 @@ class LocationResource extends JsonResource
          'address' => $this->address,
          'deleted_at' => $this->deleted_at?->toISOString(),
          'type_id' => $this->type_id,
-         'type' => $this->whenLoaded('type'),
-         'users' => $this->whenLoaded('users', function () {
-            return $this->users->map(function ($user) {
-               return [
-                  'id' => $user->id,
-                  'name' => $user->name,
-                  'pivot' => [
-                     'user_id' => $user->pivot->user_id,
-                     'role_id' => $user->pivot->role_id,
-                  ],
-               ];
-            });
+         'type' => $this->whenLoaded('type', function () {
+            return [
+               'id' => $this->type->id,
+               'name' => $this->type->name,
+            ];
          }),
+         'users' => UserResource::collection($this->whenLoaded('users')),
          'created_at' => $this->created_at?->toISOString(),
          'updated_at' => $this->updated_at?->toISOString(),
          'urls' => [

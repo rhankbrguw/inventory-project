@@ -42,8 +42,10 @@ export default function Show({ auth, purchase }) {
                         <p className="font-semibold">{data.location.name}</p>
                     </div>
                     <div>
-                        <p className="text-muted-foreground">Supplier</p>
-                        <p className="font-semibold">{data.supplier.name}</p>
+                        <p className="text-muted-foreground">Supplier Utama</p>
+                        <p className="font-semibold">
+                            {data.supplier?.name || "Multi-Supplier"}
+                        </p>
                     </div>
                     <div>
                         <p className="text-muted-foreground">

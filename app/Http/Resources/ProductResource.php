@@ -18,8 +18,18 @@ class ProductResource extends JsonResource
          'unit' => $this->unit,
          'description' => $this->description,
          'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
-         'type' => $this->whenLoaded('type'),
-         'default_supplier' => $this->whenLoaded('defaultSupplier'),
+         'type' => $this->whenLoaded('type', function () {
+            return [
+               'id' => $this->type->id,
+               'name' => $this->type->name,
+            ];
+         }),
+         'default_supplier' => $this->whenLoaded('defaultSupplier', function () {
+            return [
+               'id' => $this->defaultSupplier->id,
+               'name' => $this->defaultSupplier->name,
+            ];
+         }),
          'created_at' => $this->created_at?->toISOString(),
          'updated_at' => $this->updated_at?->toISOString(),
       ];

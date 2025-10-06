@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Type;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -12,18 +13,12 @@ class RoleSeeder extends Seeder
    {
       app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-      $roles = [
-         ['name' => 'Super Admin', 'code' => 'ADM'],
-         ['name' => 'Warehouse Manager', 'code' => 'WHM'],
-         ['name' => 'Branch Manager', 'code' => 'BRM'],
-         ['name' => 'Cashier', 'code' => 'CSH'],
-         ['name' => 'Staff', 'code' => 'STF'],
-      ];
+      $rolesFromTypes = Type::where('group', Type::GROUP_USER_ROLE)->get();
 
-      foreach ($roles as $role) {
+      foreach ($rolesFromTypes as $type) {
          Role::updateOrCreate(
-            ['name' => $role['name'], 'guard_name' => 'web'],
-            ['code' => $role['code']]
+            ['name' => $type->name, 'guard_name' => 'web'],
+            ['code' => $type->code]
          );
       }
    }

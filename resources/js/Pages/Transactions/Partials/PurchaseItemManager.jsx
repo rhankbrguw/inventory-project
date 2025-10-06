@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
+import { formatCurrency } from "@/lib/utils";
 
 export default function PurchaseItemManager({
     items,
@@ -28,8 +29,18 @@ export default function PurchaseItemManager({
     errors,
 }) {
     const handleItemChange = (index, field, value) => {
-        const updatedItems = [...items];
+        let updatedItems = [...items];
         updatedItems[index][field] = value;
+
+        if (index === 0 && field === "supplier_id") {
+            updatedItems = updatedItems.map((item, i) => {
+                if (i > 0) {
+                    return { ...item, supplier_id: value };
+                }
+                return item;
+            });
+        }
+
         setData("items", updatedItems);
     };
 
@@ -39,17 +50,22 @@ export default function PurchaseItemManager({
             ...updatedItems[index],
             product_id: product.id,
             cost_per_unit: product.price || "",
-            supplier_id: product.default_supplier?.id?.toString() || null,
+            supplier_id:
+                product.default_supplier?.id?.toString() ||
+                updatedItems[index].supplier_id ||
+                null,
         };
         setData("items", updatedItems);
     };
 
     const addItem = () => {
+        const firstItemSupplier =
+            items.length > 0 ? items[0].supplier_id : null;
         setData("items", [
             ...items,
             {
                 product_id: "",
-                supplier_id: null,
+                supplier_id: firstItemSupplier,
                 quantity: 1,
                 cost_per_unit: "",
             },
@@ -63,13 +79,16 @@ export default function PurchaseItemManager({
         );
     };
 
+    const isAddItemDisabled = !items[items.length - 1]?.product_id;
+
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <div className="space-y-1.5">
                     <CardTitle>Item Pembelian</CardTitle>
                     <CardDescription>
-                        Isi item yang akan dibeli.
+                        Pilih produk terlebih dahulu untuk mengaktifkan field
+                        lain.
                     </CardDescription>
                 </div>
                 <Button
@@ -77,84 +96,96 @@ export default function PurchaseItemManager({
                     variant="outline"
                     onClick={addItem}
                     className="flex items-center gap-2 shrink-0"
+                    disabled={isAddItemDisabled}
                 >
                     <PlusCircle className="h-4 w-4" />
                     <span className="hidden md:inline">Tambah Item</span>
                 </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="hidden md:grid md:grid-cols-12 md:gap-x-4 text-sm font-medium text-muted-foreground px-1">
-                    <Label className="md:col-span-4 text-center">Produk</Label>
-                    <Label className="md:col-span-2 text-center">Jumlah</Label>
-                    <Label className="md:col-span-2 text-center">
-                        Harga Beli
-                    </Label>
-                    <Label className="md:col-span-3 text-center">
-                        Supplier
-                    </Label>
-                </div>
                 {items.map((item, index) => {
                     const selectedProduct = products.find(
                         (p) => p.id === item.product_id
                     );
+                    const totalItem =
+                        (item.quantity || 0) * (item.cost_per_unit || 0);
+
+                    const availableProducts = item.supplier_id
+                        ? products.filter(
+                              (p) => p.default_supplier?.id == item.supplier_id
+                          )
+                        : products;
+
                     return (
                         <div
                             key={index}
-                            className="border rounded-lg p-4 space-y-4 md:space-y-0 md:grid md:grid-cols-12 md:gap-x-4 md:items-center"
+                            className="border rounded-lg p-4 space-y-4"
                         >
-                            <div className="md:col-span-4 space-y-1">
-                                <Label className="md:hidden">Produk</Label>
-                                <ProductCombobox
-                                    products={products}
-                                    value={item.product_id}
-                                    onChange={(product) =>
-                                        handleProductSelect(index, product)
-                                    }
-                                />
-                                <InputError
-                                    message={
-                                        errors[`items.${index}.product_id`]
-                                    }
-                                />
-                            </div>
-
-                            <div className="md:col-span-2 space-y-1 md:flex md:flex-col md:items-center">
-                                <Label className="md:hidden">Jumlah</Label>
-                                <div className="relative w-full">
-                                    <Input
-                                        type="number"
-                                        value={item.quantity}
-                                        onChange={(e) =>
-                                            handleItemChange(
-                                                index,
-                                                "quantity",
-                                                e.target.value
-                                            )
-                                        }
-                                        min="1"
-                                        placeholder="Jumlah"
-                                        className={
-                                            selectedProduct
-                                                ? "pr-12 md:text-center"
-                                                : "md:text-center"
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label>Produk</Label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeItem(index)}
+                                        disabled={items.length <= 1}
+                                        className="lg:hidden text-destructive hover:text-destructive h-8 w-8"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <div className="space-y-1">
+                                    <ProductCombobox
+                                        products={availableProducts}
+                                        value={item.product_id}
+                                        onChange={(product) =>
+                                            handleProductSelect(index, product)
                                         }
                                     />
-                                    {selectedProduct && (
-                                        <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-muted-foreground pointer-events-none">
-                                            {selectedProduct.unit}
-                                        </span>
-                                    )}
+                                    <InputError
+                                        message={
+                                            errors[`items.${index}.product_id`]
+                                        }
+                                    />
                                 </div>
-                                <InputError
-                                    message={errors[`items.${index}.quantity`]}
-                                />
                             </div>
 
-                            <div className="md:col-span-2 space-y-1 md:flex md:flex-col md:items-center">
-                                <Label className="md:hidden">
-                                    Harga Beli / Satuan
-                                </Label>
-                                <div className="w-full">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-1">
+                                    <Label>Jumlah</Label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            value={item.quantity}
+                                            onChange={(e) =>
+                                                handleItemChange(
+                                                    index,
+                                                    "quantity",
+                                                    e.target.value
+                                                )
+                                            }
+                                            min="1"
+                                            placeholder="Jumlah"
+                                            disabled={!selectedProduct}
+                                            className={
+                                                selectedProduct ? "pr-12" : ""
+                                            }
+                                        />
+                                        {selectedProduct && (
+                                            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-muted-foreground pointer-events-none">
+                                                {selectedProduct.unit}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <InputError
+                                        message={
+                                            errors[`items.${index}.quantity`]
+                                        }
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Harga Beli</Label>
                                     <CurrencyInput
                                         value={item.cost_per_unit}
                                         onValueChange={(value) =>
@@ -164,20 +195,19 @@ export default function PurchaseItemManager({
                                                 value
                                             )
                                         }
-                                        placeholder="Cost per unit"
-                                        className="text-left"
+                                        placeholder="Harga"
+                                        disabled={!selectedProduct}
+                                    />
+                                    <InputError
+                                        message={
+                                            errors[
+                                                `items.${index}.cost_per_unit`
+                                            ]
+                                        }
                                     />
                                 </div>
-                                <InputError
-                                    message={
-                                        errors[`items.${index}.cost_per_unit`]
-                                    }
-                                />
-                            </div>
-
-                            <div className="md:col-span-3 space-y-1 md:flex md:flex-col md:items-center">
-                                <Label className="md:hidden">Supplier</Label>
-                                <div className="w-full">
+                                <div className="space-y-1">
+                                    <Label>Supplier</Label>
                                     <Select
                                         value={item.supplier_id}
                                         onValueChange={(value) =>
@@ -187,6 +217,7 @@ export default function PurchaseItemManager({
                                                 value
                                             )
                                         }
+                                        disabled={!selectedProduct || index > 0}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Pilih supplier..." />
@@ -205,25 +236,34 @@ export default function PurchaseItemManager({
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                    <InputError
+                                        message={
+                                            errors[`items.${index}.supplier_id`]
+                                        }
+                                    />
                                 </div>
-                                <InputError
-                                    message={
-                                        errors[`items.${index}.supplier_id`]
-                                    }
-                                />
                             </div>
 
-                            <div className="md:col-span-1 flex items-center justify-end md:justify-center">
+                            <div className="flex justify-between items-center pt-2 border-t">
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon"
+                                    size="sm"
                                     onClick={() => removeItem(index)}
                                     disabled={items.length <= 1}
-                                    className="text-destructive hover:text-destructive"
+                                    className="hidden lg:flex text-destructive hover:text-destructive h-8 px-2"
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    <span className="text-xs">Hapus Item</span>
                                 </Button>
+                                <div className="flex items-baseline gap-2 lg:ml-auto">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Total Item:
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {formatCurrency(totalItem)}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     );

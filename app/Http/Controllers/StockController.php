@@ -64,6 +64,8 @@ class StockController extends Controller
 
    public function show(Inventory $inventory)
    {
+      $inventory->load('product.type', 'location');
+
       $stockMovements = StockMovement::where('product_id', $inventory->product_id)
          ->where('location_id', $inventory->location_id)
          ->with('purchase')
@@ -71,7 +73,7 @@ class StockController extends Controller
          ->paginate(20);
 
       return Inertia::render('Stock/Show', [
-         'inventory' => InventoryResource::make($inventory->load('product', 'location')),
+         'inventory' => InventoryResource::make($inventory),
          'stockMovements' => StockMovementResource::collection($stockMovements),
       ]);
    }

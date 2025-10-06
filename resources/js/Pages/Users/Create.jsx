@@ -1,7 +1,6 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import FormField from "@/Components/FormField";
-import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
 import {

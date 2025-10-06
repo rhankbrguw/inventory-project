@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, router } from "@inertiajs/react";
+import { router } from "@inertiajs/react";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
@@ -30,7 +29,7 @@ export default function Index({
     locationTypes,
     filters,
 }) {
-    const { data: locations } = locationsResource;
+    const { data, meta, links } = locationsResource;
     const { params, setFilter } = useIndexPageFilters(
         "locations.index",
         filters
@@ -58,21 +57,31 @@ export default function Index({
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
                     className="cursor-pointer"
-                    onSelect={() => router.get(location.urls.edit)}
+                    onSelect={() =>
+                        router.get(route("locations.edit", location.id))
+                    }
                 >
                     <Edit className="w-4 h-4 mr-2" /> Edit
                 </DropdownMenuItem>
                 {location.deleted_at ? (
                     <DropdownMenuItem
                         className="cursor-pointer"
-                        onSelect={() => handleActivate(location.urls.restore)}
+                        onSelect={() =>
+                            handleActivate(
+                                route("locations.restore", location.id)
+                            )
+                        }
                     >
                         <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
                     </DropdownMenuItem>
                 ) : (
                     <DropdownMenuItem
                         className="text-destructive focus:text-destructive cursor-pointer"
-                        onSelect={() => handleDeactivate(location.urls.destroy)}
+                        onSelect={() =>
+                            handleDeactivate(
+                                route("locations.destroy", location.id)
+                            )
+                        }
                     >
                         <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
                     </DropdownMenuItem>
@@ -90,7 +99,7 @@ export default function Index({
         >
             <Card className="mb-4">
                 <CardContent className="pt-6">
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
                         <Input
                             type="search"
                             placeholder="Cari nama lokasi atau pengguna..."
@@ -98,7 +107,6 @@ export default function Index({
                             onChange={(e) =>
                                 setFilter("search", e.target.value)
                             }
-                            className="w-full sm:flex-grow"
                         />
                         <Select
                             value={params.type_id || "all"}
@@ -106,7 +114,7 @@ export default function Index({
                                 setFilter("type_id", value)
                             }
                         >
-                            <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectTrigger>
                                 <SelectValue placeholder="Semua Tipe" />
                             </SelectTrigger>
                             <SelectContent>
@@ -127,7 +135,7 @@ export default function Index({
                                 setFilter("status", value)
                             }
                         >
-                            <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectTrigger>
                                 <SelectValue placeholder="Semua Status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -145,10 +153,12 @@ export default function Index({
             </Card>
 
             <MobileCardList
-                data={locations}
+                data={data}
                 renderItem={(location) => (
                     <div
-                        onClick={() => router.get(location.urls.edit)}
+                        onClick={() =>
+                            router.get(route("locations.edit", location.id))
+                        }
                         key={location.id}
                         className="cursor-pointer"
                     >
@@ -163,7 +173,7 @@ export default function Index({
             <div className="hidden md:block">
                 <DataTable
                     columns={locationColumns}
-                    data={locations}
+                    data={data}
                     actions={renderActionDropdown}
                     showRoute={"locations.edit"}
                     rowClassName={(row) => (row.deleted_at ? "opacity-50" : "")}

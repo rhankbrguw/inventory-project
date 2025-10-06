@@ -8,7 +8,6 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import UserMobileCard from "./Partials/UserMobileCard";
 import Pagination from "@/Components/Pagination";
-import RoleBadge from "@/Components/RoleBadge";
 import {
     DropdownMenu,
     DropdownMenuContent,

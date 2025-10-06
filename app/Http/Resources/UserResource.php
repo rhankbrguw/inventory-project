@@ -13,10 +13,18 @@ class UserResource extends JsonResource
          'id' => $this->id,
          'name' => $this->name,
          'email' => $this->email,
-         'role' => $this->roles->first() ? [
-            'name' => $this->roles->first()->name,
-            'code' => $this->roles->first()->code,
-         ] : null,
+         'role' => $this->whenLoaded('roles', function () {
+            $firstRole = $this->roles->first();
+            return $firstRole ? [
+               'name' => $firstRole->name,
+               'code' => $firstRole->code,
+            ] : null;
+         }),
+         'pivot' => $this->whenPivotLoaded('location_user', function () {
+            return [
+               'role_id' => $this->pivot->role_id,
+            ];
+         }),
          'created_at' => $this->created_at?->toISOString(),
          'updated_at' => $this->updated_at?->toISOString(),
       ];

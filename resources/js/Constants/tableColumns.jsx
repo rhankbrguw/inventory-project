@@ -218,15 +218,6 @@ export const locationColumns = [
         className: "text-center",
     },
     {
-        accessorKey: "users",
-        header: "Petugas",
-        cell: ({ row }) =>
-            row.users.length > 0
-                ? row.users.map((user) => user.name).join(", ")
-                : "-",
-        className: "text-center",
-    },
-    {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (

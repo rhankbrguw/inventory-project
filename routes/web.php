@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
    Route::put('password', [ProfileController::class, 'updatePassword'])->name('password.update');
+   Route::get('/api/inventory/quantity', [StockController::class, 'getQuantity'])->name('api.inventory.quantity');
 
    Route::middleware(['role:Super Admin'])->group(function () {
       Route::resource('users', UserController::class)->except(['destroy']);

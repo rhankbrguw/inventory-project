@@ -16,15 +16,12 @@ import {
     TableRow,
 } from "@/Components/ui/table";
 import { Badge } from "@/Components/ui/badge";
-import {
-    formatRelativeTime,
-    formatDate,
-    formatCurrency,
-    formatNumber,
-} from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
 
 export default function Show({ auth, inventory, stockMovements }) {
+    const inventoryData = inventory.data || inventory;
+
     return (
         <ContentPageLayout
             auth={auth}
@@ -33,16 +30,16 @@ export default function Show({ auth, inventory, stockMovements }) {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{inventory.product.name}</CardTitle>
+                    <CardTitle>{inventoryData.product?.name}</CardTitle>
                     <CardDescription>
-                        SKU: {inventory.product.sku}
+                        SKU: {inventoryData.product?.sku}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
                     <div>
                         <p className="text-muted-foreground">Lokasi</p>
                         <p className="font-semibold">
-                            {inventory.location.name}
+                            {inventoryData.location?.name}
                         </p>
                     </div>
                     <div>
@@ -50,8 +47,8 @@ export default function Show({ auth, inventory, stockMovements }) {
                             Jumlah Stok Saat Ini
                         </p>
                         <p className="font-semibold text-lg">
-                            {formatNumber(inventory.quantity)}{" "}
-                            {inventory.product.unit}
+                            {formatNumber(inventoryData.quantity)}{" "}
+                            {inventoryData.product?.unit}
                         </p>
                     </div>
                     <div>
@@ -59,7 +56,7 @@ export default function Show({ auth, inventory, stockMovements }) {
                             Harga Pokok Penjualan (HPP)
                         </p>
                         <p className="font-semibold">
-                            {formatCurrency(inventory.average_cost)}
+                            {formatCurrency(inventoryData.average_cost)}
                         </p>
                     </div>
                 </CardContent>
@@ -115,7 +112,7 @@ export default function Show({ auth, inventory, stockMovements }) {
                                             }`}
                                         >
                                             {movement.quantity > 0 ? "+" : ""}
-                                            {movement.quantity}
+                                            {formatNumber(movement.quantity)}
                                         </TableCell>
                                         <TableCell className="text-center text-xs">
                                             {movement.notes || "-"}

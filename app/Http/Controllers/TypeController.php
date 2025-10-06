@@ -20,15 +20,21 @@ class TypeController extends Controller
                ->orWhere('code', 'like', "%{$search}%");
          })
          ->when($request->input('group'), function ($query, $group) {
-            $query->where('group', 'like', "%{$group}%");
+            $query->where('group', $group);
          })
-         ->orderBy('group')->orderBy('name')
+         ->when($request->input('sort'), function ($query, $sort) {
+            $direction = str_ends_with($sort, '_desc') ? 'desc' : 'asc';
+            $column = str_replace(['_asc', '_desc'], '', $sort);
+            $query->orderBy($column, $direction);
+         }, function ($query) {
+            $query->orderBy('group')->orderBy('name');
+         })
          ->paginate(15)
          ->withQueryString();
 
       return Inertia::render('Types/Index', [
          'types' => TypeResource::collection($types),
-         'filters' => (object) $request->only(['search', 'group']),
+         'filters' => (object) $request->only(['search', 'group', 'sort']),
          'groups' => Type::getAvailableGroups(),
       ]);
    }

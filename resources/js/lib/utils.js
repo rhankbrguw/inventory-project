@@ -6,11 +6,16 @@ export function cn(...inputs) {
 }
 
 export function formatCurrency(amount) {
+    const numberAmount = Number(amount);
+    if (isNaN(numberAmount)) {
+        return "Rp0";
+    }
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",
         minimumFractionDigits: 0,
-    }).format(amount);
+        maximumFractionDigits: 0,
+    }).format(numberAmount);
 }
 
 export function formatDate(isoString) {
@@ -26,6 +31,7 @@ export function formatDate(isoString) {
 }
 
 export function formatRelativeTime(isoString) {
+    if (!isoString) return "-";
     const date = new Date(isoString);
     const now = new Date();
     const seconds = Math.round((now - date) / 1000);
@@ -33,7 +39,7 @@ export function formatRelativeTime(isoString) {
     const hours = Math.round(minutes / 60);
     const days = Math.round(hours / 24);
 
-    if (seconds < 60) return `${seconds} detik lalu`;
+    if (seconds < 60) return "Baru saja";
     if (minutes < 60) return `${minutes} menit lalu`;
     if (hours < 24) return `${hours} jam lalu`;
     return `${days} hari lalu`;
@@ -50,11 +56,7 @@ export function formatGroupName(groupName) {
 export function formatNumber(value) {
     const numberValue = Number(value);
     if (isNaN(numberValue)) {
-        return value;
+        return "0";
     }
-
-    const options = {
-        maximumFractionDigits: 3,
-    };
-    return numberValue.toLocaleString("id-ID", options);
+    return new Intl.NumberFormat("id-ID").format(numberValue);
 }

@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Type;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -39,9 +40,10 @@ class PurchaseController extends Controller
       DB::transaction(function () use ($validated, $totalCost) {
          $purchase = Purchase::create([
             'location_id' => $validated['location_id'],
+            'supplier_id' => $validated['supplier_id'],
             'user_id' => auth()->id(),
             'reference_code' => 'PO-' . now()->format('Ymd-His'),
-            'transaction_date' => $validated['transaction_date'],
+            'transaction_date' => Carbon::parse($validated['transaction_date'])->format('Y-m-d'),
             'notes' => $validated['notes'],
             'payment_method_type_id' => $validated['payment_method_type_id'] ?? null,
             'status' => 'completed',
@@ -51,7 +53,7 @@ class PurchaseController extends Controller
          foreach ($validated['items'] as $item) {
             $purchase->stockMovements()->create([
                'product_id' => $item['product_id'],
-               'supplier_id' => $item['supplier_id'] ?? null,
+               'supplier_id' => $validated['supplier_id'],
                'location_id' => $validated['location_id'],
                'type' => 'purchase',
                'quantity' => $item['quantity'],
@@ -70,7 +72,7 @@ class PurchaseController extends Controller
             $newCost = $item['cost_per_unit'];
 
             $newTotalQty = $oldQty + $newQty;
-            $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $newCost)) / $newTotalQty;
+            $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $newCost)) / ($newTotalQty > 0 ? $newTotalQty : 1);
 
             $inventory->update([
                'quantity' => $newTotalQty,

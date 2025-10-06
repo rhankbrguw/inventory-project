@@ -1,4 +1,5 @@
 import { Link, useForm } from "@inertiajs/react";
+import { useMemo } from "react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import FormField from "@/Components/FormField";
 import { Button } from "@/Components/ui/button";
@@ -18,21 +19,45 @@ export default function Edit({
     auth,
     location: locationResource,
     locationTypes,
-    allUsers,
-    allRoles,
+    allUsers: allUsersResource,
+    allRoles: allRolesResource,
 }) {
     const { data: location } = locationResource;
+    const { data: allUsers } = allUsersResource;
+    const { data: allRoles } = allRolesResource;
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: location.name || "",
-        type_id: location.type_id?.toString() || "",
+        type_id: location.type.id?.toString() || "",
         address: location.address || "",
         assignments:
             location.users?.map((user) => ({
-                user_id: user.pivot.user_id.toString(),
+                user_id: user.id.toString(),
                 role_id: user.pivot.role_id.toString(),
             })) || [],
     });
+
+    const selectedLocationType = useMemo(() => {
+        return locationTypes.find((type) => type.id == data.type_id);
+    }, [data.type_id, locationTypes]);
+
+    const filteredRoles = useMemo(() => {
+        if (!selectedLocationType?.code) return allRoles;
+
+        const typeCode = selectedLocationType.code.toUpperCase();
+
+        if (typeCode === "WH") {
+            return allRoles.filter(
+                (role) => role.name.toLowerCase() !== "branch manager"
+            );
+        }
+        if (typeCode === "BR") {
+            return allRoles.filter(
+                (role) => role.name.toLowerCase() !== "warehouse manager"
+            );
+        }
+        return allRoles;
+    }, [selectedLocationType, allRoles]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -59,7 +84,9 @@ export default function Edit({
                             <Input
                                 id="name"
                                 value={data.name}
-                                onChange={(e) => setData("name", e.g.et.value)}
+                                onChange={(e) =>
+                                    setData("name", e.target.value)
+                                }
                             />
                         </FormField>
                         <FormField
@@ -69,9 +96,9 @@ export default function Edit({
                         >
                             <Select
                                 value={data.type_id}
-                                onValueChange={(value) =>
-                                    setData("type_id", value)
-                                }
+                                onValueChange={(value) => {
+                                    setData("type_id", value);
+                                }}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih tipe..." />
@@ -107,7 +134,7 @@ export default function Edit({
                 <AssignmentManager
                     assignments={data.assignments}
                     allUsers={allUsers}
-                    allRoles={allRoles}
+                    allRoles={filteredRoles}
                     errors={errors}
                     setData={setData}
                 />

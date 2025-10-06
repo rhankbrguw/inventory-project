@@ -1,79 +1,48 @@
+import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Button } from "@/Components/ui/button";
+import { Calendar } from "@/Components/ui/calendar";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
-import { router } from "@inertiajs/react";
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/Components/ui/popover";
+import { useState } from "react";
 
-export default function DataTable({
-    columns,
-    data,
-    actions,
-    showRoute,
-    showRouteKey = "id",
-}) {
-    const handleRowClick = (row) => {
-        if (showRoute) {
-            router.get(route(showRoute, row[showRouteKey]));
+export default function DatePicker({ value, onSelect, className }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleSelect = (selectedDate) => {
+        if (onSelect) {
+            onSelect(selectedDate);
         }
+        setIsOpen(false);
     };
 
     return (
-        <div className="bg-card text-card-foreground shadow-sm sm:rounded-lg border">
-            <ScrollArea className="w-full whitespace-nowrap">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            {columns.map((col) => (
-                                <TableHead
-                                    key={col.accessorKey}
-                                    className={col.className}
-                                >
-                                    {col.header}
-                                </TableHead>
-                            ))}
-                            {actions && (
-                                <TableHead className="text-center">
-                                    Aksi
-                                </TableHead>
-                            )}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.map((row) => (
-                            <TableRow
-                                key={row.id}
-                                onClick={() => handleRowClick(row)}
-                                className={showRoute ? "cursor-pointer" : ""}
-                            >
-                                {columns.map((col) => (
-                                    <TableCell
-                                        key={col.accessorKey}
-                                        className={col.className}
-                                    >
-                                        {col.cell
-                                            ? col.cell({ row })
-                                            : row[col.accessorKey]}
-                                    </TableCell>
-                                ))}
-                                {actions && (
-                                    <TableCell
-                                        className="text-center"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        {actions(row)}
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-        </div>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant={"outline"}
+                    className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !value && "text-muted-foreground",
+                        className
+                    )}
+                >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {value ? format(value, "PPP") : <span>Pilih tanggal</span>}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+                <Calendar
+                    mode="single"
+                    selected={value}
+                    onSelect={handleSelect}
+                    initialFocus
+                />
+            </PopoverContent>
+        </Popover>
     );
 }

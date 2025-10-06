@@ -1,25 +1,10 @@
 import { Link, useForm } from "@inertiajs/react";
+import { useEffect } from "react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
-import FormField from "@/Components/FormField";
 import PurchaseItemManager from "../Partials/PurchaseItemManager";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/Components/ui/card";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/Components/ui/select";
-import { Input } from "@/Components/ui/input";
+import TransactionDetailsManager from "../Partials/TransactionDetailsManager";
 import { Button } from "@/Components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import DatePicker from "@/Components/DatePicker";
 import { format } from "date-fns";
 
 export default function Create({
@@ -31,6 +16,7 @@ export default function Create({
 }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         location_id: "",
+        supplier_id: "",
         transaction_date: new Date(),
         notes: "",
         payment_method_type_id: "",
@@ -44,9 +30,14 @@ export default function Create({
         ],
     });
 
-    const handleDateSelect = (selectedDate) => {
-        setData("transaction_date", selectedDate);
-    };
+    const isDetailsLocked = !data.items[0]?.product_id;
+
+    useEffect(() => {
+        const firstItemSupplier = data.items[0]?.supplier_id;
+        if (firstItemSupplier) {
+            setData("supplier_id", firstItemSupplier);
+        }
+    }, [data.items[0]?.supplier_id]);
 
     const calculateTotal = () => {
         return data.items.reduce((total, item) => {
@@ -56,12 +47,11 @@ export default function Create({
 
     const submit = (e) => {
         e.preventDefault();
-        const submissionData = {
-            ...data,
-            transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
-        };
         post(route("transactions.purchases.store"), {
-            data: submissionData,
+            transform: (data) => ({
+                ...data,
+                transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
+            }),
         });
     };
 
@@ -80,91 +70,15 @@ export default function Create({
                     errors={errors}
                 />
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Detail Transaksi</CardTitle>
-                        <CardDescription>
-                            Pilih lokasi, tanggal, dan detail transaksi lainnya.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid sm:grid-cols-2 gap-6">
-                        <FormField
-                            label="Lokasi Penerima"
-                            htmlFor="location_id"
-                            error={errors.location_id}
-                        >
-                            <Select
-                                value={data.location_id}
-                                onValueChange={(value) =>
-                                    setData("location_id", value)
-                                }
-                            >
-                                <SelectTrigger id="location_id">
-                                    <SelectValue placeholder="Pilih lokasi" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {locations.map((loc) => (
-                                        <SelectItem
-                                            key={loc.id}
-                                            value={loc.id.toString()}
-                                        >
-                                            {loc.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </FormField>
-                        <FormField
-                            label="Tanggal Transaksi"
-                            error={errors.transaction_date}
-                        >
-                            <DatePicker
-                                value={data.transaction_date}
-                                onSelect={handleDateSelect}
-                            />
-                        </FormField>
-                        <FormField
-                            label="Metode Pembayaran (Opsional)"
-                            htmlFor="payment_method_type_id"
-                            error={errors.payment_method_type_id}
-                        >
-                            <Select
-                                value={data.payment_method_type_id}
-                                onValueChange={(value) =>
-                                    setData("payment_method_type_id", value)
-                                }
-                            >
-                                <SelectTrigger id="payment_method_type_id">
-                                    <SelectValue placeholder="Pilih metode pembayaran" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {paymentMethods.map((method) => (
-                                        <SelectItem
-                                            key={method.id}
-                                            value={method.id.toString()}
-                                        >
-                                            {method.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </FormField>
-                        <FormField
-                            label="Catatan (Opsional)"
-                            htmlFor="notes"
-                            error={errors.notes}
-                        >
-                            <Input
-                                id="notes"
-                                value={data.notes}
-                                onChange={(e) =>
-                                    setData("notes", e.target.value)
-                                }
-                                placeholder="Contoh: Nomor referensi faktur"
-                            />
-                        </FormField>
-                    </CardContent>
-                </Card>
+                <TransactionDetailsManager
+                    data={data}
+                    setData={setData}
+                    errors={errors}
+                    locations={locations}
+                    suppliers={suppliers}
+                    paymentMethods={paymentMethods}
+                    isDetailsLocked={isDetailsLocked}
+                />
 
                 <div className="flex items-center justify-between gap-3">
                     <p className="text-xs sm:text-sm text-muted-foreground">
@@ -187,7 +101,7 @@ export default function Create({
                         <Button
                             size="sm"
                             className="px-3 py-1"
-                            disabled={processing || !isDirty}
+                            disabled={processing || !isDirty || isDetailsLocked}
                         >
                             {processing ? "Menyimpan..." : "Simpan"}
                         </Button>
