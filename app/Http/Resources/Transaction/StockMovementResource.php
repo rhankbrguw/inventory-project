@@ -15,14 +15,23 @@ class StockMovementResource extends JsonResource
          'quantity' => $this->quantity,
          'cost_per_unit' => $this->cost_per_unit,
          'notes' => $this->notes,
-         'created_at' => $this->created_at?->toISOString(),
-         'reference' => $this->whenLoaded('purchase', fn() => $this->purchase?->reference_code),
          'product' => $this->whenLoaded('product', fn() => [
             'id' => $this->product->id,
             'name' => $this->product->name,
             'sku' => $this->product->sku,
             'unit' => $this->product->unit,
          ]),
+         'location' => $this->whenLoaded('location', fn() => [
+            'id' => $this->location->id,
+            'name' => $this->location->name,
+         ]),
+         'supplier' => $this->whenLoaded('supplier', fn() => [
+            'id' => $this->supplier->id,
+            'name' => $this->supplier->name,
+         ]),
+         'purchase_reference' => $this->whenLoaded('purchase', fn() => $this->purchase?->reference_code),
+         'created_at' => $this->created_at?->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
       ];
    }
 }

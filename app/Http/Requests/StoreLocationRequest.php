@@ -18,7 +18,7 @@ class StoreLocationRequest extends FormRequest
       return [
          'name' => ['required', 'string', 'max:100', Rule::unique('locations')->ignore($this->location)],
          'type_id' => ['required', 'integer', Rule::exists('types', 'id')->where('group', Type::GROUP_LOCATION)],
-         'address' => ['nullable', 'string', 'max:100'],
+         'address' => ['nullable', 'string', 'max:150'],
       ];
    }
 }

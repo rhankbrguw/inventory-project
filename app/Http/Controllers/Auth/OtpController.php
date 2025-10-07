@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Response;
 
 class OtpController extends Controller
 {
-   public function show(Request $request)
+   public function show(Request $request): Response
    {
       return inertia('Auth/VerifyOtp', [
          'email' => $request->session()->get('email', Auth::user()?->email),
@@ -19,14 +21,16 @@ class OtpController extends Controller
       ]);
    }
 
-   public function verify(Request $request)
+   public function verify(Request $request): RedirectResponse
    {
       $request->validate([
-         'email' => 'required|email',
-         'otp_code' => 'required|numeric|digits:6',
+         'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50'],
+         'otp_code' => ['required', 'numeric', 'digits:6'],
       ]);
 
-      $user = User::where('email', $request->email)->whereNull('email_verified_at')->first();
+      $user = User::where('email', $request->email)
+         ->whereNull('email_verified_at')
+         ->first();
 
       if (!$user) {
          return back()->withErrors(['email' => 'User tidak ditemukan atau sudah terverifikasi.']);
@@ -53,18 +57,21 @@ class OtpController extends Controller
       return redirect()->intended('/dashboard');
    }
 
-   public function resend(Request $request)
+   public function resend(Request $request): RedirectResponse
    {
-      $request->validate(['email' => 'required|email']);
+      $request->validate([
+         'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50'],
+      ]);
 
-      /** @var \App\Models\User $user */
-      $user = User::where('email', $request->email)->whereNull('email_verified_at')->first();
+      $user = User::where('email', $request->email)
+         ->whereNull('email_verified_at')
+         ->first();
 
       if (!$user) {
          return back()->withErrors(['email' => 'User tidak ditemukan atau sudah terverifikasi.']);
       }
 
-      $otp = \random_int(100000, 999999);
+      $otp = random_int(100000, 999999);
 
       $user->forceFill([
          'otp_code' => $otp,

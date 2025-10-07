@@ -20,11 +20,9 @@ class UserResource extends JsonResource
                'code' => $firstRole->code,
             ] : null;
          }),
-         'pivot' => $this->whenPivotLoaded('location_user', function () {
-            return [
-               'role_id' => $this->pivot->role_id,
-            ];
-         }),
+         'pivot' => $this->whenPivotLoaded('location_user', fn() => [
+            'role_id' => $this->pivot->role_id,
+         ]),
          'created_at' => $this->created_at?->toISOString(),
          'updated_at' => $this->updated_at?->toISOString(),
       ];

@@ -19,7 +19,7 @@ class StorePurchaseRequest extends FormRequest
          'location_id' => ['required', 'exists:locations,id'],
          'supplier_id' => ['required', 'exists:suppliers,id'],
          'transaction_date' => ['required', 'date'],
-         'notes' => ['nullable', 'string', 'max:1000'],
+         'notes' => ['nullable', 'string', 'max:100'],
          'payment_method_type_id' => ['nullable', 'integer', Rule::exists('types', 'id')->where('group', Type::GROUP_PAYMENT)],
          'items' => ['required', 'array', 'min:1'],
          'items.*.product_id' => ['required', 'exists:products,id'],

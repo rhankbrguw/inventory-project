@@ -8,11 +8,11 @@ use App\Models\Location;
 use App\Models\Purchase;
 use App\Models\Type;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Inertia\Response;
 
 class TransactionController extends Controller
 {
-   public function index(Request $request)
+   public function index(Request $request): Response
    {
       $transactions = Purchase::query()
          ->with(['location', 'supplier', 'user'])
@@ -24,19 +24,24 @@ class TransactionController extends Controller
             $query->where('location_id', $locationId);
          })
          ->when($request->input('sort'), function ($query, $sort) {
-            if ($sort === 'total_desc') $query->orderBy('total_cost', 'desc');
-            if ($sort === 'total_asc') $query->orderBy('total_cost', 'asc');
-            if ($sort === 'oldest') $query->orderBy('transaction_date', 'asc');
+            match ($sort) {
+               'total_desc' => $query->orderBy('total_cost', 'desc'),
+               'total_asc' => $query->orderBy('total_cost', 'asc'),
+               'oldest' => $query->orderBy('transaction_date', 'asc'),
+               default => $query->latest('transaction_date'),
+            };
          }, function ($query) {
             $query->latest('transaction_date');
          })
          ->paginate(15)
          ->withQueryString();
 
-      return Inertia::render('Transactions/Index', [
+      return inertia('Transactions/Index', [
          'transactions' => TransactionResource::collection($transactions),
          'locations' => Location::orderBy('name')->get(['id', 'name']),
-         'transactionTypes' => Type::where('group', Type::GROUP_TRANSACTION)->orderBy('name')->get(['id', 'name']),
+         'transactionTypes' => Type::where('group', Type::GROUP_TRANSACTION)
+            ->orderBy('name')
+            ->get(['id', 'name']),
          'filters' => (object) $request->only(['search', 'sort', 'location_id', 'type']),
       ]);
    }

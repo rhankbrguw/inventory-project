@@ -11,14 +11,14 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\Type;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
+use Inertia\Response;
 
 class StockController extends Controller
 {
-   public function index(Request $request)
+   public function index(Request $request): Response
    {
       $inventories = Inventory::with(['product.type', 'location'])
          ->join('products', 'inventories.product_id', '=', 'products.id')
@@ -41,30 +41,33 @@ class StockController extends Controller
             });
          })
          ->when($request->input('sort'), function ($query, $sort) {
-            if ($sort === 'name_asc') $query->orderBy('products.name', 'asc');
-            if ($sort === 'name_desc') $query->orderBy('products.name', 'desc');
-            if ($sort === 'quantity_asc') $query->orderBy('inventories.quantity', 'asc');
-            if ($sort === 'quantity_desc') $query->orderBy('inventories.quantity', 'desc');
-            if ($sort === 'last_moved_desc') $query->orderBy('inventories.updated_at', 'desc');
-            if ($sort === 'last_moved_asc') $query->orderBy('inventories.updated_at', 'asc');
+            match ($sort) {
+               'name_asc' => $query->orderBy('products.name', 'asc'),
+               'name_desc' => $query->orderBy('products.name', 'desc'),
+               'quantity_asc' => $query->orderBy('inventories.quantity', 'asc'),
+               'quantity_desc' => $query->orderBy('inventories.quantity', 'desc'),
+               'last_moved_desc' => $query->orderBy('inventories.updated_at', 'desc'),
+               'last_moved_asc' => $query->orderBy('inventories.updated_at', 'asc'),
+               default => $query->orderBy('products.name', 'asc'),
+            };
          }, function ($query) {
             $query->orderBy('products.name', 'asc');
          })
          ->paginate(15)
          ->withQueryString();
 
-      return Inertia::render('Stock/Index', [
+      return inertia('Stock/Index', [
          'inventories' => InventoryResource::collection($inventories),
-         'locations' => Location::all(),
+         'locations' => Location::orderBy('name')->get(['id', 'name']),
          'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
-         'productTypes' => Type::where('group', 'product_type')->get(),
+         'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->get(['id', 'name']),
          'filters' => (object) $request->only(['search', 'location_id', 'type_id', 'sort', 'product_id']),
       ]);
    }
 
-   public function show(Inventory $inventory)
+   public function show(Inventory $inventory): Response
    {
-      $inventory->load('product.type', 'location');
+      $inventory->load(['product.type', 'location']);
 
       $stockMovements = StockMovement::where('product_id', $inventory->product_id)
          ->where('location_id', $inventory->location_id)
@@ -72,27 +75,30 @@ class StockController extends Controller
          ->latest('created_at')
          ->paginate(20);
 
-      return Inertia::render('Stock/Show', [
+      return inertia('Stock/Show', [
          'inventory' => InventoryResource::make($inventory),
          'stockMovements' => StockMovementResource::collection($stockMovements),
       ]);
    }
 
-   public function showAdjustForm()
+   public function showAdjustForm(): Response
    {
-      return Inertia::render('Stock/Adjust', [
+      return inertia('Stock/Adjust', [
          'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
          'locations' => Location::orderBy('name')->get(['id', 'name']),
       ]);
    }
 
-   public function adjust(AdjustStockRequest $request)
+   public function adjust(AdjustStockRequest $request): RedirectResponse
    {
       $validated = $request->validated();
 
       DB::transaction(function () use ($validated) {
          $inventory = Inventory::firstOrCreate(
-            ['product_id' => $validated['product_id'], 'location_id' => $validated['location_id']],
+            [
+               'product_id' => $validated['product_id'],
+               'location_id' => $validated['location_id']
+            ],
             ['quantity' => 0, 'average_cost' => 0]
          );
 
@@ -114,14 +120,15 @@ class StockController extends Controller
          }
       });
 
-      return Redirect::route('stock.index')->with('success', 'Stok berhasil disesuaikan.');
+      return redirect()->route('stock.index')
+         ->with('success', 'Stok berhasil disesuaikan.');
    }
 
    public function getQuantity(Request $request): JsonResponse
    {
       $request->validate([
-         'product_id' => 'required|exists:products,id',
-         'location_id' => 'required|exists:locations,id',
+         'product_id' => ['required', 'exists:products,id'],
+         'location_id' => ['required', 'exists:locations,id'],
       ]);
 
       $inventory = Inventory::where('product_id', $request->product_id)
