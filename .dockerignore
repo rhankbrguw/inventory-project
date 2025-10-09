@@ -1,0 +1,23 @@
+# Ignore Laravel storage symlink
+public/storage
+
+# Ignore git history
+.git
+.gitignore
+
+# Ignore IDE/editor files
+.idea
+.vscode
+
+# Ignore environment files
+.env
+.env.example
+
+# Ignore node dependencies
+node_modules
+
+# Ignore PHP dependencies (will be installed inside the container)
+vendor
+
+# Ignore Laravel log files
+storage/*.log
