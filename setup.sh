@@ -65,7 +65,6 @@ echo "========================================"
 echo -e "\n📌 Access Information:"
 echo "   - Application: http://127.0.0.1:8000"
 echo "   - Vite Dev:    http://127.0.0.1:5173"
-echo "   - MailHog:     http://127.0.0.1:8025"
 
 echo -e "\n📝 Useful Commands:"
 echo "   - View logs: docker-compose logs -f app"

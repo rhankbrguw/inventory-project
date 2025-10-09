@@ -59,15 +59,6 @@ services:
         stdin_open: true
         tty: true
 
-    mailhog:
-        image: mailhog/mailhog
-        container_name: inventory_mailhog
-        ports:
-            - "1025:1025"
-            - "8025:8025"
-        networks:
-            - inventory_network
-
 networks:
     inventory_network:
         driver: bridge
