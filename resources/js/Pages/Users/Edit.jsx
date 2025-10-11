@@ -22,7 +22,7 @@ export default function Edit({ auth, user, roles }) {
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: user.data.name || "",
         email: user.data.email || "",
-        role: user.data.role.name || "",
+        role: user.data.role?.name || "",
     });
 
     const submit = (e) => {

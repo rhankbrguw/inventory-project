@@ -34,6 +34,7 @@ export default function Index({
         "locations.index",
         filters
     );
+    const canCrudLocations = auth.user.roles.includes("Super Admin");
 
     const handleDeactivate = (url) => {
         router.delete(url, { preserveScroll: true });
@@ -94,7 +95,7 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Lokasi"
-            createRoute="locations.create"
+            createRoute={canCrudLocations ? "locations.create" : null}
             buttonLabel="Tambah Lokasi"
         >
             <Card className="mb-4">
@@ -156,15 +157,21 @@ export default function Index({
                 data={data}
                 renderItem={(location) => (
                     <div
-                        onClick={() =>
-                            router.get(route("locations.edit", location.id))
-                        }
+                        onClick={() => {
+                            if (canCrudLocations) {
+                                router.get(
+                                    route("locations.edit", location.id)
+                                );
+                            }
+                        }}
                         key={location.id}
-                        className="cursor-pointer"
+                        className={canCrudLocations ? "cursor-pointer" : ""}
                     >
                         <LocationMobileCard
                             location={location}
-                            renderActionDropdown={renderActionDropdown}
+                            renderActionDropdown={
+                                canCrudLocations ? renderActionDropdown : null
+                            }
                         />
                     </div>
                 )}
@@ -174,8 +181,8 @@ export default function Index({
                 <DataTable
                     columns={locationColumns}
                     data={data}
-                    actions={renderActionDropdown}
-                    showRoute={"locations.edit"}
+                    actions={canCrudLocations ? renderActionDropdown : null}
+                    showRoute={canCrudLocations ? "locations.edit" : null}
                     rowClassName={(row) => (row.deleted_at ? "opacity-50" : "")}
                 />
             </div>

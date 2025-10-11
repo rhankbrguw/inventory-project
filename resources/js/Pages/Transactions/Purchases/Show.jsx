@@ -18,7 +18,7 @@ import {
 } from "@/Components/ui/table";
 import { Badge } from "@/Components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
 
 export default function Show({ auth, purchase }) {
     const { data } = purchase;
@@ -96,8 +96,8 @@ export default function Show({ auth, purchase }) {
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span>
-                                            {item.quantity} {item.product.unit}{" "}
-                                            ×{" "}
+                                            {formatNumber(item.quantity)}{" "}
+                                            {item.product.unit} ×{" "}
                                             {formatCurrency(item.cost_per_unit)}
                                         </span>
                                         <span className="font-semibold">
@@ -152,7 +152,7 @@ export default function Show({ auth, purchase }) {
                                                 </p>
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                {item.quantity}{" "}
+                                                {formatNumber(item.quantity)}{" "}
                                                 {item.product.unit}
                                             </TableCell>
                                             <TableCell className="text-center">

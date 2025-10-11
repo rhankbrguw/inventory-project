@@ -40,7 +40,7 @@ class OtpController extends Controller
          return back()->withErrors(['otp_code' => 'Kode OTP telah kedaluwarsa.']);
       }
 
-      if ($user->otp_code !== $request->otp_code) {
+      if ((string) $user->otp_code !== (string) $request->otp_code) {
          return back()->withErrors(['otp_code' => 'Kode OTP tidak valid.']);
       }
 
