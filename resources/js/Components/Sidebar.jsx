@@ -9,6 +9,7 @@ import {
     Settings,
     ClipboardList,
     MapPin,
+    Contact,
 } from "lucide-react";
 
 const NavLink = ({ href, active, children, onClick }) => (
@@ -71,6 +72,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: Truck,
             current: route().current("suppliers.*"),
             roles: ["Super Admin", "Warehouse Manager", "Branch Manager"],
+        },
+        {
+            name: "Customers",
+            href: route("customers.index"),
+            icon: Contact,
+            current: route().current("customers.*"),
+            roles: ["Super Admin", "Branch Manager"],
         },
         {
             name: "Report",

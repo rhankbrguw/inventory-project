@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Transaction\PurchaseController;
 use App\Http\Controllers\Transaction\TransactionController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -9,7 +10,6 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -46,9 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('types.store')
         ->middleware(['role:Super Admin|Warehouse Manager|Branch Manager']);
 
+    Route::middleware(['role:Super Admin|Branch Manager'])->group(function () {
+        Route::resource('customers', CustomerController::class);
+    });
+
     Route::middleware(['role:Super Admin|Warehouse Manager|Branch Manager'])->group(function () {
         Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
-
         Route::resource('products', ProductController::class);
         Route::resource('suppliers', SupplierController::class);
 

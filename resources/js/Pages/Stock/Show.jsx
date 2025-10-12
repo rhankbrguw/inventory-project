@@ -1,5 +1,6 @@
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import Pagination from "@/Components/Pagination";
+import { Link } from "@inertiajs/react";
 import {
     Card,
     CardContent,
@@ -118,7 +119,23 @@ export default function Show({ auth, inventory, stockMovements }) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-center font-mono text-xs">
-                                                {movement.reference || "-"}
+                                                {movement.reference ? (
+                                                    <Link
+                                                        href={route(
+                                                            "transactions.purchases.show",
+                                                            movement.reference
+                                                                .id
+                                                        )}
+                                                        className="text-primary hover:underline"
+                                                    >
+                                                        {
+                                                            movement.reference
+                                                                .code
+                                                        }
+                                                    </Link>
+                                                ) : (
+                                                    "-"
+                                                )}
                                             </TableCell>
                                             <TableCell
                                                 className={`text-center font-semibold ${

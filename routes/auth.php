@@ -37,7 +37,6 @@ Route::get('verify-otp', [OtpController::class, 'show'])->name('verification.not
 Route::post('verify-otp', [OtpController::class, 'verify'])->middleware('throttle:6,1')->name('otp.verify');
 Route::post('resend-otp', [OtpController::class, 'resend'])->middleware('throttle:6,1')->name('verification.send');
 
-
 Route::middleware('auth')->group(function () {
    Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
       ->name('password.confirm');
