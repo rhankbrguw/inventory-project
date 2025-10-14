@@ -1,0 +1,58 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import { Badge } from "@/Components/ui/badge";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { router } from "@inertiajs/react";
+
+export default function TransactionMobileCard({
+    transaction,
+    renderActionDropdown,
+}) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                    <CardTitle className="text-sm font-mono">
+                        {transaction.reference_code}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                        {formatDate(transaction.transaction_date)}
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{transaction.type}</Badge>
+                    {renderActionDropdown(transaction)}
+                </div>
+            </CardHeader>
+            <CardContent
+                onClick={() =>
+                    router.get(
+                        route("transactions.purchases.show", transaction.id)
+                    )
+                }
+                className="cursor-pointer"
+            >
+                <div className="text-lg font-bold mb-2">
+                    {formatCurrency(transaction.total_cost)}
+                </div>
+                <div className="text-xs space-y-1">
+                    <p>
+                        Lokasi:{" "}
+                        <span className="font-medium">
+                            {transaction.location}
+                        </span>
+                    </p>
+                    <p>
+                        Supplier:{" "}
+                        <span className="font-medium">
+                            {transaction.supplier}
+                        </span>
+                    </p>
+                    <p>
+                        PIC:{" "}
+                        <span className="font-medium">{transaction.user}</span>
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

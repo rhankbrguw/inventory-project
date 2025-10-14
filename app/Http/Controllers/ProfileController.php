@@ -2,62 +2,67 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Auth\UpdatePasswordRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): Response
-    {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-        ]);
-    }
+   public function edit(Request $request): Response
+   {
+      return inertia('Profile/Edit', [
+         'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+         'status' => session('status'),
+      ]);
+   }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
+   public function update(ProfileUpdateRequest $request): RedirectResponse
+   {
+      $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+      $user->fill($request->validated());
 
-        $request->user()->save();
+      if ($user->isDirty('email')) {
+         $user->email_verified_at = null;
+      }
 
-        return Redirect::route('profile.edit');
-    }
+      $user->save();
 
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
+      return redirect()->route('profile.edit')
+         ->with('success', 'Profil berhasil diperbarui.');
+   }
 
-        $user = $request->user();
+   public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
+   {
+      $validated = $request->validated();
 
-        Auth::logout();
+      $request->user()->update([
+         'password' => Hash::make($validated['password']),
+      ]);
 
-        $user->delete();
+      return back()->with('success', 'Password berhasil diperbarui.');
+   }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+   public function destroy(Request $request): RedirectResponse
+   {
+      $request->validate([
+         'password' => ['required', 'current_password'],
+      ]);
 
-        return Redirect::to('/');
-    }
+      $user = $request->user();
+
+      Auth::logout();
+
+      $user->delete();
+
+      $request->session()->invalidate();
+      $request->session()->regenerateToken();
+
+      return redirect()->to('/');
+   }
 }

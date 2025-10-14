@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class StoreCustomerRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
+            'email' => ['required', 'email:rfc,dns', 'max:50', Rule::unique('customers', 'email')],
+            'phone' => ['nullable', 'string', 'min:10', 'max:15', Rule::unique('customers', 'phone')],
+            'address' => ['nullable', 'string', 'max:255'],
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->phone) {
+            $cleanedPhone = preg_replace('/\D/', '', $this->phone);
+
+            if (substr($cleanedPhone, 0, 1) === '0') {
+                $cleanedPhone = substr($cleanedPhone, 1);
+            }
+
+            $this->merge([
+                'phone' => '+62' . $cleanedPhone
+            ]);
+        }
+    }
+}

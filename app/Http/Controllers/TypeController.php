@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreTypeRequest;
+use App\Http\Requests\UpdateTypeRequest;
+use App\Http\Resources\TypeResource;
+use App\Models\Type;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
+
+class TypeController extends Controller
+{
+   public function index(Request $request): Response
+   {
+      $types = Type::query()
+         ->when($request->input('search'), function ($query, $search) {
+            $query->where('name', 'like', "%{$search}%")
+               ->orWhere('code', 'like', "%{$search}%");
+         })
+         ->when($request->input('group'), function ($query, $group) {
+            $query->where('group', $group);
+         })
+         ->when($request->input('sort'), function ($query, $sort) {
+            $direction = str_ends_with($sort, '_desc') ? 'desc' : 'asc';
+            $column = str_replace(['_asc', '_desc'], '', $sort);
+            $query->orderBy($column, $direction);
+         }, function ($query) {
+            $query->orderBy('group')->orderBy('name');
+         })
+         ->paginate(15)
+         ->withQueryString();
+
+      return inertia('Types/Index', [
+         'types' => TypeResource::collection($types),
+         'filters' => (object) $request->only(['search', 'group', 'sort']),
+         'groups' => Type::getAvailableGroups(),
+      ]);
+   }
+
+   public function create(): Response
+   {
+      return inertia('Types/Create', [
+         'availableGroups' => Type::getAvailableGroups(),
+         'allTypes' => Type::all()->groupBy('group'),
+      ]);
+   }
+
+   public function store(StoreTypeRequest $request): RedirectResponse
+   {
+      Type::create($request->validated());
+
+      if ($request->input('_from_modal')) {
+         return back()->with('success', 'Tipe baru berhasil ditambahkan.');
+      }
+
+      return redirect()->route('types.index')
+         ->with('success', 'Tipe baru berhasil ditambahkan.');
+   }
+
+   public function edit(Type $type): Response
+   {
+      return inertia('Types/Edit', [
+         'type' => TypeResource::make($type),
+         'availableGroups' => Type::getAvailableGroups(),
+         'allTypes' => Type::all()->groupBy('group'),
+      ]);
+   }
+
+   public function update(UpdateTypeRequest $request, Type $type): RedirectResponse
+   {
+      $type->update($request->validated());
+
+      return redirect()->route('types.index')
+         ->with('success', 'Tipe berhasil diperbarui.');
+   }
+
+   public function destroy(Type $type): RedirectResponse
+   {
+      if ($type->products()->exists()) {
+         return back()->with('error', 'Tipe ini tidak dapat dihapus karena masih digunakan oleh produk.');
+      }
+
+      $type->delete();
+
+      return redirect()->route('types.index')
+         ->with('success', 'Tipe berhasil dihapus.');
+   }
+}
