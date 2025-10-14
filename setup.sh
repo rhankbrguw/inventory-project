@@ -2,7 +2,7 @@
 # A script to initialize the application after 'docker-compose up'.
 
 echo -e "\n========================================"
-echo "🚀 Post-Docker Setup Script"
+echo " Post-Docker Setup Script"
 echo "========================================"
 echo -e "\nThis script will run the initial setup steps."
 echo "Ensure all containers are in the 'Up' state before proceeding."
