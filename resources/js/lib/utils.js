@@ -70,3 +70,16 @@ export function formatNumber(value) {
     }
     return new Intl.NumberFormat("id-ID").format(numberValue);
 }
+
+export function generateHslColorFromString(str) {
+    if (!str) return {};
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = hash % 360;
+    return {
+        backgroundColor: `hsl(${h}, 70%, 85%)`,
+        color: `hsl(${h}, 70%, 25%)`,
+    };
+}

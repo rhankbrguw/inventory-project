@@ -6,21 +6,16 @@ import {
     formatGroupName,
     formatNumber,
 } from "@/lib/utils";
-import RoleBadge from "@/Components/RoleBadge";
-import CustomerTypeBadge from "@/Components/CustomerTypeBadge";
+import UnifiedBadge from "@/Components/UnifiedBadge";
 import { Package, Warehouse } from "lucide-react";
-
-const renderCell = (content, className = "") => (
-    <div className={className}>{content}</div>
-);
 
 export const productColumns = [
     {
         accessorKey: "image_url",
         header: "Gambar",
-        cell: ({ row }) =>
-            renderCell(
-                row.image_url ? (
+        cell: ({ row }) => (
+            <div className="flex justify-center">
+                {row.image_url ? (
                     <img
                         src={row.image_url}
                         alt={row.name}
@@ -30,23 +25,17 @@ export const productColumns = [
                     <div className="h-12 w-12 rounded-md bg-secondary flex items-center justify-center">
                         <Package className="w-6 h-6 text-muted-foreground" />
                     </div>
-                ),
-                "flex justify-center"
-            ),
+                )}
+            </div>
+        ),
         className: "text-center",
     },
     {
         accessorKey: "name",
         header: "Nama Produk",
-        cell: ({ row }) => row.name,
         className: "text-center font-medium",
     },
-    {
-        accessorKey: "sku",
-        header: "SKU",
-        cell: ({ row }) => row.sku,
-        className: "text-center font-mono",
-    },
+    { accessorKey: "sku", header: "SKU", className: "text-center font-mono" },
     {
         accessorKey: "type",
         header: "Tipe",
@@ -71,13 +60,21 @@ export const locationColumns = [
     {
         accessorKey: "name",
         header: "Nama Lokasi",
-        cell: ({ row }) => row.name,
-        className: "text-center font-medium",
+        className: "font-medium text-center",
     },
     {
         accessorKey: "type",
         header: "Tipe",
         cell: ({ row }) => row.type?.name || "-",
+        className: "text-center",
+    },
+    {
+        accessorKey: "users",
+        header: "Petugas",
+        cell: ({ row }) =>
+            row.users.length > 0
+                ? row.users.map((user) => user.name).join(", ")
+                : "-",
         className: "text-center",
     },
     {
@@ -108,18 +105,16 @@ export const stockColumns = [
     {
         accessorKey: "location.name",
         header: "Lokasi",
-        cell: ({ row }) =>
-            renderCell(
-                <>
-                    {row.location.type === "warehouse" ? (
-                        <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />
-                    ) : (
-                        <Package className="w-4 h-4 mr-2 text-muted-foreground" />
-                    )}
-                    {row.location.name}
-                </>,
-                "flex items-center justify-center"
-            ),
+        cell: ({ row }) => (
+            <div className="flex items-center justify-center">
+                {row.location.type === "warehouse" ? (
+                    <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />
+                ) : (
+                    <Package className="w-4 h-4 mr-2 text-muted-foreground" />
+                )}
+                {row.location.name}
+            </div>
+        ),
         className: "text-center",
     },
     {
@@ -140,29 +135,26 @@ export const transactionColumns = [
     {
         accessorKey: "reference_code",
         header: "Referensi",
-        cell: ({ row }) => row.reference_code,
         className: "text-center font-mono text-xs whitespace-nowrap",
     },
     {
         accessorKey: "type",
         header: "Tipe",
-        cell: ({ row }) =>
-            renderCell(
-                <Badge variant="secondary">{row.type}</Badge>,
-                "flex justify-center"
-            ),
+        cell: ({ row }) => (
+            <div className="flex justify-center">
+                <Badge variant="secondary">{row.type}</Badge>
+            </div>
+        ),
         className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "location",
         header: "Lokasi",
-        cell: ({ row }) => row.location,
         className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "supplier",
         header: "Supplier",
-        cell: ({ row }) => row.supplier,
         className: "text-center whitespace-nowrap",
     },
     {
@@ -180,7 +172,6 @@ export const transactionColumns = [
     {
         accessorKey: "user",
         header: "PIC",
-        cell: ({ row }) => row.user,
         className: "text-center whitespace-nowrap",
     },
 ];
@@ -189,27 +180,19 @@ export const supplierColumns = [
     {
         accessorKey: "name",
         header: "Nama Supplier",
-        cell: ({ row }) => row.name,
         className: "text-center font-medium",
     },
     {
         accessorKey: "contact_person",
         header: "Koordinator",
-        cell: ({ row }) => row.contact_person,
         className: "text-center",
     },
     {
         accessorKey: "email",
         header: "Email",
-        cell: ({ row }) => row.email,
         className: "text-center text-muted-foreground",
     },
-    {
-        accessorKey: "phone",
-        header: "Telepon",
-        cell: ({ row }) => row.phone,
-        className: "text-center",
-    },
+    { accessorKey: "phone", header: "Telepon", className: "text-center" },
 ];
 
 export const customerColumns = [
@@ -228,7 +211,7 @@ export const customerColumns = [
     {
         accessorKey: "type",
         header: "Tipe",
-        cell: ({ row }) => <CustomerTypeBadge type={row.type} />,
+        cell: ({ row }) => <UnifiedBadge text={row.type?.name} />,
         className: "text-center whitespace-nowrap",
     },
     {
@@ -275,7 +258,7 @@ export const userColumns = [
     {
         accessorKey: "role",
         header: "Jabatan",
-        cell: ({ row }) => <RoleBadge role={row.role} />,
+        cell: ({ row }) => <UnifiedBadge text={row.role?.name} />,
         className: "text-center",
     },
 ];

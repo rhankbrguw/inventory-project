@@ -32,7 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:Super Admin'])->group(function () {
         Route::resource('users', UserController::class)->except(['destroy']);
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-        Route::resource('types', TypeController::class)->except(['destroy']);
+        Route::resource('types', TypeController::class);
 
         Route::get('/locations/create', [LocationsController::class, 'create'])->name('locations.create');
         Route::post('/locations', [LocationsController::class, 'store'])->name('locations.store');

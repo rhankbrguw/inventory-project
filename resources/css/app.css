@@ -67,36 +67,48 @@
 }
 
 @layer components {
-    .role-super-admin {
-        @apply bg-primary text-primary-foreground;
-    }
-    .role-warehouse-manager {
-        @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
-    }
-    .role-branch-manager {
-        @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300;
-    }
-    .role-cashier {
-        @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300;
-    }
-    .role-default {
-        @apply bg-muted text-muted-foreground;
-    }
-    @media print {
-        .print-hidden {
-            display: none !important;
+    @layer components {
+        .role-super-admin {
+            @apply bg-primary text-primary-foreground;
         }
-        .print-full-width {
-            margin-left: 0 !important;
-            width: 100% !important;
+        .role-warehouse-manager {
+            @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
         }
-        main {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
+        .role-branch-manager {
+            @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300;
         }
-        body {
-            background-color: white !important;
+        .role-cashier {
+            @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300;
+        }
+        .role-default {
+            @apply bg-muted text-muted-foreground;
+        }
+
+        .customer-type-individu {
+            @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
+        }
+        .customer-type-cabang {
+            @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300;
+        }
+        .customer-type-mitra {
+            @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300;
+        }
+        @media print {
+            .print-hidden {
+                display: none !important;
+            }
+            .print-full-width {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            body {
+                background-color: white !important;
+            }
         }
     }
 }

@@ -1,12 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import UnifiedBadge from "@/Components/UnifiedBadge";
 
 export default function CustomerMobileCard({ customer, renderActionDropdown }) {
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                    {customer.name}
-                </CardTitle>
+            <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div className="space-y-1.5">
+                    <CardTitle className="text-sm font-medium">
+                        {customer.name}
+                    </CardTitle>
+                    <UnifiedBadge text={customer.type?.name} />
+                </div>
                 {renderActionDropdown && renderActionDropdown(customer)}
             </CardHeader>
             <CardContent>

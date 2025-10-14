@@ -35,6 +35,8 @@ return [
     ],
     'attributes' => [
         'address' => 'Alamat',
+        'assignments.*.role_id' => 'Jabatan Petugas',
+        'assignments.*.user_id' => 'Petugas',
         'code' => 'Kode',
         'contact_person' => 'Nama Koordinator',
         'cost_per_unit' => 'Harga per Unit',
