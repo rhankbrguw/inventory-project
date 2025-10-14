@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Type;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,8 +16,8 @@ class StoreCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:50'],
-            'last_name' => ['required', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:100'],
+            'type_id' => ['required', 'integer', Rule::exists('types', 'id')->where('group', Type::GROUP_CUSTOMER)],
             'email' => ['required', 'email:rfc,dns', 'max:50', Rule::unique('customers', 'email')],
             'phone' => ['nullable', 'string', 'min:10', 'max:15', Rule::unique('customers', 'phone')],
             'address' => ['nullable', 'string', 'max:255'],

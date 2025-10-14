@@ -7,6 +7,7 @@ import {
     formatNumber,
 } from "@/lib/utils";
 import RoleBadge from "@/Components/RoleBadge";
+import CustomerTypeBadge from "@/Components/CustomerTypeBadge";
 import { Package, Warehouse } from "lucide-react";
 
 const renderCell = (content, className = "") => (
@@ -222,25 +223,31 @@ export const customerColumns = [
         accessorKey: "name",
         header: "Nama",
         cell: ({ row }) => row.name,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "type",
+        header: "Tipe",
+        cell: ({ row }) => <CustomerTypeBadge type={row.type} />,
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "email",
         header: "Email",
         cell: ({ row }) => row.email,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "phone",
         header: "Telepon",
         cell: ({ row }) => row.phone || "-",
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "created_at",
         header: "Tgl. Dibuat",
         cell: ({ row }) => formatDate(row.created_at),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
 ];
 

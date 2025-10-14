@@ -6,6 +6,13 @@ import { Button } from "@/Components/ui/button";
 import { Textarea } from "@/Components/ui/textarea";
 import { InputWithPrefix } from "@/Components/InputWithPrefix";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+import {
     Card,
     CardContent,
     CardHeader,
@@ -13,10 +20,10 @@ import {
     CardDescription,
 } from "@/Components/ui/card";
 
-export default function Edit({ auth, customer }) {
+export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        first_name: customer.data.first_name || "",
-        last_name: customer.data.last_name || "",
+        name: customer.data.name || "",
+        type_id: customer.data.type_id || "",
         email: customer.data.email || "",
         phone: customer.data.phone?.replace("+62 ", "").replace(/-/g, "") || "",
         address: customer.data.address || "",
@@ -44,34 +51,45 @@ export default function Edit({ auth, customer }) {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                                label="Nama Depan"
-                                htmlFor="first_name"
-                                error={errors.first_name}
+                        <FormField
+                            label="Nama Pelanggan"
+                            htmlFor="name"
+                            error={errors.name}
+                        >
+                            <Input
+                                id="name"
+                                value={data.name}
+                                onChange={(e) =>
+                                    setData("name", e.target.value)
+                                }
+                            />
+                        </FormField>
+                        <FormField
+                            label="Tipe Pelanggan"
+                            htmlFor="type_id"
+                            error={errors.type_id}
+                        >
+                            <Select
+                                value={data.type_id.toString()}
+                                onValueChange={(value) =>
+                                    setData("type_id", value)
+                                }
                             >
-                                <Input
-                                    id="first_name"
-                                    value={data.first_name}
-                                    onChange={(e) =>
-                                        setData("first_name", e.target.value)
-                                    }
-                                />
-                            </FormField>
-                            <FormField
-                                label="Nama Belakang"
-                                htmlFor="last_name"
-                                error={errors.last_name}
-                            >
-                                <Input
-                                    id="last_name"
-                                    value={data.last_name}
-                                    onChange={(e) =>
-                                        setData("last_name", e.target.value)
-                                    }
-                                />
-                            </FormField>
-                        </div>
+                                <SelectTrigger id="type_id">
+                                    <SelectValue placeholder="Pilih tipe pelanggan" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {customerTypes.data.map((type) => (
+                                        <SelectItem
+                                            key={type.id}
+                                            value={type.id.toString()}
+                                        >
+                                            {type.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
                         <FormField
                             label="Email"
                             htmlFor="email"

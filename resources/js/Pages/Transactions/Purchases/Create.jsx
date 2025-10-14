@@ -31,6 +31,9 @@ export default function Create({
     });
 
     const isDetailsLocked = !data.items[0]?.product_id;
+    const selectedProductIds = data.items
+        .map((item) => item.product_id)
+        .filter(Boolean);
 
     useEffect(() => {
         const firstItemSupplier = data.items[0]?.supplier_id;
@@ -68,6 +71,7 @@ export default function Create({
                     suppliers={suppliers}
                     setData={setData}
                     errors={errors}
+                    selectedProductIds={selectedProductIds}
                 />
 
                 <TransactionDetailsManager

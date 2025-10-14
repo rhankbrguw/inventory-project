@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -12,20 +13,16 @@ class Customer extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
+        'name',
+        'type_id',
         'email',
         'phone',
         'address',
     ];
 
-    protected $appends = [
-        'name',
-    ];
-
-    public function getNameAttribute(): string
+    public function type(): BelongsTo
     {
-        return "{$this->first_name} {$this->last_name}";
+        return $this->belongsTo(Type::class, 'type_id');
     }
 
     public function setPhoneAttribute($value)
