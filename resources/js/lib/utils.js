@@ -30,6 +30,16 @@ export function formatDate(isoString) {
     });
 }
 
+export function formatTime(dateString) {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("id-ID", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    }).format(date);
+}
+
 export function formatRelativeTime(isoString) {
     if (!isoString) return "-";
     const date = new Date(isoString);

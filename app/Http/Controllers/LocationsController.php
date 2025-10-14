@@ -10,14 +10,14 @@ use App\Http\Resources\UserResource;
 use App\Models\Location;
 use App\Models\Type;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class LocationsController extends Controller
 {
-   public function index(Request $request)
+   public function index(Request $request): Response
    {
       $locations = Location::query()
          ->with(['type', 'users'])
@@ -27,8 +27,7 @@ class LocationsController extends Controller
          ->when($request->input('status'), function ($query, $status) {
             if ($status === 'active') {
                $query->whereNull('deleted_at');
-            }
-            if ($status === 'inactive') {
+            } elseif ($status === 'inactive') {
                $query->whereNotNull('deleted_at');
             }
          })
@@ -40,31 +39,35 @@ class LocationsController extends Controller
          ->paginate(10)
          ->withQueryString();
 
-      return Inertia::render('Locations/Index', [
+      return inertia('Locations/Index', [
          'locations' => LocationResource::collection($locations),
          'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->get(['id', 'name']),
          'filters' => (object) $request->only(['search', 'status', 'type_id']),
       ]);
    }
 
-   public function create()
+   public function create(): Response
    {
-      return Inertia::render('Locations/Create', [
-         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->orderBy('name')->get(['id', 'name', 'code']),
+      return inertia('Locations/Create', [
+         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']),
       ]);
    }
 
-   public function store(StoreLocationRequest $request)
+   public function store(StoreLocationRequest $request): RedirectResponse
    {
       Location::create($request->validated());
-      return Redirect::route('locations.index')->with('success', 'Lokasi baru berhasil ditambahkan.');
+
+      return redirect()->route('locations.index')
+         ->with('success', 'Lokasi baru berhasil ditambahkan.');
    }
 
-   public function edit(Location $location)
+   public function edit(Location $location): Response
    {
       $location->load(['type', 'users.roles']);
 
-      $users = User::query()->with('roles')->orderBy('name')->get();
+      $users = User::with('roles')->orderBy('name')->get();
 
       $roleOrder = [
          'Warehouse Manager',
@@ -73,19 +76,23 @@ class LocationsController extends Controller
          'Cashier',
       ];
 
-      $roles = Role::query()->where('name', '!=', 'Super Admin')->get()->sortBy(function ($role) use ($roleOrder) {
-         return array_search($role->name, $roleOrder);
-      });
+      $roles = Role::where('name', '!=', 'Super Admin')
+         ->get()
+         ->sortBy(function ($role) use ($roleOrder) {
+            return array_search($role->name, $roleOrder);
+         });
 
-      return Inertia::render('Locations/Edit', [
+      return inertia('Locations/Edit', [
          'location' => LocationResource::make($location),
-         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)->orderBy('name')->get(['id', 'name', 'code']),
+         'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']),
          'allUsers' => UserResource::collection($users),
          'allRoles' => RoleResource::collection($roles),
       ]);
    }
 
-   public function update(UpdateLocationRequest $request, Location $location)
+   public function update(UpdateLocationRequest $request, Location $location): RedirectResponse
    {
       $validated = $request->validated();
 
@@ -95,24 +102,30 @@ class LocationsController extends Controller
          'address' => $validated['address'],
       ]);
 
-      $assignments = collect($validated['assignments'] ?? [])->mapWithKeys(function ($assignment) {
-         return [$assignment['user_id'] => ['role_id' => $assignment['role_id']]];
-      });
+      $assignments = collect($validated['assignments'] ?? [])
+         ->mapWithKeys(function ($assignment) {
+            return [$assignment['user_id'] => ['role_id' => $assignment['role_id']]];
+         });
 
       $location->users()->sync($assignments);
 
-      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diperbarui.');
+      return redirect()->route('locations.index')
+         ->with('success', 'Lokasi berhasil diperbarui.');
    }
 
-   public function destroy(Location $location)
+   public function destroy(Location $location): RedirectResponse
    {
       $location->delete();
-      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil dinonaktifkan.');
+
+      return redirect()->route('locations.index')
+         ->with('success', 'Lokasi berhasil dinonaktifkan.');
    }
 
-   public function restore(Location $location)
+   public function restore(Location $location): RedirectResponse
    {
       $location->restore();
-      return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diaktifkan kembali.');
+
+      return redirect()->route('locations.index')
+         ->with('success', 'Lokasi berhasil diaktifkan kembali.');
    }
 }

@@ -14,7 +14,7 @@ export default function LocationMobileCard({ location, renderActionDropdown }) {
                         {location.address || "Tanpa alamat"}
                     </p>
                 </div>
-                {renderActionDropdown(location)}
+                {renderActionDropdown && renderActionDropdown(location)}
             </CardHeader>
             <CardContent>
                 <div className="flex flex-wrap gap-2 items-center">

@@ -17,7 +17,7 @@ class StoreUserRequest extends FormRequest
    {
       return [
          'name' => ['required', 'string', 'max:50', 'regex:/^[\pL\s\-]+$/u'],
-         'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50', Rule::unique('users', 'email')],
+         'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50', Rule::unique('users')],
          'password' => ['required', 'string', 'confirmed', Password::defaults()],
          'role' => ['required', 'string', 'exists:roles,name'],
       ];

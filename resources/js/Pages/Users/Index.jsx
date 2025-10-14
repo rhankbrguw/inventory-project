@@ -38,11 +38,19 @@ export default function Index({ auth, users, roles, filters = {} }) {
         "name_asc"
     );
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const deleteUser = () => {
+        setIsDeleting(true);
         router.delete(route("users.destroy", confirmingUserDeletion), {
             preserveScroll: true,
-            onSuccess: () => setConfirmingUserDeletion(null),
+            onSuccess: () => {
+                setConfirmingUserDeletion(null);
+                setIsDeleting(false);
+            },
+            onError: () => {
+                setIsDeleting(false);
+            },
         });
     };
 
@@ -162,6 +170,7 @@ export default function Index({ auth, users, roles, filters = {} }) {
                 open={confirmingUserDeletion !== null}
                 onOpenChange={() => setConfirmingUserDeletion(null)}
                 onConfirm={deleteUser}
+                isDeleting={isDeleting}
                 confirmText="Hapus Pengguna"
                 description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus akun pengguna secara permanen dari sistem."
             />

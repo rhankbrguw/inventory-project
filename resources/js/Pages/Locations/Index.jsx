@@ -5,6 +5,7 @@ import MobileCardList from "@/Components/MobileCardList";
 import LocationMobileCard from "./Partials/LocationMobileCard";
 import { locationColumns } from "@/Constants/tableColumns";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import Pagination from "@/Components/Pagination";
 import { Card, CardContent } from "@/Components/ui/card";
 import { Input } from "@/Components/ui/input";
 import {
@@ -34,6 +35,7 @@ export default function Index({
         "locations.index",
         filters
     );
+    const canCrudLocations = auth.user.roles.includes("Super Admin");
 
     const handleDeactivate = (url) => {
         router.delete(url, { preserveScroll: true });
@@ -94,90 +96,108 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Lokasi"
-            createRoute="locations.create"
+            createRoute={canCrudLocations ? "locations.create" : null}
             buttonLabel="Tambah Lokasi"
         >
-            <Card className="mb-4">
-                <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
-                        <Input
-                            type="search"
-                            placeholder="Cari nama lokasi atau pengguna..."
-                            value={params.search || ""}
-                            onChange={(e) =>
-                                setFilter("search", e.target.value)
-                            }
-                        />
-                        <Select
-                            value={params.type_id || "all"}
-                            onValueChange={(value) =>
-                                setFilter("type_id", value)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Semua Tipe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua Tipe</SelectItem>
-                                {locationTypes.map((type) => (
-                                    <SelectItem
-                                        key={type.id}
-                                        value={type.id.toString()}
-                                    >
-                                        {type.name}
+            <div className="space-y-4">
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
+                            <Input
+                                type="search"
+                                placeholder="Cari nama lokasi atau pengguna..."
+                                value={params.search || ""}
+                                onChange={(e) =>
+                                    setFilter("search", e.target.value)
+                                }
+                            />
+                            <Select
+                                value={params.type_id || "all"}
+                                onValueChange={(value) =>
+                                    setFilter("type_id", value)
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Semua Tipe" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Tipe
                                     </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select
-                            value={params.status || "all"}
-                            onValueChange={(value) =>
-                                setFilter("status", value)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Semua Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">
-                                    Semua Status
-                                </SelectItem>
-                                <SelectItem value="active">Aktif</SelectItem>
-                                <SelectItem value="inactive">
-                                    Nonaktif
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
+                                    {locationTypes.map((type) => (
+                                        <SelectItem
+                                            key={type.id}
+                                            value={type.id.toString()}
+                                        >
+                                            {type.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select
+                                value={params.status || "all"}
+                                onValueChange={(value) =>
+                                    setFilter("status", value)
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Semua Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Status
+                                    </SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
 
-            <MobileCardList
-                data={data}
-                renderItem={(location) => (
-                    <div
-                        onClick={() =>
-                            router.get(route("locations.edit", location.id))
-                        }
-                        key={location.id}
-                        className="cursor-pointer"
-                    >
-                        <LocationMobileCard
-                            location={location}
-                            renderActionDropdown={renderActionDropdown}
-                        />
-                    </div>
-                )}
-            />
-
-            <div className="hidden md:block">
-                <DataTable
-                    columns={locationColumns}
+                <MobileCardList
                     data={data}
-                    actions={renderActionDropdown}
-                    showRoute={"locations.edit"}
-                    rowClassName={(row) => (row.deleted_at ? "opacity-50" : "")}
+                    renderItem={(location) => (
+                        <div
+                            onClick={() => {
+                                if (canCrudLocations) {
+                                    router.get(
+                                        route("locations.edit", location.id)
+                                    );
+                                }
+                            }}
+                            key={location.id}
+                            className={canCrudLocations ? "cursor-pointer" : ""}
+                        >
+                            <LocationMobileCard
+                                location={location}
+                                renderActionDropdown={
+                                    canCrudLocations
+                                        ? renderActionDropdown
+                                        : null
+                                }
+                            />
+                        </div>
+                    )}
                 />
+
+                <div className="hidden md:block">
+                    <DataTable
+                        columns={locationColumns}
+                        data={data}
+                        actions={canCrudLocations ? renderActionDropdown : null}
+                        showRoute={canCrudLocations ? "locations.edit" : null}
+                        rowClassName={(row) =>
+                            row.deleted_at ? "opacity-50" : ""
+                        }
+                    />
+                </div>
+
+                {data.length > 0 && <Pagination links={meta.links} />}
             </div>
         </IndexPageLayout>
     );

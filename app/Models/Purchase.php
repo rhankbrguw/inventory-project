@@ -11,7 +11,17 @@ class Purchase extends Model
 {
    use HasFactory;
 
-   protected $guarded = [];
+   protected $fillable = [
+      'location_id',
+      'supplier_id',
+      'user_id',
+      'reference_code',
+      'transaction_date',
+      'total_cost',
+      'status',
+      'notes',
+      'payment_method_type_id',
+   ];
 
    public function location(): BelongsTo
    {
@@ -26,6 +36,11 @@ class Purchase extends Model
    public function user(): BelongsTo
    {
       return $this->belongsTo(User::class);
+   }
+
+   public function paymentMethodType(): BelongsTo
+   {
+      return $this->belongsTo(Type::class, 'payment_method_type_id');
    }
 
    public function stockMovements(): HasMany

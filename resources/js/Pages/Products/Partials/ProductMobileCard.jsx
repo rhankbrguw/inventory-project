@@ -30,7 +30,7 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
                         </p>
                     </div>
                 </div>
-                {renderActionDropdown(product)}
+                {renderActionDropdown && renderActionDropdown(product)}
             </CardHeader>
             <CardContent>
                 <div className="text-lg font-bold">
