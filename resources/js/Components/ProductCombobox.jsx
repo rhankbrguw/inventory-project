@@ -29,12 +29,14 @@ export default function ProductCombobox({ products, value, onChange, error }) {
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-full justify-between font-normal"
+                        className="w-full justify-between font-normal overflow-hidden"
                     >
-                        {selectedProduct
-                            ? `${selectedProduct.name} (${selectedProduct.sku})`
-                            : "Pilih produk..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <span className="truncate block flex-1 text-left min-w-0">
+                            {selectedProduct
+                                ? `${selectedProduct.name} (${selectedProduct.sku})`
+                                : "Pilih produk..."}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent
@@ -55,18 +57,21 @@ export default function ProductCombobox({ products, value, onChange, error }) {
                                             onChange(product);
                                             setOpen(false);
                                         }}
+                                        className="flex items-start"
                                     >
                                         <Check
                                             className={cn(
-                                                "mr-2 h-4 w-4",
+                                                "mr-2 h-4 w-4 shrink-0 mt-0.5",
                                                 value === product.id
                                                     ? "opacity-100"
                                                     : "opacity-0"
                                             )}
                                         />
-                                        <div>
-                                            <p>{product.name}</p>
-                                            <p className="text-xs text-muted-foreground">
+                                        <div className="min-w-0 flex-1 overflow-hidden">
+                                            <p className="truncate">
+                                                {product.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground truncate">
                                                 SKU: {product.sku}
                                             </p>
                                         </div>

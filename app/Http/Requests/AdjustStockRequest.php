@@ -14,10 +14,10 @@ class AdjustStockRequest extends FormRequest
    public function rules(): array
    {
       return [
-         'product_id' => 'required|exists:products,id',
-         'location_id' => 'required|exists:locations,id',
-         'quantity' => 'required|numeric|min:0',
-         'notes' => 'required|string|max:100',
+         'product_id' => ['required', 'exists:products,id'],
+         'location_id' => ['required', 'exists:locations,id'],
+         'quantity' => ['required', 'numeric', 'min:0'],
+         'notes' => ['required', 'string', 'max:100'],
       ];
    }
 }

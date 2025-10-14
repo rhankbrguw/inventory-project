@@ -9,15 +9,15 @@ return new class extends Migration
    public function up(): void
    {
       Schema::table('stock_movements', function (Blueprint $table) {
-         $table->foreignId('purchase_id')->nullable()->constrained('purchases')->after('id');
+         $table->foreignId('supplier_id')->nullable()->constrained()->after('product_id');
       });
    }
 
    public function down(): void
    {
       Schema::table('stock_movements', function (Blueprint $table) {
-         $table->dropForeign(['purchase_id']);
-         $table->dropColumn('purchase_id');
+         $table->dropForeign(['supplier_id']);
+         $table->dropColumn('supplier_id');
       });
    }
 };

@@ -14,7 +14,6 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
-
    public function create(): Response
    {
       return Inertia::render('Auth/Login', [
@@ -23,10 +22,21 @@ class AuthenticatedSessionController extends Controller
       ]);
    }
 
-
    public function store(LoginRequest $request): RedirectResponse
    {
       $request->authenticate();
+
+      $user = $request->user();
+
+      if (is_null($user->email_verified_at)) {
+         Auth::guard('web')->logout();
+         $request->session()->invalidate();
+         $request->session()->regenerateToken();
+
+         $user->sendOtpNotification();
+
+         return redirect()->route('verification.notice')->with('email', $user->email);
+      }
 
       $request->session()->regenerate();
 

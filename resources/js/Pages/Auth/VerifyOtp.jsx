@@ -101,6 +101,15 @@ export default function VerifyOtp({ email, status }) {
                             Kirim ulang
                         </Button>
                     </div>
+
+                    <p className="mt-4 text-center text-xs text-muted-foreground">
+                        <i>
+                            Pastikan untuk memeriksa folder spam atau inbox
+                            email Anda. Jika terjadi sesuatu, silakan gunakan
+                            opsi kirim ulang dan refresh halaman email anda bila
+                            perlu.
+                        </i>
+                    </p>
                 </CardContent>
             </Card>
         </GuestLayout>

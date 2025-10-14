@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
-import InputError from '@/Components/InputError';
-import { useForm } from '@inertiajs/react';
-import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
+import { useRef, useState } from "react";
+import InputError from "@/Components/InputError";
+import { useForm } from "@inertiajs/react";
+import { Button } from "@/Components/ui/button";
+import { Label } from "@/Components/ui/label";
+import { PasswordInput } from "@/Components/PasswordInput";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,9 +15,14 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/Components/ui/alert-dialog";
-import { CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
+import {
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    CardContent,
+} from "@/Components/ui/card";
 
-export default function DeleteUserForm({ className = '' }) {
+export default function DeleteUserForm({ className = "" }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const passwordInput = useRef();
 
@@ -29,12 +34,12 @@ export default function DeleteUserForm({ className = '' }) {
         reset,
         errors,
     } = useForm({
-        password: '',
+        password: "",
     });
 
     const deleteUser = (e) => {
         e.preventDefault();
-        destroy(route('profile.destroy'), {
+        destroy(route("profile.destroy"), {
             preserveScroll: true,
             onSuccess: () => closeModal(),
             onError: () => passwordInput.current.focus(),
@@ -52,48 +57,67 @@ export default function DeleteUserForm({ className = '' }) {
             <CardHeader>
                 <CardTitle>Hapus Akun</CardTitle>
                 <CardDescription>
-                    Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen.
+                    Setelah akun anda dihapus, semua data yang ada tidak dapat dipulihkan.
                 </CardDescription>
             </CardHeader>
 
-            <div className="px-6 pb-6">
-                <AlertDialog open={confirmingUserDeletion} onOpenChange={setConfirmingUserDeletion}>
+            <CardContent>
+                <AlertDialog
+                    open={confirmingUserDeletion}
+                    onOpenChange={setConfirmingUserDeletion}
+                >
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive">Hapus Akun</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Apakah Anda yakin ingin menghapus akun Anda?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                                Apakah Anda yakin ingin menghapus akun Anda?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                                Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Silakan masukkan password Anda untuk mengonfirmasi.
+                                Setelah akun Anda dihapus, semua
+                                data akan dihapus secara permanen. Silakan
+                                masukkan password Anda untuk mengonfirmasi.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <form onSubmit={deleteUser}>
                             <div className="mt-4">
-                                <Label htmlFor="password" value="Password" className="sr-only" />
-                                <Input
+                                <Label
+                                    htmlFor="password"
+                                    value="Password"
+                                    className="sr-only"
+                                />
+                                <PasswordInput
                                     id="password"
-                                    type="password"
-                                    name="password"
                                     ref={passwordInput}
                                     value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
+                                    onChange={(e) =>
+                                        setData("password", e.target.value)
+                                    }
                                     className="mt-1 block w-full"
                                     autoFocus
                                     placeholder="Password"
                                 />
-                                <InputError message={errors.password} className="mt-2" />
+                                <InputError
+                                    message={errors.password}
+                                    className="mt-2"
+                                />
                             </div>
                             <AlertDialogFooter className="mt-6">
-                                <AlertDialogCancel onClick={closeModal}>Batal</AlertDialogCancel>
-                                <AlertDialogAction type="submit" disabled={processing}>
+                                <AlertDialogCancel onClick={closeModal}>
+                                    Batal
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    type="submit"
+                                    disabled={processing}
+                                >
                                     Hapus Akun
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </form>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
+            </CardContent>
         </section>
     );
 }

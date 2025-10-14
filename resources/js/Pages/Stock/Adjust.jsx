@@ -63,7 +63,7 @@ export default function Adjust({ auth, products, locations }) {
     return (
         <ContentPageLayout
             auth={auth}
-            title="Penyesuaian Stok"
+            title="Update Stok Baru"
             backRoute="stock.index"
         >
             <Card>

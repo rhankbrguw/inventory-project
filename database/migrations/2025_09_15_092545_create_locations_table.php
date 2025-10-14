@@ -10,10 +10,11 @@ return new class extends Migration
    {
       Schema::create('locations', function (Blueprint $table) {
          $table->id();
+         $table->foreignId('type_id')->nullable()->constrained('types');
          $table->string('name');
-         $table->enum('type', ['warehouse', 'branch']);
          $table->text('address')->nullable();
          $table->timestamps();
+         $table->softDeletes();
       });
    }
 

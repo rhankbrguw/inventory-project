@@ -24,16 +24,13 @@ class SupplierResource extends JsonResource
 
    private function formatPhone(?string $phone): ?string
    {
-      if (!$phone) return null;
+      if (!$phone) {
+         return null;
+      }
 
       if (str_starts_with($phone, '+62')) {
          $local = substr($phone, 3);
-
-         return '+62 ' . preg_replace(
-            "/(\d{3})(\d{3,4})(\d{3,4})/",
-            "$1-$2-$3",
-            $local
-         );
+         return '+62 ' . preg_replace("/(\d{3})(\d{3,4})(\d{3,4})/", "$1-$2-$3", $local);
       }
 
       return $phone;

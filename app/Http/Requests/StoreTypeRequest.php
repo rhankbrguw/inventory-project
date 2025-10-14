@@ -26,22 +26,9 @@ class StoreTypeRequest extends FormRequest
    public function rules(): array
    {
       return [
-         'name' => [
-            'required',
-            'string',
-            'max:50',
-            Rule::unique('types')->where('group', $this->group),
-         ],
-         'group' => [
-            'required',
-            Rule::in(array_keys(Type::getAvailableGroups())),
-         ],
-         'code' => [
-            'nullable',
-            'string',
-            'max:50',
-            Rule::unique('types', 'code')->whereNull('deleted_at'),
-         ],
+         'name' => ['required', 'string', 'max:50', Rule::unique('types')->where('group', $this->group)],
+         'group' => ['required', Rule::in(array_keys(Type::getAvailableGroups()))],
+         'code' => ['nullable', 'string', 'max:50', Rule::unique('types')->whereNull('deleted_at')],
       ];
    }
 }

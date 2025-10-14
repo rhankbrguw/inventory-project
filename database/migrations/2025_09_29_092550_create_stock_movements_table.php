@@ -10,10 +10,12 @@ return new class extends Migration
    {
       Schema::create('stock_movements', function (Blueprint $table) {
          $table->id();
-         $table->foreignId('inventory_id')->constrained()->onDelete('cascade');
-         $table->decimal('quantity_change', 15, 4);
+         $table->foreignId('product_id')->constrained()->onDelete('cascade');
+         $table->foreignId('location_id')->constrained()->onDelete('cascade');
+         $table->foreignId('purchase_id')->nullable()->constrained()->onDelete('set null');
          $table->string('type');
-         $table->morphs('source');
+         $table->decimal('quantity', 15, 4);
+         $table->decimal('cost_per_unit', 15, 4)->nullable();
          $table->text('notes')->nullable();
          $table->timestamps();
       });

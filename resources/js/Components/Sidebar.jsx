@@ -8,6 +8,8 @@ import {
     Truck,
     Settings,
     ClipboardList,
+    MapPin,
+    Contact,
 } from "lucide-react";
 
 const NavLink = ({ href, active, children, onClick }) => (
@@ -44,6 +46,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             roles: ["Super Admin", "Warehouse Manager", "Branch Manager"],
         },
         {
+            name: "Locations",
+            href: route("locations.index"),
+            icon: MapPin,
+            current: route().current("locations.*"),
+            roles: ["Super Admin", "Warehouse Manager", "Branch Manager"],
+        },
+        {
             name: "Stock",
             href: route("stock.index"),
             icon: Warehouse,
@@ -63,6 +72,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: Truck,
             current: route().current("suppliers.*"),
             roles: ["Super Admin", "Warehouse Manager", "Branch Manager"],
+        },
+        {
+            name: "Customers",
+            href: route("customers.index"),
+            icon: Contact,
+            current: route().current("customers.*"),
+            roles: ["Super Admin", "Branch Manager"],
         },
         {
             name: "Report",

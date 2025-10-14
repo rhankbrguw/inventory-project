@@ -9,6 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import { Button } from "./ui/button";
+import RoleBadge from "./RoleBadge";
 
 const UserAvatar = ({ user }) => (
     <div className="relative">
@@ -39,13 +40,16 @@ const UserDropdownMenu = () => {
                 sideOffset={10}
             >
                 <DropdownMenuLabel className="px-2 py-2">
-                    <div className="flex flex-col space-y-0.5">
+                    <div className="flex flex-col space-y-1">
                         <p className="text-sm font-semibold text-foreground leading-tight">
                             {user.name}
                         </p>
                         <p className="text-xs text-muted-foreground leading-tight">
                             {user.email}
                         </p>
+                        <div className="pt-1">
+                            <RoleBadge role={user.role} />
+                        </div>
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

@@ -93,7 +93,7 @@
         main {
             padding: 0 !important;
             margin: 0 !important;
-            max-width: 100% !important; /* Override max-w-7xl */
+            max-width: 100% !important;
         }
         body {
             background-color: white !important;

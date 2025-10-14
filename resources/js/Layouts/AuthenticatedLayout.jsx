@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { usePage } from "@inertiajs/react";
-import Sidebar from "@/Components/Sidebar";
 import Header from "@/Components/Header";
+import Sidebar from "@/Components/Sidebar";
+import { usePage } from "@inertiajs/react";
+import { useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 
 export default function AuthenticatedLayout({ children }) {

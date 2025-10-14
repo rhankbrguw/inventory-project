@@ -13,14 +13,14 @@ class InventoryResource extends JsonResource
          'id' => $this->id,
          'quantity' => $this->quantity,
          'average_cost' => $this->average_cost,
-         'updated_at' => $this->updated_at->toISOString(),
-         'product' => $this->whenLoaded('product', fn() => [
-            'name' => $this->product->name,
-            'sku' => $this->product->sku,
-            'unit' => $this->product->unit,
-            'type' => $this->product->type,
+         'product' => ProductResource::make($this->whenLoaded('product')),
+         'location' => $this->whenLoaded('location', fn() => [
+            'id' => $this->location->id,
+            'name' => $this->location->name,
+            'type' => $this->location->type,
          ]),
-         'location' => $this->whenLoaded('location'),
+         'created_at' => $this->created_at?->toISOString(),
+         'updated_at' => $this->updated_at?->toISOString(),
       ];
    }
 }

@@ -1,4 +1,4 @@
-import { Link, router, useForm } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { productColumns } from "@/Constants/tableColumns.jsx";
@@ -48,6 +48,10 @@ export default function Index({
     const [confirmingProductDeletion, setConfirmingProductDeletion] =
         useState(null);
 
+    const canCrudProducts = ["Super Admin", "Branch Manager"].some((role) =>
+        auth.user.roles.includes(role)
+    );
+
     const deleteProduct = () => {
         router.delete(route("products.destroy", confirmingProductDeletion), {
             preserveScroll: true,
@@ -86,23 +90,25 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Produk"
-            createRoute="products.create"
+            createRoute={canCrudProducts ? "products.create" : null}
             buttonLabel="Tambah Produk"
             headerActions={
-                <QuickAddTypeModal
-                    group="product_type"
-                    title="Tambah Tipe Produk Cepat"
-                    description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                    existingTypes={productTypes}
-                    trigger={
-                        <Button
-                            variant="outline"
-                            className="hidden sm:flex items-center gap-2"
-                        >
-                            <PlusCircle className="w-4 h-4" /> Tambah Tipe
-                        </Button>
-                    }
-                />
+                canCrudProducts && (
+                    <QuickAddTypeModal
+                        group="product_type"
+                        title="Tambah Tipe Produk Cepat"
+                        description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
+                        existingTypes={productTypes}
+                        trigger={
+                            <Button
+                                variant="outline"
+                                className="hidden sm:flex items-center gap-2"
+                            >
+                                <PlusCircle className="w-4 h-4" /> Tambah Tipe
+                            </Button>
+                        }
+                    />
+                )
             }
         >
             <div className="space-y-4">
@@ -158,23 +164,25 @@ export default function Index({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <div className="sm:hidden">
-                            <QuickAddTypeModal
-                                group="product_type"
-                                title="Tambah Tipe Produk Cepat"
-                                description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                                existingTypes={productTypes}
-                                trigger={
-                                    <Button
-                                        variant="outline"
-                                        className="w-full flex items-center gap-2"
-                                    >
-                                        <PlusCircle className="w-4 h-4" />{" "}
-                                        Tambah Tipe
-                                    </Button>
-                                }
-                            />
-                        </div>
+                        {canCrudProducts && (
+                            <div className="sm:hidden">
+                                <QuickAddTypeModal
+                                    group="product_type"
+                                    title="Tambah Tipe Produk Cepat"
+                                    description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
+                                    existingTypes={productTypes}
+                                    trigger={
+                                        <Button
+                                            variant="outline"
+                                            className="w-full flex items-center gap-2"
+                                        >
+                                            <PlusCircle className="w-4 h-4" />{" "}
+                                            Tambah Tipe
+                                        </Button>
+                                    }
+                                />
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -184,7 +192,9 @@ export default function Index({
                         <ProductMobileCard
                             key={product.id}
                             product={product}
-                            renderActionDropdown={renderActionDropdown}
+                            renderActionDropdown={
+                                canCrudProducts ? renderActionDropdown : null
+                            }
                         />
                     )}
                 />
@@ -193,8 +203,8 @@ export default function Index({
                     <DataTable
                         columns={productColumns}
                         data={products.data}
-                        actions={renderActionDropdown}
-                        showRoute={"products.edit"}
+                        actions={canCrudProducts ? renderActionDropdown : null}
+                        showRoute={canCrudProducts ? "products.edit" : null}
                     />
                 </div>
 
@@ -203,13 +213,15 @@ export default function Index({
                 )}
             </div>
 
-            <DeleteConfirmationDialog
-                open={confirmingProductDeletion !== null}
-                onOpenChange={() => setConfirmingProductDeletion(null)}
-                onConfirm={deleteProduct}
-                description="Tindakan ini tidak dapat dibatalkan. Produk ini akan dihapus secara permanen."
-                confirmText="Hapus Produk"
-            />
+            {canCrudProducts && (
+                <DeleteConfirmationDialog
+                    open={confirmingProductDeletion !== null}
+                    onOpenChange={() => setConfirmingProductDeletion(null)}
+                    onConfirm={deleteProduct}
+                    description="Tindakan ini tidak dapat dibatalkan. Produk ini akan dihapus secara permanen."
+                    confirmText="Hapus Produk"
+                />
+            )}
         </IndexPageLayout>
     );
 }

@@ -6,7 +6,6 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import StockMobileCard from "./Partials/StockMobileCard";
 import Pagination from "@/Components/Pagination";
-import ProductCombobox from "@/Components/ProductCombobox";
 import { Card, CardContent } from "@/Components/ui/card";
 import {
     Select,
@@ -39,7 +38,6 @@ export default function Index({
     inventories,
     locations = [],
     products = [],
-    productTypes = [],
     filters = {},
 }) {
     const { params, setFilter } = useIndexPageFilters("stock.index", filters);
@@ -60,7 +58,8 @@ export default function Index({
                     className="cursor-pointer"
                     onSelect={() => router.get(route("stock.show", item.id))}
                 >
-                    <Eye className="w-4 h-4 mr-2" />Lihat
+                    <Eye className="w-4 h-4 mr-2" />
+                    Lihat
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
@@ -86,14 +85,32 @@ export default function Index({
                             }
                             className="w-full md:w-auto md:flex-grow"
                         />
-                        <ProductCombobox
-                            products={products}
-                            value={params.product_id}
-                            onChange={(product) =>
-                                setFilter("product_id", product.id)
+                        <Select
+                            value={params.product_id?.toString() || "all"}
+                            onValueChange={(value) =>
+                                setFilter(
+                                    "product_id",
+                                    value === "all" ? null : parseInt(value)
+                                )
                             }
-                            containerClassName="w-full md:w-[200px]"
-                        />
+                        >
+                            <SelectTrigger className="w-full md:w-[200px]">
+                                <SelectValue placeholder="Semua Produk" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Produk
+                                </SelectItem>
+                                {products.map((product) => (
+                                    <SelectItem
+                                        key={product.id}
+                                        value={product.id.toString()}
+                                    >
+                                        {product.name} ({product.sku})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <Select
                             value={params.location_id || "all"}
                             onValueChange={(value) =>
