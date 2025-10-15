@@ -7,23 +7,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/Components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableFooter,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
+import { TableFooter, TableRow, TableCell } from "@/Components/ui/table";
 import { Badge } from "@/Components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
+import DataTable from "@/Components/DataTable";
+import { purchaseDetailColumns } from "@/Constants/tableColumns";
 
 export default function Show({ auth, purchase }) {
     const { data } = purchase;
-
-    const tableFooterColSpan = 4;
 
     return (
         <ContentPageLayout
@@ -117,62 +108,14 @@ export default function Show({ auth, purchase }) {
                     </div>
 
                     <div className="hidden md:block">
-                        <ScrollArea className="w-full whitespace-nowrap">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="text-center">
-                                            Produk
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            SKU
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Jumlah
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Harga Beli
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Subtotal
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {data.items.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="text-center">
-                                                <p className="font-medium">
-                                                    {item.product.name}
-                                                </p>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <p className="text-xs font-mono">
-                                                    {item.product.sku}
-                                                </p>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                {formatNumber(item.quantity)}{" "}
-                                                {item.product.unit}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                {formatCurrency(
-                                                    item.cost_per_unit
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-center font-semibold">
-                                                {formatCurrency(
-                                                    item.quantity *
-                                                        item.cost_per_unit
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
+                        <DataTable
+                            columns={purchaseDetailColumns}
+                            data={data.items}
+                            footer={
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell
-                                            colSpan={tableFooterColSpan}
+                                            colSpan={4}
                                             className="text-right font-bold"
                                         >
                                             Total Pembelian
@@ -182,9 +125,8 @@ export default function Show({ auth, purchase }) {
                                         </TableCell>
                                     </TableRow>
                                 </TableFooter>
-                            </Table>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
+                            }
+                        />
                     </div>
                 </CardContent>
             </Card>

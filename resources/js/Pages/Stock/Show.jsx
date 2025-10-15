@@ -1,5 +1,4 @@
 import ContentPageLayout from "@/Components/ContentPageLayout";
-import Pagination from "@/Components/Pagination";
 import { Link } from "@inertiajs/react";
 import {
     Card,
@@ -8,22 +7,12 @@ import {
     CardHeader,
     CardTitle,
 } from "@/Components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { Badge } from "@/Components/ui/badge";
-import {
-    formatCurrency,
-    formatDate,
-    formatNumber,
-    formatTime,
-} from "@/lib/utils";
-import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
+import { Button } from "@/Components/ui/button";
+import StockMovementMobileCard from "./Partials/StockMovementMobileCard";
+import { Eye } from "lucide-react";
+import DataTable from "@/Components/DataTable";
+import { stockMovementPreviewColumns } from "@/Constants/tableColumns";
 
 export default function Show({ auth, inventory, stockMovements }) {
     const inventoryData = inventory.data || inventory;
@@ -70,98 +59,58 @@ export default function Show({ auth, inventory, stockMovements }) {
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Riwayat Pergerakan Stok</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>Pergerakan Terakhir</CardTitle>
+                            <Link
+                                href={route("stock-movements.index", {
+                                    product_id: inventoryData.product.id,
+                                    location_id: inventoryData.location.id,
+                                })}
+                            >
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="sm:hidden"
+                                >
+                                    <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="hidden sm:inline-flex"
+                                >
+                                    Lihat Semua Riwayat
+                                </Button>
+                            </Link>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="w-full whitespace-nowrap">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="text-center">
-                                            Tanggal
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Jam
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Tipe
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Referensi
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Perubahan
-                                        </TableHead>
-                                        <TableHead className="text-center">
-                                            Catatan
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {stockMovements.data.map((movement) => (
-                                        <TableRow key={movement.id}>
-                                            <TableCell className="text-center text-xs text-muted-foreground">
-                                                {formatDate(
-                                                    movement.created_at
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-center text-xs text-muted-foreground">
-                                                {formatTime(
-                                                    movement.created_at
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge
-                                                    variant="outline"
-                                                    className="capitalize"
-                                                >
-                                                    {movement.type}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-center font-mono text-xs">
-                                                {movement.reference ? (
-                                                    <Link
-                                                        href={route(
-                                                            "transactions.purchases.show",
-                                                            movement.reference
-                                                                .id
-                                                        )}
-                                                        className="text-primary hover:underline"
-                                                    >
-                                                        {
-                                                            movement.reference
-                                                                .code
-                                                        }
-                                                    </Link>
-                                                ) : (
-                                                    "-"
-                                                )}
-                                            </TableCell>
-                                            <TableCell
-                                                className={`text-center font-semibold ${
-                                                    movement.quantity > 0
-                                                        ? "text-success"
-                                                        : "text-destructive"
-                                                }`}
-                                            >
-                                                {movement.quantity > 0
-                                                    ? "+"
-                                                    : ""}
-                                                {formatNumber(
-                                                    movement.quantity
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-center text-xs">
-                                                {movement.notes || "-"}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
-                        <div className="mt-4">
-                            <Pagination links={stockMovements.meta.links} />
+                        <div className="md:hidden space-y-3">
+                            {stockMovements.data.length > 0 ? (
+                                stockMovements.data.map((movement) => (
+                                    <StockMovementMobileCard
+                                        key={movement.id}
+                                        movement={movement}
+                                    />
+                                ))
+                            ) : (
+                                <p className="text-sm text-center text-muted-foreground py-10">
+                                    Belum ada pergerakan stok untuk item ini.
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="hidden md:block">
+                            {stockMovements.data.length > 0 ? (
+                                <DataTable
+                                    columns={stockMovementPreviewColumns}
+                                    data={stockMovements.data}
+                                />
+                            ) : (
+                                <div className="text-center text-sm text-muted-foreground py-10">
+                                    Belum ada pergerakan stok untuk item ini.
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

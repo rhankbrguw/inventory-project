@@ -15,6 +15,8 @@ export default function DataTable({
     actions,
     showRoute,
     showRouteKey = "id",
+    rowClassName,
+    footer,
 }) {
     const handleRowClick = (row) => {
         if (showRoute) {
@@ -48,7 +50,9 @@ export default function DataTable({
                             <TableRow
                                 key={row.id}
                                 onClick={() => handleRowClick(row)}
-                                className={showRoute ? "cursor-pointer" : ""}
+                                className={`${
+                                    showRoute ? "cursor-pointer" : ""
+                                } ${rowClassName ? rowClassName(row) : ""}`}
                             >
                                 {columns.map((col) => (
                                     <TableCell
@@ -71,6 +75,7 @@ export default function DataTable({
                             </TableRow>
                         ))}
                     </TableBody>
+                    {footer}
                 </Table>
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>

@@ -11,6 +11,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import { Button } from "@/Components/ui/button";
@@ -41,6 +42,10 @@ export default function Index({
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
         filters
+    );
+
+    const canManageFullStock = ["Super Admin", "Warehouse Manager"].some(
+        (role) => auth.user.roles.includes(role)
     );
 
     const renderActionDropdown = (transaction) => (
@@ -100,9 +105,31 @@ export default function Index({
                         >
                             Pembelian (Purchase)
                         </DropdownMenuItem>
-                        <DropdownMenuItem disabled>
-                            Transfer Stok (Coming Soon)
-                        </DropdownMenuItem>
+                        {canManageFullStock && (
+                            <DropdownMenuItem
+                                onSelect={() =>
+                                    router.get(
+                                        route("transactions.transfers.create")
+                                    )
+                                }
+                            >
+                                Pergerakan Stok (Stock Transfer)
+                            </DropdownMenuItem>
+                        )}
+                        {canManageFullStock && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onSelect={() =>
+                                        router.get(
+                                            route("stock-movements.index")
+                                        )
+                                    }
+                                >
+                                    Riwayat Stok (Stock Movements)
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             }

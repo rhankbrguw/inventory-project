@@ -5,8 +5,10 @@ import {
     formatRelativeTime,
     formatGroupName,
     formatNumber,
+    formatTime,
 } from "@/lib/utils";
 import UnifiedBadge from "@/Components/UnifiedBadge";
+import { Link } from "@inertiajs/react";
 import { Package, Warehouse } from "lucide-react";
 
 export const productColumns = [
@@ -173,6 +175,171 @@ export const transactionColumns = [
         accessorKey: "user",
         header: "PIC",
         className: "text-center whitespace-nowrap",
+    },
+];
+
+export const stockMovementPreviewColumns = [
+    {
+        accessorKey: "created_at_time",
+        header: "Waktu",
+        cell: ({ row }) => (
+            <div>
+                <div>{formatDate(row.created_at)}</div>
+                <div className="text-muted-foreground">
+                    {formatTime(row.created_at)}
+                </div>
+            </div>
+        ),
+        className: "text-xs text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "type",
+        header: "Tipe",
+        cell: ({ row }) => (
+            <Badge variant="outline" className="capitalize">
+                {row.type}
+            </Badge>
+        ),
+        className: "text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "reference",
+        header: "Referensi / Catatan",
+        cell: ({ row }) =>
+            row.reference ? (
+                <Link
+                    href={row.reference.url}
+                    className="text-primary hover:underline"
+                >
+                    {row.reference.code}
+                </Link>
+            ) : (
+                row.notes || "-"
+            ),
+        className: "font-mono text-center text-xs whitespace-nowrap",
+    },
+    {
+        accessorKey: "quantity",
+        header: "Perubahan",
+        cell: ({ row }) => (
+            <span
+                className={
+                    row.quantity > 0 ? "text-success" : "text-destructive"
+                }
+            >
+                {row.quantity > 0 ? "+" : ""}
+                {formatNumber(row.quantity)}
+            </span>
+        ),
+        className: "text-center font-semibold whitespace-nowrap",
+    },
+];
+
+export const stockMovementColumns = [
+    {
+        accessorKey: "product.name",
+        header: "Produk",
+        cell: ({ row }) => row.product?.name,
+        className: "font-medium text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "product.sku",
+        header: "SKU",
+        cell: ({ row }) => row.product?.sku,
+        className: "font-mono text-center text-xs whitespace-nowrap",
+    },
+    {
+        accessorKey: "location.name",
+        header: "Lokasi",
+        cell: ({ row }) => row.location?.name,
+        className: "text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "type",
+        header: "Tipe",
+        cell: ({ row }) => (
+            <Badge variant="outline" className="capitalize">
+                {row.type}
+            </Badge>
+        ),
+        className: "text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "reference",
+        header: "Referensi / Catatan",
+        cell: ({ row }) =>
+            row.reference ? (
+                <Link
+                    href={row.reference.url}
+                    className="text-primary hover:underline"
+                >
+                    {row.reference.code}
+                </Link>
+            ) : (
+                row.notes || "-"
+            ),
+        className: "font-mono text-center text-xs whitespace-nowrap",
+    },
+    {
+        accessorKey: "quantity",
+        header: "Perubahan",
+        cell: ({ row }) => (
+            <span
+                className={
+                    row.quantity > 0 ? "text-success" : "text-destructive"
+                }
+            >
+                {row.quantity > 0 ? "+" : ""}
+                {formatNumber(row.quantity)}
+            </span>
+        ),
+        className: "font-semibold text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "created_at",
+        header: "Waktu",
+        cell: ({ row }) => (
+            <div>
+                <div>{formatDate(row.created_at)}</div>
+                <div className="text-muted-foreground">
+                    {formatTime(row.created_at)}
+                </div>
+            </div>
+        ),
+        className: "text-xs text-center whitespace-nowrap",
+    },
+];
+
+export const purchaseDetailColumns = [
+    {
+        accessorKey: "product.name",
+        header: "Produk",
+        cell: ({ row }) => row.product.name,
+        className: "font-medium text-center",
+    },
+    {
+        accessorKey: "product.sku",
+        header: "SKU",
+        cell: ({ row }) => row.product.sku,
+        className: "font-mono text-xs text-center",
+    },
+    {
+        accessorKey: "quantity",
+        header: "Jumlah",
+        cell: ({ row }) => `${formatNumber(row.quantity)} ${row.product.unit}`,
+        className: "text-center",
+    },
+    {
+        accessorKey: "cost_per_unit",
+        header: "Harga Beli",
+        cell: ({ row }) => formatCurrency(row.cost_per_unit),
+        className: "text-center",
+    },
+    {
+        accessorKey: "subtotal",
+        header: "Subtotal",
+        cell: ({ row }) => formatCurrency(row.quantity * row.cost_per_unit),
+        className: "text-center font-semibold",
     },
 ];
 

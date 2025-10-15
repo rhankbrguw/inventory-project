@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Transaction\PurchaseController;
+use App\Http\Controllers\Transaction\StockMovementController;
+use App\Http\Controllers\Transaction\StockTransferController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\LocationsController;
@@ -66,6 +68,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');
         Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
         Route::get('/stock/{inventory}', [StockController::class, 'show'])->name('stock.show');
+
+        Route::get('/stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
+
+        Route::get('/transactions/transfers/create', [StockTransferController::class, 'create'])->name('transactions.transfers.create');
+        Route::post('/transactions/transfers', [StockTransferController::class, 'store'])->name('transactions.transfers.store');
     });
 });
 

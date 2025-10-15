@@ -1,6 +1,4 @@
 import { Link, useForm } from "@inertiajs/react";
-import { useState, useEffect } from "react";
-import axios from "axios";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import FormField from "@/Components/FormField";
 import { Input } from "@/Components/ui/input";
@@ -21,57 +19,44 @@ import {
     CardTitle,
     CardDescription,
 } from "@/Components/ui/card";
-import { formatNumber } from "@/lib/utils";
+
+const adjustmentReasons = [
+    { value: "Rusak", label: "Barang Rusak" },
+    { value: "Retur", label: "Barang Retur" },
+];
 
 export default function Adjust({ auth, products, locations }) {
-    const { data, setData, post, processing, errors, isDirty } = useForm({
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
         product_id: "",
         location_id: "",
+        reason: "",
         quantity: "",
         notes: "",
     });
 
-    const [currentStock, setCurrentStock] = useState(null);
-    const [isLoadingStock, setIsLoadingStock] = useState(false);
-
-    useEffect(() => {
-        if (data.product_id && data.location_id) {
-            setIsLoadingStock(true);
-            axios
-                .get(
-                    route("api.inventory.quantity", {
-                        product_id: data.product_id,
-                        location_id: data.location_id,
-                    })
-                )
-                .then((response) => {
-                    setCurrentStock(response.data.quantity);
-                })
-                .finally(() => {
-                    setIsLoadingStock(false);
-                });
-        } else {
-            setCurrentStock(null);
-        }
-    }, [data.product_id, data.location_id]);
+    const productsData = products.data || [];
+    const selectedProduct = data.product_id
+        ? productsData.find((p) => p.id == data.product_id)
+        : null;
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("stock.adjust"));
+        post(route("stock.adjust"), {
+            onSuccess: () => reset(),
+        });
     };
 
     return (
         <ContentPageLayout
             auth={auth}
-            title="Update Stok Baru"
+            title="Buat Penyesuaian Stok"
             backRoute="stock.index"
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>Input Jumlah Stok Fisik</CardTitle>
+                    <CardTitle>Formulir Penyesuaian Stok</CardTitle>
                     <CardDescription>
-                        Formulir ini digunakan untuk menyesuaikan jumlah stok di
-                        sistem agar sama dengan jumlah fisik hasil stock opname.
+                        Gunakan formulir ini untuk mencatat stok yang berkurang karena rusak atau diretur.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -83,7 +68,7 @@ export default function Adjust({ auth, products, locations }) {
                                 error={errors.product_id}
                             >
                                 <ProductCombobox
-                                    products={products}
+                                    products={productsData}
                                     value={data.product_id}
                                     onChange={(product) =>
                                         setData("product_id", product.id)
@@ -117,50 +102,51 @@ export default function Adjust({ auth, products, locations }) {
                                 </Select>
                             </FormField>
                         </div>
-
-                        {(isLoadingStock || currentStock !== null) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <FormField
+                                label="Alasan Penyesuaian"
+                                htmlFor="reason"
+                                error={errors.reason}
+                            >
+                                <Select
+                                    value={data.reason}
+                                    onValueChange={(value) =>
+                                        setData("reason", value)
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih alasan..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {adjustmentReasons.map((reason) => (
+                                            <SelectItem
+                                                key={reason.value}
+                                                value={reason.value}
+                                            >
+                                                {reason.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormField>
                             <FormField
-                                label="Stok Sistem Saat Ini"
-                                htmlFor="current_stock"
+                                label={`Jumlah yang Disesuaikan (${selectedProduct?.unit || '...' })`}
+                                htmlFor="quantity"
+                                error={errors.quantity}
                             >
                                 <Input
-                                    id="current_stock"
-                                    readOnly
-                                    value={
-                                        isLoadingStock
-                                            ? "Memuat..."
-                                            : `${formatNumber(currentStock)} ${
-                                                  products.find(
-                                                      (p) =>
-                                                          p.id ===
-                                                          data.product_id
-                                                  )?.unit || ""
-                                              }`
+                                    id="quantity"
+                                    type="number"
+                                    value={data.quantity}
+                                    onChange={(e) =>
+                                        setData("quantity", e.target.value)
                                     }
-                                    className="bg-muted"
+                                    placeholder="Contoh: 5"
                                 />
                             </FormField>
-                        )}
-
+                        </div>
                         <FormField
-                            label="Jumlah Fisik Baru"
-                            htmlFor="quantity"
-                            error={errors.quantity}
-                        >
-                            <Input
-                                id="quantity"
-                                type="number"
-                                value={data.quantity}
-                                onChange={(e) =>
-                                    setData("quantity", e.target.value)
-                                }
-                                placeholder="Masukkan jumlah stok fisik saat ini"
-                                disabled={currentStock === null}
-                            />
-                        </FormField>
-
-                        <FormField
-                            label="Catatan Penyesuaian"
+                            label="Catatan (Opsional)"
                             htmlFor="notes"
                             error={errors.notes}
                         >
@@ -170,8 +156,7 @@ export default function Adjust({ auth, products, locations }) {
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
-                                placeholder="Contoh: Koreksi hasil stock opname 24 Sept 2025"
-                                disabled={currentStock === null}
+                                placeholder="Contoh: Rusak karena jatuh saat pengiriman."
                             />
                         </FormField>
 
@@ -181,13 +166,7 @@ export default function Adjust({ auth, products, locations }) {
                                     Batal
                                 </Button>
                             </Link>
-                            <Button
-                                disabled={
-                                    processing ||
-                                    !isDirty ||
-                                    currentStock === null
-                                }
-                            >
+                            <Button disabled={processing || !isDirty}>
                                 Simpan Penyesuaian
                             </Button>
                         </div>
