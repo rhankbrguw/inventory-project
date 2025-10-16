@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStockTransferRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
@@ -19,7 +20,9 @@ class StockTransferController extends Controller
     {
         return inertia('Transactions/Transfers/Create', [
             'locations' => Location::orderBy('name')->get(['id', 'name']),
-            'products' => Product::orderBy('name')->get(),
+            'products' => ProductResource::collection(
+                Product::with('locations:id')->orderBy('name')->get()
+            ),
         ]);
     }
 

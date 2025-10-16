@@ -23,7 +23,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -54,8 +54,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['role:Super Admin|Warehouse Manager|Branch Manager'])->group(function () {
         Route::get('/locations', [LocationsController::class, 'index'])->name('locations.index');
-        Route::resource('products', ProductController::class);
-        Route::resource('suppliers', SupplierController::class);
+
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit')->withTrashed();
+
+        Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update')->withTrashed();
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->withTrashed();
+        Route::post('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore')->withTrashed();
+
+        Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+        Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
+        Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+        Route::get('/suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit')->withTrashed();
+        Route::patch('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update')->withTrashed();
+        Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy')->withTrashed();
+        Route::post('/suppliers/{supplier}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore')->withTrashed();
 
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
         Route::post('/transactions/purchases', [PurchaseController::class, 'store'])->name('transactions.purchases.store');

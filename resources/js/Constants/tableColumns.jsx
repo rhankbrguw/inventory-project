@@ -7,6 +7,7 @@ import {
     formatNumber,
     formatTime,
 } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import UnifiedBadge from "@/Components/UnifiedBadge";
 import { Link } from "@inertiajs/react";
 import { Package, Warehouse } from "lucide-react";
@@ -45,9 +46,13 @@ export const productColumns = [
         className: "text-center",
     },
     {
-        accessorKey: "created_at",
-        header: "Tgl. Dibuat",
-        cell: ({ row }) => formatDate(row.created_at),
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+            <Badge variant={row.deleted_at ? "destructive" : "success"}>
+                {row.deleted_at ? "Nonaktif" : "Aktif"}
+            </Badge>
+        ),
         className: "text-center",
     },
     {
@@ -95,13 +100,13 @@ export const stockColumns = [
     {
         accessorKey: "product.name",
         header: "Nama Item",
-        cell: ({ row }) => row.product.name,
+        cell: ({ row }) => row.product?.name || "Produk Dihapus",
         className: "text-center font-medium",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
-        cell: ({ row }) => row.product.sku,
+        cell: ({ row }) => row.product?.sku || "-",
         className: "text-center font-mono",
     },
     {
@@ -109,12 +114,12 @@ export const stockColumns = [
         header: "Lokasi",
         cell: ({ row }) => (
             <div className="flex items-center justify-center">
-                {row.location.type === "warehouse" ? (
+                {row.location?.type === "warehouse" ? (
                     <Warehouse className="w-4 h-4 mr-2 text-muted-foreground" />
                 ) : (
                     <Package className="w-4 h-4 mr-2 text-muted-foreground" />
                 )}
-                {row.location.name}
+                {row.location?.name || "Lokasi Dihapus"}
             </div>
         ),
         className: "text-center",
@@ -128,7 +133,8 @@ export const stockColumns = [
     {
         accessorKey: "quantity",
         header: "Kuantitas",
-        cell: ({ row }) => `${formatNumber(row.quantity)} ${row.product.unit}`,
+        cell: ({ row }) =>
+            `${formatNumber(row.quantity)} ${row.product?.unit || ""}`,
         className: "text-center font-semibold",
     },
 ];
@@ -314,19 +320,33 @@ export const purchaseDetailColumns = [
     {
         accessorKey: "product.name",
         header: "Produk",
-        cell: ({ row }) => row.product.name,
+        cell: ({ row }) => (
+            <div
+                className={cn(
+                    row.product?.deleted_at && "text-muted-foreground"
+                )}
+            >
+                {row.product?.name || "Produk Telah Dihapus"}
+                {row.product?.deleted_at && (
+                    <span className="ml-2 text-xs text-destructive">
+                        (Nonaktif)
+                    </span>
+                )}
+            </div>
+        ),
         className: "font-medium text-center",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
-        cell: ({ row }) => row.product.sku,
+        cell: ({ row }) => row.product?.sku || "-",
         className: "font-mono text-xs text-center",
     },
     {
         accessorKey: "quantity",
         header: "Jumlah",
-        cell: ({ row }) => `${formatNumber(row.quantity)} ${row.product.unit}`,
+        cell: ({ row }) =>
+            `${formatNumber(row.quantity)} ${row.product?.unit || ""}`,
         className: "text-center",
     },
     {
@@ -347,19 +367,33 @@ export const supplierColumns = [
     {
         accessorKey: "name",
         header: "Nama Supplier",
-        className: "text-center font-medium",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "contact_person",
         header: "Koordinator",
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "email",
         header: "Email",
-        className: "text-center text-muted-foreground",
+        className: "text-center text-muted-foreground whitespace-nowrap",
     },
-    { accessorKey: "phone", header: "Telepon", className: "text-center" },
+    {
+        accessorKey: "phone",
+        header: "Telepon",
+        className: "text-center whitespace-nowrap",
+    },
+    {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+            <Badge variant={row.deleted_at ? "destructive" : "success"}>
+                {row.deleted_at ? "Nonaktif" : "Aktif"}
+            </Badge>
+        ),
+        className: "text-center",
+    },
 ];
 
 export const customerColumns = [

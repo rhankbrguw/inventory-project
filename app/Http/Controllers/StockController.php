@@ -24,6 +24,12 @@ class StockController extends Controller
         $inventories = Inventory::with(['product.type', 'location'])
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->select('inventories.*')
+            ->whereHas('location', function ($query) {
+                $query->whereNull('deleted_at');
+            })
+            ->whereHas('product', function ($query) {
+                $query->whereNull('deleted_at');
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q
@@ -88,6 +94,10 @@ class StockController extends Controller
         return inertia('Stock/Adjust', [
             'products' => ProductResource::collection(Product::orderBy('name')->get()),
             'locations' => Location::orderBy('name')->get(['id', 'name']),
+            'adjustmentReasons' => [
+                ['value' => 'Rusak', 'label' => 'Barang Rusak'],
+                ['value' => 'Retur', 'label' => 'Barang Retur'],
+            ],
         ]);
     }
 

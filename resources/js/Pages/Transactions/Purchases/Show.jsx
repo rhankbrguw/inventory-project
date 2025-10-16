@@ -9,7 +9,7 @@ import {
 } from "@/Components/ui/card";
 import { TableFooter, TableRow, TableCell } from "@/Components/ui/table";
 import { Badge } from "@/Components/ui/badge";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
 import DataTable from "@/Components/DataTable";
 import { purchaseDetailColumns } from "@/Constants/tableColumns";
 
@@ -75,20 +75,28 @@ export default function Show({ auth, purchase }) {
                 <CardContent>
                     <div className="md:hidden space-y-3">
                         {data.items.map((item) => (
-                            <Card key={item.id} className="p-3">
+                            <Card
+                                key={item.id}
+                                className={cn(
+                                    "p-3",
+                                    item.product?.deleted_at &&
+                                        "opacity-60 bg-muted/50"
+                                )}
+                            >
                                 <div className="space-y-2">
                                     <div>
                                         <p className="font-medium text-sm">
-                                            {item.product.name}
+                                            {item.product?.name ||
+                                                "Produk Telah Dihapus"}
                                         </p>
                                         <p className="text-xs text-muted-foreground font-mono">
-                                            {item.product.sku}
+                                            {item.product?.sku || "-"}
                                         </p>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span>
                                             {formatNumber(item.quantity)}{" "}
-                                            {item.product.unit} ×{" "}
+                                            {item.product?.unit} ×{" "}
                                             {formatCurrency(item.cost_per_unit)}
                                         </span>
                                         <span className="font-semibold">

@@ -1,6 +1,6 @@
 import { Link, router } from "@inertiajs/react";
-import { useState } from "react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
+import { useSoftDeletes } from "@/Hooks/useSoftDeletes";
 import { productColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DeleteConfirmationDialog from "@/Components/DeleteConfirmationDialog";
@@ -25,13 +25,25 @@ import {
 } from "@/Components/ui/select";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
-import { Edit, Trash2, MoreVertical, PlusCircle } from "lucide-react";
+import {
+    Edit,
+    MoreVertical,
+    PlusCircle,
+    Archive,
+    ArchiveRestore,
+} from "lucide-react";
 
 const sortOptions = [
     { value: "newest", label: "Produk Terbaru" },
     { value: "oldest", label: "Produk Terlama" },
     { value: "price_desc", label: "Harga Tertinggi" },
     { value: "price_asc", label: "Harga Terendah" },
+];
+
+const statusOptions = [
+    { value: "all", label: "Semua Status" },
+    { value: "active", label: "Aktif" },
+    { value: "inactive", label: "Nonaktif" },
 ];
 
 export default function Index({
@@ -45,19 +57,18 @@ export default function Index({
         "products.index",
         filters
     );
-    const [confirmingProductDeletion, setConfirmingProductDeletion] =
-        useState(null);
+    const {
+        confirmingDeletion,
+        setConfirmingDeletion,
+        isProcessing,
+        itemToDeactivate,
+        deactivateItem,
+        restoreItem,
+    } = useSoftDeletes({ resourceName: "products", data: products.data });
 
     const canCrudProducts = ["Super Admin", "Branch Manager"].some((role) =>
         auth.user.roles.includes(role)
     );
-
-    const deleteProduct = () => {
-        router.delete(route("products.destroy", confirmingProductDeletion), {
-            preserveScroll: true,
-            onSuccess: () => setConfirmingProductDeletion(null),
-        });
-    };
 
     const renderActionDropdown = (product) => (
         <DropdownMenu>
@@ -71,17 +82,29 @@ export default function Index({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <Link href={route("products.edit", product.id)}>
-                    <DropdownMenuItem className="cursor-pointer">
-                        <Edit className="w-4 h-4 mr-2" /> Edit
-                    </DropdownMenuItem>
-                </Link>
                 <DropdownMenuItem
-                    onClick={() => setConfirmingProductDeletion(product.id)}
-                    className="text-destructive focus:text-destructive cursor-pointer"
+                    className="cursor-pointer"
+                    onSelect={() =>
+                        router.get(route("products.edit", product.id))
+                    }
                 >
-                    <Trash2 className="w-4 h-4 mr-2" /> Hapus
+                    <Edit className="w-4 h-4 mr-2" /> Edit
                 </DropdownMenuItem>
+                {product.deleted_at ? (
+                    <DropdownMenuItem
+                        className="cursor-pointer text-emerald-600 focus:text-emerald-700"
+                        onSelect={() => restoreItem(product.id)}
+                    >
+                        <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
+                    </DropdownMenuItem>
+                ) : (
+                    <DropdownMenuItem
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onSelect={() => setConfirmingDeletion(product.id)}
+                    >
+                        <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
+                    </DropdownMenuItem>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -98,7 +121,7 @@ export default function Index({
                         group="product_type"
                         title="Tambah Tipe Produk Cepat"
                         description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                        existingTypes={productTypes}
+                        existingTypes={productTypes.data}
                         trigger={
                             <Button
                                 variant="outline"
@@ -124,24 +147,21 @@ export default function Index({
                             className="w-full sm:w-auto sm:flex-grow"
                         />
                         <Select
-                            value={params.supplier_id || "all"}
+                            value={params.status || "all"}
                             onValueChange={(value) =>
-                                setFilter("supplier_id", value)
+                                setFilter("status", value)
                             }
                         >
                             <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Semua Supplier" />
+                                <SelectValue placeholder="Semua Status" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">
-                                    Semua Supplier
-                                </SelectItem>
-                                {suppliers.map((s) => (
+                                {statusOptions.map((opt) => (
                                     <SelectItem
-                                        key={s.id}
-                                        value={s.id.toString()}
+                                        key={opt.value}
+                                        value={opt.value}
                                     >
-                                        {s.name}
+                                        {opt.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -170,7 +190,7 @@ export default function Index({
                                     group="product_type"
                                     title="Tambah Tipe Produk Cepat"
                                     description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                                    existingTypes={productTypes}
+                                    existingTypes={productTypes.data}
                                     trigger={
                                         <Button
                                             variant="outline"
@@ -205,6 +225,9 @@ export default function Index({
                         data={products.data}
                         actions={canCrudProducts ? renderActionDropdown : null}
                         showRoute={canCrudProducts ? "products.edit" : null}
+                        rowClassName={(row) =>
+                            row.deleted_at ? "opacity-50" : ""
+                        }
                     />
                 </div>
 
@@ -215,11 +238,13 @@ export default function Index({
 
             {canCrudProducts && (
                 <DeleteConfirmationDialog
-                    open={confirmingProductDeletion !== null}
-                    onOpenChange={() => setConfirmingProductDeletion(null)}
-                    onConfirm={deleteProduct}
-                    description="Tindakan ini tidak dapat dibatalkan. Produk ini akan dihapus secara permanen."
-                    confirmText="Hapus Produk"
+                    open={confirmingDeletion !== null}
+                    onOpenChange={() => setConfirmingDeletion(null)}
+                    onConfirm={deactivateItem}
+                    isDeleting={isProcessing}
+                    confirmText="Nonaktifkan"
+                    title={`Nonaktifkan ${itemToDeactivate?.name}?`}
+                    description="Tindakan ini akan menyembunyikan produk dari daftar. Anda bisa mengaktifkannya kembali nanti."
                 />
             )}
         </IndexPageLayout>

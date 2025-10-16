@@ -5,6 +5,7 @@ import { Input } from "@/Components/ui/input";
 import { Textarea } from "@/Components/ui/textarea";
 import { Button } from "@/Components/ui/button";
 import ProductCombobox from "@/Components/ProductCombobox";
+import StockAvailability from "@/Components/StockAvailability";
 import {
     Select,
     SelectContent,
@@ -20,19 +21,21 @@ import {
     CardDescription,
 } from "@/Components/ui/card";
 
-const adjustmentReasons = [
-    { value: "Rusak", label: "Barang Rusak" },
-    { value: "Retur", label: "Barang Retur" },
-];
-
-export default function Adjust({ auth, products, locations }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
-        product_id: "",
-        location_id: "",
-        reason: "",
-        quantity: "",
-        notes: "",
-    });
+export default function Adjust({
+    auth,
+    products,
+    locations,
+    adjustmentReasons,
+}) {
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
+        {
+            product_id: "",
+            location_id: "",
+            reason: "",
+            quantity: "",
+            notes: "",
+        }
+    );
 
     const productsData = products.data || [];
     const selectedProduct = data.product_id
@@ -56,7 +59,8 @@ export default function Adjust({ auth, products, locations }) {
                 <CardHeader>
                     <CardTitle>Formulir Penyesuaian Stok</CardTitle>
                     <CardDescription>
-                        Gunakan formulir ini untuk mencatat stok yang berkurang karena rusak atau diretur.
+                        Gunakan formulir ini untuk mencatat stok yang berkurang
+                        karena rusak atau diretur.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -73,6 +77,11 @@ export default function Adjust({ auth, products, locations }) {
                                     onChange={(product) =>
                                         setData("product_id", product.id)
                                     }
+                                />
+                                <StockAvailability
+                                    productId={data.product_id}
+                                    locationId={data.location_id}
+                                    unit={selectedProduct?.unit}
                                 />
                             </FormField>
                             <FormField
@@ -103,7 +112,7 @@ export default function Adjust({ auth, products, locations }) {
                             </FormField>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <FormField
+                            <FormField
                                 label="Alasan Penyesuaian"
                                 htmlFor="reason"
                                 error={errors.reason}
@@ -130,7 +139,9 @@ export default function Adjust({ auth, products, locations }) {
                                 </Select>
                             </FormField>
                             <FormField
-                                label={`Jumlah yang Disesuaikan (${selectedProduct?.unit || '...' })`}
+                                label={`Jumlah yang Disesuaikan (${
+                                    selectedProduct?.unit || "..."
+                                })`}
                                 htmlFor="quantity"
                                 error={errors.quantity}
                             >

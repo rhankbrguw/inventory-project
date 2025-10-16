@@ -11,36 +11,8 @@ import { PlusCircle, Trash2 } from "lucide-react";
 import ProductCombobox from "@/Components/ProductCombobox";
 import InputError from "@/Components/InputError";
 import { Label } from "@/Components/ui/label";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { formatNumber } from "@/lib/utils";
-
-const StockAvailability = ({ productId, locationId, unit }) => {
-    const [stock, setStock] = useState(null);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        if (productId && locationId) {
-            setLoading(true);
-            axios.get(route("api.inventory.quantity", { product_id: productId, location_id: locationId }))
-                .then(response => setStock(response.data.quantity))
-                .catch(() => setStock(0))
-                .finally(() => setLoading(false));
-        } else {
-            setStock(null);
-        }
-    }, [productId, locationId]);
-
-    if (loading) {
-        return <p className="text-xs text-muted-foreground mt-1">Memuat stok...</p>;
-    }
-
-    if (stock !== null) {
-        return <p className="text-xs text-muted-foreground mt-1">Stok tersedia: {formatNumber(stock)} {unit}</p>;
-    }
-
-    return null;
-};
+import StockAvailability from "@/Components/StockAvailability";
+import { cn } from "@/lib/utils";
 
 export default function TransferItemManager({
     items,
@@ -49,7 +21,10 @@ export default function TransferItemManager({
     errors,
     selectedProductIds,
     fromLocationId,
+    isLocked,
 }) {
+    // ... (sisa logika komponen tetap sama)
+
     const handleItemChange = (index, field, value) => {
         const newItems = [...items];
         newItems[index][field] = value;
@@ -67,10 +42,7 @@ export default function TransferItemManager({
     };
 
     const addItem = () => {
-        setData("items", [
-            ...items,
-            { product_id: "", quantity: 1, unit: "" },
-        ]);
+        setData("items", [...items, { product_id: "", quantity: 1, unit: "" }]);
     };
 
     const removeItem = (index) => {
@@ -88,7 +60,9 @@ export default function TransferItemManager({
                 <div className="space-y-1.5">
                     <CardTitle>Item Transfer</CardTitle>
                     <CardDescription>
-                        Pilih produk yang akan ditransfer antar lokasi.
+                        {isLocked
+                            ? "Pilih lokasi asal terlebih dahulu untuk menambah item."
+                            : "Pilih produk yang akan ditransfer antar lokasi."}
                     </CardDescription>
                 </div>
                 <Button
@@ -96,13 +70,18 @@ export default function TransferItemManager({
                     variant="outline"
                     onClick={addItem}
                     className="flex items-center gap-2 shrink-0"
-                    disabled={isAddItemDisabled}
+                    disabled={isAddItemDisabled || isLocked}
                 >
                     <PlusCircle className="h-4 w-4" />
                     <span className="hidden md:inline">Tambah Item</span>
                 </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent
+                className={cn(
+                    "space-y-4",
+                    isLocked && "opacity-50 pointer-events-none"
+                )}
+            >
                 {items.map((item, index) => {
                     const selectedProduct = products.find(
                         (p) => p.id === item.product_id
@@ -136,15 +115,15 @@ export default function TransferItemManager({
                                         }
                                         disabledIds={selectedProductIds}
                                     />
-                                    <InputError
-                                        message={
-                                            errors[`items.${index}.product_id`]
-                                        }
-                                    />
                                     <StockAvailability
                                         productId={item.product_id}
                                         locationId={fromLocationId}
                                         unit={selectedProduct?.unit}
+                                    />
+                                    <InputError
+                                        message={
+                                            errors[`items.${index}.product_id`]
+                                        }
                                     />
                                 </div>
                                 <div className="space-y-1">
