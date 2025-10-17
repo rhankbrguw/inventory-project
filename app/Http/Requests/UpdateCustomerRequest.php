@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Type;
+use App\Rules\ExistsInGroup;
+use App\Rules\UniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateCustomerRequest extends FormRequest
 {
@@ -17,9 +18,9 @@ class UpdateCustomerRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'type_id' => ['required', 'integer', Rule::exists('types', 'id')->where('group', Type::GROUP_CUSTOMER)],
-            'email' => ['required', 'email:rfc,dns', 'max:50', Rule::unique('customers', 'email')->ignore($this->customer->id)],
-            'phone' => ['nullable', 'string', 'min:10', 'max:15', Rule::unique('customers', 'phone')->ignore($this->customer->id)],
+            'type_id' => ['required', 'integer', new ExistsInGroup('types', Type::GROUP_CUSTOMER)],
+            'email' => ['required', 'email:rfc,dns', 'max:50', new UniqueRule('customers', $this->customer->id)],
+            'phone' => ['nullable', 'string', 'min:10', 'max:15', new UniqueRule('customers', $this->customer->id)],
             'address' => ['nullable', 'string', 'max:255'],
         ];
     }

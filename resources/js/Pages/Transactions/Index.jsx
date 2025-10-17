@@ -113,7 +113,7 @@ export default function Index({
                                     )
                                 }
                             >
-                                Pergerakan Stok (Stock Transfer)
+                                Kirim Stok (Stock Transfer)
                             </DropdownMenuItem>
                         )}
                         {canManageFullStock && (
@@ -126,7 +126,7 @@ export default function Index({
                                         )
                                     }
                                 >
-                                    Riwayat Stok (Stock Movements)
+                                    Pergerakan Stok (Stock Movements)
                                 </DropdownMenuItem>
                             </>
                         )}

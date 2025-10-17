@@ -79,7 +79,7 @@ export default function Show({ auth, inventory, stockMovements }) {
                                     size="sm"
                                     className="hidden sm:inline-flex"
                                 >
-                                    Lihat Semua Riwayat
+                                    Lihat Riwayat Item Ini
                                 </Button>
                             </Link>
                         </div>

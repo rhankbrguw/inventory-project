@@ -23,8 +23,6 @@ export default function TransferItemManager({
     fromLocationId,
     isLocked,
 }) {
-    // ... (sisa logika komponen tetap sama)
-
     const handleItemChange = (index, field, value) => {
         const newItems = [...items];
         newItems[index][field] = value;
