@@ -42,12 +42,20 @@ class StockTransferController extends Controller
             ]);
 
             foreach ($validated['items'] as $item) {
+                $sourceInventory = Inventory::where('product_id', $item['product_id'])
+                    ->where('location_id', $validated['from_location_id'])
+                    ->firstOrFail();
+
+                $costPerUnit = $sourceInventory->average_cost;
+
                 $transfer->stockMovements()->create([
                     'product_id' => $item['product_id'],
                     'location_id' => $validated['from_location_id'],
                     'user_id' => $request->user()->id,
                     'type' => 'transfer_out',
                     'quantity' => -abs($item['quantity']),
+                    'cost_per_unit' => $costPerUnit,
+                    'notes' => $validated['notes'],
                 ]);
 
                 $transfer->stockMovements()->create([
@@ -56,15 +64,27 @@ class StockTransferController extends Controller
                     'user_id' => $request->user()->id,
                     'type' => 'transfer_in',
                     'quantity' => abs($item['quantity']),
+                    'cost_per_unit' => $costPerUnit,
+                    'notes' => $validated['notes'],
                 ]);
 
-                Inventory::where('product_id', $item['product_id'])
-                    ->where('location_id', $validated['from_location_id'])
-                    ->decrement('quantity', $item['quantity']);
+                $sourceInventory->decrement('quantity', $item['quantity']);
 
-                Inventory::where('product_id', $item['product_id'])
-                    ->where('location_id', $validated['to_location_id'])
-                    ->increment('quantity', $item['quantity']);
+                $destinationInventory = Inventory::firstOrNew([
+                    'product_id' => $item['product_id'],
+                    'location_id' => $validated['to_location_id'],
+                ]);
+
+                $oldQty = $destinationInventory->quantity ?? 0;
+                $oldAvgCost = $destinationInventory->average_cost ?? 0;
+                $newQty = abs($item['quantity']);
+
+                $totalQty = $oldQty + $newQty;
+                $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $costPerUnit)) / ($totalQty > 0 ? $totalQty : 1);
+
+                $destinationInventory->quantity = $totalQty;
+                $destinationInventory->average_cost = $newAvgCost;
+                $destinationInventory->save();
             }
         });
 

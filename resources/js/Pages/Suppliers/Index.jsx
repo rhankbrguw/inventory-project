@@ -8,34 +8,15 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import SupplierMobileCard from "./Partials/SupplierMobileCard";
 import Pagination from "@/Components/Pagination";
+import SupplierFilterCard from "./Partials/SupplierFilterCard";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/Components/ui/select";
-import { Card, CardContent } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
-
-const sortOptions = [
-    { value: "name_asc", label: "Nama (A-Z)" },
-    { value: "name_desc", label: "Nama (Z-A)" },
-];
-
-const statusOptions = [
-    { value: "all", label: "Semua Status" },
-    { value: "active", label: "Aktif" },
-    { value: "inactive", label: "Nonaktif" },
-];
 
 export default function Index({ auth, suppliers, filters = {} }) {
     const { params, setFilter } = useIndexPageFilters(
@@ -100,57 +81,7 @@ export default function Index({ auth, suppliers, filters = {} }) {
             buttonLabel="Tambah Supplier"
         >
             <div className="space-y-4">
-                <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
-                        <Input
-                            type="search"
-                            placeholder="Cari nama, koordinator, atau email..."
-                            value={params.search || ""}
-                            onChange={(e) =>
-                                setFilter("search", e.target.value)
-                            }
-                            className="w-full sm:w-auto sm:flex-grow"
-                        />
-                        <Select
-                            value={params.status || "all"}
-                            onValueChange={(value) =>
-                                setFilter("status", value)
-                            }
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Semua Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statusOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select
-                            value={params.sort || "name_asc"}
-                            onValueChange={(value) => setFilter("sort", value)}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Urutkan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {sortOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </CardContent>
-                </Card>
+                <SupplierFilterCard params={params} setFilter={setFilter} />
 
                 <MobileCardList
                     data={suppliers.data}

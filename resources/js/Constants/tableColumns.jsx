@@ -36,9 +36,18 @@ export const productColumns = [
     {
         accessorKey: "name",
         header: "Nama Produk",
-        className: "text-center font-medium",
+        cell: ({ row }) => (
+            <div>
+                <p className="font-medium">{row.name}</p>
+            </div>
+        ),
+        className: "text-center",
     },
-    { accessorKey: "sku", header: "SKU", className: "text-center font-mono" },
+    {
+        accessorKey: "sku",
+        header: "SKU",
+        className: "text-center font-mono",
+    },
     {
         accessorKey: "type",
         header: "Tipe",
@@ -61,13 +70,30 @@ export const productColumns = [
         cell: ({ row }) => formatCurrency(row.price),
         className: "text-center font-semibold",
     },
+    {
+        accessorKey: "total_stock",
+        header: "Total Stok",
+        cell: ({ row }) => (
+            <span
+                className={cn(
+                    "font-semibold",
+                    row.total_stock > 0
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                )}
+            >
+                {formatNumber(row.total_stock)} {row.unit}
+            </span>
+        ),
+        className: "text-center",
+    },
 ];
 
 export const locationColumns = [
     {
         accessorKey: "name",
         header: "Nama Lokasi",
-        className: "font-medium text-center",
+        className: "text-center font-medium",
     },
     {
         accessorKey: "type",
@@ -196,7 +222,7 @@ export const stockMovementPreviewColumns = [
                 </div>
             </div>
         ),
-        className: "text-xs text-center whitespace-nowrap",
+        className: "text-center text-xs whitespace-nowrap",
     },
     {
         accessorKey: "type",
@@ -210,7 +236,7 @@ export const stockMovementPreviewColumns = [
     },
     {
         accessorKey: "reference",
-        header: "Referensi / Catatan",
+        header: "Referensi",
         cell: ({ row }) =>
             row.reference ? (
                 <Link
@@ -220,9 +246,15 @@ export const stockMovementPreviewColumns = [
                     {row.reference.code}
                 </Link>
             ) : (
-                row.notes || "-"
+                "-"
             ),
-        className: "font-mono text-center text-xs whitespace-nowrap",
+        className: "text-center font-mono text-xs whitespace-nowrap",
+    },
+    {
+        accessorKey: "notes",
+        header: "Catatan",
+        cell: ({ row }) => row.notes || "-",
+        className: "text-center text-xs",
     },
     {
         accessorKey: "quantity",
@@ -246,13 +278,13 @@ export const stockMovementColumns = [
         accessorKey: "product.name",
         header: "Produk",
         cell: ({ row }) => row.product?.name,
-        className: "font-medium text-center whitespace-nowrap",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
         cell: ({ row }) => row.product?.sku,
-        className: "font-mono text-center text-xs whitespace-nowrap",
+        className: "text-center font-mono text-xs whitespace-nowrap",
     },
     {
         accessorKey: "location.name",
@@ -272,7 +304,7 @@ export const stockMovementColumns = [
     },
     {
         accessorKey: "reference",
-        header: "Referensi / Catatan",
+        header: "Referensi",
         cell: ({ row }) =>
             row.reference ? (
                 <Link
@@ -282,9 +314,15 @@ export const stockMovementColumns = [
                     {row.reference.code}
                 </Link>
             ) : (
-                row.notes || "-"
+                "-"
             ),
-        className: "font-mono text-center text-xs whitespace-nowrap",
+        className: "text-center font-mono text-xs whitespace-nowrap",
+    },
+    {
+        accessorKey: "notes",
+        header: "Catatan",
+        cell: ({ row }) => row.notes || "-",
+        className: "text-center text-xs",
     },
     {
         accessorKey: "quantity",
@@ -299,7 +337,7 @@ export const stockMovementColumns = [
                 {formatNumber(row.quantity)}
             </span>
         ),
-        className: "font-semibold text-center whitespace-nowrap",
+        className: "text-center font-semibold whitespace-nowrap",
     },
     {
         accessorKey: "created_at",
@@ -312,7 +350,7 @@ export const stockMovementColumns = [
                 </div>
             </div>
         ),
-        className: "text-xs text-center whitespace-nowrap",
+        className: "text-center text-xs whitespace-nowrap",
     },
 ];
 
@@ -334,13 +372,13 @@ export const purchaseDetailColumns = [
                 )}
             </div>
         ),
-        className: "font-medium text-center",
+        className: "text-center font-medium",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
         cell: ({ row }) => row.product?.sku || "-",
-        className: "font-mono text-xs text-center",
+        className: "text-center font-mono text-xs",
     },
     {
         accessorKey: "quantity",

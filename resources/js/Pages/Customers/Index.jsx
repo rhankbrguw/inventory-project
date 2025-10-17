@@ -9,30 +9,15 @@ import MobileCardList from "@/Components/MobileCardList";
 import CustomerMobileCard from "./Partials/CustomerMobileCard";
 import Pagination from "@/Components/Pagination";
 import QuickAddTypeModal from "@/Components/QuickAddTypeModal";
+import CustomerFilterCard from "./Partials/CustomerFilterCard";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/Components/ui/select";
-import { Card, CardContent } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import { Edit, Trash2, MoreVertical, PlusCircle } from "lucide-react";
-
-const sortOptions = [
-    { value: "newest", label: "Pelanggan Terbaru" },
-    { value: "oldest", label: "Pelanggan Terlama" },
-    { value: "name_asc", label: "Nama (A-Z)" },
-    { value: "name_desc", label: "Nama (Z-A)" },
-];
 
 export default function Index({
     auth,
@@ -60,6 +45,10 @@ export default function Index({
             },
         });
     };
+
+    const customerToDelete = customers.data.find(
+        (c) => c.id === confirmingDeletion
+    );
 
     const renderActionDropdown = (customer) => (
         <DropdownMenu>
@@ -112,75 +101,11 @@ export default function Index({
             }
         >
             <div className="space-y-4">
-                <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
-                        <Input
-                            type="search"
-                            placeholder="Cari nama, email, atau telepon..."
-                            value={params.search || ""}
-                            onChange={(e) =>
-                                setFilter("search", e.target.value)
-                            }
-                            className="w-full sm:w-auto sm:flex-grow"
-                        />
-                        <Select
-                            value={params.type_id || "all"}
-                            onValueChange={(value) =>
-                                setFilter("type_id", value)
-                            }
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Semua Tipe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua Tipe</SelectItem>
-                                {customerTypes.data.map((type) => (
-                                    <SelectItem
-                                        key={type.id}
-                                        value={type.id.toString()}
-                                    >
-                                        {type.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select
-                            value={params.sort || "newest"}
-                            onValueChange={(value) => setFilter("sort", value)}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Urutkan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {sortOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <div className="sm:hidden">
-                            <QuickAddTypeModal
-                                group="customer_type"
-                                title="Tambah Tipe Pelanggan Cepat"
-                                description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                                existingTypes={customerTypes.data}
-                                trigger={
-                                    <Button
-                                        variant="outline"
-                                        className="w-full flex items-center gap-2"
-                                    >
-                                        <PlusCircle className="w-4 h-4" />
-                                        Tambah Tipe
-                                    </Button>
-                                }
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                <CustomerFilterCard
+                    params={params}
+                    setFilter={setFilter}
+                    customerTypes={customerTypes}
+                />
 
                 <MobileCardList
                     data={customers.data}
@@ -216,6 +141,7 @@ export default function Index({
                 onOpenChange={() => setConfirmingDeletion(null)}
                 onConfirm={deleteCustomer}
                 isDeleting={isDeleting}
+                title={`Hapus Pelanggan ${customerToDelete?.name}?`}
                 confirmText="Hapus Pelanggan"
                 description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data pelanggan secara permanen."
             />

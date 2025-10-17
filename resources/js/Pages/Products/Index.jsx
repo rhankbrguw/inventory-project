@@ -1,4 +1,3 @@
-import { Link, router } from "@inertiajs/react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { useSoftDeletes } from "@/Hooks/useSoftDeletes";
 import { productColumns } from "@/Constants/tableColumns.jsx";
@@ -9,22 +8,14 @@ import MobileCardList from "@/Components/MobileCardList";
 import ProductMobileCard from "./Partials/ProductMobileCard";
 import Pagination from "@/Components/Pagination";
 import QuickAddTypeModal from "@/Components/QuickAddTypeModal";
+import ProductFilterCard from "./Partials/ProductFilterCard";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import { Card, CardContent } from "@/Components/ui/card";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/Components/ui/select";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import {
     Edit,
     MoreVertical,
@@ -33,23 +24,10 @@ import {
     ArchiveRestore,
 } from "lucide-react";
 
-const sortOptions = [
-    { value: "newest", label: "Produk Terbaru" },
-    { value: "oldest", label: "Produk Terlama" },
-    { value: "price_desc", label: "Harga Tertinggi" },
-    { value: "price_asc", label: "Harga Terendah" },
-];
-
-const statusOptions = [
-    { value: "all", label: "Semua Status" },
-    { value: "active", label: "Aktif" },
-    { value: "inactive", label: "Nonaktif" },
-];
-
 export default function Index({
     auth,
     products,
-    suppliers,
+    allProducts,
     productTypes,
     filters = {},
 }) {
@@ -135,76 +113,11 @@ export default function Index({
             }
         >
             <div className="space-y-4">
-                <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
-                        <Input
-                            type="search"
-                            placeholder="Cari nama atau sku..."
-                            value={params.search || ""}
-                            onChange={(e) =>
-                                setFilter("search", e.target.value)
-                            }
-                            className="w-full sm:w-auto sm:flex-grow"
-                        />
-                        <Select
-                            value={params.status || "all"}
-                            onValueChange={(value) =>
-                                setFilter("status", value)
-                            }
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Semua Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statusOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select
-                            value={params.sort || "newest"}
-                            onValueChange={(value) => setFilter("sort", value)}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Urutkan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {sortOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {canCrudProducts && (
-                            <div className="sm:hidden">
-                                <QuickAddTypeModal
-                                    group="product_type"
-                                    title="Tambah Tipe Produk Cepat"
-                                    description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                                    existingTypes={productTypes.data}
-                                    trigger={
-                                        <Button
-                                            variant="outline"
-                                            className="w-full flex items-center gap-2"
-                                        >
-                                            <PlusCircle className="w-4 h-4" />{" "}
-                                            Tambah Tipe
-                                        </Button>
-                                    }
-                                />
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                <ProductFilterCard
+                    params={params}
+                    setFilter={setFilter}
+                    allProducts={allProducts}
+                />
 
                 <MobileCardList
                     data={products.data}

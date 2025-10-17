@@ -21,6 +21,7 @@ class ProductController extends Controller
     {
         $products = Product::query()
             ->with(['type', 'defaultSupplier'])
+            ->withSum('inventories', 'quantity')
             ->when($request->input('search'), function ($query, $search) {
                 $query
                     ->where('name', 'like', "%{$search}%")
@@ -33,6 +34,9 @@ class ProductController extends Controller
                     $query->whereNotNull('deleted_at');
                 }
             })
+            ->when($request->input('product_id'), function ($query, $productId) {
+                $query->where('id', $productId);
+            })
             ->withTrashed()
             ->latest()
             ->paginate(15)
@@ -40,9 +44,10 @@ class ProductController extends Controller
 
         return inertia('Products/Index', [
             'products' => ProductResource::collection($products),
+            'allProducts' => Product::orderBy('name')->get(['id', 'name', 'sku']),
             'suppliers' => SupplierResource::collection(Supplier::orderBy('name')->get()),
             'productTypes' => TypeResource::collection(Type::where('group', Type::GROUP_PRODUCT)->get()),
-            'filters' => (object) $request->only(['search', 'status', 'sort']),
+            'filters' => (object) $request->only(['search', 'status', 'sort', 'product_id']),
         ]);
     }
 
