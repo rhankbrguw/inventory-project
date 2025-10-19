@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Transaction;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Transaction\StockMovementResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\StockMovementResource;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\Purchase;
 use App\Models\StockMovement;
+use App\Models\StockTransfer;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
@@ -15,7 +18,15 @@ class StockMovementController extends Controller
 {
     public function index(Request $request): Response
     {
-        $stockMovements = StockMovement::with(['product', 'location', 'user', 'reference'])
+        $stockMovements = StockMovement::with([
+            'product', 'location', 'user',
+            'reference' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    Purchase::class => ['supplier'],
+                    StockTransfer::class => ['fromLocation', 'toLocation'],
+                ]);
+            }
+        ])
             ->when($request->input('search'), function ($query, $search) {
                 $query->whereHas('product', function ($q) use ($search) {
                     $q
@@ -42,7 +53,7 @@ class StockMovementController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return inertia('Transactions/StockMovements/Index', [
+        return inertia('StockMovements/Index', [
             'stockMovements' => StockMovementResource::collection($stockMovements),
             'locations' => Location::orderBy('name')->get(['id', 'name']),
             'products' => ProductResource::collection(Product::orderBy('name')->get()),

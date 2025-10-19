@@ -278,13 +278,13 @@ export const stockMovementColumns = [
         accessorKey: "product.name",
         header: "Produk",
         cell: ({ row }) => row.product?.name,
-        className: "text-center font-medium whitespace-nowrap",
+        className: "font-medium text-center whitespace-nowrap",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
         cell: ({ row }) => row.product?.sku,
-        className: "text-center font-mono text-xs whitespace-nowrap",
+        className: "font-mono text-center  whitespace-nowrap",
     },
     {
         accessorKey: "location.name",
@@ -297,32 +297,30 @@ export const stockMovementColumns = [
         header: "Tipe",
         cell: ({ row }) => (
             <Badge variant="outline" className="capitalize">
-                {row.type}
+                {row.type.replace("_", " ")}
             </Badge>
         ),
         className: "text-center whitespace-nowrap",
     },
     {
-        accessorKey: "reference",
-        header: "Referensi",
-        cell: ({ row }) =>
-            row.reference ? (
-                <Link
-                    href={row.reference.url}
-                    className="text-primary hover:underline"
-                >
-                    {row.reference.code}
-                </Link>
-            ) : (
-                "-"
-            ),
-        className: "text-center font-mono text-xs whitespace-nowrap",
-    },
-    {
-        accessorKey: "notes",
-        header: "Catatan",
-        cell: ({ row }) => row.notes || "-",
-        className: "text-center text-xs",
+        accessorKey: "origin_destination",
+        header: "Keterangan",
+        cell: ({ row }) => {
+            const od = row.origin_destination;
+            if (row.type === "adjustment") {
+                return <span className="text-xs">{od?.name || "-"}</span>;
+            }
+            if (od?.name) {
+                return (
+                    <div className="text-xs">
+                        <p className="text-muted-foreground">{od.label}</p>
+                        <p className="font-medium">{od.name}</p>
+                    </div>
+                );
+            }
+            return "-";
+        },
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "quantity",
@@ -337,7 +335,7 @@ export const stockMovementColumns = [
                 {formatNumber(row.quantity)}
             </span>
         ),
-        className: "text-center font-semibold whitespace-nowrap",
+        className: "font-semibold text-center whitespace-nowrap",
     },
     {
         accessorKey: "created_at",
@@ -350,7 +348,7 @@ export const stockMovementColumns = [
                 </div>
             </div>
         ),
-        className: "text-center text-xs whitespace-nowrap",
+        className: "text-xs text-center whitespace-nowrap",
     },
 ];
 

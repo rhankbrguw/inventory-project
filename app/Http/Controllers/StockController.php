@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AdjustStockRequest;
-use App\Http\Resources\Transaction\StockMovementResource;
 use App\Http\Resources\InventoryResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\StockMovementResource;
 use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;

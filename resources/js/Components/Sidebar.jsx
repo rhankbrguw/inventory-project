@@ -10,6 +10,7 @@ import {
     ClipboardList,
     MapPin,
     Contact,
+    ArrowRightLeft,
 } from "lucide-react";
 
 const NavLink = ({ href, active, children, onClick }) => (
@@ -56,7 +57,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             name: "Stock",
             href: route("stock.index"),
             icon: Warehouse,
-            current: route().current("stock.*"),
+            current: route().current("stock.*") && !route().current("stock-movements.*"),
+            roles: ["Super Admin", "Warehouse Manager"],
+        },
+        {
+            name: "Stock Movements",
+            href: route("stock-movements.index"),
+            icon: ArrowRightLeft,
+            current: route().current("stock-movements.*"),
             roles: ["Super Admin", "Warehouse Manager"],
         },
         {

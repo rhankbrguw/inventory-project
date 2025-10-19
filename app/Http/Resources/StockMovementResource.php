@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Transaction;
+namespace App\Http\Resources;
 
 use App\Http\Resources\UserResource;
 use App\Models\Purchase;
@@ -19,6 +19,7 @@ class StockMovementResource extends JsonResource
             'quantity' => $this->quantity,
             'cost_per_unit' => $this->cost_per_unit,
             'notes' => $this->notes,
+            'origin_destination' => $this->getOriginDestination(),
             'reference' => $this->whenLoaded('reference', function () {
                 if (!$this->reference) {
                     return null;
@@ -51,5 +52,29 @@ class StockMovementResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
+    }
+
+    private function getOriginDestination(): ?array
+    {
+        if ($this->type === 'adjustment') {
+            return [
+                'label' => 'Catatan',
+                'name' => $this->notes ?? '-',
+            ];
+        }
+
+        return match ($this->type) {
+            'purchase', 'transfer_in' => [
+                'label' => 'Diterima dari',
+                'name' => $this->type === 'purchase'
+                    ? $this->reference?->supplier?->name
+                    : $this->reference?->fromLocation?->name,
+            ],
+            'transfer_out' => [
+                'label' => 'Dikirim ke',
+                'name' => $this->reference?->toLocation?->name,
+            ],
+            default => null,
+        };
     }
 }

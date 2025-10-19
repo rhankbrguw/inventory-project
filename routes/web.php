@@ -1,14 +1,14 @@
 <?php
 
 use App\Http\Controllers\Transaction\PurchaseController;
-use App\Http\Controllers\Transaction\StockMovementController;
-use App\Http\Controllers\Transaction\StockTransferController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
@@ -23,7 +23,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -59,7 +59,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('/products', [ProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit')->withTrashed();
-
         Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update')->withTrashed();
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->withTrashed();
         Route::post('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore')->withTrashed();
@@ -85,9 +84,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/stock/{inventory}', [StockController::class, 'show'])->name('stock.show');
 
         Route::get('/stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
-
-        Route::get('/transactions/transfers/create', [StockTransferController::class, 'create'])->name('transactions.transfers.create');
-        Route::post('/transactions/transfers', [StockTransferController::class, 'store'])->name('transactions.transfers.store');
+        Route::get('/stock-movements/transfers/create', [StockTransferController::class, 'create'])->name('stock-movements.transfers.create');
+        Route::post('/stock-movements/transfers', [StockTransferController::class, 'store'])->name('stock-movements.transfers.store');
     });
 });
 

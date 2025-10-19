@@ -1,7 +1,7 @@
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
-import TransferItemManager from "../Partials/TransferItemManager";
-import TransferDetailsManager from "../Partials/TransferDetailsManager";
+import TransferItemManager from "./Partials/TransferItemManager";
+import TransferDetailsManager from "./Partials/TransferDetailsManager";
 import { Button } from "@/Components/ui/button";
 import { formatNumber } from "@/lib/utils";
 import { format } from "date-fns";
@@ -28,12 +28,13 @@ export default function Create({ auth, locations, products }) {
         if (!data.from_location_id) {
             return [];
         }
-        return products.data.filter((product) =>
+        return (products?.data || []).filter((product) =>
             product.locations?.some(
                 (loc) => loc.id.toString() === data.from_location_id
             )
         );
-    }, [data.from_location_id, products.data]);
+    }, [data.from_location_id, products?.data]);
+
 
     const calculateTotals = () => {
         const totalItems = data.items.filter((item) => item.product_id).length;
@@ -48,7 +49,7 @@ export default function Create({ auth, locations, products }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("transactions.transfers.store"), {
+        post(route("stock-movements.transfers.store"), {
             transform: (data) => ({
                 ...data,
                 transfer_date: format(data.transfer_date, "yyyy-MM-dd"),
@@ -60,7 +61,7 @@ export default function Create({ auth, locations, products }) {
         <ContentPageLayout
             auth={auth}
             title="Buat Transfer Stok"
-            backRoute="transactions.index"
+            backRoute="stock-movements.index"
         >
             <form onSubmit={submit} className="space-y-4">
                 <TransferDetailsManager
@@ -87,7 +88,7 @@ export default function Create({ auth, locations, products }) {
                         {formatNumber(totalQuantity)}
                     </div>
                     <div className="flex gap-2">
-                        <Link href={route("transactions.index")}>
+                        <Link href={route("stock-movements.index")}>
                             <Button
                                 variant="outline"
                                 type="button"

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Transaction;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStockTransferRequest;
@@ -18,7 +18,7 @@ class StockTransferController extends Controller
 {
     public function create(): Response
     {
-        return inertia('Transactions/Transfers/Create', [
+        return inertia('StockMovements/Create', [
             'locations' => Location::orderBy('name')->get(['id', 'name']),
             'products' => ProductResource::collection(
                 Product::with('locations:id')->orderBy('name')->get()
@@ -51,7 +51,6 @@ class StockTransferController extends Controller
                 $transfer->stockMovements()->create([
                     'product_id' => $item['product_id'],
                     'location_id' => $validated['from_location_id'],
-                    'user_id' => $request->user()->id,
                     'type' => 'transfer_out',
                     'quantity' => -abs($item['quantity']),
                     'cost_per_unit' => $costPerUnit,
@@ -61,7 +60,6 @@ class StockTransferController extends Controller
                 $transfer->stockMovements()->create([
                     'product_id' => $item['product_id'],
                     'location_id' => $validated['to_location_id'],
-                    'user_id' => $request->user()->id,
                     'type' => 'transfer_in',
                     'quantity' => abs($item['quantity']),
                     'cost_per_unit' => $costPerUnit,
@@ -80,7 +78,8 @@ class StockTransferController extends Controller
                 $newQty = abs($item['quantity']);
 
                 $totalQty = $oldQty + $newQty;
-                $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $costPerUnit)) / ($totalQty > 0 ? $totalQty : 1);
+                $newAvgCost = $totalQty > 0 ? (($oldQty * $oldAvgCost) + ($newQty * $costPerUnit)) / $totalQty : 0;
+
 
                 $destinationInventory->quantity = $totalQty;
                 $destinationInventory->average_cost = $newAvgCost;
