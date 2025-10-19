@@ -32,6 +32,9 @@ class StockMovementResource extends JsonResource
                     $url = route('transactions.purchases.show', $this->reference->id);
                 }
 
+                if ($this->reference instanceof StockTransfer) {
+                }
+
                 return [
                     'id' => $this->reference->id,
                     'code' => $code,

@@ -4,6 +4,8 @@ import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { stockMovementColumns } from "@/Constants/tableColumns.jsx";
 import DataTable from "@/Components/DataTable";
 import StockMovementFilterCard from "./Partials/StockMovementFilterCard";
+import MobileCardList from "@/Components/MobileCardList";
+import StockMovementMobileCard from "./Partials/StockMovementMobileCard";
 import { Send } from "lucide-react";
 
 export default function Index({
@@ -30,7 +32,7 @@ export default function Index({
             createRoute={
                 canCreateTransfer ? "stock-movements.transfers.create" : null
             }
-            buttonLabel="Tambah Transfer"
+            buttonLabel="Buat Transfer Baru"
             icon={Send}
         >
             <div className="space-y-4">
@@ -42,12 +44,24 @@ export default function Index({
                     movementTypes={movementTypes}
                 />
 
-                <DataTable
-                    columns={stockMovementColumns}
+                <MobileCardList
                     data={stockMovements.data}
-                    actions={null}
-                    showRoute={null}
+                    renderItem={(movement) => (
+                        <StockMovementMobileCard
+                            key={movement.id}
+                            movement={movement}
+                        />
+                    )}
                 />
+
+                <div className="hidden md:block">
+                    <DataTable
+                        columns={stockMovementColumns}
+                        data={stockMovements.data}
+                        actions={null}
+                        showRoute={null}
+                    />
+                </div>
 
                 {stockMovements.data.length > 0 && (
                     <Pagination links={stockMovements.meta.links} />

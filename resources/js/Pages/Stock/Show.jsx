@@ -9,7 +9,7 @@ import {
 } from "@/Components/ui/card";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
 import { Button } from "@/Components/ui/button";
-import StockMovementMobileCard from "./Partials/StockMovementMobileCard";
+import StockMovementMobileCard from "../StockMovements/Partials/StockMovementMobileCard";
 import { Eye } from "lucide-react";
 import DataTable from "@/Components/DataTable";
 import { stockMovementPreviewColumns } from "@/Constants/tableColumns";

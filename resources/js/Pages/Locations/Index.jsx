@@ -1,4 +1,4 @@
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import IndexPageLayout from "@/Components/IndexPageLayout";
 import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
@@ -98,16 +98,16 @@ export default function Index({
                 <MobileCardList
                     data={locationsResource.data}
                     renderItem={(location) => (
-                        <div
-                            onClick={() => {
-                                if (canCrudLocations) {
-                                    router.get(
-                                        route("locations.edit", location.id)
-                                    );
-                                }
-                            }}
+                        <Link
+                            href={
+                                canCrudLocations
+                                    ? route("locations.edit", location.id)
+                                    : "#"
+                            }
                             key={location.id}
-                            className={canCrudLocations ? "cursor-pointer" : ""}
+                            className={
+                                !canCrudLocations ? "pointer-events-none" : ""
+                            }
                         >
                             <LocationMobileCard
                                 location={location}
@@ -117,7 +117,7 @@ export default function Index({
                                         : null
                                 }
                             />
-                        </div>
+                        </Link>
                     )}
                 />
 

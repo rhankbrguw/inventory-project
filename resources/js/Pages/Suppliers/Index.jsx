@@ -86,18 +86,15 @@ export default function Index({ auth, suppliers, filters = {} }) {
                 <MobileCardList
                     data={suppliers.data}
                     renderItem={(supplier) => (
-                        <div
-                            onClick={() =>
-                                router.get(route("suppliers.edit", supplier.id))
-                            }
+                        <Link
+                            href={route("suppliers.edit", supplier.id)}
                             key={supplier.id}
-                            className="cursor-pointer"
                         >
                             <SupplierMobileCard
                                 supplier={supplier}
                                 renderActionDropdown={renderActionDropdown}
                             />
-                        </div>
+                        </Link>
                     )}
                 />
 

@@ -9,8 +9,11 @@ use App\Http\Resources\StockMovementResource;
 use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\Purchase;
 use App\Models\StockMovement;
+use App\Models\StockTransfer;
 use App\Models\Type;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,7 +82,16 @@ class StockController extends Controller
 
         $stockMovements = StockMovement::where('product_id', $inventory->product_id)
             ->where('location_id', $inventory->location_id)
-            ->with('reference')
+            ->with([
+                'product',
+                'location',
+                'reference' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        Purchase::class => ['supplier'],
+                        StockTransfer::class => ['fromLocation', 'toLocation'],
+                    ]);
+                }
+            ])
             ->latest('created_at')
             ->paginate(20);
 

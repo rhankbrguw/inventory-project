@@ -1,3 +1,4 @@
+import { Link, router } from "@inertiajs/react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { useSoftDeletes } from "@/Hooks/useSoftDeletes";
 import { productColumns } from "@/Constants/tableColumns.jsx";
@@ -122,13 +123,20 @@ export default function Index({
                 <MobileCardList
                     data={products.data}
                     renderItem={(product) => (
-                        <ProductMobileCard
+                        <Link
+                            href={route("products.edit", product.id)}
                             key={product.id}
-                            product={product}
-                            renderActionDropdown={
-                                canCrudProducts ? renderActionDropdown : null
-                            }
-                        />
+                            className="block"
+                        >
+                            <ProductMobileCard
+                                product={product}
+                                renderActionDropdown={
+                                    canCrudProducts
+                                        ? renderActionDropdown
+                                        : null
+                                }
+                            />
+                        </Link>
                     )}
                 />
 

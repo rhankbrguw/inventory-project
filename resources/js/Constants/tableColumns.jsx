@@ -31,44 +31,42 @@ export const productColumns = [
                 )}
             </div>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "name",
         header: "Nama Produk",
-        cell: ({ row }) => (
-            <div>
-                <p className="font-medium">{row.name}</p>
-            </div>
-        ),
-        className: "text-center",
+        cell: ({ row }) => <p className="font-medium">{row.name}</p>,
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "sku",
         header: "SKU",
-        className: "text-center font-mono",
+        className: "text-center font-mono text-xs whitespace-nowrap",
     },
     {
         accessorKey: "type",
         header: "Tipe",
         cell: ({ row }) => row.type?.name || "-",
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
-            <Badge variant={row.deleted_at ? "destructive" : "success"}>
-                {row.deleted_at ? "Nonaktif" : "Aktif"}
-            </Badge>
+            <div className="flex justify-center">
+                <Badge variant={row.deleted_at ? "destructive" : "success"}>
+                    {row.deleted_at ? "Nonaktif" : "Aktif"}
+                </Badge>
+            </div>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "price",
         header: "Harga",
         cell: ({ row }) => formatCurrency(row.price),
-        className: "text-center font-semibold",
+        className: "text-center font-semibold whitespace-nowrap",
     },
     {
         accessorKey: "total_stock",
@@ -85,7 +83,7 @@ export const productColumns = [
                 {formatNumber(row.total_stock)} {row.unit}
             </span>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
 ];
 
@@ -93,13 +91,13 @@ export const locationColumns = [
     {
         accessorKey: "name",
         header: "Nama Lokasi",
-        className: "text-center font-medium",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "type",
         header: "Tipe",
         cell: ({ row }) => row.type?.name || "-",
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "users",
@@ -108,7 +106,7 @@ export const locationColumns = [
             row.users.length > 0
                 ? row.users.map((user) => user.name).join(", ")
                 : "-",
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "status",
@@ -118,7 +116,7 @@ export const locationColumns = [
                 {row.deleted_at ? "Nonaktif" : "Aktif"}
             </Badge>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
 ];
 
@@ -127,13 +125,13 @@ export const stockColumns = [
         accessorKey: "product.name",
         header: "Nama Item",
         cell: ({ row }) => row.product?.name || "Produk Dihapus",
-        className: "text-center font-medium",
+        className: "text-center font-medium whitespace-nowrap px-4",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
         cell: ({ row }) => row.product?.sku || "-",
-        className: "text-center font-mono",
+        className: "text-center font-mono text-xs whitespace-nowrap px-4",
     },
     {
         accessorKey: "location.name",
@@ -148,20 +146,20 @@ export const stockColumns = [
                 {row.location?.name || "Lokasi Dihapus"}
             </div>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap px-4",
     },
     {
         accessorKey: "updated_at",
         header: "Aktivitas Terakhir",
         cell: ({ row }) => formatRelativeTime(row.updated_at),
-        className: "text-center",
+        className: "text-center whitespace-nowrap px-4",
     },
     {
         accessorKey: "quantity",
         header: "Kuantitas",
         cell: ({ row }) =>
             `${formatNumber(row.quantity)} ${row.product?.unit || ""}`,
-        className: "text-center font-semibold",
+        className: "text-center font-semibold whitespace-nowrap px-4",
     },
 ];
 
@@ -254,7 +252,7 @@ export const stockMovementPreviewColumns = [
         accessorKey: "notes",
         header: "Catatan",
         cell: ({ row }) => row.notes || "-",
-        className: "text-center text-xs",
+        className: "text-center text-xs whitespace-nowrap",
     },
     {
         accessorKey: "quantity",
@@ -284,7 +282,7 @@ export const stockMovementColumns = [
         accessorKey: "product.sku",
         header: "SKU",
         cell: ({ row }) => row.product?.sku,
-        className: "font-mono text-center  whitespace-nowrap",
+        className: "font-mono text-center text-xs whitespace-nowrap",
     },
     {
         accessorKey: "location.name",
@@ -370,32 +368,32 @@ export const purchaseDetailColumns = [
                 )}
             </div>
         ),
-        className: "text-center font-medium",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
         cell: ({ row }) => row.product?.sku || "-",
-        className: "text-center font-mono text-xs",
+        className: "text-center font-mono text-xs whitespace-nowrap",
     },
     {
         accessorKey: "quantity",
         header: "Jumlah",
         cell: ({ row }) =>
             `${formatNumber(row.quantity)} ${row.product?.unit || ""}`,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "cost_per_unit",
         header: "Harga Beli",
         cell: ({ row }) => formatCurrency(row.cost_per_unit),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "subtotal",
         header: "Subtotal",
         cell: ({ row }) => formatCurrency(row.quantity * row.cost_per_unit),
-        className: "text-center font-semibold",
+        className: "text-center font-semibold whitespace-nowrap",
     },
 ];
 
@@ -428,7 +426,7 @@ export const supplierColumns = [
                 {row.deleted_at ? "Nonaktif" : "Aktif"}
             </Badge>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
 ];
 
@@ -437,7 +435,7 @@ export const customerColumns = [
         accessorKey: "id",
         header: "ID",
         cell: ({ row }) => row.id,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "name",
@@ -476,13 +474,13 @@ export const userColumns = [
         accessorKey: "name",
         header: "Nama",
         cell: ({ row }) => row.name,
-        className: "text-center font-medium",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "email",
         header: "Email",
         cell: ({ row }) => row.email,
-        className: "text-center text-muted-foreground",
+        className: "text-center text-muted-foreground whitespace-nowrap",
     },
     {
         accessorKey: "role.code",
@@ -490,13 +488,13 @@ export const userColumns = [
         cell: ({ row }) => (
             <span className="font-mono">{row.role?.code || "-"}</span>
         ),
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "role",
         header: "Jabatan",
         cell: ({ row }) => <UnifiedBadge text={row.role?.name} />,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
 ];
 
@@ -505,18 +503,18 @@ export const typeColumns = [
         accessorKey: "group",
         header: "Grup",
         cell: ({ row }) => formatGroupName(row.group),
-        className: "text-center font-medium",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "name",
         header: "Nama",
         cell: ({ row }) => row.name,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "code",
         header: "Kode",
         cell: ({ row }) => <span className="font-mono">{row.code || "-"}</span>,
-        className: "text-center",
+        className: "text-center whitespace-nowrap",
     },
 ];

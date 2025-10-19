@@ -1,4 +1,4 @@
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { transactionColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
@@ -91,17 +91,6 @@ export default function Index({
                             Pembelian (Purchase)
                         </DropdownMenuItem>
                         {canManageFullStock && (
-                            <DropdownMenuItem
-                                onSelect={() =>
-                                    router.get(
-                                        route("transactions.transfers.create")
-                                    )
-                                }
-                            >
-                                Kirim Stok (Stock Transfer)
-                            </DropdownMenuItem>
-                        )}
-                        {canManageFullStock && (
                             <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -111,7 +100,7 @@ export default function Index({
                                         )
                                     }
                                 >
-                                    Pergerakan Stok (Stock Movements)
+                                    Riwayat Pergerakan Stok
                                 </DropdownMenuItem>
                             </>
                         )}
@@ -130,11 +119,18 @@ export default function Index({
                 <MobileCardList
                     data={transactions.data}
                     renderItem={(transaction) => (
-                        <TransactionMobileCard
+                        <Link
+                            href={route(
+                                "transactions.purchases.show",
+                                transaction.id
+                            )}
                             key={transaction.id}
-                            transaction={transaction}
-                            renderActionDropdown={renderActionDropdown}
-                        />
+                        >
+                            <TransactionMobileCard
+                                transaction={transaction}
+                                renderActionDropdown={renderActionDropdown}
+                            />
+                        </Link>
                     )}
                 />
 
