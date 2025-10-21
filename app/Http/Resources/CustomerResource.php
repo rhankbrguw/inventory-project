@@ -12,11 +12,13 @@ class CustomerResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'type_id' => $this->type_id,
-            'type' => TypeResource::make($this->whenLoaded('type')),
             'email' => $this->email,
             'phone' => $this->formatPhone($this->phone),
             'address' => $this->address,
+            'type' => $this->whenLoaded('type', fn() => [
+                'id' => $this->type->id,
+                'name' => $this->type->name,
+            ]),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

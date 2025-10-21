@@ -225,9 +225,6 @@ export default function PurchaseItemManager({
                                             <SelectValue placeholder="Pilih supplier..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value={null}>
-                                                Tanpa Supplier
-                                            </SelectItem>
                                             {suppliers.map((supplier) => (
                                                 <SelectItem
                                                     key={supplier.id}

@@ -18,12 +18,15 @@ class StockMovement extends Model
         'quantity',
         'cost_per_unit',
         'notes',
+        'reference_id',
+        'reference_type',
     ];
 
     public static function getMovementTypes(): array
     {
         return [
             ['value' => 'purchase', 'label' => 'Pembelian'],
+            ['value' => 'sell', 'label' => 'Penjualan'],
             ['value' => 'adjustment', 'label' => 'Penyesuaian'],
             ['value' => 'transfer_in', 'label' => 'Transfer Masuk'],
             ['value' => 'transfer_out', 'label' => 'Transfer Keluar'],
@@ -43,10 +46,5 @@ class StockMovement extends Model
     public function reference(): MorphTo
     {
         return $this->morphTo();
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 }

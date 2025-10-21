@@ -12,7 +12,9 @@ use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
@@ -42,7 +44,7 @@ class ProductController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return inertia('Products/Index', [
+        return Inertia::render('Products/Index', [
             'products' => ProductResource::collection($products),
             'allProducts' => Product::orderBy('name')->get(['id', 'name', 'sku']),
             'suppliers' => SupplierResource::collection(Supplier::orderBy('name')->get()),
@@ -53,7 +55,7 @@ class ProductController extends Controller
 
     public function create(): Response
     {
-        return inertia('Products/Create', [
+        return Inertia::render('Products/Create', [
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
         ]);
@@ -69,12 +71,12 @@ class ProductController extends Controller
 
         Product::create($validated);
 
-        return redirect()->route('products.index')->with('success', 'Produk baru berhasil ditambahkan.');
+        return Redirect::route('products.index')->with('success', 'Produk baru berhasil ditambahkan.');
     }
 
     public function edit(Product $product): Response
     {
-        return inertia('Products/Edit', [
+        return Inertia::render('Products/Edit', [
             'product' => ProductResource::make($product->load(['type', 'defaultSupplier'])),
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
@@ -95,26 +97,25 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()
-            ->route('products.index')
+        return Redirect::route('products.index')
             ->with('success', 'Produk berhasil diperbarui.');
     }
 
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->inventories()->where('quantity', '>', 0)->exists()) {
-            return back()->with('error', 'Produk ini tidak dapat dinonaktifkan karena masih memiliki stok di inventaris.');
+            return Redirect::back()->with('error', 'Produk ini tidak dapat dinonaktifkan karena masih memiliki stok di inventaris.');
         }
 
         $product->delete();
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil dinonaktifkan.');
+        return Redirect::route('products.index')->with('success', 'Produk berhasil dinonaktifkan.');
     }
 
     public function restore(Product $product): RedirectResponse
     {
         $product->restore();
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil diaktifkan kembali.');
+        return Redirect::route('products.index')->with('success', 'Produk berhasil diaktifkan kembali.');
     }
 }

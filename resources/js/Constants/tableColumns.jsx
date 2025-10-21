@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import UnifiedBadge from "@/Components/UnifiedBadge";
 import { Link } from "@inertiajs/react";
-import { Package, Warehouse } from "lucide-react";
+import { Package, Warehouse, ArrowUp, ArrowDown } from "lucide-react";
 
 export const productColumns = [
     {
@@ -163,20 +163,24 @@ export const stockColumns = [
     },
 ];
 
-export const transactionColumns = [
+export const transactionColumns = (auth) => [
     {
         accessorKey: "reference_code",
         header: "Referensi",
-        className: "text-center font-mono text-xs whitespace-nowrap",
+        cell: ({ row }) => (
+            <Link
+                href={row.url}
+                className="text-primary hover:underline font-mono text-xs whitespace-nowrap"
+            >
+                {row.reference_code}
+            </Link>
+        ),
+        className: "text-center",
     },
     {
         accessorKey: "type",
         header: "Tipe",
-        cell: ({ row }) => (
-            <div className="flex justify-center">
-                <Badge variant="secondary">{row.type}</Badge>
-            </div>
-        ),
+        cell: ({ row }) => <UnifiedBadge text={row.type} />,
         className: "text-center whitespace-nowrap",
     },
     {
@@ -185,8 +189,9 @@ export const transactionColumns = [
         className: "text-center whitespace-nowrap",
     },
     {
-        accessorKey: "supplier",
+        accessorKey: "party",
         header: "Supplier",
+        cell: ({ row }) => row.default_supplier_name || "-",
         className: "text-center whitespace-nowrap",
     },
     {
@@ -426,7 +431,7 @@ export const supplierColumns = [
                 {row.deleted_at ? "Nonaktif" : "Aktif"}
             </Badge>
         ),
-        className: "text-center whitespace-nowrap",
+        className: "text-center",
     },
 ];
 

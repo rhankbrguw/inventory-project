@@ -146,7 +146,7 @@ export default function Edit({
                         </Button>
                     </Link>
                     <Button disabled={processing || !isDirty}>
-                        Simpan Perubahan
+                        Simpan
                     </Button>
                 </div>
             </form>

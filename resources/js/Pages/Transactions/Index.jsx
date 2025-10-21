@@ -1,4 +1,4 @@
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useIndexPageFilters } from "@/Hooks/useIndexPageFilters";
 import { transactionColumns } from "@/Constants/tableColumns.jsx";
 import IndexPageLayout from "@/Components/IndexPageLayout";
@@ -11,7 +11,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import { Button } from "@/Components/ui/button";
@@ -24,14 +23,22 @@ export default function Index({
     transactionTypes,
     filters = {},
 }) {
+    const { auth: authData } = usePage().props;
+    const hasRole = (roleName) => authData.user.roles.includes(roleName);
+
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
         filters
     );
 
-    const canManageFullStock = ["Super Admin", "Warehouse Manager"].some(
-        (role) => auth.user.roles.includes(role)
-    );
+    const canCreatePurchase =
+        hasRole("Super Admin") ||
+        hasRole("Warehouse Manager") ||
+        hasRole("Branch Manager");
+    const canCreateSell =
+        hasRole("Super Admin") ||
+        hasRole("Branch Manager") ||
+        hasRole("Cashier");
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
@@ -47,11 +54,7 @@ export default function Index({
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
                     className="cursor-pointer"
-                    onSelect={() =>
-                        router.get(
-                            route("transactions.purchases.show", transaction.id)
-                        )
-                    }
+                    onSelect={() => router.get(transaction.url)}
                 >
                     <Eye className="w-4 h-4 mr-2" /> Lihat
                 </DropdownMenuItem>
@@ -65,47 +68,52 @@ export default function Index({
             title="Riwayat Transaksi"
             buttonLabel="Tambah Transaksi"
             headerActions={
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <div>
-                            <Button
-                                size="icon"
-                                className="sm:hidden rounded-full h-10 w-10"
-                            >
-                                <Plus className="h-5 w-5" />
-                            </Button>
-                            <Button className="hidden sm:flex items-center gap-2">
-                                <Plus className="w-4 h-4" />
-                                <span>Tambah Transaksi</span>
-                            </Button>
-                        </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onSelect={() =>
-                                router.get(
-                                    route("transactions.purchases.create")
-                                )
-                            }
-                        >
-                            Pembelian (Purchase)
-                        </DropdownMenuItem>
-                        {canManageFullStock && (
-                            <>
-                                <DropdownMenuSeparator />
+                (canCreatePurchase || canCreateSell) && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <div>
+                                <Button
+                                    size="icon"
+                                    className="sm:hidden rounded-full h-10 w-10"
+                                >
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                                <Button className="hidden sm:flex items-center gap-2">
+                                    <Plus className="w-4 h-4" />
+                                    <span>Tambah Transaksi</span>
+                                </Button>
+                            </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {canCreatePurchase && (
                                 <DropdownMenuItem
+                                    className="cursor-pointer"
                                     onSelect={() =>
                                         router.get(
-                                            route("stock-movements.index")
+                                            route(
+                                                "transactions.purchases.create"
+                                            )
                                         )
                                     }
                                 >
-                                    Riwayat Pergerakan Stok
+                                    Pembelian (Purchases)
                                 </DropdownMenuItem>
-                            </>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            )}
+                            {canCreateSell && (
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onSelect={() =>
+                                        router.get(
+                                            route("transactions.sells.create")
+                                        )
+                                    }
+                                >
+                                    Penjualan (Sells)
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )
             }
         >
             <div className="space-y-4">
@@ -119,13 +127,7 @@ export default function Index({
                 <MobileCardList
                     data={transactions.data}
                     renderItem={(transaction) => (
-                        <Link
-                            href={route(
-                                "transactions.purchases.show",
-                                transaction.id
-                            )}
-                            key={transaction.id}
-                        >
+                        <Link href={transaction.url} key={transaction.id}>
                             <TransactionMobileCard
                                 transaction={transaction}
                                 renderActionDropdown={renderActionDropdown}
@@ -136,10 +138,10 @@ export default function Index({
 
                 <div className="hidden md:block">
                     <DataTable
-                        columns={transactionColumns}
+                        columns={transactionColumns(authData)}
                         data={transactions.data}
                         actions={renderActionDropdown}
-                        showRoute="transactions.purchases.show"
+                        showRoute={null}
                     />
                 </div>
 

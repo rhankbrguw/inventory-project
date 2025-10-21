@@ -64,7 +64,7 @@ export default function Index({
                 </DropdownMenuItem>
                 {location.deleted_at ? (
                     <DropdownMenuItem
-                        className="cursor-pointer text-emerald-600 focus:text-emerald-700"
+                        className="cursor-pointer text-success focus:text-success"
                         onSelect={() => restoreItem(location.id)}
                     >
                         <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan

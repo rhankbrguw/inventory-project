@@ -10,6 +10,7 @@ use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\Sell;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Type;
@@ -18,6 +19,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class StockController extends Controller
@@ -67,7 +70,7 @@ class StockController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return inertia('Stock/Index', [
+        return Inertia::render('Stock/Index', [
             'inventories' => InventoryResource::collection($inventories),
             'locations' => Location::orderBy('name')->get(['id', 'name']),
             'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
@@ -88,6 +91,7 @@ class StockController extends Controller
                 'reference' => function (MorphTo $morphTo) {
                     $morphTo->morphWith([
                         Purchase::class => ['supplier'],
+                        Sell::class => ['customer'],
                         StockTransfer::class => ['fromLocation', 'toLocation'],
                     ]);
                 }
@@ -95,7 +99,7 @@ class StockController extends Controller
             ->latest('created_at')
             ->paginate(20);
 
-        return inertia('Stock/Show', [
+        return Inertia::render('Stock/Show', [
             'inventory' => InventoryResource::make($inventory),
             'stockMovements' => StockMovementResource::collection($stockMovements),
         ]);
@@ -103,9 +107,12 @@ class StockController extends Controller
 
     public function showAdjustForm(): Response
     {
-        return inertia('Stock/Adjust', [
-            'products' => ProductResource::collection(Product::orderBy('name')->get()),
-            'locations' => Location::orderBy('name')->get(['id', 'name']),
+        $productsData = Product::orderBy('name')->get();
+        $locationsData = Location::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Stock/Adjust', [
+            'products' => ProductResource::collection($productsData),
+            'locations' => $locationsData,
             'adjustmentReasons' => [
                 ['value' => 'Rusak', 'label' => 'Barang Rusak'],
                 ['value' => 'Retur', 'label' => 'Barang Retur'],
@@ -113,39 +120,45 @@ class StockController extends Controller
         ]);
     }
 
+
     public function adjust(AdjustStockRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $quantityToRemove = (float) $validated['quantity'];
 
-        DB::transaction(function () use ($validated) {
-            $inventory = Inventory::firstOrCreate(
-                [
-                    'product_id' => $validated['product_id'],
-                    'location_id' => $validated['location_id']
-                ],
-                ['quantity' => 0, 'average_cost' => 0]
-            );
+        if ($quantityToRemove <= 0) {
+            return Redirect::back()->withErrors(['quantity' => 'Jumlah yang disesuaikan harus lebih besar dari 0.'])->withInput();
+        }
 
-            $currentQuantity = $inventory->quantity;
-            $newQuantity = $validated['quantity'];
-            $quantityChange = $newQuantity - $currentQuantity;
+        try {
+            DB::transaction(function () use ($validated, $quantityToRemove) {
+                $inventory = Inventory::where('product_id', $validated['product_id'])
+                    ->where('location_id', $validated['location_id'])
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($quantityChange != 0) {
+                if (!$inventory || $inventory->quantity < $quantityToRemove) {
+                    throw new \Exception('Stok tidak mencukupi untuk penyesuaian.');
+                }
+
+                $quantityChange = -$quantityToRemove;
+
                 StockMovement::create([
                     'product_id' => $validated['product_id'],
                     'location_id' => $validated['location_id'],
                     'type' => 'adjustment',
                     'quantity' => $quantityChange,
                     'cost_per_unit' => $inventory->average_cost,
-                    'notes' => $validated['notes'],
+                    'notes' => $validated['notes'] ?? null,
                 ]);
 
-                $inventory->update(['quantity' => $newQuantity]);
-            }
-        });
+                $inventory->decrement('quantity', $quantityToRemove);
+            });
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', 'Gagal menyesuaikan stok: ' . $e->getMessage())->withInput();
+        }
 
-        return redirect()
-            ->route('stock.index')
+        return Redirect::route('stock.index')
             ->with('success', 'Stok berhasil disesuaikan.');
     }
 

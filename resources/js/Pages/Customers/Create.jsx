@@ -21,7 +21,7 @@ import {
 } from "@/Components/ui/card";
 
 export default function Create({ auth, customerTypes = { data: [] } }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         type_id: "",
         email: "",
@@ -140,10 +140,8 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                                     Batal
                                 </Button>
                             </Link>
-                            <Button disabled={processing}>
-                                {processing
-                                    ? "Menyimpan..."
-                                    : "Simpan Pelanggan"}
+                            <Button disabled={processing | !isDirty}>
+                                {processing ? "Menyimpan..." : "Simpan"}
                             </Button>
                         </div>
                     </form>

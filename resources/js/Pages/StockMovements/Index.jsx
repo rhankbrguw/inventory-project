@@ -28,7 +28,7 @@ export default function Index({
     return (
         <IndexPageLayout
             auth={auth}
-            title="Riwayat Pergerakan Stok"
+            title="Riwayat Stok"
             createRoute={
                 canCreateTransfer ? "stock-movements.transfers.create" : null
             }

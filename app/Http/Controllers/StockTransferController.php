@@ -12,13 +12,15 @@ use App\Models\StockTransfer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class StockTransferController extends Controller
 {
     public function create(): Response
     {
-        return inertia('StockMovements/Create', [
+        return Inertia::render('StockMovements/Create', [
             'locations' => Location::orderBy('name')->get(['id', 'name']),
             'products' => ProductResource::collection(
                 Product::with('locations:id')->orderBy('name')->get()
@@ -87,8 +89,7 @@ class StockTransferController extends Controller
             }
         });
 
-        return redirect()
-            ->route('stock-movements.index')
+        return Redirect::route('stock-movements.index')
             ->with('success', 'Transfer stok berhasil dicatat.');
     }
 }

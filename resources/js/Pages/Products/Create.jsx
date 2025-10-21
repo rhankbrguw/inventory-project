@@ -221,7 +221,7 @@ export default function Create({ auth, types, suppliers }) {
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                Simpan Produk
+                                Simpan
                             </Button>
                         </div>
                     </form>

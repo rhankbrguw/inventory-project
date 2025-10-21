@@ -20,6 +20,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/Components/ui/card";
+import InputError from "@/Components/InputError";
 
 export default function Adjust({
     auth,
@@ -31,13 +32,14 @@ export default function Adjust({
         {
             product_id: "",
             location_id: "",
-            reason: "",
             quantity: "",
             notes: "",
         }
     );
 
-    const productsData = products.data || [];
+    const productsData = products.data || products || [];
+    const locationsData = locations.data || locations || [];
+
     const selectedProduct = data.product_id
         ? productsData.find((p) => p.id == data.product_id)
         : null;
@@ -59,47 +61,43 @@ export default function Adjust({
                 <CardHeader>
                     <CardTitle>Formulir Penyesuaian Stok</CardTitle>
                     <CardDescription>
-                        Gunakan formulir ini untuk mencatat stok yang berkurang
-                        karena rusak atau diretur.
+                        Gunakan formulir ini untuk mengurangi stok karena rusak,
+                        hilang, atau alasan lainnya. Masukkan jumlah yang
+                        ingin dikurangi.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                                label="Produk"
-                                htmlFor="product_id"
-                                error={errors.product_id}
-                            >
+                            <FormField label="Produk *" htmlFor="product_id">
                                 <ProductCombobox
                                     products={productsData}
                                     value={data.product_id}
                                     onChange={(product) =>
                                         setData("product_id", product.id)
                                     }
+                                    error={errors.product_id}
                                 />
-                                <StockAvailability
-                                    productId={data.product_id}
-                                    locationId={data.location_id}
-                                    unit={selectedProduct?.unit}
-                                />
+                                {data.location_id && data.product_id && (
+                                    <StockAvailability
+                                        productId={data.product_id}
+                                        locationId={data.location_id}
+                                        unit={selectedProduct?.unit}
+                                    />
+                                )}
                             </FormField>
-                            <FormField
-                                label="Lokasi"
-                                htmlFor="location_id"
-                                error={errors.location_id}
-                            >
+                            <FormField label="Lokasi *" htmlFor="location_id">
                                 <Select
-                                    value={data.location_id}
+                                    value={data.location_id?.toString()}
                                     onValueChange={(value) =>
                                         setData("location_id", value)
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger id="location_id">
                                         <SelectValue placeholder="Pilih lokasi..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {locations.map((location) => (
+                                        {locationsData.map((location) => (
                                             <SelectItem
                                                 key={location.id}
                                                 value={location.id.toString()}
@@ -109,57 +107,36 @@ export default function Adjust({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.location_id} />
                             </FormField>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
-                                label="Alasan Penyesuaian"
-                                htmlFor="reason"
-                                error={errors.reason}
-                            >
-                                <Select
-                                    value={data.reason}
-                                    onValueChange={(value) =>
-                                        setData("reason", value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih alasan..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {adjustmentReasons.map((reason) => (
-                                            <SelectItem
-                                                key={reason.value}
-                                                value={reason.value}
-                                            >
-                                                {reason.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
-                            <FormField
-                                label={`Jumlah yang Disesuaikan (${
-                                    selectedProduct?.unit || "..."
+                                label={`Jumlah yang ingin Dikurangi (${
+                                    selectedProduct?.unit || "unit"
                                 })`}
                                 htmlFor="quantity"
-                                error={errors.quantity}
                             >
                                 <Input
                                     id="quantity"
                                     type="number"
+                                    step="any"
+                                    min="0.0001"
                                     value={data.quantity}
                                     onChange={(e) =>
                                         setData("quantity", e.target.value)
                                     }
                                     placeholder="Contoh: 5"
+                                    disabled={
+                                        !data.product_id || !data.location_id
+                                    }
                                 />
+                                <InputError message={errors.quantity} />
                             </FormField>
                         </div>
                         <FormField
-                            label="Catatan (Opsional)"
+                            label="Catatan (Alasan Detail)"
                             htmlFor="notes"
-                            error={errors.notes}
                         >
                             <Textarea
                                 id="notes"
@@ -168,7 +145,9 @@ export default function Adjust({
                                     setData("notes", e.target.value)
                                 }
                                 placeholder="Contoh: Rusak karena jatuh saat pengiriman."
+                                disabled={!data.product_id || !data.location_id}
                             />
+                            <InputError message={errors.notes} />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
@@ -177,8 +156,15 @@ export default function Adjust({
                                     Batal
                                 </Button>
                             </Link>
-                            <Button disabled={processing || !isDirty}>
-                                Simpan Penyesuaian
+                            <Button
+                                disabled={
+                                    processing ||
+                                    !isDirty ||
+                                    !data.product_id ||
+                                    !data.location_id
+                                }
+                            >
+                                Simpan
                             </Button>
                         </div>
                     </form>

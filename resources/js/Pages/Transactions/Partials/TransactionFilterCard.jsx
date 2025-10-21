@@ -26,7 +26,7 @@ export default function TransactionFilterCard({
             <CardContent className="flex flex-col sm:flex-row items-center gap-2 pt-6">
                 <Input
                     type="search"
-                    placeholder="Cari referensi atau supplier..."
+                    placeholder="Cari ref, supplier, atau customer..."
                     value={params.search || ""}
                     onChange={(e) => setFilter("search", e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
@@ -56,14 +56,17 @@ export default function TransactionFilterCard({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Semua Tipe</SelectItem>
-                        {transactionTypes.map((type) => (
-                            <SelectItem
-                                key={type.id}
-                                value={type.id.toString()}
-                            >
-                                {type.name}
-                            </SelectItem>
-                        ))}
+                        {transactionTypes &&
+                            transactionTypes.map((type) =>
+                                type && type.id ? (
+                                    <SelectItem
+                                        key={type.id}
+                                        value={type.id.toString()}
+                                    >
+                                        {type.name}
+                                    </SelectItem>
+                                ) : null
+                            )}
                     </SelectContent>
                 </Select>
                 <Select

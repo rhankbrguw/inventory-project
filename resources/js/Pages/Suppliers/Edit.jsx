@@ -134,7 +134,7 @@ export default function Edit({ auth, supplier }) {
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                Simpan Perubahan
+                                Simpan
                             </Button>
                         </div>
                     </form>

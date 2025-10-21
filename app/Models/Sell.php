@@ -7,21 +7,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
 
-class Purchase extends Model
+class Sell extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'type_id',
         'location_id',
-        'supplier_id',
+        'customer_id',
         'user_id',
         'reference_code',
         'transaction_date',
-        'total_cost',
+        'total_price',
         'status',
-        'notes',
         'payment_method_type_id',
+        'notes',
+    ];
+
+    protected $casts = [
+        'transaction_date' => 'date',
+        'total_price' => 'decimal:2',
     ];
 
     public function type(): BelongsTo
@@ -34,9 +39,9 @@ class Purchase extends Model
         return $this->belongsTo(Location::class);
     }
 
-    public function supplier(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function user(): BelongsTo
@@ -44,7 +49,7 @@ class Purchase extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function paymentMethodType(): BelongsTo
+    public function paymentMethod(): BelongsTo
     {
         return $this->belongsTo(Type::class, 'payment_method_type_id');
     }

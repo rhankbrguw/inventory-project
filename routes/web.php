@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Transaction\PurchaseController;
+use App\Http\Controllers\Transaction\SellController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\LocationsController;
@@ -75,6 +76,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/transactions/purchases', [PurchaseController::class, 'store'])->name('transactions.purchases.store');
         Route::get('/transactions/purchases/create', [PurchaseController::class, 'create'])->name('transactions.purchases.create');
         Route::get('/transactions/purchases/{purchase}', [PurchaseController::class, 'show'])->name('transactions.purchases.show');
+    });
+
+    Route::middleware(['role:Super Admin|Branch Manager|Cashier'])->group(function () {
+        Route::get('/transactions/sells/create', [SellController::class, 'create'])->name('transactions.sells.create');
+        Route::post('/transactions/sells', [SellController::class, 'store'])->name('transactions.sells.store');
+        Route::get('/transactions/sells/{sell}', [SellController::class, 'show'])->name('transactions.sells.show');
     });
 
     Route::middleware(['role:Super Admin|Warehouse Manager'])->group(function () {

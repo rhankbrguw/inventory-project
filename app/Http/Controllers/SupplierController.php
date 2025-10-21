@@ -8,6 +8,8 @@ use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class SupplierController extends Controller
@@ -42,7 +44,7 @@ class SupplierController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return inertia('Suppliers/Index', [
+        return Inertia::render('Suppliers/Index', [
             'suppliers' => SupplierResource::collection($suppliers),
             'filters' => (object) $request->only(['search', 'sort', 'status']),
         ]);
@@ -50,18 +52,18 @@ class SupplierController extends Controller
 
     public function create(): Response
     {
-        return inertia('Suppliers/Create');
+        return Inertia::render('Suppliers/Create');
     }
 
     public function store(StoreSupplierRequest $request): RedirectResponse
     {
         Supplier::create($request->validated());
-        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
+        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
     }
 
     public function edit(Supplier $supplier): Response
     {
-        return inertia('Suppliers/Edit', [
+        return Inertia::render('Suppliers/Edit', [
             'supplier' => SupplierResource::make($supplier),
         ]);
     }
@@ -69,18 +71,18 @@ class SupplierController extends Controller
     public function update(UpdateSupplierRequest $request, Supplier $supplier): RedirectResponse
     {
         $supplier->update($request->validated());
-        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
+        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
     }
 
     public function destroy(Supplier $supplier): RedirectResponse
     {
         $supplier->delete();
-        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dinonaktifkan.');
+        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil dinonaktifkan.');
     }
 
     public function restore(Supplier $supplier): RedirectResponse
     {
         $supplier->restore();
-        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diaktifkan kembali.');
+        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil diaktifkan kembali.');
     }
 }

@@ -144,7 +144,7 @@ export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
                             <Button disabled={processing || !isDirty}>
                                 {processing
                                     ? "Menyimpan..."
-                                    : "Simpan Perubahan"}
+                                    : "Simpan"}
                             </Button>
                         </div>
                     </form>

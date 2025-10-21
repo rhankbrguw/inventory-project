@@ -2,7 +2,7 @@ import { Link, useForm } from "@inertiajs/react";
 import { useEffect } from "react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import PurchaseItemManager from "../Partials/PurchaseItemManager";
-import TransactionDetailsManager from "../Partials/TransactionDetailsManager";
+import TransactionDetailsManager from "../Partials/PurchaseDetailsManager";
 import { Button } from "@/Components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";

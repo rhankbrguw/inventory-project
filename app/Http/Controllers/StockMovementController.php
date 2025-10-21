@@ -8,10 +8,12 @@ use App\Http\Resources\StockMovementResource;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\Sell;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class StockMovementController extends Controller
@@ -19,10 +21,11 @@ class StockMovementController extends Controller
     public function index(Request $request): Response
     {
         $stockMovements = StockMovement::with([
-            'product', 'location', 'user',
+            'product', 'location',
             'reference' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
                     Purchase::class => ['supplier'],
+                    Sell::class => ['customer'],
                     StockTransfer::class => ['fromLocation', 'toLocation'],
                 ]);
             }
@@ -35,7 +38,7 @@ class StockMovementController extends Controller
                 });
             })
             ->when($request->input('location_id'), function ($query, $locationId) {
-                if ($locationId !== 'all') {
+                if ($locationId && $locationId !== 'all') {
                     $query->where('location_id', $locationId);
                 }
             })
@@ -45,7 +48,7 @@ class StockMovementController extends Controller
                 }
             })
             ->when($request->input('type'), function ($query, $type) {
-                if ($type !== 'all') {
+                if ($type && $type !== 'all') {
                     $query->where('type', $type);
                 }
             })
@@ -53,7 +56,7 @@ class StockMovementController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return inertia('StockMovements/Index', [
+        return Inertia::render('StockMovements/Index', [
             'stockMovements' => StockMovementResource::collection($stockMovements),
             'locations' => Location::orderBy('name')->get(['id', 'name']),
             'products' => ProductResource::collection(Product::orderBy('name')->get()),
