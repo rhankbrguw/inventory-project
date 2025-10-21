@@ -29,6 +29,7 @@ export const useSoftDeletes = ({ resourceName, data }) => {
         setIsProcessing(true);
         router.delete(route(`${resourceName}.destroy`, confirmingDeletion), {
             preserveScroll: true,
+            preserveState: false,
             onSuccess: () => {
                 if (isMountedRef.current) {
                     setConfirmingDeletion(null);
@@ -48,6 +49,7 @@ export const useSoftDeletes = ({ resourceName, data }) => {
                 {},
                 {
                     preserveScroll: true,
+                    preserveState: false,
                     onFinish: () => safeSetProcessing(false),
                 }
             );

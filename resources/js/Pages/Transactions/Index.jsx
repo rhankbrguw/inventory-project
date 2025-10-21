@@ -145,6 +145,7 @@ export default function Index({
                         data={transactions.data}
                         actions={renderActionDropdown}
                         showRoute={null}
+                        keyExtractor={(row) => row.unique_key}
                     />
                 </div>
 

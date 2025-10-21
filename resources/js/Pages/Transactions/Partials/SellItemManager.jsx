@@ -103,7 +103,7 @@ export default function SellItemManager({
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <Label htmlFor={`product_${index}`}>
-                                        Produk *
+                                        Produk
                                     </Label>
                                     <Button
                                         type="button"
@@ -151,7 +151,7 @@ export default function SellItemManager({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor={`quantity_${index}`}>
-                                        Jumlah *
+                                        Jumlah
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -192,7 +192,7 @@ export default function SellItemManager({
 
                                 <div className="space-y-2">
                                     <Label htmlFor={`sell_price_${index}`}>
-                                        Harga Jual *
+                                        Harga Jual
                                     </Label>
                                     <CurrencyInput
                                         id={`sell_price_${index}`}

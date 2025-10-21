@@ -28,7 +28,7 @@ export default function TransactionDetailsManager({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Detail Transaksi</CardTitle>
+                <CardTitle>Informasi Pembelian</CardTitle>
                 <CardDescription>
                     {isDetailsLocked
                         ? "Silakan isi minimal satu item pembelian di atas terlebih dahulu."

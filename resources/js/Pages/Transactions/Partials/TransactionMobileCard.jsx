@@ -28,7 +28,7 @@ export default function TransactionMobileCard({
                 className="cursor-pointer"
             >
                 <div className="text-lg font-bold mb-2">
-                    {formatCurrency(transaction.total_cost)}
+                    {formatCurrency(transaction.total_amount)}{" "}
                 </div>
                 <div className="text-xs space-y-1">
                     <p>
@@ -38,14 +38,12 @@ export default function TransactionMobileCard({
                         </span>
                     </p>
                     <p>
-                        {transaction.type === "Pembelian"
-                            ? "Supplier"
-                            : "Customer"}
-                        :{" "}
+                        {transaction.party_type ||
+                            (transaction.type === "Pembelian"
+                                ? "Supplier"
+                                : "Customer")}{" "}
                         <span className="font-medium">
-                            {transaction.supplier ||
-                                transaction.customer ||
-                                "-"}
+                            {transaction.party_name || "-"}{" "}
                         </span>
                     </p>
                     <p>

@@ -22,15 +22,28 @@ export default function Create({
             payment_method_type_id: null,
             notes: "",
             status: "Completed",
-            items: [{ product_id: null, quantity: "", sell_price: "" }],
+            items: [{ product_id: null, quantity: 1, sell_price: "" }],
         }
     );
 
-    const totalPrice = data.items.reduce((sum, item) => {
-        const quantity = parseFloat(item.quantity) || 0;
-        const price = parseFloat(item.sell_price) || 0;
-        return sum + quantity * price;
-    }, 0);
+    const isDetailsLocked = !data.location_id;
+    const selectedProductIds = data.items
+        .map((item) => item.product_id)
+        .filter(Boolean);
+
+    const isFirstItemIncomplete =
+        !data.items[0]?.product_id ||
+        !data.items[0]?.quantity ||
+        data.items[0]?.quantity <= 0 ||
+        !data.items[0]?.sell_price;
+
+    const calculateTotal = () => {
+        return data.items.reduce((sum, item) => {
+            const quantity = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.sell_price) || 0;
+            return sum + quantity * price;
+        }, 0);
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -42,23 +55,23 @@ export default function Create({
         });
     };
 
-    const detailsDisabled = !data.location_id;
-    const isSubmitDisabled =
-        processing ||
-        !isDirty ||
-        detailsDisabled ||
-        data.items.length === 0 ||
-        !data.items[0].product_id ||
-        !data.items[0].quantity ||
-        !data.items[0].sell_price;
-
     return (
         <ContentPageLayout
             auth={auth}
             title="Buat Penjualan Item"
             backRoute="transactions.index"
         >
-            <form onSubmit={submit} className="space-y-6">
+            <form onSubmit={submit} className="space-y-4">
+                <SellItemManager
+                    items={data.items}
+                    allProducts={allProducts}
+                    setData={setData}
+                    errors={errors}
+                    locationId={data.location_id}
+                    itemsDisabled={isDetailsLocked}
+                    selectedProductIds={selectedProductIds}
+                />
+
                 <SellDetailsManager
                     data={data}
                     setData={setData}
@@ -66,23 +79,14 @@ export default function Create({
                     locations={locations}
                     customers={customers}
                     paymentMethods={paymentMethods}
-                    detailsDisabled={detailsDisabled}
+                    isDetailsLocked={isDetailsLocked}
                 />
 
-                <SellItemManager
-                    items={data.items}
-                    allProducts={allProducts}
-                    setData={setData}
-                    errors={errors}
-                    locationId={data.location_id}
-                    itemsDisabled={detailsDisabled}
-                />
-
-                <div className="flex items-center justify-between gap-3 pt-4 border-t">
+                <div className="flex items-center justify-between gap-3">
                     <p className="text-xs sm:text-sm text-muted-foreground">
                         Total Penjualan <br />
                         <span className="text-lg sm:text-xl font-bold text-foreground">
-                            {formatCurrency(totalPrice)}
+                            {formatCurrency(calculateTotal())}
                         </span>
                     </p>
                     <div className="flex gap-2">
@@ -99,7 +103,12 @@ export default function Create({
                         <Button
                             size="sm"
                             className="px-3 py-1"
-                            disabled={isSubmitDisabled}
+                            disabled={
+                                processing ||
+                                !isDirty ||
+                                isDetailsLocked ||
+                                isFirstItemIncomplete
+                            }
                         >
                             {processing ? "Menyimpan..." : "Simpan"}
                         </Button>

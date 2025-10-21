@@ -17,6 +17,7 @@ export default function DataTable({
     showRouteKey = "id",
     rowClassName,
     footer,
+    keyExtractor = (row) => row.id,
 }) {
     const handleRowClick = (row) => {
         if (showRoute) {
@@ -32,14 +33,17 @@ export default function DataTable({
                         <TableRow>
                             {columns.map((col) => (
                                 <TableHead
-                                    key={col.accessorKey}
+                                    key={
+                                        col.accessorKey || col.id || col.header
+                                    }
                                     className={col.className}
                                 >
                                     {col.header}
                                 </TableHead>
                             ))}
                             {actions && (
-                                <TableHead className="text-center">
+                                <TableHead className="text-center w-[100px]">
+                                    {" "}
                                     Aksi
                                 </TableHead>
                             )}
@@ -48,7 +52,7 @@ export default function DataTable({
                     <TableBody>
                         {data.map((row) => (
                             <TableRow
-                                key={row.id}
+                                key={keyExtractor(row)}
                                 onClick={() => handleRowClick(row)}
                                 className={`${
                                     showRoute ? "cursor-pointer" : ""
@@ -56,7 +60,11 @@ export default function DataTable({
                             >
                                 {columns.map((col) => (
                                     <TableCell
-                                        key={col.accessorKey}
+                                        key={
+                                            col.accessorKey ||
+                                            col.id ||
+                                            col.header
+                                        }
                                         className={col.className}
                                     >
                                         {col.cell

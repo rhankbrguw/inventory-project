@@ -81,7 +81,7 @@ class SellController extends Controller
                         'location_id' => $validated['location_id'],
                         'type' => 'sell',
                         'quantity' => -(float) $item['quantity'],
-                        'cost_per_unit' => $inventory->average_cost,
+                        'cost_per_unit' => (float) $item['sell_price'],
                         'customer_id' => $validated['customer_id'],
                         'notes' => $validated['notes'],
                     ]);

@@ -46,6 +46,7 @@ class StockMovementResource extends JsonResource
                 'name' => $this->product->name,
                 'sku' => $this->product->sku,
                 'unit' => $this->product->unit,
+                'deleted_at' => $this->product->deleted_at?->toISOString(),
             ]),
             'location' => $this->whenLoaded('location', fn() => [
                 'id' => $this->location->id,

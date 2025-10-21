@@ -1,5 +1,11 @@
 import FormField from "@/Components/FormField";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/Components/ui/card";
 import {
     Select,
     SelectContent,
@@ -7,9 +13,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import { Textarea } from "@/Components/ui/textarea";
+import { Input } from "@/Components/ui/input";
 import DatePicker from "@/Components/DatePicker";
-import InputError from "@/Components/InputError";
 
 export default function SellDetailsManager({
     data,
@@ -18,19 +23,27 @@ export default function SellDetailsManager({
     locations,
     customers,
     paymentMethods,
-    detailsDisabled,
+    isDetailsLocked,
 }) {
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Informasi Penjualan</CardTitle>
+                <CardDescription>
+                    {isDetailsLocked
+                        ? "Pilih lokasi penjualan terlebih dahulu untuk mengisi item."
+                        : "Pilih tanggal, pelanggan, dan detail transaksi lainnya."}
+                </CardDescription>
             </CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-4">
-                <FormField label="Lokasi Penjualan *" htmlFor="location_id">
+            <CardContent className="grid sm:grid-cols-2 gap-6">
+                <FormField
+                    label="Lokasi Penjualan"
+                    htmlFor="location_id"
+                    error={errors.location_id}
+                >
                     <Select
-                        value={data.location_id?.toString()}
+                        value={data.location_id}
                         onValueChange={(value) => setData("location_id", value)}
-                        required
                     >
                         <SelectTrigger id="location_id">
                             <SelectValue placeholder="Pilih lokasi" />
@@ -46,34 +59,33 @@ export default function SellDetailsManager({
                             ))}
                         </SelectContent>
                     </Select>
-                    <InputError message={errors.location_id} />
                 </FormField>
 
                 <FormField
-                    label="Tanggal Transaksi *"
-                    htmlFor="transaction_date"
+                    label="Tanggal Transaksi"
+                    error={errors.transaction_date}
                 >
                     <DatePicker
                         value={data.transaction_date}
                         onSelect={(date) => setData("transaction_date", date)}
-                        disabled={detailsDisabled}
+                        disabled={isDetailsLocked}
                     />
-                    <InputError message={errors.transaction_date} />
                 </FormField>
 
-                <FormField label="Pelanggan" htmlFor="customer_id">
+                <FormField
+                    label="Pelanggan (Opsional)"
+                    htmlFor="customer_id"
+                    error={errors.customer_id}
+                >
                     <Select
-                        value={data.customer_id?.toString() || ""}
+                        value={data.customer_id || ""}
                         onValueChange={(value) =>
                             setData("customer_id", value || null)
                         }
-                        disabled={detailsDisabled}
+                        disabled={isDetailsLocked}
                     >
-                        <SelectTrigger
-                            id="customer_id"
-                            disabled={detailsDisabled}
-                        >
-                            <SelectValue placeholder="Pilih pelanggan (opsional)" />
+                        <SelectTrigger id="customer_id">
+                            <SelectValue placeholder="Pilih pelanggan" />
                         </SelectTrigger>
                         <SelectContent>
                             {customers.map((cust) => (
@@ -86,25 +98,22 @@ export default function SellDetailsManager({
                             ))}
                         </SelectContent>
                     </Select>
-                    <InputError message={errors.customer_id} />
                 </FormField>
 
                 <FormField
-                    label="Metode Pembayaran"
+                    label="Metode Pembayaran (Opsional)"
                     htmlFor="payment_method_type_id"
+                    error={errors.payment_method_type_id}
                 >
                     <Select
-                        value={data.payment_method_type_id?.toString() || ""}
+                        value={data.payment_method_type_id || ""}
                         onValueChange={(value) =>
                             setData("payment_method_type_id", value || null)
                         }
-                        disabled={detailsDisabled}
+                        disabled={isDetailsLocked}
                     >
-                        <SelectTrigger
-                            id="payment_method_type_id"
-                            disabled={detailsDisabled}
-                        >
-                            <SelectValue placeholder="Pilih metode (opsional)" />
+                        <SelectTrigger id="payment_method_type_id">
+                            <SelectValue placeholder="Pilih metode" />
                         </SelectTrigger>
                         <SelectContent>
                             {paymentMethods.map((method) => (
@@ -117,46 +126,23 @@ export default function SellDetailsManager({
                             ))}
                         </SelectContent>
                     </Select>
-                    <InputError message={errors.payment_method_type_id} />
                 </FormField>
 
-                <FormField
-                    label="Status Transaksi *"
-                    htmlFor="status"
-                    className="sm:col-span-2"
-                >
-                    <Select
-                        value={data.status}
-                        onValueChange={(value) => setData("status", value)}
-                        required
-                        disabled={detailsDisabled}
+                <div className="sm:col-span-2">
+                    <FormField
+                        label="Catatan (Opsional)"
+                        htmlFor="notes"
+                        error={errors.notes}
                     >
-                        <SelectTrigger id="status" disabled={detailsDisabled}>
-                            <SelectValue placeholder="Pilih status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Completed">Completed</SelectItem>
-                            <SelectItem value="Draft">Draft</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <InputError message={errors.status} />
-                </FormField>
-
-                <FormField
-                    label="Catatan (Opsional)"
-                    htmlFor="notes"
-                    className="sm:col-span-2"
-                >
-                    <Textarea
-                        id="notes"
-                        value={data.notes}
-                        onChange={(e) => setData("notes", e.target.value)}
-                        rows={3}
-                        placeholder="Catatan tambahan..."
-                        disabled={detailsDisabled}
-                    />
-                    <InputError message={errors.notes} />
-                </FormField>
+                        <Input
+                            id="notes"
+                            value={data.notes}
+                            onChange={(e) => setData("notes", e.target.value)}
+                            placeholder="Catatan tambahan untuk penjualan..."
+                            disabled={isDetailsLocked}
+                        />
+                    </FormField>
+                </div>
             </CardContent>
         </Card>
     );

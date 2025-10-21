@@ -124,20 +124,20 @@ export const stockColumns = [
     {
         accessorKey: "product.name",
         header: "Nama Item",
-        cell: ({ row }) => row.original.product?.name || "Produk Dihapus",
-        className: "text-left font-medium whitespace-nowrap px-4",
+        cell: ({ row }) => row.product?.name || "Produk Dihapus",
+        className: "text-center font-medium whitespace-nowrap px-4",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
-        cell: ({ row }) => row.original.product?.sku || "-",
+        cell: ({ row }) => row.product?.sku || "-",
         className: "text-center font-mono text-xs whitespace-nowrap px-4",
     },
     {
         accessorKey: "location.name",
         header: "Lokasi",
         cell: ({ row }) => {
-            const location = row.original.location;
+            const location = row.location;
             const isWarehouse = location?.type?.name === "Warehouse";
             return (
                 <div className="flex items-center justify-center">
@@ -155,14 +155,14 @@ export const stockColumns = [
     {
         accessorKey: "updated_at",
         header: "Aktivitas Terakhir",
-        cell: ({ row }) => formatRelativeTime(row.original.updated_at),
+        cell: ({ row }) => formatRelativeTime(row.updated_at),
         className: "text-center whitespace-nowrap px-4",
     },
     {
         accessorKey: "quantity",
         header: "Kuantitas",
         cell: ({ row }) => {
-            const item = row.original;
+            const item = row;
             const displayQuantity = Math.max(0, parseFloat(item.quantity || 0));
             return (
                 <span>
@@ -173,7 +173,7 @@ export const stockColumns = [
                 </span>
             );
         },
-        className: "text-right font-semibold whitespace-nowrap px-4",
+        className: "text-center font-semibold whitespace-nowrap px-4",
     },
 ];
 
@@ -200,12 +200,13 @@ export const transactionColumns = (auth) => [
     {
         accessorKey: "location",
         header: "Lokasi",
+        cell: ({ row }) => row.location || "-",
         className: "text-center whitespace-nowrap",
     },
     {
-        accessorKey: "party",
-        header: "Supplier",
-        cell: ({ row }) => row.default_supplier_name || "-",
+        accessorKey: "party_name",
+        header: "Supplier/Customer",
+        cell: ({ row }) => row.party_name || "-",
         className: "text-center whitespace-nowrap",
     },
     {
@@ -215,14 +216,15 @@ export const transactionColumns = (auth) => [
         className: "text-center whitespace-nowrap",
     },
     {
-        accessorKey: "total_cost",
+        accessorKey: "total_amount",
         header: "Total",
-        cell: ({ row }) => formatCurrency(row.total_cost),
+        cell: ({ row }) => formatCurrency(row.total_amount),
         className: "text-center font-semibold whitespace-nowrap",
     },
     {
         accessorKey: "user",
         header: "PIC",
+        cell: ({ row }) => row.user || "-",
         className: "text-center whitespace-nowrap",
     },
 ];
@@ -420,57 +422,58 @@ export const sellDetailColumns = [
     {
         accessorKey: "product.name",
         header: "Nama Item",
-        cell: ({ row }) => row.original.product?.name || "Produk Dihapus",
-        className: "text-left font-medium whitespace-nowrap px-4",
+        cell: ({ row }) => (
+            <div
+                className={cn(
+                    row.product?.deleted_at && "text-muted-foreground"
+                )}
+            >
+                {row.product?.name || "Produk Telah Dihapus"}
+                {row.product?.deleted_at && (
+                    <span className="ml-2 text-xs text-destructive">
+                        (Nonaktif)
+                    </span>
+                )}
+            </div>
+        ),
+        className: "text-center font-medium whitespace-nowrap px-4",
     },
     {
         accessorKey: "product.sku",
         header: "SKU",
-        cell: ({ row }) => row.original.product?.sku || "-",
+        cell: ({ row }) => row.product?.sku || "-",
         className: "text-center font-mono text-xs whitespace-nowrap px-4",
     },
     {
         accessorKey: "quantity",
         header: "Qty",
         cell: ({ row }) => {
-            const item = row.original;
+            const item = row;
             return `${formatNumber(Math.abs(item.quantity))} ${
                 item.product?.unit || ""
             }`;
         },
-        className: "text-right whitespace-nowrap px-4",
+        className: "text-center whitespace-nowrap px-4",
     },
     {
-        accessorKey: "sell_price",
+        accessorKey: "cost_per_unit",
         header: "Harga Jual",
         cell: ({ row }) => {
-            const item = row.original;
-            const sellPrice =
-                item.sell_price ||
-                item.reference?.items?.find(
-                    (i) => i.product_id === item.product_id
-                )?.sell_price ||
-                0;
-            return formatCurrency(sellPrice);
+            return formatCurrency(row.cost_per_unit || 0);
         },
-        className: "text-right whitespace-nowrap px-4",
+        className: "text-center whitespace-nowrap px-4",
     },
     {
         id: "total",
         header: "Total",
         cell: ({ row }) => {
-            const item = row.original;
+            const item = row;
             const quantity = Math.abs(item.quantity || 0);
-            const sellPrice =
-                item.sell_price ||
-                item.reference?.items?.find(
-                    (i) => i.product_id === item.product_id
-                )?.sell_price ||
-                0;
+            const sellPrice = item.cost_per_unit || 0;
             const total = quantity * sellPrice;
             return formatCurrency(total);
         },
-        className: "text-right font-semibold whitespace-nowrap px-4",
+        className: "text-center font-semibold whitespace-nowrap px-4",
     },
 ];
 
