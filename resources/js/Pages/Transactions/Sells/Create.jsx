@@ -2,10 +2,10 @@ import { useForm, usePage } from "@inertiajs/react";
 import { Link } from "@inertiajs/react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import { Button } from "@/Components/ui/button";
-import { Card, CardContent } from "@/Components/ui/card";
 import SellDetailsManager from "../Partials/SellDetailsManager";
 import SellItemManager from "../Partials/SellItemManager";
 import { formatCurrency } from "@/lib/utils";
+import { format } from "date-fns";
 
 export default function Create({
     auth,
@@ -14,15 +14,17 @@ export default function Create({
     allProducts,
     paymentMethods,
 }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        location_id: "",
-        customer_id: null,
-        transaction_date: new Date(),
-        payment_method_type_id: null,
-        notes: "",
-        status: "Completed",
-        items: [{ product_id: null, quantity: "", sell_price: "" }],
-    });
+    const { data, setData, post, processing, errors, reset, isDirty } = useForm(
+        {
+            location_id: "",
+            customer_id: null,
+            transaction_date: new Date(),
+            payment_method_type_id: null,
+            notes: "",
+            status: "Completed",
+            items: [{ product_id: null, quantity: "", sell_price: "" }],
+        }
+    );
 
     const totalPrice = data.items.reduce((sum, item) => {
         const quantity = parseFloat(item.quantity) || 0;
@@ -32,12 +34,18 @@ export default function Create({
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("transactions.sells.store"), {});
+        post(route("transactions.sells.store"), {
+            transform: (data) => ({
+                ...data,
+                transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
+            }),
+        });
     };
 
     const detailsDisabled = !data.location_id;
     const isSubmitDisabled =
         processing ||
+        !isDirty ||
         detailsDisabled ||
         data.items.length === 0 ||
         !data.items[0].product_id ||
@@ -47,7 +55,7 @@ export default function Create({
     return (
         <ContentPageLayout
             auth={auth}
-            title="Buat Transaksi Penjualan Baru"
+            title="Buat Penjualan Item"
             backRoute="transactions.index"
         >
             <form onSubmit={submit} className="space-y-6">
@@ -70,39 +78,33 @@ export default function Create({
                     itemsDisabled={detailsDisabled}
                 />
 
-                <Card>
-                    <CardContent className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="text-right sm:text-left w-full sm:w-auto">
-                            <p className="text-sm text-muted-foreground">
-                                Total Harga
-                            </p>
-                            <p className="text-2xl font-bold">
-                                {formatCurrency(totalPrice)}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <Link
-                                href={route("transactions.index")}
-                                className="w-full sm:w-auto"
-                            >
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full"
-                                >
-                                    Batal
-                                </Button>
-                            </Link>
+                <div className="flex items-center justify-between gap-3 pt-4 border-t">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                        Total Penjualan <br />
+                        <span className="text-lg sm:text-xl font-bold text-foreground">
+                            {formatCurrency(totalPrice)}
+                        </span>
+                    </p>
+                    <div className="flex gap-2">
+                        <Link href={route("transactions.index")}>
                             <Button
-                                type="submit"
-                                disabled={isSubmitDisabled}
-                                className="w-full sm:w-auto"
+                                variant="outline"
+                                type="button"
+                                size="sm"
+                                className="px-3 py-1"
                             >
-                                {processing ? "Menyimpan..." : "Simpan"}
+                                Batal
                             </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </Link>
+                        <Button
+                            size="sm"
+                            className="px-3 py-1"
+                            disabled={isSubmitDisabled}
+                        >
+                            {processing ? "Menyimpan..." : "Simpan"}
+                        </Button>
+                    </div>
+                </div>
             </form>
         </ContentPageLayout>
     );

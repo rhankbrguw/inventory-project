@@ -24,6 +24,11 @@ class Purchase extends Model
         'payment_method_type_id',
     ];
 
+    protected $casts = [
+        'transaction_date' => 'date',
+        'total_cost' => 'decimal:2',
+    ];
+
     public function type(): BelongsTo
     {
         return $this->belongsTo(Type::class);

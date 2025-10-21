@@ -122,7 +122,7 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                             />
                         </FormField>
                         <FormField
-                            label="Alamat"
+                            label="Alamat (Opsional)"
                             htmlFor="address"
                             error={errors.address}
                         >

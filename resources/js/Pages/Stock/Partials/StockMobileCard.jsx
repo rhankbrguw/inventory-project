@@ -4,15 +4,18 @@ import { Package, Warehouse } from "lucide-react";
 
 export default function StockMobileCard({ item, renderActionDropdown }) {
     const renderLocationIcon = (locType) => {
-        if (locType === "warehouse") {
-            return <Warehouse className="w-4 h-4 text-muted-foreground" />;
+        if (item.location?.type?.name === "Warehouse") {
+             return <Warehouse className="w-4 h-4 text-muted-foreground" />;
         }
         return <Package className="w-4 h-4 text-muted-foreground" />;
     };
 
+
     if (!item.product) {
         return null;
     }
+
+    const displayQuantity = Math.max(0, parseFloat(item.quantity || 0));
 
     return (
         <Card>
@@ -29,7 +32,7 @@ export default function StockMobileCard({ item, renderActionDropdown }) {
             </CardHeader>
             <CardContent>
                 <div className="text-lg font-bold">
-                    {formatNumber(item.quantity)}
+                    {formatNumber(displayQuantity)}
                     <span className="ml-1.5 text-sm font-normal text-muted-foreground">
                         {item.product?.unit || ""}
                     </span>

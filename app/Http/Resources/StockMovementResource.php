@@ -33,7 +33,6 @@ class StockMovementResource extends JsonResource
                 } elseif ($this->reference instanceof Sell) {
                     $url = route('transactions.sells.show', $this->reference->id);
                 } elseif ($this->reference instanceof StockTransfer) {
-                     // Maybe add a route for StockTransfer later if needed
                 }
 
                 return [
@@ -60,7 +59,7 @@ class StockMovementResource extends JsonResource
     private function getOriginDestination(): ?array
     {
         if (!$this->relationLoaded('reference')) {
-             return ['label' => 'Catatan', 'name' => $this->notes ?? '-'];
+            return ['label' => 'Catatan', 'name' => $this->notes ?? '-'];
         }
 
         if ($this->type === 'adjustment') {
@@ -79,10 +78,10 @@ class StockMovementResource extends JsonResource
                 'label' => 'Dijual ke',
                 'name' => $this->reference?->customer?->name ?? 'Pelanggan Umum',
             ],
-             'transfer_in' => [
-                 'label' => 'Diterima dari',
-                 'name' => $this->reference?->fromLocation?->name,
-             ],
+            'transfer_in' => [
+                'label' => 'Diterima dari',
+                'name' => $this->reference?->fromLocation?->name,
+            ],
             'transfer_out' => [
                 'label' => 'Dikirim ke',
                 'name' => $this->reference?->toLocation?->name,

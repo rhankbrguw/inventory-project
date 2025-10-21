@@ -28,7 +28,7 @@ export default function Edit({
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: location.name || "",
-        type_id: location.type.id?.toString() || "",
+        type_id: location.type?.id?.toString() || "",
         address: location.address || "",
         assignments:
             location.users?.map((user) => ({
@@ -38,7 +38,9 @@ export default function Edit({
     });
 
     const selectedLocationType = useMemo(() => {
-        return locationTypes.find((type) => type.id == data.type_id);
+        return locationTypes.find(
+            (type) => type.id.toString() === data.type_id
+        );
     }, [data.type_id, locationTypes]);
 
     const filteredRoles = useMemo(() => {
@@ -145,9 +147,7 @@ export default function Edit({
                             Batal
                         </Button>
                     </Link>
-                    <Button disabled={processing || !isDirty}>
-                        Simpan
-                    </Button>
+                    <Button disabled={processing || !isDirty}>Simpan</Button>
                 </div>
             </form>
         </ContentPageLayout>

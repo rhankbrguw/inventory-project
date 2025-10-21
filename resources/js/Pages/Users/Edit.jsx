@@ -18,16 +18,17 @@ import {
     CardDescription,
 } from "@/Components/ui/card";
 
-export default function Edit({ auth, user, roles }) {
+export default function Edit({ auth, user: userResource, roles }) {
+    const { data: user } = userResource;
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: user.data.name || "",
-        email: user.data.email || "",
-        role: user.data.role?.name || "",
+        name: user.name || "",
+        email: user.email || "",
+        role: user.role?.name || "",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("users.update", { user: user.data.id }), {
+        patch(route("users.update", { user: user.id }), {
             preserveScroll: true,
         });
     };
@@ -40,7 +41,7 @@ export default function Edit({ auth, user, roles }) {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{user.data.name}</CardTitle>
+                    <CardTitle>{user.name}</CardTitle>
                     <CardDescription>
                         Ubah detail untuk akun pengguna yang sudah ada.
                     </CardDescription>

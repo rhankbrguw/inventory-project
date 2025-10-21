@@ -127,7 +127,10 @@ export default function Index({
                 <MobileCardList
                     data={transactions.data}
                     renderItem={(transaction) => (
-                        <Link href={transaction.url} key={transaction.id}>
+                        <Link
+                            href={transaction.url}
+                            key={transaction.unique_key}
+                        >
                             <TransactionMobileCard
                                 transaction={transaction}
                                 renderActionDropdown={renderActionDropdown}

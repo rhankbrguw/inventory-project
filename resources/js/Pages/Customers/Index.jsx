@@ -30,18 +30,18 @@ export default function Index({
         filters
     );
     const [confirmingDeletion, setConfirmingDeletion] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const deleteCustomer = () => {
-        setIsDeleting(true);
+        setIsProcessing(true);
         router.delete(route("customers.destroy", confirmingDeletion), {
             preserveScroll: true,
             onSuccess: () => {
                 setConfirmingDeletion(null);
-                setIsDeleting(false);
+                setIsProcessing(false);
             },
             onError: () => {
-                setIsDeleting(false);
+                setIsProcessing(false);
             },
         });
     };
@@ -140,7 +140,7 @@ export default function Index({
                 open={confirmingDeletion !== null}
                 onOpenChange={() => setConfirmingDeletion(null)}
                 onConfirm={deleteCustomer}
-                isDeleting={isDeleting}
+                isDeleting={isProcessing}
                 title={`Hapus Pelanggan ${customerToDelete?.name}?`}
                 confirmText="Hapus Pelanggan"
                 description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data pelanggan secara permanen."

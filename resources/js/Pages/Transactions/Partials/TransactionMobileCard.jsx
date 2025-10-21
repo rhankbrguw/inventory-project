@@ -24,11 +24,7 @@ export default function TransactionMobileCard({
                 </div>
             </CardHeader>
             <CardContent
-                onClick={() =>
-                    router.get(
-                        route("transactions.purchases.show", transaction.id)
-                    )
-                }
+                onClick={() => router.get(transaction.url)}
                 className="cursor-pointer"
             >
                 <div className="text-lg font-bold mb-2">
@@ -42,9 +38,14 @@ export default function TransactionMobileCard({
                         </span>
                     </p>
                     <p>
-                        Supplier:{" "}
+                        {transaction.type === "Pembelian"
+                            ? "Supplier"
+                            : "Customer"}
+                        :{" "}
                         <span className="font-medium">
-                            {transaction.supplier}
+                            {transaction.supplier ||
+                                transaction.customer ||
+                                "-"}
                         </span>
                     </p>
                     <p>

@@ -20,18 +20,23 @@ import {
     CardDescription,
 } from "@/Components/ui/card";
 
-export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
+export default function Edit({
+    auth,
+    customer: customerResource,
+    customerTypes = { data: [] },
+}) {
+    const { data: customer } = customerResource;
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: customer.data.name || "",
-        type_id: customer.data.type_id || "",
-        email: customer.data.email || "",
-        phone: customer.data.phone?.replace("+62 ", "").replace(/-/g, "") || "",
-        address: customer.data.address || "",
+        name: customer.name || "",
+        type_id: customer.type_id || "",
+        email: customer.email || "",
+        phone: customer.phone?.replace("+62 ", "").replace(/-/g, "") || "",
+        address: customer.address || "",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("customers.update", customer.data.id), {
+        patch(route("customers.update", customer.id), {
             preserveScroll: true,
         });
     };
@@ -44,7 +49,7 @@ export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{customer.data.name}</CardTitle>
+                    <CardTitle>{customer.name}</CardTitle>
                     <CardDescription>
                         Perbarui detail untuk pelanggan yang sudah ada.
                     </CardDescription>
@@ -70,7 +75,7 @@ export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
                             error={errors.type_id}
                         >
                             <Select
-                                value={data.type_id.toString()}
+                                value={data.type_id?.toString() ?? ""}
                                 onValueChange={(value) =>
                                     setData("type_id", value)
                                 }
@@ -123,7 +128,7 @@ export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
                             />
                         </FormField>
                         <FormField
-                            label="Alamat"
+                            label="Alamat (Opsional)"
                             htmlFor="address"
                             error={errors.address}
                         >
@@ -142,9 +147,7 @@ export default function Edit({ auth, customer, customerTypes = { data: [] } }) {
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                {processing
-                                    ? "Menyimpan..."
-                                    : "Simpan"}
+                                {processing ? "Menyimpan..." : "Simpan"}
                             </Button>
                         </div>
                     </form>

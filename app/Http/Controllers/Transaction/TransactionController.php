@@ -7,13 +7,11 @@ use App\Http\Resources\Transaction\TransactionResource;
 use App\Models\Location;
 use App\Models\Purchase;
 use App\Models\Sell;
-use App\Models\StockMovement;
 use App\Models\Type;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -117,19 +115,26 @@ class TransactionController extends Controller
 
             if ($item->party_type === 'supplier') {
                 $model = Purchase::find($item->id);
-                if ($model)
+                if ($model) {
                     $model->load(array_merge($relationsToLoad, ['supplier', 'paymentMethodType']));
+                }
             } elseif ($item->party_type === 'customer') {
                 $model = Sell::find($item->id);
-                if ($model)
-                    $model->load(array_merge($relationsToLoad, ['customer', 'paymentMethodType']));
+                if ($model) {
+                    $model->load(array_merge($relationsToLoad, ['customer', 'paymentMethod']));
+                }
             }
 
             if ($model) {
-                $model->total_cost = $item->total_amount;
+                 if ($model instanceof Purchase) {
+                     $model->total_cost = $item->total_amount;
+                 } elseif ($model instanceof Sell) {
+                     $model->total_price = $item->total_amount;
+                 }
             }
             return $model;
         })->filter();
+
 
         $paginatedTransactions = new LengthAwarePaginator(
             $items,
