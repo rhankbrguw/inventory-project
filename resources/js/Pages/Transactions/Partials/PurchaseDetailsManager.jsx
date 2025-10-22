@@ -28,7 +28,7 @@ export default function TransactionDetailsManager({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Detail Transaksi</CardTitle>
+                <CardTitle>Informasi Pembelian</CardTitle>
                 <CardDescription>
                     {isDetailsLocked
                         ? "Silakan isi minimal satu item pembelian di atas terlebih dahulu."
@@ -97,7 +97,7 @@ export default function TransactionDetailsManager({
                     />
                 </FormField>
                 <FormField
-                    label="Metode Pembayaran (Opsional)"
+                    label="Metode Pembayaran"
                     htmlFor="payment_method_type_id"
                     error={errors.payment_method_type_id}
                 >

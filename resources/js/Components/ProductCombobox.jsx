@@ -17,7 +17,13 @@ import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function ProductCombobox({ products, value, onChange, error }) {
+export default function ProductCombobox({
+    products,
+    value,
+    onChange,
+    error,
+    disabledIds = [],
+}) {
     const [open, setOpen] = useState(false);
     const selectedProduct = products.find((p) => p.id === value);
 
@@ -57,6 +63,10 @@ export default function ProductCombobox({ products, value, onChange, error }) {
                                             onChange(product);
                                             setOpen(false);
                                         }}
+                                        disabled={
+                                            disabledIds.includes(product.id) &&
+                                            product.id !== value
+                                        }
                                         className="flex items-start"
                                     >
                                         <Check

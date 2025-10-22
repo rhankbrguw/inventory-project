@@ -3,41 +3,48 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Supplier extends Model
 {
-   use HasFactory;
+    use HasFactory, SoftDeletes;
 
-   protected $fillable = [
-      'name',
-      'contact_person',
-      'email',
-      'phone',
-      'address',
-      'notes',
-   ];
+    protected $fillable = [
+        'name',
+        'contact_person',
+        'email',
+        'phone',
+        'address',
+        'notes',
+    ];
 
-   public function products(): BelongsToMany
-   {
-      return $this->belongsToMany(Product::class, 'product_supplier');
-   }
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_supplier');
+    }
 
-   public function setPhoneAttribute($value)
-   {
-      if (empty($value)) {
-         $this->attributes['phone'] = null;
-         return;
-      }
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
 
-      $cleanedPhone = preg_replace('/[^\d\+]/', '', $value);
+    public function setPhoneAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['phone'] = null;
+            return;
+        }
 
-      if (Str::startsWith($cleanedPhone, '08')) {
-         $cleanedPhone = '+628' . substr($cleanedPhone, 2);
-      }
+        $cleanedPhone = preg_replace('/[^\d\+]/', '', $value);
 
-      $this->attributes['phone'] = $cleanedPhone;
-   }
+        if (Str::startsWith($cleanedPhone, '08')) {
+            $cleanedPhone = '+628' . substr($cleanedPhone, 2);
+        }
+
+        $this->attributes['phone'] = $cleanedPhone;
+    }
 }

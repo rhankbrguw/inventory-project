@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import { Button } from "./ui/button";
-import RoleBadge from "./RoleBadge";
+import UnifiedBadge from "./UnifiedBadge";
 
 const UserAvatar = ({ user }) => (
     <div className="relative">
@@ -48,7 +48,7 @@ const UserDropdownMenu = () => {
                             {user.email}
                         </p>
                         <div className="pt-1">
-                            <RoleBadge role={user.role} />
+                            <UnifiedBadge text={user.role?.name} />
                         </div>
                     </div>
                 </DropdownMenuLabel>
