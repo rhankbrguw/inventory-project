@@ -1,114 +1,118 @@
----
-
 # Inventory Management System
 
 A modern, containerized **Inventory Management System** built with **Laravel 11**, **React 18**, and **Docker**.
-The project follows clean architecture principles, ensuring scalability and maintainability.
 
 ---
 
 ## 🧰 Tech Stack
 
-* **Backend:** Laravel 11 (PHP 8.3)
-* **Frontend:** React 18 + Vite
-* **UI:** Inertia.js, Tailwind CSS, shadcn/ui
-* **Database:** MySQL 8.0
-* **Containerization:** Docker & Docker Compose
-* **Dev Environment:** WSL2 (Ubuntu)
+- **Backend:** Laravel 11 (PHP 8.3)
+- **Frontend:** React 18 + Vite + Inertia.js
+- **UI:** Tailwind CSS, shadcn/ui
+- **Database:** MySQL 8.0
+- **Container:** Docker & Docker Compose
 
 ---
 
 ## ⚙️ Prerequisites
 
-Make sure you have:
-
-1. **WSL2 (Ubuntu)**
-2. **Docker Desktop** (with WSL2 integration enabled)
-3. **Git** installed inside WSL
+- **WSL2 (Ubuntu)**
+- **Docker Desktop** (with WSL2 integration)
+- **Git**
 
 ---
 
 ## 🚀 Quick Start
 
-All commands are run **inside your WSL terminal**.
-
-### 1. Clone the Repository
+Run all commands **inside your WSL terminal**.
 
 ```bash
+# 1. Clone repository
 git clone https://github.com/MCN-maganger/inventory-management-system-laravel-react.git
 cd inventory-management-system-laravel-react
-```
 
-### 2. Copy Environment File
-
-```bash
+# 2. Copy environment file
 cp .env.example .env
-```
 
-### 3. Build & Start Containers
-
-```bash
+# 3. Start containers
 docker-compose up -d --build
-```
 
-### 4. Run Setup Script
-
-Once all containers are up, initialize the app:
-
-```bash
+# 4. Run setup (wait for containers to be fully up)
 chmod +x setup.sh
 ./setup.sh
 ```
 
-This script automatically:
+**Access the app:**
 
-* Installs Composer dependencies
-* Generates the app key
-* Runs migrations & seeders
-* Links storage
-* Fixes permissions & clears cache
+- Application: [http://localhost:8000](http://localhost:8000)
+- Vite Dev: [http://localhost:5173](http://localhost:5173)
 
----
+**Default login:**
 
-## 🌐 Access the App
-
-* **App:** [http://127.0.0.1:8000](http://127.0.0.1:8000)
-* **Vite Dev Server:** [http://127.0.0.1:5173](http://127.0.0.1:5173)
+- Email: `admin@example.com`
+- Password: `password`
 
 ---
 
-## 🧩 Daily Workflow
-
-Start your environment:
+## 🔧 Daily Commands
 
 ```bash
+# Start
 docker-compose up -d
+
+# Stop
+docker-compose down
+
+# View logs
+docker-compose logs -f app
+
+# Run artisan commands
+docker-compose exec app php artisan [command]
 ```
 
-Stop all containers:
+---
+
+## 🛠️ Troubleshooting
+
+**Database connection errors:**
+
+```bash
+# Wait 30-60 seconds for MySQL initialization
+docker-compose logs mysql
+```
+
+**Permission errors:**
+
+```bash
+docker-compose exec app chmod -R 777 storage bootstrap/cache
+```
+
+**APP_KEY errors:**
+
+```bash
+docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan config:clear
+```
+
+**Rebuild containers:**
 
 ```bash
 docker-compose down
-```
-
-View logs:
-
-```bash
-docker-compose logs -f app
+docker-compose up -d --build
 ```
 
 ---
 
-## 🏗️ Architecture Principles
+## 🏗️ Architecture
 
-* **Lean Controllers:** Only handle HTTP; logic lives in Models, FormRequests, and Resources.
-* **Component-Based Frontend:** Modular, reusable React components for consistency.
-* **Strict Validation:** Centralized business rules via Form Requests.
+- **Lean Controllers** - Logic in Models, FormRequests, Resources
+- **Component-Based Frontend** - Modular React components
+- **Docker-First** - Consistent dev environment
 
 ---
 
 ## 📄 License
 
-This project is open source and created for internship learning purposes.
+Open source - created for educational purposes.
 
 ---
