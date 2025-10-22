@@ -22,20 +22,14 @@ export default function Create({
             payment_method_type_id: null,
             notes: "",
             status: "Completed",
-            items: [{ product_id: null, quantity: 1, sell_price: "" }],
+            items: [{ product_id: "", quantity: 1, sell_price: "" }],
         }
     );
 
-    const isDetailsLocked = !data.location_id;
+    const isDetailsLocked = !data.items[0]?.product_id;
     const selectedProductIds = data.items
         .map((item) => item.product_id)
         .filter(Boolean);
-
-    const isFirstItemIncomplete =
-        !data.items[0]?.product_id ||
-        !data.items[0]?.quantity ||
-        data.items[0]?.quantity <= 0 ||
-        !data.items[0]?.sell_price;
 
     const calculateTotal = () => {
         return data.items.reduce((sum, item) => {
@@ -68,7 +62,6 @@ export default function Create({
                     setData={setData}
                     errors={errors}
                     locationId={data.location_id}
-                    itemsDisabled={isDetailsLocked}
                     selectedProductIds={selectedProductIds}
                 />
 
@@ -106,8 +99,7 @@ export default function Create({
                             disabled={
                                 processing ||
                                 !isDirty ||
-                                isDetailsLocked ||
-                                isFirstItemIncomplete
+                                isDetailsLocked
                             }
                         >
                             {processing ? "Menyimpan..." : "Simpan"}

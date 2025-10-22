@@ -101,7 +101,7 @@ export default function SellDetailsManager({
                 </FormField>
 
                 <FormField
-                    label="Metode Pembayaran (Opsional)"
+                    label="Metode Pembayaran"
                     htmlFor="payment_method_type_id"
                     error={errors.payment_method_type_id}
                 >

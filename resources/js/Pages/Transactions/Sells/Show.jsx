@@ -18,7 +18,7 @@ export default function Show({ auth, sell }) {
     return (
         <ContentPageLayout
             auth={auth}
-            title="Detail Transaksi Penjualan"
+            title="Detail Transaksi"
             backRoute="transactions.index"
         >
             <Card>
@@ -54,14 +54,6 @@ export default function Show({ auth, sell }) {
                         </Badge>
                     </div>
                     <div>
-                        <p className="text-muted-foreground">
-                            Metode Pembayaran
-                        </p>
-                        <p className="font-semibold">
-                            {data.payment_method?.name || "-"}
-                        </p>
-                    </div>
-                    <div>
                         <p className="text-muted-foreground">PIC</p>
                         <p className="font-semibold">{data.user?.name}</p>
                     </div>
@@ -74,16 +66,16 @@ export default function Show({ auth, sell }) {
                 </CardContent>
             </Card>
 
-            <Card className="mt-6">
+            <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle>Rincian Item Terjual</CardTitle>
+                    <CardTitle>Rincian Item</CardTitle>
                     <PrintButton>
                         <span className="hidden sm:inline">Cetak</span>
                     </PrintButton>
                 </CardHeader>
                 <CardContent>
                     <div className="md:hidden space-y-3">
-                        {data.items?.map((item) => (
+                        {data.items.map((item) => (
                             <Card
                                 key={item.id}
                                 className={cn(
@@ -121,7 +113,7 @@ export default function Show({ auth, sell }) {
                             </Card>
                         ))}
                         <div className="flex justify-between items-center pt-3 border-t font-bold text-base">
-                            <span>Total Penjualan</span>
+                            <span>Total Pembelian</span>
                             <span>{formatCurrency(data.total_price)}</span>
                         </div>
                     </div>
@@ -129,7 +121,7 @@ export default function Show({ auth, sell }) {
                     <div className="hidden md:block">
                         <DataTable
                             columns={sellDetailColumns}
-                            data={data.items || []}
+                            data={data.items}
                             footer={
                                 <TableFooter>
                                     <TableRow>
@@ -137,9 +129,9 @@ export default function Show({ auth, sell }) {
                                             colSpan={4}
                                             className="text-right font-bold"
                                         >
-                                            Total Penjualan
+                                            Total Pembelian
                                         </TableCell>
-                                        <TableCell className="text-right font-bold">
+                                        <TableCell className="text-center font-bold">
                                             {formatCurrency(data.total_price)}
                                         </TableCell>
                                     </TableRow>

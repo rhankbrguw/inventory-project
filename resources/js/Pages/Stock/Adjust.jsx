@@ -62,14 +62,14 @@ export default function Adjust({
                     <CardTitle>Formulir Penyesuaian Stok</CardTitle>
                     <CardDescription>
                         Gunakan formulir ini untuk mengurangi stok karena rusak,
-                        hilang, atau alasan lainnya. Masukkan jumlah yang
-                        ingin dikurangi.
+                        hilang, atau alasan lainnya. Masukkan jumlah yang ingin
+                        dikurangi.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField label="Produk *" htmlFor="product_id">
+                            <FormField label="Produk" htmlFor="product_id">
                                 <ProductCombobox
                                     products={productsData}
                                     value={data.product_id}
@@ -86,7 +86,7 @@ export default function Adjust({
                                     />
                                 )}
                             </FormField>
-                            <FormField label="Lokasi *" htmlFor="location_id">
+                            <FormField label="Lokasi" htmlFor="location_id">
                                 <Select
                                     value={data.location_id?.toString()}
                                     onValueChange={(value) =>
