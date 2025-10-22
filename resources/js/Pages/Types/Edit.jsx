@@ -47,7 +47,7 @@ export default function Edit({
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{type.name}</CardTitle>
+                    <CardTitle>{type.name}</CardTitle> ame
                     <CardDescription>
                         Ubah detail untuk tipe yang sudah ada.
                     </CardDescription>
@@ -145,7 +145,7 @@ export default function Edit({
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                Simpan Perubahan
+                                Simpan
                             </Button>
                         </div>
                     </form>

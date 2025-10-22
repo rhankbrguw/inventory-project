@@ -1,0 +1,146 @@
+import ContentPageLayout from "@/Components/ContentPageLayout";
+import PrintButton from "@/Components/PrintButton";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/Components/ui/card";
+import { TableFooter, TableRow, TableCell } from "@/Components/ui/table";
+import { Badge } from "@/Components/ui/badge";
+import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
+import DataTable from "@/Components/DataTable";
+import { sellDetailColumns } from "@/Constants/tableColumns";
+
+export default function Show({ auth, sell }) {
+    const { data } = sell;
+    return (
+        <ContentPageLayout
+            auth={auth}
+            title="Detail Transaksi"
+            backRoute="transactions.index"
+        >
+            <Card>
+                <CardHeader>
+                    <CardTitle>Informasi Umum</CardTitle>
+                    <CardDescription>{data.reference_code}</CardDescription>
+                </CardHeader>
+                <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+                    <div>
+                        <p className="text-muted-foreground">
+                            Lokasi Penjualan
+                        </p>
+                        <p className="font-semibold">{data.location?.name}</p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground">Pelanggan</p>
+                        <p className="font-semibold">
+                            {data.customer?.name || "Pelanggan Umum"}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground">
+                            Tanggal Transaksi
+                        </p>
+                        <p className="font-semibold">
+                            {formatDate(data.transaction_date)}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground">Status</p>
+                        <Badge variant="outline" className="capitalize">
+                            {data.status}
+                        </Badge>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground">PIC</p>
+                        <p className="font-semibold">{data.user?.name}</p>
+                    </div>
+                    {data.notes && (
+                        <div className="sm:col-span-3">
+                            <p className="text-muted-foreground">Catatan</p>
+                            <p className="font-semibold">{data.notes}</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                    <CardTitle>Rincian Item</CardTitle>
+                    <PrintButton>
+                        <span className="hidden sm:inline">Cetak</span>
+                    </PrintButton>
+                </CardHeader>
+                <CardContent>
+                    <div className="md:hidden space-y-3">
+                        {data.items.map((item) => (
+                            <Card
+                                key={item.id}
+                                className={cn(
+                                    "p-3",
+                                    item.product?.deleted_at &&
+                                        "opacity-60 bg-muted/50"
+                                )}
+                            >
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="font-medium text-sm">
+                                            {item.product?.name ||
+                                                "Produk Telah Dihapus"}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground font-mono">
+                                            {item.product?.sku || "-"}
+                                        </p>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span>
+                                            {formatNumber(
+                                                Math.abs(item.quantity)
+                                            )}{" "}
+                                            {item.product?.unit} ×{" "}
+                                            {formatCurrency(item.sell_price)}{" "}
+                                        </span>
+                                        <span className="font-semibold">
+                                            {formatCurrency(
+                                                Math.abs(item.quantity) *
+                                                    (item.sell_price || 0)
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                        <div className="flex justify-between items-center pt-3 border-t font-bold text-base">
+                            <span>Total Pembelian</span>
+                            <span>{formatCurrency(data.total_price)}</span>
+                        </div>
+                    </div>
+
+                    <div className="hidden md:block">
+                        <DataTable
+                            columns={sellDetailColumns}
+                            data={data.items}
+                            footer={
+                                <TableFooter>
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={4}
+                                            className="text-right font-bold"
+                                        >
+                                            Total Pembelian
+                                        </TableCell>
+                                        <TableCell className="text-center font-bold">
+                                            {formatCurrency(data.total_price)}
+                                        </TableCell>
+                                    </TableRow>
+                                </TableFooter>
+                            }
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+        </ContentPageLayout>
+    );
+}

@@ -15,6 +15,9 @@ export default function DataTable({
     actions,
     showRoute,
     showRouteKey = "id",
+    rowClassName,
+    footer,
+    keyExtractor = (row) => row.id,
 }) {
     const handleRowClick = (row) => {
         if (showRoute) {
@@ -30,14 +33,17 @@ export default function DataTable({
                         <TableRow>
                             {columns.map((col) => (
                                 <TableHead
-                                    key={col.accessorKey}
+                                    key={
+                                        col.accessorKey || col.id || col.header
+                                    }
                                     className={col.className}
                                 >
                                     {col.header}
                                 </TableHead>
                             ))}
                             {actions && (
-                                <TableHead className="text-center">
+                                <TableHead className="text-center w-[100px]">
+                                    {" "}
                                     Aksi
                                 </TableHead>
                             )}
@@ -46,13 +52,19 @@ export default function DataTable({
                     <TableBody>
                         {data.map((row) => (
                             <TableRow
-                                key={row.id}
+                                key={keyExtractor(row)}
                                 onClick={() => handleRowClick(row)}
-                                className={showRoute ? "cursor-pointer" : ""}
+                                className={`${
+                                    showRoute ? "cursor-pointer" : ""
+                                } ${rowClassName ? rowClassName(row) : ""}`}
                             >
                                 {columns.map((col) => (
                                     <TableCell
-                                        key={col.accessorKey}
+                                        key={
+                                            col.accessorKey ||
+                                            col.id ||
+                                            col.header
+                                        }
                                         className={col.className}
                                     >
                                         {col.cell
@@ -71,6 +83,7 @@ export default function DataTable({
                             </TableRow>
                         ))}
                     </TableBody>
+                    {footer}
                 </Table>
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>

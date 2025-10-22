@@ -8,28 +8,15 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import UserMobileCard from "./Partials/UserMobileCard";
 import Pagination from "@/Components/Pagination";
+import UserFilterCard from "./Partials/UserFilterCard";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/Components/ui/select";
-import { Card, CardContent } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import { Edit, Trash2, MoreVertical } from "lucide-react";
-
-const sortOptions = [
-    { value: "name_asc", label: "Nama (A-Z)" },
-    { value: "name_desc", label: "Nama (Z-A)" },
-];
 
 export default function Index({ auth, users, roles, filters = {} }) {
     const { params, setFilter } = useIndexPageFilters(
@@ -38,21 +25,20 @@ export default function Index({ auth, users, roles, filters = {} }) {
         "name_asc"
     );
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const deleteUser = () => {
-        setIsDeleting(true);
+        setIsProcessing(true);
         router.delete(route("users.destroy", confirmingUserDeletion), {
             preserveScroll: true,
-            onSuccess: () => {
-                setConfirmingUserDeletion(null);
-                setIsDeleting(false);
-            },
-            onError: () => {
-                setIsDeleting(false);
-            },
+            onSuccess: () => setConfirmingUserDeletion(null),
+            onFinish: () => setIsProcessing(false),
         });
     };
+
+    const userToDelete = users.data.find(
+        (u) => u.id === confirmingUserDeletion
+    );
 
     const renderActionDropdown = (user) => (
         <DropdownMenu>
@@ -90,55 +76,11 @@ export default function Index({ auth, users, roles, filters = {} }) {
             buttonLabel="Tambah Pengguna"
         >
             <div className="space-y-4">
-                <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
-                        <Input
-                            type="search"
-                            placeholder="Cari nama atau email..."
-                            value={params.search || ""}
-                            onChange={(e) =>
-                                setFilter("search", e.target.value)
-                            }
-                            className="w-full sm:w-auto sm:flex-grow"
-                        />
-                        <Select
-                            value={params.role || "all"}
-                            onValueChange={(value) => setFilter("role", value)}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Semua Jabatan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">
-                                    Semua Jabatan
-                                </SelectItem>
-                                {roles.map((r) => (
-                                    <SelectItem key={r.name} value={r.name}>
-                                        {r.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select
-                            value={params.sort || "name_asc"}
-                            onValueChange={(value) => setFilter("sort", value)}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Urutkan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {sortOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </CardContent>
-                </Card>
+                <UserFilterCard
+                    params={params}
+                    setFilter={setFilter}
+                    roles={roles}
+                />
 
                 <MobileCardList
                     data={users.data}
@@ -170,7 +112,8 @@ export default function Index({ auth, users, roles, filters = {} }) {
                 open={confirmingUserDeletion !== null}
                 onOpenChange={() => setConfirmingUserDeletion(null)}
                 onConfirm={deleteUser}
-                isDeleting={isDeleting}
+                isDeleting={isProcessing}
+                title={`Hapus Pengguna ${userToDelete?.name}?`}
                 confirmText="Hapus Pengguna"
                 description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus akun pengguna secara permanen dari sistem."
             />

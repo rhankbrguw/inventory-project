@@ -1,11 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { Package } from "lucide-react";
+import { formatCurrency, formatDate, cn, formatNumber } from "@/lib/utils";
+import { Badge } from "@/Components/ui/badge";
+import { Package, PackageCheck } from "lucide-react";
 
 export default function ProductMobileCard({ product, renderActionDropdown }) {
+    const isInactive = !!product.deleted_at;
+
     return (
-        <Card key={product.id}>
-            <CardHeader className="flex flex-row items-center justify-between">
+        <Card
+            key={product.id}
+            className={cn(isInactive && "opacity-50 bg-muted/50")}
+        >
+            <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="flex items-center gap-4">
                     {product.image_url ? (
                         <img
@@ -19,14 +25,11 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
                         </div>
                     )}
                     <div className="space-y-1">
-                        <CardTitle className="text-sm font-medium">
+                        <CardTitle className="text-base font-medium leading-tight">
                             {product.name}
                         </CardTitle>
                         <p className="text-xs text-muted-foreground">
                             SKU: {product.sku}
-                        </p>
-                        <p className="text-xs font-semibold">
-                            {product.type ? product.type.name : "No Type"}
                         </p>
                     </div>
                 </div>
@@ -36,9 +39,20 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
                 <div className="text-lg font-bold">
                     {formatCurrency(product.price)} / {product.unit}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                    Ditambahkan: {formatDate(product.created_at)}
-                </p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+                    <PackageCheck className="w-3 h-3" />
+                    <span>Stok: {formatNumber(product.total_stock)}</span>
+                    <span className="mx-1">·</span>
+                    <span>Ditambahkan: {formatDate(product.created_at)}</span>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                    <Badge variant={isInactive ? "destructive" : "success"}>
+                        {isInactive ? "Nonaktif" : "Aktif"}
+                    </Badge>
+                    <Badge variant="outline">
+                        {product.type?.name || "Tanpa Tipe"}
+                    </Badge>
+                </div>
             </CardContent>
         </Card>
     );

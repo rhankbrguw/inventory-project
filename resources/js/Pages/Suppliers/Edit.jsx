@@ -7,21 +7,22 @@ import { Button } from "@/Components/ui/button";
 import { InputWithPrefix } from "@/Components/InputWithPrefix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 
-export default function Edit({ auth, supplier }) {
+export default function Edit({ auth, supplier: supplierResource }) {
+    const { data: supplier } = supplierResource;
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: supplier.data.name,
-        contact_person: supplier.data.contact_person || "",
-        email: supplier.data.email || "",
-        phone: supplier.data.phone
-            ? supplier.data.phone.replace("+62", "")
+        name: supplier.name,
+        contact_person: supplier.contact_person || "",
+        email: supplier.email || "",
+        phone: supplier.phone
+            ? supplier.phone.replace("+62 ", "").replace(/-/g, "")
             : "",
-        address: supplier.data.address || "",
-        notes: supplier.data.notes || "",
+        address: supplier.address || "",
+        notes: supplier.notes || "",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("suppliers.update", supplier.data.id));
+        patch(route("suppliers.update", supplier.id));
     };
 
     return (
@@ -32,7 +33,7 @@ export default function Edit({ auth, supplier }) {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{supplier.data.name}</CardTitle>
+                    <CardTitle>{supplier.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-4">
@@ -134,7 +135,7 @@ export default function Edit({ auth, supplier }) {
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                Simpan Perubahan
+                                Simpan
                             </Button>
                         </div>
                     </form>

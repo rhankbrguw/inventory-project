@@ -6,7 +6,7 @@ import { Toaster, toast } from "sonner";
 
 export default function AuthenticatedLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
 
     useEffect(() => {
         if (flash && flash.success) {
@@ -16,6 +16,13 @@ export default function AuthenticatedLayout({ children }) {
             toast.error(flash.error);
         }
     }, [flash]);
+
+    useEffect(() => {
+        const errorValues = Object.values(errors);
+        if (errorValues.length > 0) {
+            toast.error(errorValues[0]);
+        }
+    }, [errors]);
 
     useEffect(() => {
         const handleWheelOnNumberInput = (event) => {

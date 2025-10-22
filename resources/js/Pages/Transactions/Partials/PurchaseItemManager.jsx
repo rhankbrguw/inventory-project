@@ -27,6 +27,7 @@ export default function PurchaseItemManager({
     suppliers,
     setData,
     errors,
+    selectedProductIds,
 }) {
     const handleItemChange = (index, field, value) => {
         let updatedItems = [...items];
@@ -142,6 +143,7 @@ export default function PurchaseItemManager({
                                         onChange={(product) =>
                                             handleProductSelect(index, product)
                                         }
+                                        disabledIds={selectedProductIds}
                                     />
                                     <InputError
                                         message={
@@ -223,9 +225,6 @@ export default function PurchaseItemManager({
                                             <SelectValue placeholder="Pilih supplier..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value={null}>
-                                                Tanpa Supplier
-                                            </SelectItem>
                                             {suppliers.map((supplier) => (
                                                 <SelectItem
                                                     key={supplier.id}

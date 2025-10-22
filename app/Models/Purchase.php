@@ -3,48 +3,59 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Model;
 
 class Purchase extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
-   protected $fillable = [
-      'location_id',
-      'supplier_id',
-      'user_id',
-      'reference_code',
-      'transaction_date',
-      'total_cost',
-      'status',
-      'notes',
-      'payment_method_type_id',
-   ];
+    protected $fillable = [
+        'type_id',
+        'location_id',
+        'supplier_id',
+        'user_id',
+        'reference_code',
+        'transaction_date',
+        'total_cost',
+        'status',
+        'notes',
+        'payment_method_type_id',
+    ];
 
-   public function location(): BelongsTo
-   {
-      return $this->belongsTo(Location::class);
-   }
+    protected $casts = [
+        'transaction_date' => 'date',
+        'total_cost' => 'decimal:2',
+    ];
 
-   public function supplier(): BelongsTo
-   {
-      return $this->belongsTo(Supplier::class);
-   }
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class);
+    }
 
-   public function user(): BelongsTo
-   {
-      return $this->belongsTo(User::class);
-   }
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
 
-   public function paymentMethodType(): BelongsTo
-   {
-      return $this->belongsTo(Type::class, 'payment_method_type_id');
-   }
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
-   public function stockMovements(): HasMany
-   {
-      return $this->hasMany(StockMovement::class);
-   }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function paymentMethodType(): BelongsTo
+    {
+        return $this->belongsTo(Type::class, 'payment_method_type_id');
+    }
+
+    public function stockMovements(): MorphMany
+    {
+        return $this->morphMany(StockMovement::class, 'reference');
+    }
 }
