@@ -17,6 +17,7 @@ import {
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Index({
     auth,
@@ -105,9 +106,10 @@ export default function Index({
                                     : "#"
                             }
                             key={location.id}
-                            className={
-                                !canCrudLocations ? "pointer-events-none" : ""
-                            }
+                            className={cn(
+                                !canCrudLocations ? "pointer-events-none" : "",
+                                location.deleted_at ? "opacity-50" : ""
+                            )}
                         >
                             <LocationMobileCard
                                 location={location}

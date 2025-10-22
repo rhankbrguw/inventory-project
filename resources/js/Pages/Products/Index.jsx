@@ -24,6 +24,7 @@ import {
     Archive,
     ArchiveRestore,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Index({
     auth,
@@ -126,7 +127,10 @@ export default function Index({
                         <Link
                             href={route("products.edit", product.id)}
                             key={product.id}
-                            className="block"
+                            className={cn(
+                                "block",
+                                product.deleted_at ? "opacity-50" : ""
+                            )}
                         >
                             <ProductMobileCard
                                 product={product}

@@ -17,6 +17,7 @@ import {
 } from "@/Components/ui/dropdown-menu";
 import { Button } from "@/Components/ui/button";
 import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Index({ auth, suppliers, filters = {} }) {
     const { params, setFilter } = useIndexPageFilters(
@@ -89,6 +90,9 @@ export default function Index({ auth, suppliers, filters = {} }) {
                         <Link
                             href={route("suppliers.edit", supplier.id)}
                             key={supplier.id}
+                            className={cn(
+                                supplier.deleted_at ? "opacity-50" : ""
+                            )}
                         >
                             <SupplierMobileCard
                                 supplier={supplier}
