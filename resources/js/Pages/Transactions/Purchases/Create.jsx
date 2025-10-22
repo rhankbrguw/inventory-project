@@ -2,7 +2,7 @@ import { Link, useForm } from "@inertiajs/react";
 import { useEffect } from "react";
 import ContentPageLayout from "@/Components/ContentPageLayout";
 import PurchaseItemManager from "../Partials/PurchaseItemManager";
-import TransactionDetailsManager from "../Partials/TransactionDetailsManager";
+import TransactionDetailsManager from "../Partials/PurchaseDetailsManager";
 import { Button } from "@/Components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
@@ -31,6 +31,9 @@ export default function Create({
     });
 
     const isDetailsLocked = !data.items[0]?.product_id;
+    const selectedProductIds = data.items
+        .map((item) => item.product_id)
+        .filter(Boolean);
 
     useEffect(() => {
         const firstItemSupplier = data.items[0]?.supplier_id;
@@ -68,6 +71,7 @@ export default function Create({
                     suppliers={suppliers}
                     setData={setData}
                     errors={errors}
+                    selectedProductIds={selectedProductIds}
                 />
 
                 <TransactionDetailsManager

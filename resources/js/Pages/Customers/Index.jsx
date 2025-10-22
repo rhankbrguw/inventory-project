@@ -8,52 +8,47 @@ import DataTable from "@/Components/DataTable";
 import MobileCardList from "@/Components/MobileCardList";
 import CustomerMobileCard from "./Partials/CustomerMobileCard";
 import Pagination from "@/Components/Pagination";
+import QuickAddTypeModal from "@/Components/QuickAddTypeModal";
+import CustomerFilterCard from "./Partials/CustomerFilterCard";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/Components/ui/select";
-import { Card, CardContent } from "@/Components/ui/card";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Edit, Trash2, MoreVertical } from "lucide-react";
+import { Edit, Trash2, MoreVertical, PlusCircle } from "lucide-react";
 
-const sortOptions = [
-    { value: "newest", label: "Pelanggan Terbaru" },
-    { value: "oldest", label: "Pelanggan Terlama" },
-    { value: "name_asc", label: "Nama (A-Z)" },
-    { value: "name_desc", label: "Nama (Z-A)" },
-];
-
-export default function Index({ auth, customers, filters = {} }) {
+export default function Index({
+    auth,
+    customers,
+    filters = {},
+    customerTypes = { data: [] },
+}) {
     const { params, setFilter } = useIndexPageFilters(
         "customers.index",
         filters
     );
     const [confirmingDeletion, setConfirmingDeletion] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const deleteCustomer = () => {
-        setIsDeleting(true);
+        setIsProcessing(true);
         router.delete(route("customers.destroy", confirmingDeletion), {
             preserveScroll: true,
             onSuccess: () => {
                 setConfirmingDeletion(null);
-                setIsDeleting(false);
+                setIsProcessing(false);
             },
             onError: () => {
-                setIsDeleting(false);
+                setIsProcessing(false);
             },
         });
     };
+
+    const customerToDelete = customers.data.find(
+        (c) => c.id === confirmingDeletion
+    );
 
     const renderActionDropdown = (customer) => (
         <DropdownMenu>
@@ -88,39 +83,29 @@ export default function Index({ auth, customers, filters = {} }) {
             title="Manajemen Pelanggan"
             createRoute="customers.create"
             buttonLabel="Tambah Pelanggan"
+            headerActions={
+                <QuickAddTypeModal
+                    group="customer_type"
+                    title="Tambah Tipe Pelanggan Cepat"
+                    description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
+                    existingTypes={customerTypes.data}
+                    trigger={
+                        <Button
+                            variant="outline"
+                            className="hidden sm:flex items-center gap-2"
+                        >
+                            <PlusCircle className="w-4 h-4" /> Tambah Tipe
+                        </Button>
+                    }
+                />
+            }
         >
             <div className="space-y-4">
-                <Card>
-                    <CardContent className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-6">
-                        <Input
-                            type="search"
-                            placeholder="Cari nama, email, atau telepon..."
-                            value={params.search || ""}
-                            onChange={(e) =>
-                                setFilter("search", e.target.value)
-                            }
-                            className="w-full sm:w-auto sm:flex-grow"
-                        />
-                        <Select
-                            value={params.sort || "newest"}
-                            onValueChange={(value) => setFilter("sort", value)}
-                        >
-                            <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Urutkan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {sortOptions.map((opt) => (
-                                    <SelectItem
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </CardContent>
-                </Card>
+                <CustomerFilterCard
+                    params={params}
+                    setFilter={setFilter}
+                    customerTypes={customerTypes}
+                />
 
                 <MobileCardList
                     data={customers.data}
@@ -155,7 +140,8 @@ export default function Index({ auth, customers, filters = {} }) {
                 open={confirmingDeletion !== null}
                 onOpenChange={() => setConfirmingDeletion(null)}
                 onConfirm={deleteCustomer}
-                isDeleting={isDeleting}
+                isDeleting={isProcessing}
+                title={`Hapus Pelanggan ${customerToDelete?.name}?`}
                 confirmText="Hapus Pelanggan"
                 description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data pelanggan secara permanen."
             />
