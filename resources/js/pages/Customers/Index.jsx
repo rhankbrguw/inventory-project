@@ -27,27 +27,23 @@ export default function Index({
 }) {
     const { params, setFilter } = useIndexPageFilters(
         "customers.index",
-        filters
+        filters,
     );
     const [confirmingDeletion, setConfirmingDeletion] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const deleteCustomer = () => {
         setIsProcessing(true);
+
         router.delete(route("customers.destroy", confirmingDeletion), {
             preserveScroll: true,
-            onSuccess: () => {
-                setConfirmingDeletion(null);
-                setIsProcessing(false);
-            },
-            onError: () => {
-                setIsProcessing(false);
-            },
+            onSuccess: () => setConfirmingDeletion(null),
+            onFinish: () => setIsProcessing(false),
         });
     };
 
     const customerToDelete = customers.data.find(
-        (c) => c.id === confirmingDeletion
+        (c) => c.id === confirmingDeletion,
     );
 
     const renderActionDropdown = (customer) => (

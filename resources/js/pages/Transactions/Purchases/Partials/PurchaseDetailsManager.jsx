@@ -44,12 +44,6 @@ export default function TransactionDetailsManager({
                     "yyyy-MM-dd",
                 ),
             }),
-            onSuccess: () => {
-                onClose();
-            },
-            onError: (formErrors) => {
-                console.error(formErrors);
-            },
         });
     };
 

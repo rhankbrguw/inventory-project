@@ -47,11 +47,6 @@ chmod +x setup.sh
 - Application: [http://localhost:8000](http://localhost:8000)
 - Vite Dev: [http://localhost:5173](http://localhost:5173)
 
-**Default login:**
-
-- Email: `admin@example.com`
-- Password: `password`
-
 ---
 
 ## 🔧 Daily Commands

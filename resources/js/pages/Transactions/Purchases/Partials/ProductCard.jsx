@@ -11,12 +11,11 @@ export default function ProductCard({
     const imageUrl = product.image_path
         ? `/storage/${product.image_path}`
         : "https://placehold.co/300x300/f1f5f9/a3a3a3?text=No+Image";
-
     return (
         <div
             onClick={!processing ? onClick : undefined}
             className={cn(
-                "group rounded-lg border bg-card overflow-hidden transition-all relative",
+                "group rounded-md border bg-card overflow-hidden transition-all relative",
                 selected
                     ? "ring-2 ring-primary border-primary shadow-sm"
                     : "border-border hover:border-primary/50 hover:shadow-sm",
@@ -25,7 +24,7 @@ export default function ProductCard({
         >
             {processing && (
                 <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10 backdrop-blur-[1px]">
-                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
             <div className="aspect-square w-full bg-muted/30 relative overflow-hidden">
@@ -41,9 +40,9 @@ export default function ProductCard({
                 />
                 {selected && (
                     <div className="absolute inset-0 bg-primary/15 flex items-center justify-center">
-                        <div className="w-7 h-7 rounded-full bg-primary shadow-md flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary shadow-md flex items-center justify-center">
                             <Check
-                                className="w-4 h-4 text-primary-foreground"
+                                className="w-3.5 h-3.5 text-primary-foreground"
                                 strokeWidth={2.5}
                             />
                         </div>
@@ -51,13 +50,13 @@ export default function ProductCard({
                 )}
             </div>
             <div className="p-1.5 space-y-0.5 bg-card">
-                <p className="font-semibold text-[11px] leading-tight line-clamp-1 text-foreground">
+                <p className="font-semibold text-[10px] leading-tight line-clamp-2 text-foreground">
                     {product.name}
                 </p>
                 <p className="text-[9px] text-muted-foreground font-mono leading-tight truncate">
                     {product.sku}
                 </p>
-                <p className="text-xs font-bold text-primary pt-0.5">
+                <p className="text-[11px] font-bold text-primary pt-0.5">
                     {formatCurrency(product.price)}
                 </p>
             </div>

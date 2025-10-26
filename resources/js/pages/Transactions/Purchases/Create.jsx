@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Head } from "@inertiajs/react";
-import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
+import ContentPageLayout from "@/components/ContentPageLayout";
 import TransactionDetailsManager from "./Partials/PurchaseDetailsManager";
 import ProductCard from "./Partials/ProductCard";
 import PurchaseCart from "./Partials/PurchaseCart";
@@ -69,6 +69,7 @@ export default function Create({
             }),
         [products, searchQuery, selectedType],
     );
+
     const cartProps = {
         cartGroups,
         hasSelectedGroups,
@@ -87,11 +88,13 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout>
-            <Head title="Buat Pembelian Barang" />
-
-            <div className="h-[calc(100vh-7rem)] flex flex-col">
-                <div className="flex-shrink-0 space-y-2 p-4 border-b bg-card">
+        <ContentPageLayout
+            auth={auth}
+            title="Buat Pembelian"
+            backRoute="transactions.index"
+        >
+            <div className="h-[calc(100vh-12rem)] flex flex-col">
+                <div className="flex-shrink-0 space-y-3 mb-4">
                     <div className="relative">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <Input
@@ -101,12 +104,12 @@ export default function Create({
                             className="pl-9 h-9 text-sm"
                         />
                     </div>
-                    <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pl-9">
                         <button
                             type="button"
                             onClick={() => setSelectedType("all")}
                             className={cn(
-                                "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
+                                "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border snap-start flex-shrink-0",
                                 selectedType === "all"
                                     ? "bg-primary text-primary-foreground border-primary"
                                     : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
@@ -122,7 +125,7 @@ export default function Create({
                                     setSelectedType(type.id.toString())
                                 }
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
+                                    "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border snap-start flex-shrink-0",
                                     selectedType === type.id.toString()
                                         ? "bg-primary text-primary-foreground border-primary"
                                         : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
@@ -134,7 +137,7 @@ export default function Create({
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto overscroll-contain p-4">
+                <div className="flex-1 overflow-y-auto overscroll-contain">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2">
                         {filteredProducts.length > 0 ? (
                             filteredProducts.map((product) => (
@@ -216,6 +219,6 @@ export default function Create({
                     />
                 </DialogContent>
             </Dialog>
-        </AuthenticatedLayout>
+        </ContentPageLayout>
     );
 }

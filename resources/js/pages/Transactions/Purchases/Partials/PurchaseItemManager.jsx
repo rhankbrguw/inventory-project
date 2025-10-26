@@ -85,24 +85,29 @@ export default function PurchaseItemManager({
                                 <Package className="w-4 h-4 text-primary flex-shrink-0" />
                                 {supplierName}
                             </Label>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                    onRemoveSupplierGroup(groupData.supplier_id)
-                                }
-                                disabled={
-                                    isGroupProcessing || processingItem !== null
-                                }
-                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                            >
-                                {isGroupProcessing ? (
-                                    <LoadingSpinner />
-                                ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                )}
-                            </Button>
+                            {isSelected && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                        onRemoveSupplierGroup(
+                                            groupData.supplier_id,
+                                        )
+                                    }
+                                    disabled={
+                                        isGroupProcessing ||
+                                        processingItem !== null
+                                    }
+                                    className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                >
+                                    {isGroupProcessing ? (
+                                        <LoadingSpinner />
+                                    ) : (
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    )}
+                                </Button>
+                            )}
                         </div>
 
                         <div className="p-2.5 space-y-2">
@@ -122,7 +127,7 @@ export default function PurchaseItemManager({
                                         key={item.id}
                                         className="pb-2 border-b last:border-b-0 last:pb-0"
                                     >
-                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                        <div className="flex items-center justify-between gap-2 mb-2">
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-semibold text-xs leading-tight truncate text-foreground">
                                                     {item.product.name}
@@ -142,12 +147,12 @@ export default function PurchaseItemManager({
                                                     isItemProcessing ||
                                                     isGroupProcessing
                                                 }
-                                                className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
                                             >
                                                 {isItemProcessing ? (
                                                     <LoadingSpinner />
                                                 ) : (
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-3.5 w-3.5" />
                                                 )}
                                             </Button>
                                         </div>
@@ -210,10 +215,8 @@ export default function PurchaseItemManager({
                                                             cleanNumberString(
                                                                 formattedValue,
                                                             );
-
                                                         e.target.value =
                                                             cleanedValue;
-
                                                         if (
                                                             formattedValue !==
                                                             cleanedValue
@@ -223,7 +226,6 @@ export default function PurchaseItemManager({
                                                                 cleanedValue,
                                                             );
                                                         }
-
                                                         setTimeout(() => {
                                                             e.target.select();
                                                         }, 0);

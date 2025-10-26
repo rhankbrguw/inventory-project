@@ -2,8 +2,8 @@ import { useForm, usePage } from "@inertiajs/react";
 import { Link } from "@inertiajs/react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import { Button } from "@/components/ui/button";
-import SellDetailsManager from "../Partials/SellDetailsManager";
-import SellItemManager from "../Partials/SellItemManager";
+import SellDetailsManager from "./Partials/SellDetailsManager";
+import SellItemManager from "./Partials/SellItemManager";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 

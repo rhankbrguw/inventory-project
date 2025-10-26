@@ -102,7 +102,7 @@ class CheckoutController extends Controller
             $user->cartItems()->where("supplier_id", $supplierId)->delete();
         });
 
-        return Redirect::route("transactions.purchases.create")->with(
+        return Redirect::route("transactions.index")->with(
             "success",
             "Transaksi pembelian berhasil disimpan.",
         );
