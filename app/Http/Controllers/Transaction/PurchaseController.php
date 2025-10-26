@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseRequest;
+use App\Http\Resources\CartItemResource;
 use App\Http\Resources\Transaction\PurchaseResource;
 use App\Models\Inventory;
 use App\Models\Location;
@@ -12,6 +13,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Carbon;
@@ -38,6 +40,12 @@ class PurchaseController extends Controller
 
     public function create(): Response
     {
+        $user = Auth::user();
+        $cartItems = $user
+            ->cartItems()
+            ->with(["product", "supplier"])
+            ->get();
+
         return Inertia::render("Transactions/Purchases/Create", [
             "locations" => Location::orderBy("name")->get(["id", "name"]),
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
@@ -59,6 +67,7 @@ class PurchaseController extends Controller
             "productTypes" => Type::where("group", Type::GROUP_PRODUCT)
                 ->orderBy("name")
                 ->get(["id", "name"]),
+            "cart" => CartItemResource::collection($cartItems),
         ]);
     }
 
@@ -78,12 +87,13 @@ class PurchaseController extends Controller
             $validated,
             $totalCost,
             $purchaseType,
+            $request,
         ) {
             $purchase = Purchase::create([
                 "type_id" => $purchaseType->id,
                 "location_id" => $validated["location_id"],
                 "supplier_id" => $validated["supplier_id"],
-                "user_id" => auth()->id(),
+                "user_id" => $request->user()->id,
                 "reference_code" => "PO-" . now()->format("Ymd-His"),
                 "transaction_date" => Carbon::parse(
                     $validated["transaction_date"],
