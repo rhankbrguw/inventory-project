@@ -63,52 +63,72 @@
     }
     body {
         @apply bg-background text-foreground;
+        font-family: "Montserrat", sans-serif;
+    }
+
+    [data-state="open"] > div[vaul-overlay] {
+        @apply backdrop-blur-sm bg-background/20;
+    }
+
+    [data-state="open"] > div[vaul-overlay][vaul-snap-points] {
+        @apply backdrop-blur-sm bg-background/20;
     }
 }
 
 @layer components {
-    @layer components {
-        .role-super-admin {
-            @apply bg-primary text-primary-foreground;
+    .card {
+        @apply bg-card text-card-foreground border-border rounded-xl;
+    }
+    .role-super-admin {
+        @apply bg-primary text-primary-foreground;
+    }
+    .role-warehouse-manager {
+        @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
+    }
+    .role-branch-manager {
+        @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+    }
+    .role-cashier {
+        @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200;
+    }
+    .role-default {
+        @apply bg-muted text-muted-foreground;
+    }
+    .customer-type-individu {
+        @apply bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200;
+    }
+    .customer-type-cabang {
+        @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200;
+    }
+    .customer-type-mitra {
+        @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200;
+    }
+    @media print {
+        .print-hidden {
+            display: none !important;
         }
-        .role-warehouse-manager {
-            @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
+        .print-full-width {
+            margin-left: 0 !important;
+            width: 100% !important;
         }
-        .role-branch-manager {
-            @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300;
+        main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
         }
-        .role-cashier {
-            @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300;
+        body {
+            background-color: white !important;
         }
-        .role-default {
-            @apply bg-muted text-muted-foreground;
-        }
+    }
+}
 
-        .customer-type-individu {
-            @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
-        }
-        .customer-type-cabang {
-            @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300;
-        }
-        .customer-type-mitra {
-            @apply bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300;
-        }
-        @media print {
-            .print-hidden {
-                display: none !important;
-            }
-            .print-full-width {
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-            main {
-                padding: 0 !important;
-                margin: 0 !important;
-                max-width: 100% !important;
-            }
-            body {
-                background-color: white !important;
-            }
-        }
+@layer utilities {
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 }
