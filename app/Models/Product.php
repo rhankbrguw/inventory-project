@@ -14,14 +14,14 @@ class Product extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'type_id',
-        'default_supplier_id',
-        'name',
-        'sku',
-        'description',
-        'price',
-        'unit',
-        'image_path',
+        "type_id",
+        "default_supplier_id",
+        "name",
+        "sku",
+        "description",
+        "price",
+        "unit",
+        "image_path",
     ];
 
     public function type(): BelongsTo
@@ -31,12 +31,12 @@ class Product extends Model
 
     public function defaultSupplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class, 'default_supplier_id');
+        return $this->belongsTo(Supplier::class, "default_supplier_id");
     }
 
     public function suppliers(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, 'product_supplier');
+        return $this->belongsToMany(Supplier::class, "product_supplier");
     }
 
     public function inventories(): HasMany
@@ -44,8 +44,13 @@ class Product extends Model
         return $this->hasMany(Inventory::class);
     }
 
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
     public function locations(): BelongsToMany
     {
-        return $this->belongsToMany(Location::class, 'inventories');
+        return $this->belongsToMany(Location::class, "inventories");
     }
 }

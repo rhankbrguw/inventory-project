@@ -14,17 +14,17 @@ class Supplier extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'contact_person',
-        'email',
-        'phone',
-        'address',
-        'notes',
+        "name",
+        "contact_person",
+        "email",
+        "phone",
+        "address",
+        "notes",
     ];
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'product_supplier');
+        return $this->belongsToMany(Product::class, "product_supplier");
     }
 
     public function purchases(): HasMany
@@ -32,19 +32,24 @@ class Supplier extends Model
         return $this->hasMany(Purchase::class);
     }
 
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
     public function setPhoneAttribute($value)
     {
         if (empty($value)) {
-            $this->attributes['phone'] = null;
+            $this->attributes["phone"] = null;
             return;
         }
 
-        $cleanedPhone = preg_replace('/[^\d\+]/', '', $value);
+        $cleanedPhone = preg_replace("/[^\d\+]/", "", $value);
 
-        if (Str::startsWith($cleanedPhone, '08')) {
-            $cleanedPhone = '+628' . substr($cleanedPhone, 2);
+        if (Str::startsWith($cleanedPhone, "08")) {
+            $cleanedPhone = "+628" . substr($cleanedPhone, 2);
         }
 
-        $this->attributes['phone'] = $cleanedPhone;
+        $this->attributes["phone"] = $cleanedPhone;
     }
 }

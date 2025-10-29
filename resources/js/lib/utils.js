@@ -10,11 +10,14 @@ export function formatCurrency(amount) {
     if (isNaN(numberAmount)) {
         return "Rp0";
     }
+
+    const hasDecimal = numberAmount % 1 !== 0;
+
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        maximumFractionDigits: hasDecimal ? 2 : 0,
     }).format(numberAmount);
 }
 
@@ -68,7 +71,19 @@ export function formatNumber(value) {
     if (isNaN(numberValue)) {
         return "0";
     }
-    return new Intl.NumberFormat("id-ID").format(numberValue);
+
+    if (numberValue % 1 === 0) {
+        return numberValue.toLocaleString("id-ID", {
+            useGrouping: true,
+            maximumFractionDigits: 0,
+        });
+    }
+
+    return numberValue.toLocaleString("id-ID", {
+        useGrouping: false,
+        maximumFractionDigits: 4,
+        minimumFractionDigits: 0,
+    });
 }
 
 export function generateHslColorFromString(str) {
