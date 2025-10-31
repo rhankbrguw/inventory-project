@@ -13,14 +13,16 @@ class StorePurchaseCartItemRequest extends FormRequest
 
     public function rules(): array
     {
+        $uniqueProductRule = new UniqueRule("purchase_cart_items");
+        $uniqueProductRule->where("user_id", $this->user()->id);
+        $uniqueProductRule->where("supplier_id", $this->input("supplier_id"));
+
         return [
             "product_id" => [
                 "required",
                 "integer",
                 "exists:products,id,deleted_at,NULL",
-                new UniqueRule("purchase_cart_items")
-                    ->where("user_id", $this->user()->id)
-                    ->where("supplier_id", $this->input("supplier_id")),
+                $uniqueProductRule,
             ],
             "supplier_id" => ["required", "integer", "exists:suppliers,id"],
             "quantity" => ["nullable", "numeric", "min:0.0001"],
