@@ -1,11 +1,18 @@
-import { useForm, usePage } from "@inertiajs/react";
-import { Link } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import { Button } from "@/components/ui/button";
-import SellDetailsManager from "./Partials/SellDetailsManager";
-import SellItemManager from "./Partials/SellItemManager";
-import { formatCurrency } from "@/lib/utils";
-import { format } from "date-fns";
+import React, { useState, useMemo } from "react";
+import { Head } from "@inertiajs/react";
+import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useSellCart } from "@/hooks/useSellCart";
+import SellProductGrid from "./Partials/SellProductGrid";
+import SellCart from "./Partials/SellCart";
+import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
 
 export default function Create({
     auth,
@@ -13,96 +20,127 @@ export default function Create({
     customers,
     allProducts,
     paymentMethods,
+    productTypes = [],
+    cart: { data: initialCart = [] },
 }) {
-    const { data, setData, post, processing, errors, reset, isDirty } = useForm(
-        {
-            location_id: "",
-            customer_id: null,
-            transaction_date: new Date(),
-            payment_method_type_id: null,
-            notes: "",
-            status: "Completed",
-            items: [{ product_id: "", quantity: 1, sell_price: "" }],
-        },
+    const [selectedLocationId, setSelectedLocationId] = useState(
+        initialCart[0]?.location?.id?.toString() || "",
+    );
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedType, setSelectedType] = useState("all");
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+    const {
+        cart,
+        selectedProductIds,
+        processingItem,
+        addItem,
+        removeItem,
+        updateItem,
+        clearCart,
+        totalCartItems,
+        totalCartPrice,
+    } = useSellCart(initialCart, selectedLocationId);
+
+    const filteredProducts = useMemo(
+        () =>
+            allProducts.filter((p) => {
+                const matchesSearch =
+                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesType =
+                    selectedType === "all" ||
+                    p.type_id?.toString() === selectedType;
+                return matchesSearch && matchesType;
+            }),
+        [allProducts, searchQuery, selectedType],
     );
 
-    const isDetailsLocked = !data.items[0]?.product_id;
-    const selectedProductIds = data.items
-        .map((item) => item.product_id)
-        .filter(Boolean);
-
-    const calculateTotal = () => {
-        return data.items.reduce((sum, item) => {
-            const quantity = parseFloat(item.quantity) || 0;
-            const price = parseFloat(item.sell_price) || 0;
-            return sum + quantity * price;
-        }, 0);
-    };
-
-    const submit = (e) => {
-        e.preventDefault();
-        post(route("transactions.sells.store"), {
-            transform: (data) => ({
-                ...data,
-                transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
-            }),
-        });
+    const handleLocationChange = (locationId) => {
+        if (
+            cart.length > 0 &&
+            !confirm("Mengganti lokasi akan mengosongkan keranjang. Lanjutkan?")
+        ) {
+            return;
+        }
+        if (cart.length > 0) {
+            clearCart();
+        }
+        setSelectedLocationId(locationId);
     };
 
     return (
-        <ContentPageLayout
-            auth={auth}
-            title="Buat Penjualan Item"
-            backRoute="transactions.index"
+        <AuthenticatedLayout
+            user={auth.user}
+            headerProps={{
+                title: "Point of Sale (POS)",
+                backRoute: "transactions.index",
+            }}
         >
-            <form onSubmit={submit} className="space-y-4">
-                <SellItemManager
-                    items={data.items}
-                    allProducts={allProducts}
-                    setData={setData}
-                    errors={errors}
-                    locationId={data.location_id}
-                    selectedProductIds={selectedProductIds}
-                />
+            <Head title="Point of Sale (POS)" />
 
-                <SellDetailsManager
-                    data={data}
-                    setData={setData}
-                    errors={errors}
-                    locations={locations}
-                    customers={customers}
-                    paymentMethods={paymentMethods}
-                    isDetailsLocked={isDetailsLocked}
-                />
-
-                <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                        Total Penjualan <br />
-                        <span className="text-lg sm:text-xl font-bold text-foreground">
-                            {formatCurrency(calculateTotal())}
-                        </span>
-                    </p>
-                    <div className="flex gap-2">
-                        <Link href={route("transactions.index")}>
-                            <Button
-                                variant="outline"
-                                type="button"
-                                size="sm"
-                                className="px-3 py-1"
-                            >
-                                Batal
-                            </Button>
-                        </Link>
-                        <Button
-                            size="sm"
-                            className="px-3 py-1"
-                            disabled={processing || !isDirty || isDetailsLocked}
+            <div className="flex h-[calc(100vh-8.5rem)] gap-4">
+                <div className="flex-[3] flex flex-col h-full overflow-hidden">
+                    <div className="flex-shrink-0 mb-4">
+                        <Label htmlFor="location_id">Lokasi Penjualan</Label>
+                        <Select
+                            value={selectedLocationId}
+                            onValueChange={handleLocationChange}
                         >
-                            {processing ? "Menyimpan..." : "Simpan"}
-                        </Button>
+                            <SelectTrigger id="location_id" className="h-9">
+                                <SelectValue placeholder="Pilih lokasi untuk memulai" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {locations.map((loc) => (
+                                    <SelectItem
+                                        key={loc.id}
+                                        value={loc.id.toString()}
+                                    >
+                                        {loc.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
+
+                    <SellProductGrid
+                        products={filteredProducts}
+                        productTypes={productTypes}
+                        selectedType={selectedType}
+                        setSelectedType={setSelectedType}
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        onProductClick={addItem}
+                        selectedProductIds={selectedProductIds}
+                        processingItem={processingItem}
+                        locationId={selectedLocationId}
+                    />
                 </div>
-            </form>
-        </ContentPageLayout>
+
+                <div className="flex-[2] h-full overflow-hidden rounded-lg border bg-card">
+                    <SellCart
+                        cart={cart}
+                        customers={customers}
+                        removeItem={removeItem}
+                        updateItem={updateItem}
+                        clearCart={clearCart}
+                        processingItem={processingItem}
+                        totalCartItems={totalCartItems}
+                        totalCartPrice={totalCartPrice}
+                        onCheckout={() => setIsCheckoutOpen(true)}
+                        locationId={selectedLocationId}
+                    />
+                </div>
+            </div>
+
+            <SellCheckoutDialog
+                isOpen={isCheckoutOpen}
+                onOpenChange={setIsCheckoutOpen}
+                cartItems={cart}
+                totalPrice={totalCartPrice}
+                locationId={selectedLocationId}
+                paymentMethods={paymentMethods}
+            />
+        </AuthenticatedLayout>
     );
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSellRequest;
+use App\Http\Resources\Transaction\SellCartItemResource;
 use App\Http\Resources\Transaction\SellResource;
 use App\Models\Customer;
 use App\Models\Inventory;
@@ -12,6 +13,7 @@ use App\Models\Product;
 use App\Models\Sell;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -26,16 +28,34 @@ class SellController extends Controller
         $customers = Customer::orderBy("name")->get(["id", "name"]);
         $products = Product::whereNull("deleted_at")
             ->orderBy("name")
-            ->get(["id", "name", "sku", "unit", "price"]);
+            ->get([
+                "id",
+                "name",
+                "sku",
+                "unit",
+                "price",
+                "image_path",
+                "type_id",
+            ]);
         $paymentMethods = Type::where("group", Type::GROUP_PAYMENT)
             ->orderBy("name")
             ->get(["id", "name"]);
+        $productTypes = Type::where("group", Type::GROUP_PRODUCT)
+            ->orderBy("name")
+            ->get(["id", "name"]);
+
+        $cartItems = Auth::user()
+            ->sellCartItems()
+            ->with(["product", "location"])
+            ->get();
 
         return Inertia::render("Transactions/Sells/Create", [
             "locations" => $locations,
             "customers" => $customers,
             "allProducts" => $products,
             "paymentMethods" => $paymentMethods,
+            "productTypes" => $productTypes,
+            "cart" => SellCartItemResource::collection($cartItems),
         ]);
     }
 
@@ -81,7 +101,6 @@ class SellController extends Controller
                 ]);
 
                 foreach ($itemsData as $item) {
-                    $product = Product::find($item["product_id"]);
                     $inventory = Inventory::where(
                         "product_id",
                         $item["product_id"],
@@ -104,6 +123,12 @@ class SellController extends Controller
                         (float) $item["quantity"],
                     );
                 }
+
+                $request
+                    ->user()
+                    ->sellCartItems()
+                    ->where("location_id", $validated["location_id"])
+                    ->delete();
             });
         } catch (\Exception $e) {
             return Redirect::back()->with(

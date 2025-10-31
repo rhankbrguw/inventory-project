@@ -1,0 +1,106 @@
+import React from "react";
+import { Input } from "@/components/ui/input";
+import { Search, PackageOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
+import ProductCard from "../../Purchases/Partials/ProductCard";
+
+export default function SellProductGrid({
+    products,
+    productTypes,
+    selectedType,
+    setSelectedType,
+    searchQuery,
+    setSearchQuery,
+    onProductClick,
+    selectedProductIds,
+    processingItem,
+    locationId,
+}) {
+    if (!locationId) {
+        return (
+            <div className="flex flex-col h-full flex-1 items-center justify-center rounded-lg border border-dashed">
+                <PackageOpen className="h-16 w-16 text-muted-foreground/50" />
+                <p className="mt-4 text-sm font-semibold text-muted-foreground">
+                    Pilih lokasi penjualan
+                </p>
+                <p className="text-xs text-muted-foreground">
+                    Katalog produk akan tampil setelah lokasi dipilih.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex-shrink-0 space-y-3 mb-4">
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Cari produk (Nama atau SKU)..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9 text-sm"
+                    />
+                </div>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth -mx-1 px-1">
+                    <button
+                        type="button"
+                        onClick={() => setSelectedType("all")}
+                        className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
+                            selectedType === "all"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
+                        )}
+                    >
+                        Semua
+                    </button>
+                    {productTypes.map((type) => (
+                        <button
+                            key={type.id}
+                            type="button"
+                            onClick={() => setSelectedType(type.id.toString())}
+                            className={cn(
+                                "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
+                                selectedType === type.id.toString()
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
+                            )}
+                        >
+                            {type.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto overscroll-contain pr-1 -mr-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                    {products.length > 0 ? (
+                        products.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                onClick={() => onProductClick(product)}
+                                selected={selectedProductIds.includes(
+                                    product.id,
+                                )}
+                                processing={processingItem === product.id}
+                                showPrice={true}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                            <Search className="w-16 h-16 text-muted-foreground/50 mb-3" />
+                            <p className="text-sm font-medium text-foreground mb-1">
+                                Produk tidak ditemukan
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Coba kata kunci atau filter lain.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
