@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseRequest;
-use App\Http\Resources\CartItemResource;
+use App\Http\Resources\Transaction\PurchaseCartItemResource;
 use App\Http\Resources\Transaction\PurchaseResource;
 use App\Models\Inventory;
 use App\Models\Location;
@@ -42,7 +42,7 @@ class PurchaseController extends Controller
     {
         $user = Auth::user();
         $cartItems = $user
-            ->cartItems()
+            ->purchaseCartItems()
             ->with(["product", "supplier"])
             ->get();
 
@@ -67,7 +67,7 @@ class PurchaseController extends Controller
             "productTypes" => Type::where("group", Type::GROUP_PRODUCT)
                 ->orderBy("name")
                 ->get(["id", "name"]),
-            "cart" => CartItemResource::collection($cartItems),
+            "cart" => PurchaseCartItemResource::collection($cartItems),
         ]);
     }
 
@@ -139,6 +139,11 @@ class PurchaseController extends Controller
                     "average_cost" => $newAvgCost,
                 ]);
             }
+
+            Auth::user()
+                ->purchaseCartItems()
+                ->where("supplier_id", $validated["supplier_id"])
+                ->delete();
         });
 
         return Redirect::route("transactions.index")->with(

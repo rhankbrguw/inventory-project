@@ -16,6 +16,7 @@ export default function usePurchaseCart(initialCart = []) {
     const [processingGroup, setProcessingGroup] = useState(null);
     const [selectedSuppliers, setSelectedSuppliers] = useState({});
     const [localQuantities, setLocalQuantities] = useState({});
+    const [localCosts, setLocalCosts] = useState({});
     const updateTimeoutRef = useRef({});
 
     useMemo(() => {
@@ -61,17 +62,20 @@ export default function usePurchaseCart(initialCart = []) {
 
             setProcessingItem(product.id);
             router.post(
-                route("cart.store"),
+                route("purchase.cart.store"),
                 {
                     product_id: product.id,
                     supplier_id: product.default_supplier_id,
                     quantity: 1,
+                    cost_per_unit: 0,
                 },
                 {
                     preserveScroll: true,
                     onFinish: () => setProcessingItem(null),
                     onError: (errors) => {
-                        toast.error("Gagal menambahkan item");
+                        toast.error(
+                            errors.product_id || "Gagal menambahkan item",
+                        );
                         console.error(errors);
                     },
                 },
@@ -84,7 +88,7 @@ export default function usePurchaseCart(initialCart = []) {
         (cartItemId) => {
             if (processingItem === cartItemId) return;
             setProcessingItem(cartItemId);
-            router.delete(route("cart.destroy.item", cartItemId), {
+            router.delete(route("purchase.cart.destroy.item", cartItemId), {
                 preserveScroll: true,
                 onFinish: () => setProcessingItem(null),
                 onError: (errors) => {
@@ -100,7 +104,7 @@ export default function usePurchaseCart(initialCart = []) {
         (supplierId) => {
             if (processingGroup === supplierId) return;
             setProcessingGroup(supplierId);
-            router.delete(route("cart.destroy.supplier"), {
+            router.delete(route("purchase.cart.destroy.supplier"), {
                 data: { supplier_id: supplierId },
                 preserveScroll: true,
                 onFinish: () => {
@@ -149,53 +153,63 @@ export default function usePurchaseCart(initialCart = []) {
         [selectedSuppliers],
     );
 
-    const updateQuantity = useCallback((item, quantityString) => {
-        setLocalQuantities((prev) => ({ ...prev, [item.id]: quantityString }));
+    const updateCartItem = useCallback((item, field, value) => {
+        const isQty = field === "quantity";
+        const localStateSetter = isQty ? setLocalQuantities : setLocalCosts;
+        const cleanedValue = cleanNumberString(value);
+
+        localStateSetter((prev) => ({ ...prev, [item.id]: value }));
 
         if (updateTimeoutRef.current[item.id]) {
             clearTimeout(updateTimeoutRef.current[item.id]);
         }
 
-        if (quantityString === "") {
-            return;
-        }
+        if (value === "") return;
 
         updateTimeoutRef.current[item.id] = setTimeout(() => {
-            const cleanedString = cleanNumberString(quantityString);
-            const newQuantity = parseFloat(cleanedString);
+            const newNumericValue = parseFloat(cleanedValue);
+            const payload = {};
 
-            if (isNaN(newQuantity) || newQuantity <= 0) {
-                setLocalQuantities((prev) => ({ ...prev, [item.id]: "1" }));
-                router.patch(
-                    route("cart.update", { cartItem: item.id }),
-                    { quantity: 1 },
-                    { preserveScroll: true, preserveState: true },
-                );
-                return;
+            if (isQty) {
+                payload.quantity =
+                    isNaN(newNumericValue) || newNumericValue <= 0
+                        ? 1
+                        : newNumericValue;
+            } else {
+                payload.cost_per_unit =
+                    isNaN(newNumericValue) || newNumericValue < 0
+                        ? 0
+                        : newNumericValue;
+            }
+
+            if (
+                (isQty &&
+                    payload.quantity === 1 &&
+                    (isNaN(newNumericValue) || newNumericValue <= 0)) ||
+                !isQty
+            ) {
+                localStateSetter((prev) => ({
+                    ...prev,
+                    [item.id]: isQty ? "1" : payload.cost_per_unit.toString(),
+                }));
             }
 
             setProcessingItem(item.id);
             router.patch(
-                route("cart.update", { cartItem: item.id }),
-                {
-                    quantity: newQuantity,
-                },
+                route("purchase.cart.update", { cartItem: item.id }),
+                payload,
                 {
                     preserveScroll: true,
                     onFinish: () => {
                         setProcessingItem(null);
-                        setLocalQuantities((prev) => {
+                        localStateSetter((prev) => {
                             const newState = { ...prev };
                             delete newState[item.id];
                             return newState;
                         });
                     },
                     onError: (errors) => {
-                        toast.error("Gagal memperbarui jumlah");
-                        setLocalQuantities((prev) => ({
-                            ...prev,
-                            [item.id]: formatNumber(item.quantity),
-                        }));
+                        toast.error("Gagal memperbarui item");
                         console.error(errors);
                     },
                 },
@@ -211,6 +225,16 @@ export default function usePurchaseCart(initialCart = []) {
             return formatNumber(item.quantity);
         },
         [localQuantities],
+    );
+
+    const getItemCost = useCallback(
+        (item) => {
+            if (localCosts[item.id] !== undefined) {
+                return localCosts[item.id];
+            }
+            return item.cost_per_unit?.toString() || "0";
+        },
+        [localCosts],
     );
 
     const totalCartItems = cart.length;
@@ -229,8 +253,9 @@ export default function usePurchaseCart(initialCart = []) {
         isSupplierSelected,
         removeSelectedGroups,
         hasSelectedGroups,
-        updateQuantity,
+        updateCartItem,
         getItemQuantity,
+        getItemCost,
         totalCartItems,
     };
 }

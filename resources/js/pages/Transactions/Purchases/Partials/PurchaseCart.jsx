@@ -6,8 +6,9 @@ export default function PurchaseCart({
     processingGroup,
     removeItem,
     removeSupplierGroup,
-    updateQuantity,
+    updateItem,
     getItemQuantity,
+    getItemCost,
     setCheckoutSupplierId,
     processingItem,
     toggleSupplierSelection,
@@ -21,8 +22,9 @@ export default function PurchaseCart({
                     cartGroups={cartGroups}
                     onRemoveItem={removeItem}
                     onRemoveSupplierGroup={removeSupplierGroup}
-                    onUpdateQuantity={updateQuantity}
+                    onUpdateItem={updateItem}
                     getItemQuantity={getItemQuantity}
+                    getItemCost={getItemCost}
                     onCheckout={setCheckoutSupplierId}
                     processingItem={processingItem}
                     processingGroup={processingGroup}

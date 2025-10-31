@@ -51,8 +51,9 @@ export default function Create({
         isSupplierSelected,
         removeSelectedGroups,
         hasSelectedGroups,
-        updateQuantity,
+        updateCartItem,
         getItemQuantity,
+        getItemCost,
         totalCartItems,
     } = usePurchaseCart(initialCart);
 
@@ -77,8 +78,9 @@ export default function Create({
         processingGroup,
         removeItem,
         removeSupplierGroup,
-        updateQuantity,
+        updateItem: updateCartItem,
         getItemQuantity,
+        getItemCost,
         setCheckoutSupplierId,
         processingItem,
         toggleSupplierSelection,
@@ -149,6 +151,7 @@ export default function Create({
                                         product.id,
                                     )}
                                     processing={processingItem === product.id}
+                                    showPrice={false}
                                 />
                             ))
                         ) : (
@@ -215,6 +218,13 @@ export default function Create({
                         locations={locations}
                         suppliers={suppliers}
                         paymentMethods={paymentMethods}
+                        cartItems={
+                            cartGroups[
+                                suppliers.find(
+                                    (s) => s.id === checkoutSupplierId,
+                                )?.name
+                            ]?.items || []
+                        }
                         onClose={() => setCheckoutSupplierId(null)}
                     />
                 </DialogContent>

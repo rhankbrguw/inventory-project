@@ -20,6 +20,7 @@ export default function TransactionDetailsManager({
     locations,
     suppliers,
     paymentMethods,
+    cartItems,
     onClose,
 }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
@@ -28,6 +29,11 @@ export default function TransactionDetailsManager({
         transaction_date: new Date(),
         notes: "",
         payment_method_type_id: "",
+        items: cartItems.map((item) => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+            cost_per_unit: item.cost_per_unit,
+        })),
     });
 
     const selectedSupplier = suppliers.find(
@@ -36,7 +42,7 @@ export default function TransactionDetailsManager({
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("checkout.store"), {
+        post(route("transactions.purchases.store"), {
             transform: (formData) => ({
                 ...formData,
                 transaction_date: format(
@@ -44,6 +50,7 @@ export default function TransactionDetailsManager({
                     "yyyy-MM-dd",
                 ),
             }),
+            onSuccess: () => onClose(),
         });
     };
 
@@ -153,6 +160,10 @@ export default function TransactionDetailsManager({
                     />
                     <InputError message={errors.notes} />
                 </FormField>
+
+                {errors.items && (
+                    <InputError message="Error pada data item, cek keranjang Anda." />
+                )}
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0">
