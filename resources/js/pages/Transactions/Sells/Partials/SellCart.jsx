@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, ShoppingBag, X } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
-import CurrencyInput from "@/components/CurrencyInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Select,
@@ -32,6 +31,7 @@ export default function SellCart({
     totalCartPrice,
     onCheckout,
     locationId,
+    getItemQuantity,
 }) {
     const LoadingSpinner = () => (
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -83,7 +83,8 @@ export default function SellCart({
                         {cart.map((item) => {
                             const isItemProcessing = processingItem === item.id;
                             const subtotal =
-                                item.quantity * (item.product.price || 0);
+                                Number(item.quantity) *
+                                (Number(item.product.price) || 0);
 
                             return (
                                 <div
@@ -122,18 +123,43 @@ export default function SellCart({
                                             id={`qty-${item.id}`}
                                             type="text"
                                             inputMode="numeric"
-                                            value={item.quantity}
+                                            value={getItemQuantity(item)}
                                             onChange={(e) => {
-                                                const value =
-                                                    e.target.value.replace(
-                                                        /[^0-9.,]/g,
-                                                        "",
-                                                    );
-                                                updateItem(item.id, {
-                                                    quantity: value,
-                                                });
+                                                const value = e.target.value;
+                                                updateItem(
+                                                    item,
+                                                    "quantity",
+                                                    value,
+                                                );
                                             }}
-                                            onFocus={(e) => e.target.select()}
+                                            onBlur={(e) => {
+                                                const value = e.target.value;
+                                                const cleanedValue =
+                                                    cleanNumberString(value);
+
+                                                if (
+                                                    cleanedValue === "" ||
+                                                    parseFloat(cleanedValue) <=
+                                                    0
+                                                ) {
+                                                    updateItem(
+                                                        item,
+                                                        "quantity",
+                                                        "1",
+                                                    );
+                                                } else {
+                                                    updateItem(
+                                                        item,
+                                                        "quantity",
+                                                        formatNumber(
+                                                            cleanedValue,
+                                                        ),
+                                                    );
+                                                }
+                                            }}
+                                            onFocus={(e) => {
+                                                e.target.select();
+                                            }}
                                             disabled={isItemProcessing}
                                             className="h-8 text-xs w-20 text-center"
                                             autoComplete="off"

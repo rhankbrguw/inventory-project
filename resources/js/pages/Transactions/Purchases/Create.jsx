@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Head } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
+import { Head, Link } from "@inertiajs/react";
+import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 import TransactionDetailsManager from "./Partials/PurchaseDetailsManager";
 import ProductCard from "./Partials/ProductCard";
 import PurchaseCart from "./Partials/PurchaseCart";
@@ -8,7 +8,7 @@ import usePurchaseCart from "@/hooks/usePurchaseCart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart, ArrowLeft } from "lucide-react";
 import {
     Sheet,
     SheetContent,
@@ -90,23 +90,38 @@ export default function Create({
     };
 
     return (
-        <ContentPageLayout
-            auth={auth}
-            title="Buat Pembelian"
-            backRoute="transactions.index"
-        >
-            <div className="h-[calc(100vh-12rem)] flex flex-col">
+        <AuthenticatedLayout user={auth.user}>
+            <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                    <Link href={route("transactions.index")}>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        Buat Pembelian
+                    </h1>
+                </div>
+            </div>
+
+            <Head title="Buat Pembelian" />
+
+            <div className="h-[calc(100vh-13rem)] flex flex-col">
                 <div className="flex-shrink-0 space-y-3 mb-4">
                     <div className="relative">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <Input
-                            placeholder="Cari produk..."
+                            placeholder="Cari produk (Nama atau SKU)..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9 h-9 text-sm"
                         />
                     </div>
-                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pl-9">
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth -mx-1 px-1">
                         <button
                             type="button"
                             onClick={() => setSelectedType("all")}
@@ -139,7 +154,7 @@ export default function Create({
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto overscroll-contain">
+                <div className="flex-1 overflow-y-auto overscroll-contain pr-1 -mr-3">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2">
                         {filteredProducts.length > 0 ? (
                             filteredProducts.map((product) => (
@@ -229,6 +244,6 @@ export default function Create({
                     />
                 </DialogContent>
             </Dialog>
-        </ContentPageLayout>
+        </AuthenticatedLayout>
     );
 }

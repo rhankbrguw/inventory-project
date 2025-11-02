@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 import {
     Select,
@@ -13,6 +13,8 @@ import { useSellCart } from "@/hooks/useSellCart";
 import SellProductGrid from "./Partials/SellProductGrid";
 import SellCart from "./Partials/SellCart";
 import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function Create({
     auth,
@@ -36,10 +38,11 @@ export default function Create({
         processingItem,
         addItem,
         removeItem,
-        updateItem,
+        updateCartItem,
         clearCart,
         totalCartItems,
         totalCartPrice,
+        getItemQuantity,
     } = useSellCart(initialCart, selectedLocationId);
 
     const filteredProducts = useMemo(
@@ -70,16 +73,27 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            headerProps={{
-                title: "Point of Sale (POS)",
-                backRoute: "transactions.index",
-            }}
-        >
-            <Head title="Point of Sale (POS)" />
+        <AuthenticatedLayout user={auth.user}>
+            <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                    <Link href={route("transactions.index")}>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        Buat Penjualan
+                    </h1>
+                </div>
+            </div>
 
-            <div className="flex h-[calc(100vh-8.5rem)] gap-4">
+            <Head title="Buat Penjualan" />
+
+            <div className="flex flex-1 gap-4 overflow-hidden h-[calc(100vh-13rem)]">
                 <div className="flex-[3] flex flex-col h-full overflow-hidden">
                     <div className="flex-shrink-0 mb-4">
                         <Label htmlFor="location_id">Lokasi Penjualan</Label>
@@ -122,13 +136,14 @@ export default function Create({
                         cart={cart}
                         customers={customers}
                         removeItem={removeItem}
-                        updateItem={updateItem}
+                        updateItem={updateCartItem}
                         clearCart={clearCart}
                         processingItem={processingItem}
                         totalCartItems={totalCartItems}
                         totalCartPrice={totalCartPrice}
                         onCheckout={() => setIsCheckoutOpen(true)}
                         locationId={selectedLocationId}
+                        getItemQuantity={getItemQuantity}
                     />
                 </div>
             </div>

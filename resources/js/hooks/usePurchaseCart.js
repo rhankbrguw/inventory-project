@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { router } from "@inertiajs/react";
-import { toast } from "sonner";
 import { formatNumber } from "@/lib/utils";
 
 const cleanNumberString = (numStr) => {
@@ -42,12 +41,24 @@ export default function usePurchaseCart(initialCart = []) {
         [cart],
     );
 
+    const removeItem = useCallback(
+        (cartItemId) => {
+            if (processingItem === cartItemId) return;
+            setProcessingItem(cartItemId);
+            router.delete(route("purchase.cart.destroy.item", cartItemId), {
+                preserveScroll: true,
+                onFinish: () => setProcessingItem(null),
+                onError: () => { },
+            });
+        },
+        [processingItem],
+    );
+
     const addItem = useCallback(
         (product) => {
             if (processingItem === product.id) return;
 
             if (!product.default_supplier_id) {
-                toast.error("Produk ini tidak memiliki supplier default");
                 return;
             }
 
@@ -72,32 +83,11 @@ export default function usePurchaseCart(initialCart = []) {
                 {
                     preserveScroll: true,
                     onFinish: () => setProcessingItem(null),
-                    onError: (errors) => {
-                        toast.error(
-                            errors.product_id || "Gagal menambahkan item",
-                        );
-                        console.error(errors);
-                    },
+                    onError: () => { },
                 },
             );
         },
-        [cart, processingItem],
-    );
-
-    const removeItem = useCallback(
-        (cartItemId) => {
-            if (processingItem === cartItemId) return;
-            setProcessingItem(cartItemId);
-            router.delete(route("purchase.cart.destroy.item", cartItemId), {
-                preserveScroll: true,
-                onFinish: () => setProcessingItem(null),
-                onError: (errors) => {
-                    toast.error("Gagal menghapus item");
-                    console.error(errors);
-                },
-            });
-        },
-        [processingItem],
+        [cart, processingItem, removeItem],
     );
 
     const removeSupplierGroup = useCallback(
@@ -114,10 +104,7 @@ export default function usePurchaseCart(initialCart = []) {
                         [supplierId]: false,
                     }));
                 },
-                onError: (errors) => {
-                    toast.error("Gagal menghapus grup item");
-                    console.error(errors);
-                },
+                onError: () => { },
             });
         },
         [processingGroup],
@@ -141,7 +128,6 @@ export default function usePurchaseCart(initialCart = []) {
             .map(([supplierId]) => parseInt(supplierId));
 
         if (supplierIdsToRemove.length === 0) {
-            toast.info("Pilih grup supplier yang ingin dihapus");
             return;
         }
 
@@ -208,10 +194,7 @@ export default function usePurchaseCart(initialCart = []) {
                             return newState;
                         });
                     },
-                    onError: (errors) => {
-                        toast.error("Gagal memperbarui item");
-                        console.error(errors);
-                    },
+                    onError: () => { },
                 },
             );
         }, 800);
