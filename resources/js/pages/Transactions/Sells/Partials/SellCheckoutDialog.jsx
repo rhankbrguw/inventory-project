@@ -29,11 +29,12 @@ export default function SellCheckoutDialog({
     cartItems,
     totalPrice,
     locationId,
+    customerId,
     paymentMethods,
 }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         location_id: locationId || "",
-        customer_id: null,
+        customer_id: customerId || null,
         transaction_date: new Date(),
         notes: "",
         payment_method_type_id: paymentMethods[0]?.id.toString() || "",
@@ -46,6 +47,7 @@ export default function SellCheckoutDialog({
             setData({
                 ...data,
                 location_id: locationId,
+                customer_id: customerId,
                 transaction_date: new Date(),
                 items: cartItems.map((item) => ({
                     product_id: item.product.id,
@@ -53,9 +55,10 @@ export default function SellCheckoutDialog({
                     sell_price: item.product.price,
                 })),
             });
+        } else {
             reset();
         }
-    }, [isOpen, cartItems, locationId]);
+    }, [isOpen, cartItems, locationId, customerId]);
 
     const submit = (e) => {
         e.preventDefault();

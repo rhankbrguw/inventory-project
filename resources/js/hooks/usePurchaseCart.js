@@ -48,7 +48,7 @@ export default function usePurchaseCart(initialCart = []) {
             router.delete(route("purchase.cart.destroy.item", cartItemId), {
                 preserveScroll: true,
                 onFinish: () => setProcessingItem(null),
-                onError: () => { },
+                onError: () => {},
             });
         },
         [processingItem],
@@ -57,10 +57,6 @@ export default function usePurchaseCart(initialCart = []) {
     const addItem = useCallback(
         (product) => {
             if (processingItem === product.id) return;
-
-            if (!product.default_supplier_id) {
-                return;
-            }
 
             const existingItem = cart.find(
                 (item) => item.product.id === product.id,
@@ -83,7 +79,7 @@ export default function usePurchaseCart(initialCart = []) {
                 {
                     preserveScroll: true,
                     onFinish: () => setProcessingItem(null),
-                    onError: () => { },
+                    onError: () => {},
                 },
             );
         },
@@ -104,7 +100,7 @@ export default function usePurchaseCart(initialCart = []) {
                         [supplierId]: false,
                     }));
                 },
-                onError: () => { },
+                onError: () => {},
             });
         },
         [processingGroup],
@@ -194,7 +190,7 @@ export default function usePurchaseCart(initialCart = []) {
                             return newState;
                         });
                     },
-                    onError: () => { },
+                    onError: () => {},
                 },
             );
         }, 800);

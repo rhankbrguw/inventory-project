@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, ShoppingBag, X } from "lucide-react";
+import { Trash2, ShoppingBag, X, UserPlus } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import QuickAddCustomerModal from "@/components/QuickAddCustomerModal";
 
 const cleanNumberString = (numStr) => {
     if (typeof numStr !== "string") {
@@ -23,6 +24,9 @@ const cleanNumberString = (numStr) => {
 export default function SellCart({
     cart,
     customers,
+    customerTypes,
+    selectedCustomerId,
+    onCustomerChange,
     removeItem,
     updateItem,
     clearCart,
@@ -40,28 +44,59 @@ export default function SellCart({
     const hasItems = cart.length > 0;
     const isCartDisabled = !locationId || processingItem !== null;
 
+    const handleNewCustomer = (newCustomer) => {
+        onCustomerChange(newCustomer.id.toString());
+    };
+
     return (
         <div className="flex flex-col h-full">
             <div className="p-3 border-b flex-shrink-0">
                 <h3 className="text-base font-semibold">Keranjang</h3>
-                <div className="mt-2">
+                <div className="mt-2 space-y-2">
                     <Label htmlFor="customer_id">Pelanggan</Label>
-                    <Select>
-                        <SelectTrigger id="customer_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pelanggan Umum" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="null">Pelanggan Umum</SelectItem>
-                            {customers.map((cust) => (
-                                <SelectItem
-                                    key={cust.id}
-                                    value={cust.id.toString()}
-                                >
-                                    {cust.name}
+                    <div className="flex gap-2">
+                        <Select
+                            value={selectedCustomerId || ""}
+                            onValueChange={(value) =>
+                                onCustomerChange(
+                                    value === "null" ? null : value,
+                                )
+                            }
+                        >
+                            <SelectTrigger
+                                id="customer_id"
+                                className="h-9 text-xs"
+                            >
+                                <SelectValue placeholder="Pelanggan Umum" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="null">
+                                    Pelanggan Umum
                                 </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                                {customers.map((cust) => (
+                                    <SelectItem
+                                        key={cust.id}
+                                        value={cust.id.toString()}
+                                    >
+                                        {cust.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <QuickAddCustomerModal
+                            customerTypes={customerTypes}
+                            onSuccess={handleNewCustomer}
+                        >
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-9 w-9 flex-shrink-0"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                            </Button>
+                        </QuickAddCustomerModal>
+                    </div>
                 </div>
             </div>
 
@@ -140,7 +175,7 @@ export default function SellCart({
                                                 if (
                                                     cleanedValue === "" ||
                                                     parseFloat(cleanedValue) <=
-                                                    0
+                                                        0
                                                 ) {
                                                     updateItem(
                                                         item,

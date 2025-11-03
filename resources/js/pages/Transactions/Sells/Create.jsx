@@ -23,6 +23,7 @@ export default function Create({
     allProducts,
     paymentMethods,
     productTypes = [],
+    customerTypes = [],
     cart: { data: initialCart = [] },
 }) {
     const [selectedLocationId, setSelectedLocationId] = useState(
@@ -31,6 +32,7 @@ export default function Create({
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedType, setSelectedType] = useState("all");
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
     const {
         cart,
@@ -135,6 +137,9 @@ export default function Create({
                     <SellCart
                         cart={cart}
                         customers={customers}
+                        customerTypes={customerTypes}
+                        selectedCustomerId={selectedCustomerId}
+                        onCustomerChange={setSelectedCustomerId}
                         removeItem={removeItem}
                         updateItem={updateCartItem}
                         clearCart={clearCart}
@@ -154,6 +159,7 @@ export default function Create({
                 cartItems={cart}
                 totalPrice={totalCartPrice}
                 locationId={selectedLocationId}
+                customerId={selectedCustomerId}
                 paymentMethods={paymentMethods}
             />
         </AuthenticatedLayout>

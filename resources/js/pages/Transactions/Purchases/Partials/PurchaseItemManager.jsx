@@ -208,7 +208,7 @@ export default function PurchaseItemManager({
 
                                                         if (
                                                             cleanedValue ===
-                                                                "" ||
+                                                            "" ||
                                                             parseFloat(
                                                                 cleanedValue,
                                                             ) <= 0

@@ -24,37 +24,36 @@ class SellController extends Controller
 {
     public function create(): Response
     {
-        $locations = Location::orderBy("name")->get(["id", "name"]);
-        $customers = Customer::orderBy("name")->get(["id", "name"]);
-        $products = Product::whereNull("deleted_at")
-            ->orderBy("name")
-            ->get([
-                "id",
-                "name",
-                "sku",
-                "unit",
-                "price",
-                "image_path",
-                "type_id",
-            ]);
-        $paymentMethods = Type::where("group", Type::GROUP_PAYMENT)
-            ->orderBy("name")
-            ->get(["id", "name"]);
-        $productTypes = Type::where("group", Type::GROUP_PRODUCT)
-            ->orderBy("name")
-            ->get(["id", "name"]);
-
-        $cartItems = Auth::user()
+        $user = Auth::user();
+        $cartItems = $user
             ->sellCartItems()
             ->with(["product", "location"])
             ->get();
 
         return Inertia::render("Transactions/Sells/Create", [
-            "locations" => $locations,
-            "customers" => $customers,
-            "allProducts" => $products,
-            "paymentMethods" => $paymentMethods,
-            "productTypes" => $productTypes,
+            "locations" => Location::orderBy("name")->get(["id", "name"]),
+            "customers" => Customer::orderBy("name")->get(["id", "name"]),
+            "allProducts" => Product::with("defaultSupplier:id,name")
+                ->orderBy("name")
+                ->get([
+                    "id",
+                    "name",
+                    "sku",
+                    "price",
+                    "unit",
+                    "image_path",
+                    "default_supplier_id",
+                    "type_id",
+                ]),
+            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
+                ->orderBy("name")
+                ->get(["id", "name"]),
+            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)
+                ->orderBy("name")
+                ->get(["id", "name"]),
+            "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)
+                ->orderBy("name")
+                ->get(["id", "name"]),
             "cart" => SellCartItemResource::collection($cartItems),
         ]);
     }
@@ -96,7 +95,7 @@ class SellController extends Controller
                     "total_price" => $totalPrice,
                     "status" => $validated["status"],
                     "payment_method_type_id" =>
-                        $validated["payment_method_type_id"],
+                    $validated["payment_method_type_id"],
                     "notes" => $validated["notes"],
                 ]);
 

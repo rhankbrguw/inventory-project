@@ -8,35 +8,35 @@ use App\Models\Type;
 
 class LocationSeeder extends Seeder
 {
-   public function run(): void
-   {
-      $warehouseType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Warehouse')->firstOrFail();
-      $branchType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Branch')->firstOrFail();
+    public function run(): void
+    {
+        $warehouseType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Warehouse')->firstOrFail();
+        $branchType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Branch')->firstOrFail();
 
-      $warehouses = [
-         ['name' => 'Gudang Pusat A', 'type_id' => $warehouseType->id],
-         ['name' => 'Gudang Pusat B', 'type_id' => $warehouseType->id],
-         ['name' => 'Gudang Pusat C', 'type_id' => $warehouseType->id],
-      ];
+        $warehouses = [
+            ['name' => 'Gudang Pusat A', 'type_id' => $warehouseType->id],
+            ['name' => 'Gudang Pusat B', 'type_id' => $warehouseType->id],
+            ['name' => 'Gudang Pusat C', 'type_id' => $warehouseType->id],
+        ];
 
-      foreach ($warehouses as $warehouse) {
-         Location::create($warehouse);
-      }
+        foreach ($warehouses as $warehouse) {
+            Location::firstOrCreate(['name' => $warehouse['name']], $warehouse);
+        }
 
-      $branches = [
-         ['name' => 'ABSR', 'type_id' => $branchType->id],
-         ['name' => 'MEDANG', 'type_id' => $branchType->id],
-         ['name' => 'ALSUT', 'type_id' => $branchType->id],
-         ['name' => 'PARIGI', 'type_id' => $branchType->id],
-         ['name' => 'BINONG', 'type_id' => $branchType->id],
-         ['name' => 'PAKOJAN', 'type_id' => $branchType->id],
-         ['name' => 'CISAUK', 'type_id' => $branchType->id],
-         ['name' => 'BSD PLAZA', 'type_id' => $branchType->id],
-         ['name' => 'VIKTOR', 'type_id' => $branchType->id],
-      ];
+        $branches = [
+            ['name' => 'ABSR', 'type_id' => $branchType->id],
+            ['name' => 'MEDANG', 'type_id' => $branchType->id],
+            ['name' => 'ALSUT', 'type_id' => $branchType->id],
+            ['name' => 'PARIGI', 'type_id' => $branchType->id],
+            ['name' => 'BINONG', 'type_id' => $branchType->id],
+            ['name' => 'PAKOJAN', 'type_id' => $branchType->id],
+            ['name' => 'CISAUK', 'type_id' => $branchType->id],
+            ['name' => 'BSD PLAZA', 'type_id' => $branchType->id],
+            ['name' => 'VIKTOR', 'type_id' => $branchType->id],
+        ];
 
-      foreach ($branches as $branch) {
-         Location::create($branch);
-      }
-   }
+        foreach ($branches as $branch) {
+            Location::firstOrCreate(['name' => $branch['name']], $branch);
+        }
+    }
 }

@@ -74,7 +74,7 @@ export default function SellProductGrid({
             </div>
 
             <div className="flex-1 overflow-y-auto overscroll-contain pr-1 -mr-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {products.length > 0 ? (
                         products.map((product) => (
                             <ProductCard
