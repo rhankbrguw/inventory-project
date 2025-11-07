@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Head, Link } from "@inertiajs/react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 import {
     Select,
@@ -13,6 +13,7 @@ import { useSellCart } from "@/hooks/useSellCart";
 import SellProductGrid from "./Partials/SellProductGrid";
 import SellCart from "./Partials/SellCart";
 import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
+import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -25,14 +26,16 @@ export default function Create({
     productTypes = [],
     customerTypes = [],
     cart: { data: initialCart = [] },
+    filters = {},
 }) {
     const [selectedLocationId, setSelectedLocationId] = useState(
-        initialCart[0]?.location?.id?.toString() || "",
+        filters.location_id || initialCart[0]?.location?.id?.toString() || "",
     );
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedType, setSelectedType] = useState("all");
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+    const [pendingLocationId, setPendingLocationId] = useState(null);
 
     const {
         cart,
@@ -46,6 +49,14 @@ export default function Create({
         totalCartPrice,
         getItemQuantity,
     } = useSellCart(initialCart, selectedLocationId);
+
+    useEffect(() => {
+        setSelectedLocationId(
+            filters.location_id ||
+                initialCart[0]?.location?.id?.toString() ||
+                "",
+        );
+    }, [filters.location_id, initialCart]);
 
     const filteredProducts = useMemo(
         () =>
@@ -62,16 +73,31 @@ export default function Create({
     );
 
     const handleLocationChange = (locationId) => {
-        if (
-            cart.length > 0 &&
-            !confirm("Mengganti lokasi akan mengosongkan keranjang. Lanjutkan?")
-        ) {
-            return;
-        }
+        if (locationId === selectedLocationId) return;
+
         if (cart.length > 0) {
-            clearCart();
+            setPendingLocationId(locationId);
+        } else {
+            reloadProducts(locationId);
         }
-        setSelectedLocationId(locationId);
+    };
+
+    const confirmLocationChange = () => {
+        clearCart();
+        reloadProducts(pendingLocationId);
+        setPendingLocationId(null);
+    };
+
+    const reloadProducts = (locationId) => {
+        router.get(
+            route("transactions.sells.create"),
+            { location_id: locationId },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["allProducts", "filters"],
+            },
+        );
     };
 
     return (
@@ -161,6 +187,15 @@ export default function Create({
                 locationId={selectedLocationId}
                 customerId={selectedCustomerId}
                 paymentMethods={paymentMethods}
+            />
+
+            <DeleteConfirmationDialog
+                open={!!pendingLocationId}
+                onOpenChange={() => setPendingLocationId(null)}
+                onConfirm={confirmLocationChange}
+                title="Kosongkan Keranjang?"
+                description="Mengganti lokasi akan mengosongkan keranjang Anda saat ini. Lanjutkan?"
+                confirmText="Lanjutkan"
             />
         </AuthenticatedLayout>
     );

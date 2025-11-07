@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\Sell;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -22,29 +23,45 @@ use Inertia\Response;
 
 class SellController extends Controller
 {
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $user = Auth::user();
+        $locationId = $request->input('location_id');
+
         $cartItems = $user
             ->sellCartItems()
             ->with(["product", "location"])
             ->get();
 
+        $productsQuery = Product::query()
+            ->with("defaultSupplier:id,name")
+            ->orderBy("name");
+
+        if ($locationId) {
+            $productsQuery->whereHas('inventories', function ($query) use (
+                $locationId,
+            ) {
+                $query
+                    ->where('location_id', $locationId)
+                    ->where('quantity', '>', 0);
+            });
+        } else {
+            $productsQuery->whereRaw('1 = 0');
+        }
+
         return Inertia::render("Transactions/Sells/Create", [
             "locations" => Location::orderBy("name")->get(["id", "name"]),
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
-            "allProducts" => Product::with("defaultSupplier:id,name")
-                ->orderBy("name")
-                ->get([
-                    "id",
-                    "name",
-                    "sku",
-                    "price",
-                    "unit",
-                    "image_path",
-                    "default_supplier_id",
-                    "type_id",
-                ]),
+            "allProducts" => $productsQuery->get([
+                "id",
+                "name",
+                "sku",
+                "price",
+                "unit",
+                "image_path",
+                "default_supplier_id",
+                "type_id",
+            ]),
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
                 ->orderBy("name")
                 ->get(["id", "name"]),
@@ -55,6 +72,7 @@ class SellController extends Controller
                 ->orderBy("name")
                 ->get(["id", "name"]),
             "cart" => SellCartItemResource::collection($cartItems),
+            "filters" => (object) $request->only(['location_id']),
         ]);
     }
 

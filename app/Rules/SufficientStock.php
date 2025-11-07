@@ -27,7 +27,8 @@ class SufficientStock implements ValidationRule, DataAwareRule
         if (Str::startsWith($attribute, 'items.')) {
             $index = explode('.', $attribute)[1];
             $productId = $this->data['items'][$index]['product_id'] ?? null;
-            $locationId = $this->data['from_location_id'] ?? null;
+
+            $locationId = $this->data['location_id'] ?? $this->data['from_location_id'] ?? null;
         } else {
             $productId = $this->data['product_id'] ?? null;
             $locationId = $this->data['location_id'] ?? null;

@@ -21,7 +21,7 @@ class StoreSellRequest extends FormRequest
             ->where('name', 'Penjualan')
             ->value('id');
 
-        return [
+        $rules = [
             'type_id' => ['required', 'integer', Rule::in([$sellTypeId])],
             'location_id' => ['required', 'integer', 'exists:locations,id'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
@@ -36,14 +36,22 @@ class StoreSellRequest extends FormRequest
                 'exists:products,id,deleted_at,NULL',
                 'distinct',
             ],
-            'items.*.quantity' => [
+            'items.*.sell_price' => ['required', 'numeric', 'min:0'],
+        ];
+
+        foreach ($this->input('items', []) as $index => $item) {
+            $rules["items.{$index}.quantity"] = [
                 'required',
                 'numeric',
                 'min:0.0001',
-                new SufficientStock(),
-            ],
-            'items.*.sell_price' => ['required', 'numeric', 'min:0'],
-        ];
+                new SufficientStock(
+                    $this->input('location_id'),
+                    $item['product_id'] ?? null
+                ),
+            ];
+        }
+
+        return $rules;
     }
 
     protected function prepareForValidation(): void
