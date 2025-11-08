@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, ShoppingBag, X, UserPlus } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Select,
     SelectContent,
@@ -100,9 +99,9 @@ export default function SellCart({
                 </div>
             </div>
 
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
                 {!hasItems && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
                         <ShoppingBag className="w-16 h-16 text-muted-foreground/30" />
                         <p className="mt-3 text-sm font-semibold text-foreground">
                             Keranjang kosong
@@ -114,7 +113,7 @@ export default function SellCart({
                 )}
 
                 {hasItems && (
-                    <div className="p-3 space-y-2">
+                    <div className="p-3 pb-4 space-y-2">
                         {cart.map((item) => {
                             const isItemProcessing = processingItem === item.id;
                             const subtotal =
@@ -210,7 +209,7 @@ export default function SellCart({
                         })}
                     </div>
                 )}
-            </ScrollArea>
+            </div>
 
             <div className="flex-shrink-0 border-t bg-muted/30 p-3 space-y-3">
                 <div className="flex items-center justify-between">

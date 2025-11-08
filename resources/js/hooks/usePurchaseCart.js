@@ -62,28 +62,40 @@ export default function usePurchaseCart(initialCart = []) {
                 (item) => item.product.id === product.id,
             );
 
-            if (existingItem) {
-                removeItem(existingItem.id);
-                return;
-            }
-
             setProcessingItem(product.id);
-            router.post(
-                route("purchase.cart.store"),
-                {
-                    product_id: product.id,
-                    supplier_id: product.default_supplier_id,
-                    quantity: 1,
-                    cost_per_unit: 0,
-                },
-                {
-                    preserveScroll: true,
-                    onFinish: () => setProcessingItem(null),
-                    onError: () => {},
-                },
-            );
+
+            if (existingItem) {
+                const newQuantity =
+                    parseFloat(String(existingItem.quantity)) + 1;
+                router.patch(
+                    route("purchase.cart.update", {
+                        cartItem: existingItem.id,
+                    }),
+                    { quantity: newQuantity },
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setProcessingItem(null),
+                        onError: () => {},
+                    },
+                );
+            } else {
+                router.post(
+                    route("purchase.cart.store"),
+                    {
+                        product_id: product.id,
+                        supplier_id: product.default_supplier_id,
+                        quantity: 1,
+                        cost_per_unit: 0,
+                    },
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setProcessingItem(null),
+                        onError: () => {},
+                    },
+                );
+            }
         },
-        [cart, processingItem, removeItem],
+        [cart, processingItem],
     );
 
     const removeSupplierGroup = useCallback(

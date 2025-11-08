@@ -13,6 +13,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -38,7 +39,7 @@ class PurchaseController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $user = Auth::user();
         $cartItems = $user
@@ -46,21 +47,28 @@ class PurchaseController extends Controller
             ->with(["product", "supplier"])
             ->get();
 
+        $products = Product::query()
+            ->with("defaultSupplier:id,name")
+            ->when($request->input("search"), function ($query, $search) {
+                $query
+                    ->where("name", "like", "%{$search}%")
+                    ->orWhere("sku", "like", "%{$search}%");
+            })
+            ->when(
+                $request->input("type_id") &&
+                    $request->input("type_id") !== "all",
+                function ($query, $typeId) {
+                    $query->where("type_id", $typeId);
+                },
+            )
+            ->orderBy("name")
+            ->paginate(12)
+            ->withQueryString();
+
         return Inertia::render("Transactions/Purchases/Create", [
             "locations" => Location::orderBy("name")->get(["id", "name"]),
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
-            "products" => Product::with("defaultSupplier:id,name")
-                ->orderBy("name")
-                ->get([
-                    "id",
-                    "name",
-                    "sku",
-                    "price",
-                    "unit",
-                    "image_path",
-                    "default_supplier_id",
-                    "type_id",
-                ]),
+            "products" => $products,
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
                 ->orderBy("name")
                 ->get(["id", "name"]),
@@ -68,6 +76,7 @@ class PurchaseController extends Controller
                 ->orderBy("name")
                 ->get(["id", "name"]),
             "cart" => PurchaseCartItemResource::collection($cartItems),
+            "filters" => (object) $request->only(["search", "type_id"]),
         ]);
     }
 

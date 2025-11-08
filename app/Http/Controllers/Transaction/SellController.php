@@ -26,7 +26,9 @@ class SellController extends Controller
     public function create(Request $request): Response
     {
         $user = Auth::user();
-        $locationId = $request->input('location_id');
+        $locationId = $request->input("location_id");
+        $search = $request->input("search");
+        $typeId = $request->input("type_id");
 
         $cartItems = $user
             ->sellCartItems()
@@ -35,33 +37,34 @@ class SellController extends Controller
 
         $productsQuery = Product::query()
             ->with("defaultSupplier:id,name")
+            ->when($search, function ($query, $search) {
+                $query
+                    ->where("name", "like", "%{$search}%")
+                    ->orWhere("sku", "like", "%{$search}%");
+            })
+            ->when($typeId && $typeId !== "all", function ($query, $typeId) {
+                $query->where("type_id", $typeId);
+            })
             ->orderBy("name");
 
         if ($locationId) {
-            $productsQuery->whereHas('inventories', function ($query) use (
+            $productsQuery->whereHas("inventories", function ($query) use (
                 $locationId,
             ) {
                 $query
-                    ->where('location_id', $locationId)
-                    ->where('quantity', '>', 0);
+                    ->where("location_id", $locationId)
+                    ->where("quantity", ">", 0);
             });
         } else {
-            $productsQuery->whereRaw('1 = 0');
+            $productsQuery->whereRaw("1 = 0");
         }
 
         return Inertia::render("Transactions/Sells/Create", [
             "locations" => Location::orderBy("name")->get(["id", "name"]),
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
-            "allProducts" => $productsQuery->get([
-                "id",
-                "name",
-                "sku",
-                "price",
-                "unit",
-                "image_path",
-                "default_supplier_id",
-                "type_id",
-            ]),
+            "allProducts" => $productsQuery
+                ->paginate(12)
+                ->withQueryString(),
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
                 ->orderBy("name")
                 ->get(["id", "name"]),
@@ -72,7 +75,11 @@ class SellController extends Controller
                 ->orderBy("name")
                 ->get(["id", "name"]),
             "cart" => SellCartItemResource::collection($cartItems),
-            "filters" => (object) $request->only(['location_id']),
+            "filters" => (object) $request->only([
+                "location_id",
+                "search",
+                "type_id",
+            ]),
         ]);
     }
 
@@ -113,7 +120,7 @@ class SellController extends Controller
                     "total_price" => $totalPrice,
                     "status" => $validated["status"],
                     "payment_method_type_id" =>
-                    $validated["payment_method_type_id"],
+                        $validated["payment_method_type_id"],
                     "notes" => $validated["notes"],
                 ]);
 

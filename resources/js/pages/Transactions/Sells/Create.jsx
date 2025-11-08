@@ -1,21 +1,23 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { useSellCart } from "@/hooks/useSellCart";
 import SellProductGrid from "./Partials/SellProductGrid";
 import SellCart from "./Partials/SellCart";
 import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
 import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import Pagination from "@/components/Pagination";
+import { useDebounce } from "use-debounce";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import { formatNumber } from "@/lib/utils";
 
 export default function Create({
     auth,
@@ -31,11 +33,14 @@ export default function Create({
     const [selectedLocationId, setSelectedLocationId] = useState(
         filters.location_id || initialCart[0]?.location?.id?.toString() || "",
     );
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedType, setSelectedType] = useState("all");
+    const [searchQuery, setSearchQuery] = useState(filters.search || "");
+    const [selectedType, setSelectedType] = useState(filters.type_id || "all");
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const [cartOpen, setCartOpen] = useState(false);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [pendingLocationId, setPendingLocationId] = useState(null);
+    const [debouncedSearch] = useDebounce(searchQuery, 500);
+    const isInitialMount = useRef(true);
 
     const {
         cart,
@@ -58,19 +63,17 @@ export default function Create({
         );
     }, [filters.location_id, initialCart]);
 
-    const filteredProducts = useMemo(
-        () =>
-            allProducts.filter((p) => {
-                const matchesSearch =
-                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesType =
-                    selectedType === "all" ||
-                    p.type_id?.toString() === selectedType;
-                return matchesSearch && matchesType;
-            }),
-        [allProducts, searchQuery, selectedType],
-    );
+    const reloadProducts = (locationId, search, type) => {
+        const queryParams = { location_id: locationId };
+        if (search) queryParams.search = search;
+        if (type && type !== "all") queryParams.type_id = type;
+
+        router.get(route("transactions.sells.create"), queryParams, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ["allProducts", "filters"],
+        });
+    };
 
     const handleLocationChange = (locationId) => {
         if (locationId === selectedLocationId) return;
@@ -78,26 +81,46 @@ export default function Create({
         if (cart.length > 0) {
             setPendingLocationId(locationId);
         } else {
-            reloadProducts(locationId);
+            reloadProducts(locationId, searchQuery, selectedType);
         }
     };
 
     const confirmLocationChange = () => {
         clearCart();
-        reloadProducts(pendingLocationId);
+        setSearchQuery("");
+        setSelectedType("all");
+        reloadProducts(pendingLocationId, "", "all");
         setPendingLocationId(null);
     };
 
-    const reloadProducts = (locationId) => {
-        router.get(
-            route("transactions.sells.create"),
-            { location_id: locationId },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ["allProducts", "filters"],
-            },
-        );
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        if (selectedLocationId) {
+            reloadProducts(selectedLocationId, debouncedSearch, selectedType);
+        }
+    }, [debouncedSearch, selectedType]);
+
+    const cartProps = {
+        cart,
+        customers,
+        customerTypes,
+        selectedCustomerId,
+        onCustomerChange: setSelectedCustomerId,
+        removeItem,
+        updateItem: updateCartItem,
+        clearCart,
+        processingItem,
+        totalCartItems,
+        totalCartPrice,
+        onCheckout: () => {
+            setIsCheckoutOpen(true);
+            setCartOpen(false);
+        },
+        locationId: selectedLocationId,
+        getItemQuantity,
     };
 
     return (
@@ -121,32 +144,13 @@ export default function Create({
 
             <Head title="Buat Penjualan" />
 
-            <div className="flex flex-1 gap-4 overflow-hidden h-[calc(100vh-13rem)]">
-                <div className="flex-[3] flex flex-col h-full overflow-hidden">
-                    <div className="flex-shrink-0 mb-4">
-                        <Label htmlFor="location_id">Lokasi Penjualan</Label>
-                        <Select
-                            value={selectedLocationId}
-                            onValueChange={handleLocationChange}
-                        >
-                            <SelectTrigger id="location_id" className="h-9">
-                                <SelectValue placeholder="Pilih lokasi untuk memulai" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {locations.map((loc) => (
-                                    <SelectItem
-                                        key={loc.id}
-                                        value={loc.id.toString()}
-                                    >
-                                        {loc.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
+            <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
+                <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
                     <SellProductGrid
-                        products={filteredProducts}
+                        locations={locations}
+                        selectedLocationId={selectedLocationId}
+                        onLocationChange={handleLocationChange}
+                        products={allProducts.data}
                         productTypes={productTypes}
                         selectedType={selectedType}
                         setSelectedType={setSelectedType}
@@ -155,29 +159,36 @@ export default function Create({
                         onProductClick={addItem}
                         selectedProductIds={selectedProductIds}
                         processingItem={processingItem}
-                        locationId={selectedLocationId}
+                        paginationLinks={allProducts.links}
                     />
                 </div>
 
-                <div className="flex-[2] h-full overflow-hidden rounded-lg border bg-card">
-                    <SellCart
-                        cart={cart}
-                        customers={customers}
-                        customerTypes={customerTypes}
-                        selectedCustomerId={selectedCustomerId}
-                        onCustomerChange={setSelectedCustomerId}
-                        removeItem={removeItem}
-                        updateItem={updateCartItem}
-                        clearCart={clearCart}
-                        processingItem={processingItem}
-                        totalCartItems={totalCartItems}
-                        totalCartPrice={totalCartPrice}
-                        onCheckout={() => setIsCheckoutOpen(true)}
-                        locationId={selectedLocationId}
-                        getItemQuantity={getItemQuantity}
-                    />
+                <div className="hidden lg:flex flex-[2] flex-col overflow-hidden rounded-lg border bg-card">
+                    <SellCart {...cartProps} />
                 </div>
             </div>
+
+            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+                <SheetTrigger asChild>
+                    <Button
+                        className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50"
+                        size="icon"
+                    >
+                        <ShoppingCart className="h-6 w-6" />
+                        {totalCartItems > 0 && (
+                            <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center">
+                                {formatNumber(totalCartItems)}
+                            </span>
+                        )}
+                    </Button>
+                </SheetTrigger>
+                <SheetContent
+                    side="right"
+                    className="w-full sm:max-w-md p-0 flex flex-col"
+                >
+                    <SellCart {...cartProps} />
+                </SheetContent>
+            </Sheet>
 
             <SellCheckoutDialog
                 isOpen={isCheckoutOpen}

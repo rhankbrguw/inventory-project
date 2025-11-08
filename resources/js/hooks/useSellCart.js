@@ -122,12 +122,22 @@ export function useSellCart(initialCart = [], locationId) {
     const addItem = useCallback(
         (product) => {
             if (!locationId || processingItem === product.id) return;
+
             const existingItem = activeCart.find(
                 (item) => item.product.id === product.id,
             );
 
             if (existingItem) {
-                removeItem(existingItem.id);
+                const newQuantity =
+                    parseFloat(String(existingItem.quantity)) + 1;
+
+                router.patch(
+                    route("sell.cart.update", {
+                        cartItem: existingItem.id,
+                    }),
+                    { quantity: newQuantity },
+                    updateCartState(product.id),
+                );
             } else {
                 router.post(
                     route("sell.cart.store"),
@@ -140,7 +150,7 @@ export function useSellCart(initialCart = [], locationId) {
                 );
             }
         },
-        [locationId, processingItem, activeCart, removeItem],
+        [locationId, processingItem, activeCart],
     );
 
     const clearCart = useCallback(() => {
