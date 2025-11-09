@@ -73,7 +73,7 @@ class SellController extends Controller
                 ->get(["id", "name"]),
             "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)
                 ->orderBy("name")
-                ->get(["id","name"]),
+                ->get(["id", "name"]),
             "cart" => SellCartItemResource::collection($cartItems),
             "filters" => (object) $request->only([
                 "location_id",
@@ -138,6 +138,7 @@ class SellController extends Controller
                         "type" => "sell",
                         "quantity" => -(float) $item["quantity"],
                         "cost_per_unit" => (float) $item["sell_price"],
+                        "average_cost_per_unit" => $inventory->average_cost,
                         "customer_id" => $validated["customer_id"],
                         "notes" => $validated["notes"],
                     ]);

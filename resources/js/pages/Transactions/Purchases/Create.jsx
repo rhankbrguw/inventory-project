@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 import PurchaseDetailsManager from "./Partials/PurchaseDetailsManager";
@@ -36,6 +36,7 @@ export default function Create({
     const [checkoutSupplierId, setCheckoutSupplierId] = useState(null);
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
+    const [supplierFilter, setSupplierFilter] = useState("all");
 
     const {
         cartGroups,
@@ -60,6 +61,27 @@ export default function Create({
         "transactions.purchases.create",
         filters,
     );
+
+    const supplierOptions = useMemo(
+        () =>
+            suppliers.filter((s) =>
+                Object.values(cartGroups).some(
+                    (group) => group.supplier_id === s.id,
+                ),
+            ),
+        [cartGroups, suppliers],
+    );
+
+    const filteredCartGroups = useMemo(() => {
+        if (supplierFilter === "all") {
+            return cartGroups;
+        }
+        const supplierName =
+            suppliers.find((s) => s.id.toString() === supplierFilter)?.name ||
+            "Supplier Umum";
+        const group = cartGroups[supplierName];
+        return group ? { [supplierName]: group } : {};
+    }, [cartGroups, supplierFilter, suppliers]);
 
     const handleOpenCheckout = (supplierId) => {
         setCheckoutSupplierId(supplierId);
@@ -99,6 +121,10 @@ export default function Create({
         totalCartItems,
         selectedSuppliers,
         suppliers,
+        supplierFilter,
+        setSupplierFilter,
+        supplierOptions,
+        filteredCartGroups,
     };
 
     return (

@@ -17,6 +17,7 @@ class StockMovement extends Model
         'type',
         'quantity',
         'cost_per_unit',
+        'average_cost_per_unit',
         'notes',
         'reference_id',
         'reference_type',

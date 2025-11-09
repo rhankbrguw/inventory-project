@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import PurchaseItemManager from "./PurchaseItemManager";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -27,30 +27,11 @@ export default function PurchaseCart({
     isSupplierSelected,
     totalCartItems,
     suppliers,
+    supplierFilter,
+    setSupplierFilter,
+    supplierOptions,
+    filteredCartGroups,
 }) {
-    const [supplierFilter, setSupplierFilter] = useState("all");
-
-    const supplierOptions = useMemo(
-        () =>
-            suppliers.filter((s) =>
-                Object.values(cartGroups).some(
-                    (group) => group.supplier_id === s.id,
-                ),
-            ),
-        [cartGroups, suppliers],
-    );
-
-    const filteredCartGroups = useMemo(() => {
-        if (supplierFilter === "all") {
-            return cartGroups;
-        }
-        const supplierName =
-            suppliers.find((s) => s.id.toString() === supplierFilter)?.name ||
-            "Tanpa Supplier";
-        const group = cartGroups[supplierName];
-        return group ? { [supplierName]: group } : {};
-    }, [cartGroups, supplierFilter, suppliers]);
-
     const hasCartItems = Object.keys(cartGroups).length > 0;
 
     return (
