@@ -8,8 +8,7 @@ import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
 import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
-import Pagination from "@/components/Pagination";
-import { useDebounce } from "use-debounce";
+import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
 import {
     Sheet,
     SheetContent,
@@ -28,19 +27,21 @@ export default function Create({
     productTypes = [],
     customerTypes = [],
     cart: { data: initialCart = [] },
-    filters = {},
+    filters,
 }) {
-    const [selectedLocationId, setSelectedLocationId] = useState(
-        filters.location_id || initialCart[0]?.location?.id?.toString() || "",
+    const { params, setFilter } = useIndexPageFilters(
+        "transactions.sells.create",
+        filters,
     );
-    const [searchQuery, setSearchQuery] = useState(filters.search || "");
-    const [selectedType, setSelectedType] = useState(filters.type_id || "all");
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [pendingLocationId, setPendingLocationId] = useState(null);
-    const [debouncedSearch] = useDebounce(searchQuery, 500);
-    const isInitialMount = useRef(true);
+
+    const selectedLocationId = useMemo(
+        () => params.location_id || "",
+        [params.location_id],
+    );
 
     const {
         cart,
@@ -56,24 +57,11 @@ export default function Create({
     } = useSellCart(initialCart, selectedLocationId);
 
     useEffect(() => {
-        setSelectedLocationId(
-            filters.location_id ||
-                initialCart[0]?.location?.id?.toString() ||
-                "",
-        );
-    }, [filters.location_id, initialCart]);
+        if (!selectedLocationId && locations.length > 0 && !filters.location_id) {
+            setFilter("location_id", locations[0].id.toString());
+        }
+    }, [selectedLocationId, locations, filters.location_id]);
 
-    const reloadProducts = (locationId, search, type) => {
-        const queryParams = { location_id: locationId };
-        if (search) queryParams.search = search;
-        if (type && type !== "all") queryParams.type_id = type;
-
-        router.get(route("transactions.sells.create"), queryParams, {
-            preserveState: true,
-            preserveScroll: true,
-            only: ["allProducts", "filters"],
-        });
-    };
 
     const handleLocationChange = (locationId) => {
         if (locationId === selectedLocationId) return;
@@ -81,27 +69,17 @@ export default function Create({
         if (cart.length > 0) {
             setPendingLocationId(locationId);
         } else {
-            reloadProducts(locationId, searchQuery, selectedType);
+            setFilter("location_id", locationId);
         }
     };
 
     const confirmLocationChange = () => {
         clearCart();
-        setSearchQuery("");
-        setSelectedType("all");
-        reloadProducts(pendingLocationId, "", "all");
+        setFilter("search", "");
+        setFilter("type_id", "all");
+        setFilter("location_id", pendingLocationId);
         setPendingLocationId(null);
     };
-
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-        if (selectedLocationId) {
-            reloadProducts(selectedLocationId, debouncedSearch, selectedType);
-        }
-    }, [debouncedSearch, selectedType]);
 
     const cartProps = {
         cart,
@@ -148,14 +126,11 @@ export default function Create({
                 <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
                     <SellProductGrid
                         locations={locations}
-                        selectedLocationId={selectedLocationId}
                         onLocationChange={handleLocationChange}
                         products={allProducts.data}
                         productTypes={productTypes}
-                        selectedType={selectedType}
-                        setSelectedType={setSelectedType}
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
+                        params={params}
+                        setFilter={setFilter}
                         onProductClick={addItem}
                         selectedProductIds={selectedProductIds}
                         processingItem={processingItem}

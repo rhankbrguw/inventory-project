@@ -15,19 +15,20 @@ import Pagination from "@/components/Pagination";
 
 export default function SellProductGrid({
     locations,
-    selectedLocationId,
     onLocationChange,
     products,
     productTypes,
-    selectedType,
-    setSelectedType,
-    searchQuery,
-    setSearchQuery,
+    params,
+    setFilter,
     onProductClick,
     selectedProductIds,
     processingItem,
     paginationLinks,
 }) {
+    const selectedLocationId = params.location_id || "";
+    const searchQuery = params.search || "";
+    const selectedType = params.type_id || "all";
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <div className="p-3 border-b flex-shrink-0">
@@ -75,14 +76,16 @@ export default function SellProductGrid({
                             <Input
                                 placeholder="Cari produk (Nama atau SKU)..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) =>
+                                    setFilter("search", e.target.value)
+                                }
                                 className="pl-9 h-9 text-sm"
                             />
                         </div>
                         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth -mx-1 px-1">
                             <button
                                 type="button"
-                                onClick={() => setSelectedType("all")}
+                                onClick={() => setFilter("type_id", "all")}
                                 className={cn(
                                     "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
                                     selectedType === "all"
@@ -97,7 +100,7 @@ export default function SellProductGrid({
                                     key={type.id}
                                     type="button"
                                     onClick={() =>
-                                        setSelectedType(type.id.toString())
+                                        setFilter("type_id", type.id.toString())
                                     }
                                     className={cn(
                                         "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
@@ -120,7 +123,9 @@ export default function SellProductGrid({
                                         <ProductCard
                                             key={product.id}
                                             product={product}
-                                            onClick={() => onProductClick(product)}
+                                            onClick={() =>
+                                                onProductClick(product)
+                                            }
                                             selected={selectedProductIds.includes(
                                                 product.id,
                                             )}

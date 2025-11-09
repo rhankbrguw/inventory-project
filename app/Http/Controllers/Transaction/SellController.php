@@ -42,7 +42,7 @@ class SellController extends Controller
                     ->where("name", "like", "%{$search}%")
                     ->orWhere("sku", "like", "%{$search}%");
             })
-            ->when($typeId && $typeId !== "all", function ($query, $typeId) {
+            ->when($typeId && $typeId !== "all", function ($query) use ($typeId) {
                 $query->where("type_id", $typeId);
             })
             ->orderBy("name");
@@ -73,7 +73,7 @@ class SellController extends Controller
                 ->get(["id", "name"]),
             "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)
                 ->orderBy("name")
-                ->get(["id", "name"]),
+                ->get(["id","name"]),
             "cart" => SellCartItemResource::collection($cartItems),
             "filters" => (object) $request->only([
                 "location_id",

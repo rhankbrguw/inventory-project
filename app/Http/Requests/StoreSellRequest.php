@@ -44,10 +44,7 @@ class StoreSellRequest extends FormRequest
                 'required',
                 'numeric',
                 'min:0.0001',
-                new SufficientStock(
-                    $this->input('location_id'),
-                    $item['product_id'] ?? null
-                ),
+                new SufficientStock(),
             ];
         }
 

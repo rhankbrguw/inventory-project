@@ -9,18 +9,18 @@ const cleanNumberString = (numStr) => {
     return numStr.replace(/\./g, "").replace(/,/g, ".");
 };
 
-export function useSellCart(initialCart = [], locationId) {
-    const [cart, setCart] = useState(initialCart);
+export function useSellCart(cart = [], locationId) {
     const [processingItem, setProcessingItem] = useState(null);
     const [localQuantities, setLocalQuantities] = useState({});
     const updateTimeoutRef = useRef({});
 
-    const isCartForLocation = useMemo(() => {
-        if (cart.length === 0) return true;
-        return cart[0].location?.id.toString() === locationId;
+    const activeCart = useMemo(() => {
+        if (cart.length === 0) return [];
+        if (!locationId) return [];
+        return cart.filter(
+            (item) => item.location?.id.toString() === locationId,
+        );
     }, [cart, locationId]);
-
-    const activeCart = isCartForLocation ? cart : [];
 
     const selectedProductIds = useMemo(
         () => activeCart.map((item) => item.product.id),
@@ -42,29 +42,6 @@ export function useSellCart(initialCart = [], locationId) {
             ),
         [activeCart],
     );
-
-    const preserveState = {
-        preserveScroll: true,
-        preserveState: true,
-    };
-
-    const updateCartState = (productId) => {
-        setProcessingItem(productId);
-        return {
-            ...preserveState,
-            onSuccess: (page) => {
-                setCart(page.props.cart.data);
-                setProcessingItem(null);
-                setLocalQuantities((prev) => {
-                    const newState = { ...prev };
-                    delete newState[productId];
-                    return newState;
-                });
-            },
-            onError: () => setProcessingItem(null),
-            onFinish: () => setProcessingItem(null),
-        };
-    };
 
     const updateCartItem = useCallback(
         (item, field, value) => {
@@ -98,10 +75,21 @@ export function useSellCart(initialCart = [], locationId) {
                     }));
                 }
 
+                setProcessingItem(item.id);
                 router.patch(
                     route("sell.cart.update", { cartItem: item.id }),
                     payload,
-                    updateCartState(item.id),
+                    {
+                        preserveScroll: true,
+                        onFinish: () => {
+                            setProcessingItem(null);
+                            localStateSetter((prev) => {
+                                const newState = { ...prev };
+                                delete newState[item.id];
+                                return newState;
+                            });
+                        },
+                    },
                 );
             }, 800);
         },
@@ -111,9 +99,13 @@ export function useSellCart(initialCart = [], locationId) {
     const removeItem = useCallback(
         (itemId) => {
             if (!locationId || processingItem) return;
+            setProcessingItem(itemId);
             router.delete(
                 route("sell.cart.destroy.item", { cartItem: itemId }),
-                updateCartState(itemId),
+                {
+                    preserveScroll: true,
+                    onFinish: () => setProcessingItem(null),
+                },
             );
         },
         [locationId, processingItem],
@@ -127,16 +119,20 @@ export function useSellCart(initialCart = [], locationId) {
                 (item) => item.product.id === product.id,
             );
 
+            setProcessingItem(product.id);
+
             if (existingItem) {
                 const newQuantity =
                     parseFloat(String(existingItem.quantity)) + 1;
-
                 router.patch(
                     route("sell.cart.update", {
                         cartItem: existingItem.id,
                     }),
                     { quantity: newQuantity },
-                    updateCartState(product.id),
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setProcessingItem(null),
+                    },
                 );
             } else {
                 router.post(
@@ -146,7 +142,10 @@ export function useSellCart(initialCart = [], locationId) {
                         location_id: locationId,
                         quantity: 1,
                     },
-                    updateCartState(product.id),
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setProcessingItem(null),
+                    },
                 );
             }
         },
@@ -158,12 +157,7 @@ export function useSellCart(initialCart = [], locationId) {
         setProcessingItem("all");
         router.delete(route("sell.cart.destroy.location"), {
             data: { location_id: locationId },
-            ...preserveState,
-            onSuccess: (page) => {
-                setCart(page.props.cart.data);
-                setProcessingItem(null);
-            },
-            onError: () => setProcessingItem(null),
+            preserveScroll: true,
             onFinish: () => setProcessingItem(null),
         });
     }, [locationId, activeCart, processingItem]);
