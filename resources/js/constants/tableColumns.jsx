@@ -77,7 +77,7 @@ export const productColumns = [
                     "font-semibold",
                     row.total_stock > 0
                         ? "text-foreground"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground",
                 )}
             >
                 {formatNumber(row.total_stock)} {row.unit}
@@ -378,7 +378,7 @@ export const purchaseDetailColumns = [
         cell: ({ row }) => (
             <div
                 className={cn(
-                    row.product?.deleted_at && "text-muted-foreground"
+                    row.product?.deleted_at && "text-muted-foreground",
                 )}
             >
                 {row.product?.name || "Produk Telah Dihapus"}
@@ -425,7 +425,7 @@ export const sellDetailColumns = [
         cell: ({ row }) => (
             <div
                 className={cn(
-                    row.product?.deleted_at && "text-muted-foreground"
+                    row.product?.deleted_at && "text-muted-foreground",
                 )}
             >
                 {row.product?.name || "Produk Telah Dihapus"}
@@ -456,6 +456,14 @@ export const sellDetailColumns = [
         className: "text-center whitespace-nowrap px-4",
     },
     {
+        accessorKey: "average_cost_per_unit",
+        header: "Harga Modal",
+        cell: ({ row }) => {
+            return formatCurrency(row.average_cost_per_unit || 0);
+        },
+        className: "text-center whitespace-nowrap px-4",
+    },
+    {
         accessorKey: "cost_per_unit",
         header: "Harga Jual",
         cell: ({ row }) => {
@@ -464,8 +472,29 @@ export const sellDetailColumns = [
         className: "text-center whitespace-nowrap px-4",
     },
     {
+        id: "margin",
+        header: "Margin",
+        cell: ({ row }) => {
+            const item = row;
+            const quantity = Math.abs(item.quantity || 0);
+            const sellPrice = item.cost_per_unit || 0;
+            const avgCost = item.average_cost_per_unit || 0;
+            const margin = (sellPrice - avgCost) * quantity;
+            return (
+                <span
+                    className={cn(
+                        margin > 0 ? "text-success" : "text-destructive",
+                    )}
+                >
+                    {formatCurrency(margin)}
+                </span>
+            );
+        },
+        className: "text-center font-semibold whitespace-nowrap px-4",
+    },
+    {
         id: "total",
-        header: "Total",
+        header: "Total Jual",
         cell: ({ row }) => {
             const item = row;
             const quantity = Math.abs(item.quantity || 0);

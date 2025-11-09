@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Transaction;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
-class CartItemResource extends JsonResource
+class SellCartItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
@@ -24,15 +24,13 @@ class CartItemResource extends JsonResource
                     "image_url" => $this->product->image_path
                         ? Storage::url($this->product->image_path)
                         : null,
-                    "default_supplier_id" =>
-                        $this->product->default_supplier_id,
                 ],
             ),
-            "supplier" => $this->whenLoaded(
-                "supplier",
+            "location" => $this->whenLoaded(
+                "location",
                 fn() => [
-                    "id" => $this->supplier->id,
-                    "name" => $this->supplier->name,
+                    "id" => $this->location->id,
+                    "name" => $this->location->name,
                 ],
             ),
             "user_id" => $this->user_id,

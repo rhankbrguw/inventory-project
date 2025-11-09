@@ -1,11 +1,22 @@
-import { useForm, usePage } from "@inertiajs/react";
-import { Link } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Head, Link, router } from "@inertiajs/react";
+import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
+import { useSellCart } from "@/hooks/useSellCart";
+import SellProductGrid from "./Partials/SellProductGrid";
+import SellCart from "./Partials/SellCart";
+import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
+import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
-import SellDetailsManager from "./Partials/SellDetailsManager";
-import SellItemManager from "./Partials/SellItemManager";
-import { formatCurrency } from "@/lib/utils";
-import { format } from "date-fns";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import { formatNumber } from "@/lib/utils";
 
 export default function Create({
     auth,
@@ -13,96 +24,165 @@ export default function Create({
     customers,
     allProducts,
     paymentMethods,
+    productTypes = [],
+    customerTypes = [],
+    cart: { data: initialCart = [] },
+    filters,
 }) {
-    const { data, setData, post, processing, errors, reset, isDirty } = useForm(
-        {
-            location_id: "",
-            customer_id: null,
-            transaction_date: new Date(),
-            payment_method_type_id: null,
-            notes: "",
-            status: "Completed",
-            items: [{ product_id: "", quantity: 1, sell_price: "" }],
-        },
+    const { params, setFilter } = useIndexPageFilters(
+        "transactions.sells.create",
+        filters,
+    );
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const [cartOpen, setCartOpen] = useState(false);
+    const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+    const [pendingLocationId, setPendingLocationId] = useState(null);
+
+    const selectedLocationId = useMemo(
+        () => params.location_id || "",
+        [params.location_id],
     );
 
-    const isDetailsLocked = !data.items[0]?.product_id;
-    const selectedProductIds = data.items
-        .map((item) => item.product_id)
-        .filter(Boolean);
+    const {
+        cart,
+        selectedProductIds,
+        processingItem,
+        addItem,
+        removeItem,
+        updateCartItem,
+        clearCart,
+        totalCartItems,
+        totalCartPrice,
+        getItemQuantity,
+    } = useSellCart(initialCart, selectedLocationId);
 
-    const calculateTotal = () => {
-        return data.items.reduce((sum, item) => {
-            const quantity = parseFloat(item.quantity) || 0;
-            const price = parseFloat(item.sell_price) || 0;
-            return sum + quantity * price;
-        }, 0);
+    useEffect(() => {
+        if (!selectedLocationId && locations.length > 0 && !filters.location_id) {
+            setFilter("location_id", locations[0].id.toString());
+        }
+    }, [selectedLocationId, locations, filters.location_id]);
+
+
+    const handleLocationChange = (locationId) => {
+        if (locationId === selectedLocationId) return;
+
+        if (cart.length > 0) {
+            setPendingLocationId(locationId);
+        } else {
+            setFilter("location_id", locationId);
+        }
     };
 
-    const submit = (e) => {
-        e.preventDefault();
-        post(route("transactions.sells.store"), {
-            transform: (data) => ({
-                ...data,
-                transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
-            }),
-        });
+    const confirmLocationChange = () => {
+        clearCart();
+        setFilter("search", "");
+        setFilter("type_id", "all");
+        setFilter("location_id", pendingLocationId);
+        setPendingLocationId(null);
+    };
+
+    const cartProps = {
+        cart,
+        customers,
+        customerTypes,
+        selectedCustomerId,
+        onCustomerChange: setSelectedCustomerId,
+        removeItem,
+        updateItem: updateCartItem,
+        clearCart,
+        processingItem,
+        totalCartItems,
+        totalCartPrice,
+        onCheckout: () => {
+            setIsCheckoutOpen(true);
+            setCartOpen(false);
+        },
+        locationId: selectedLocationId,
+        getItemQuantity,
     };
 
     return (
-        <ContentPageLayout
-            auth={auth}
-            title="Buat Penjualan Item"
-            backRoute="transactions.index"
-        >
-            <form onSubmit={submit} className="space-y-4">
-                <SellItemManager
-                    items={data.items}
-                    allProducts={allProducts}
-                    setData={setData}
-                    errors={errors}
-                    locationId={data.location_id}
-                    selectedProductIds={selectedProductIds}
-                />
-
-                <SellDetailsManager
-                    data={data}
-                    setData={setData}
-                    errors={errors}
-                    locations={locations}
-                    customers={customers}
-                    paymentMethods={paymentMethods}
-                    isDetailsLocked={isDetailsLocked}
-                />
-
-                <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                        Total Penjualan <br />
-                        <span className="text-lg sm:text-xl font-bold text-foreground">
-                            {formatCurrency(calculateTotal())}
-                        </span>
-                    </p>
-                    <div className="flex gap-2">
-                        <Link href={route("transactions.index")}>
-                            <Button
-                                variant="outline"
-                                type="button"
-                                size="sm"
-                                className="px-3 py-1"
-                            >
-                                Batal
-                            </Button>
-                        </Link>
+        <AuthenticatedLayout user={auth.user}>
+            <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                    <Link href={route("transactions.index")}>
                         <Button
-                            size="sm"
-                            className="px-3 py-1"
-                            disabled={processing || !isDirty || isDetailsLocked}
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
                         >
-                            {processing ? "Menyimpan..." : "Simpan"}
+                            <ArrowLeft className="h-4 w-4" />
                         </Button>
-                    </div>
+                    </Link>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        Buat Penjualan
+                    </h1>
                 </div>
-            </form>
-        </ContentPageLayout>
+            </div>
+
+            <Head title="Buat Penjualan" />
+
+            <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
+                <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
+                    <SellProductGrid
+                        locations={locations}
+                        onLocationChange={handleLocationChange}
+                        products={allProducts.data}
+                        productTypes={productTypes}
+                        params={params}
+                        setFilter={setFilter}
+                        onProductClick={addItem}
+                        selectedProductIds={selectedProductIds}
+                        processingItem={processingItem}
+                        paginationLinks={allProducts.links}
+                    />
+                </div>
+
+                <div className="hidden lg:flex flex-[2] flex-col overflow-hidden rounded-lg border bg-card">
+                    <SellCart {...cartProps} />
+                </div>
+            </div>
+
+            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+                <SheetTrigger asChild>
+                    <Button
+                        className="lg:hidden fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50"
+                        size="icon"
+                    >
+                        <ShoppingCart className="h-6 w-6" />
+                        {totalCartItems > 0 && (
+                            <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center">
+                                {formatNumber(totalCartItems)}
+                            </span>
+                        )}
+                    </Button>
+                </SheetTrigger>
+                <SheetContent
+                    side="right"
+                    className="w-full sm:max-w-md p-0 flex flex-col"
+                >
+                    <SellCart {...cartProps} />
+                </SheetContent>
+            </Sheet>
+
+            <SellCheckoutDialog
+                isOpen={isCheckoutOpen}
+                onOpenChange={setIsCheckoutOpen}
+                cartItems={cart}
+                totalPrice={totalCartPrice}
+                locationId={selectedLocationId}
+                customerId={selectedCustomerId}
+                paymentMethods={paymentMethods}
+            />
+
+            <DeleteConfirmationDialog
+                open={!!pendingLocationId}
+                onOpenChange={() => setPendingLocationId(null)}
+                onConfirm={confirmLocationChange}
+                title="Kosongkan Keranjang?"
+                description="Mengganti lokasi akan mengosongkan keranjang Anda saat ini. Lanjutkan?"
+                confirmText="Lanjutkan"
+            />
+        </AuthenticatedLayout>
     );
 }

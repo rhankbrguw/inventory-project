@@ -18,6 +18,7 @@ class StockMovementResource extends JsonResource
             'reason' => $this->reason,
             'quantity' => $this->quantity,
             'cost_per_unit' => $this->cost_per_unit,
+            'average_cost_per_unit' => $this->average_cost_per_unit,
             'notes' => $this->notes,
             'origin_destination' => $this->getOriginDestination(),
             'reference' => $this->whenLoaded('reference', function () {
@@ -41,14 +42,14 @@ class StockMovementResource extends JsonResource
                     'url' => $url,
                 ];
             }),
-            'product' => $this->whenLoaded('product', fn() => [
+            'product' => $this->whenLoaded('product', fn () => [
                 'id' => $this->product->id,
                 'name' => $this->product->name,
                 'sku' => $this->product->sku,
                 'unit' => $this->product->unit,
                 'deleted_at' => $this->product->deleted_at?->toISOString(),
             ]),
-            'location' => $this->whenLoaded('location', fn() => [
+            'location' => $this->whenLoaded('location', fn () => [
                 'id' => $this->location->id,
                 'name' => $this->location->name,
             ]),

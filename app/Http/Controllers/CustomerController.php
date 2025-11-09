@@ -65,10 +65,17 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request)
     {
-        Customer::create($request->validated());
+        $customer = Customer::create($request->validated());
+
+        if ($request->boolean('_from_modal')) {
+            return Redirect::back()->with('newCustomer', $customer)
+                ->with('success', 'Pelanggan baru berhasil ditambahkan.');
+        }
 
         return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
     }
+
+
 
     public function edit(Customer $customer)
     {

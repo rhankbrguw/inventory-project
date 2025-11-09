@@ -15,28 +15,40 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from "@/components/InputError";
 
-export default function TransactionDetailsManager({
+export default function PurchaseDetailsManager({
     supplierId,
     locations,
     suppliers,
     paymentMethods,
+    cartItems,
     onClose,
 }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         location_id: "",
-        supplier_id: supplierId?.toString() || "",
+        supplier_id: supplierId,
         transaction_date: new Date(),
         notes: "",
         payment_method_type_id: "",
+        items: cartItems.map((item) => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+            cost_per_unit: item.cost_per_unit,
+        })),
     });
 
-    const selectedSupplier = suppliers.find(
-        (s) => s.id.toString() === data.supplier_id,
-    );
+    const getSupplierName = () => {
+        if (data.supplier_id === null) {
+            return "Supplier Umum";
+        }
+        return (
+            suppliers.find((s) => s.id === data.supplier_id)?.name ||
+            "Supplier Tidak Ditemukan"
+        );
+    };
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("checkout.store"), {
+        post(route("transactions.purchases.store"), {
             transform: (formData) => ({
                 ...formData,
                 transaction_date: format(
@@ -44,6 +56,7 @@ export default function TransactionDetailsManager({
                     "yyyy-MM-dd",
                 ),
             }),
+            onSuccess: () => onClose(),
         });
     };
 
@@ -57,7 +70,7 @@ export default function TransactionDetailsManager({
                 >
                     <Input
                         id="supplier_id"
-                        value={selectedSupplier?.name || ""}
+                        value={getSupplierName()}
                         readOnly
                         disabled
                         className="h-9 text-xs bg-muted/50 cursor-not-allowed"
@@ -153,6 +166,10 @@ export default function TransactionDetailsManager({
                     />
                     <InputError message={errors.notes} />
                 </FormField>
+
+                {errors.items && (
+                    <InputError message="Error pada data item, cek keranjang Anda." />
+                )}
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0">

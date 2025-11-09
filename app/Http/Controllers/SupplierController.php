@@ -57,7 +57,14 @@ class SupplierController extends Controller
 
     public function store(StoreSupplierRequest $request): RedirectResponse
     {
-        Supplier::create($request->validated());
+        $supplier = Supplier::create($request->validated());
+
+        if ($request->input('_from_modal')) {
+            return Redirect::back()
+                ->with('success', 'Supplier berhasil ditambahkan.')
+                ->with('newSupplier', SupplierResource::make($supplier));
+        }
+
         return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
     }
 

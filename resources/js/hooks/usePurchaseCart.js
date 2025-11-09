@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { router } from "@inertiajs/react";
-import { toast } from "sonner";
 import { formatNumber } from "@/lib/utils";
 
 const cleanNumberString = (numStr) => {
@@ -13,9 +12,10 @@ const cleanNumberString = (numStr) => {
 export default function usePurchaseCart(initialCart = []) {
     const [cart, setCart] = useState(initialCart);
     const [processingItem, setProcessingItem] = useState(null);
-    const [processingGroup, setProcessingGroup] = useState(null);
+    const [processingGroup, setProcessingGroup] = useState(false);
     const [selectedSuppliers, setSelectedSuppliers] = useState({});
     const [localQuantities, setLocalQuantities] = useState({});
+    const [localCosts, setLocalCosts] = useState({});
     const updateTimeoutRef = useRef({});
 
     useMemo(() => {
@@ -24,10 +24,10 @@ export default function usePurchaseCart(initialCart = []) {
 
     const cartGroups = useMemo(() => {
         return cart.reduce((acc, item) => {
-            const supplierName = item.supplier.name || "Tanpa Supplier";
+            const supplierName = item.supplier?.name || "Supplier Umum";
             if (!acc[supplierName]) {
                 acc[supplierName] = {
-                    supplier_id: item.supplier.id,
+                    supplier_id: item.supplier?.id || null,
                     items: [],
                 };
             }
@@ -41,103 +41,108 @@ export default function usePurchaseCart(initialCart = []) {
         [cart],
     );
 
+    const removeItem = useCallback(
+        (cartItemId) => {
+            if (processingItem === cartItemId) return;
+            setProcessingItem(cartItemId);
+            router.delete(route("purchase.cart.destroy.item", cartItemId), {
+                preserveScroll: true,
+                onFinish: () => setProcessingItem(null),
+                onError: () => {},
+            });
+        },
+        [processingItem],
+    );
+
     const addItem = useCallback(
         (product) => {
             if (processingItem === product.id) return;
-
-            if (!product.default_supplier_id) {
-                toast.error("Produk ini tidak memiliki supplier default");
-                return;
-            }
 
             const existingItem = cart.find(
                 (item) => item.product.id === product.id,
             );
 
-            if (existingItem) {
-                removeItem(existingItem.id);
-                return;
-            }
-
             setProcessingItem(product.id);
-            router.post(
-                route("cart.store"),
-                {
-                    product_id: product.id,
-                    supplier_id: product.default_supplier_id,
-                    quantity: 1,
-                },
-                {
-                    preserveScroll: true,
-                    onFinish: () => setProcessingItem(null),
-                    onError: (errors) => {
-                        toast.error("Gagal menambahkan item");
-                        console.error(errors);
+
+            if (existingItem) {
+                const newQuantity =
+                    parseFloat(String(existingItem.quantity)) + 1;
+                router.patch(
+                    route("purchase.cart.update", {
+                        cartItem: existingItem.id,
+                    }),
+                    { quantity: newQuantity },
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setProcessingItem(null),
+                        onError: () => {},
                     },
-                },
-            );
+                );
+            } else {
+                router.post(
+                    route("purchase.cart.store"),
+                    {
+                        product_id: product.id,
+                        supplier_id: product.default_supplier_id,
+                        quantity: 1,
+                        cost_per_unit: 0,
+                    },
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setProcessingItem(null),
+                        onError: () => {},
+                    },
+                );
+            }
         },
         [cart, processingItem],
-    );
-
-    const removeItem = useCallback(
-        (cartItemId) => {
-            if (processingItem === cartItemId) return;
-            setProcessingItem(cartItemId);
-            router.delete(route("cart.destroy.item", cartItemId), {
-                preserveScroll: true,
-                onFinish: () => setProcessingItem(null),
-                onError: (errors) => {
-                    toast.error("Gagal menghapus item");
-                    console.error(errors);
-                },
-            });
-        },
-        [processingItem],
     );
 
     const removeSupplierGroup = useCallback(
         (supplierId) => {
             if (processingGroup === supplierId) return;
             setProcessingGroup(supplierId);
-            router.delete(route("cart.destroy.supplier"), {
+
+            router.delete(route("purchase.cart.destroy.supplier"), {
                 data: { supplier_id: supplierId },
                 preserveScroll: true,
                 onFinish: () => {
-                    setProcessingGroup(null);
+                    setProcessingGroup(false);
                     setSelectedSuppliers((prev) => ({
                         ...prev,
                         [supplierId]: false,
                     }));
                 },
-                onError: (errors) => {
-                    toast.error("Gagal menghapus grup item");
-                    console.error(errors);
-                },
+                onError: () => setProcessingGroup(false),
             });
         },
         [processingGroup],
     );
 
     const toggleSupplierSelection = useCallback((supplierId) => {
+        const key = supplierId === null ? "null" : supplierId;
         setSelectedSuppliers((prev) => ({
             ...prev,
-            [supplierId]: !prev[supplierId],
+            [key]: !prev[key],
         }));
     }, []);
 
     const isSupplierSelected = useCallback(
-        (supplierId) => !!selectedSuppliers[supplierId],
+        (supplierId) => {
+            const key = supplierId === null ? "null" : supplierId;
+            return !!selectedSuppliers[key];
+        },
         [selectedSuppliers],
     );
 
     const removeSelectedGroups = useCallback(() => {
         const supplierIdsToRemove = Object.entries(selectedSuppliers)
             .filter(([, isSelected]) => isSelected)
-            .map(([supplierId]) => parseInt(supplierId));
+            .map(([supplierId]) =>
+                supplierId === "null" ? null : parseInt(supplierId),
+            );
 
         if (supplierIdsToRemove.length === 0) {
-            toast.info("Pilih grup supplier yang ingin dihapus");
             return;
         }
 
@@ -149,55 +154,62 @@ export default function usePurchaseCart(initialCart = []) {
         [selectedSuppliers],
     );
 
-    const updateQuantity = useCallback((item, quantityString) => {
-        setLocalQuantities((prev) => ({ ...prev, [item.id]: quantityString }));
+    const updateCartItem = useCallback((item, field, value) => {
+        const isQty = field === "quantity";
+        const localStateSetter = isQty ? setLocalQuantities : setLocalCosts;
+        const cleanedValue = cleanNumberString(value);
+
+        localStateSetter((prev) => ({ ...prev, [item.id]: value }));
 
         if (updateTimeoutRef.current[item.id]) {
             clearTimeout(updateTimeoutRef.current[item.id]);
         }
 
-        if (quantityString === "") {
-            return;
-        }
+        if (value === "") return;
 
         updateTimeoutRef.current[item.id] = setTimeout(() => {
-            const cleanedString = cleanNumberString(quantityString);
-            const newQuantity = parseFloat(cleanedString);
+            const newNumericValue = parseFloat(cleanedValue);
+            const payload = {};
 
-            if (isNaN(newQuantity) || newQuantity <= 0) {
-                setLocalQuantities((prev) => ({ ...prev, [item.id]: "1" }));
-                router.patch(
-                    route("cart.update", { cartItem: item.id }),
-                    { quantity: 1 },
-                    { preserveScroll: true, preserveState: true },
-                );
-                return;
+            if (isQty) {
+                payload.quantity =
+                    isNaN(newNumericValue) || newNumericValue <= 0
+                        ? 1
+                        : newNumericValue;
+            } else {
+                payload.cost_per_unit =
+                    isNaN(newNumericValue) || newNumericValue < 0
+                        ? 0
+                        : newNumericValue;
+            }
+
+            if (
+                (isQty &&
+                    payload.quantity === 1 &&
+                    (isNaN(newNumericValue) || newNumericValue <= 0)) ||
+                !isQty
+            ) {
+                localStateSetter((prev) => ({
+                    ...prev,
+                    [item.id]: isQty ? "1" : payload.cost_per_unit.toString(),
+                }));
             }
 
             setProcessingItem(item.id);
             router.patch(
-                route("cart.update", { cartItem: item.id }),
-                {
-                    quantity: newQuantity,
-                },
+                route("purchase.cart.update", { cartItem: item.id }),
+                payload,
                 {
                     preserveScroll: true,
                     onFinish: () => {
                         setProcessingItem(null);
-                        setLocalQuantities((prev) => {
+                        localStateSetter((prev) => {
                             const newState = { ...prev };
                             delete newState[item.id];
                             return newState;
                         });
                     },
-                    onError: (errors) => {
-                        toast.error("Gagal memperbarui jumlah");
-                        setLocalQuantities((prev) => ({
-                            ...prev,
-                            [item.id]: formatNumber(item.quantity),
-                        }));
-                        console.error(errors);
-                    },
+                    onError: () => {},
                 },
             );
         }, 800);
@@ -211,6 +223,16 @@ export default function usePurchaseCart(initialCart = []) {
             return formatNumber(item.quantity);
         },
         [localQuantities],
+    );
+
+    const getItemCost = useCallback(
+        (item) => {
+            if (localCosts[item.id] !== undefined) {
+                return localCosts[item.id];
+            }
+            return item.cost_per_unit?.toString() || "0";
+        },
+        [localCosts],
     );
 
     const totalCartItems = cart.length;
@@ -229,8 +251,9 @@ export default function usePurchaseCart(initialCart = []) {
         isSupplierSelected,
         removeSelectedGroups,
         hasSelectedGroups,
-        updateQuantity,
+        updateCartItem,
         getItemQuantity,
+        getItemCost,
         totalCartItems,
     };
 }
