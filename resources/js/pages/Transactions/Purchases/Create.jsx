@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import TransactionDetailsManager from "./Partials/PurchaseDetailsManager";
+import PurchaseDetailsManager from "./Partials/PurchaseDetailsManager";
 import PurchaseProductGrid from "./Partials/PurchaseProductGrid";
 import PurchaseCart from "./Partials/PurchaseCart";
 import usePurchaseCart from "@/hooks/usePurchaseCart";
@@ -34,6 +34,7 @@ export default function Create({
     filters,
 }) {
     const [checkoutSupplierId, setCheckoutSupplierId] = useState(null);
+    const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
 
     const {
@@ -60,6 +61,27 @@ export default function Create({
         filters,
     );
 
+    const handleOpenCheckout = (supplierId) => {
+        setCheckoutSupplierId(supplierId);
+        setIsCheckoutModalOpen(true);
+        setCartOpen(false);
+    };
+
+    const handleCloseCheckout = () => {
+        setIsCheckoutModalOpen(false);
+        setCheckoutSupplierId(null);
+    };
+
+    const getCartItemsForCheckout = () => {
+        if (checkoutSupplierId === null) {
+            return cartGroups["Supplier Umum"]?.items || [];
+        }
+        const supplierName = suppliers.find(
+            (s) => s.id === checkoutSupplierId,
+        )?.name;
+        return cartGroups[supplierName]?.items || [];
+    };
+
     const cartProps = {
         cartGroups,
         hasSelectedGroups,
@@ -70,10 +92,7 @@ export default function Create({
         updateItem: updateCartItem,
         getItemQuantity,
         getItemCost,
-        setCheckoutSupplierId: (id) => {
-            setCheckoutSupplierId(id);
-            setCartOpen(false);
-        },
+        setCheckoutSupplierId: handleOpenCheckout,
         processingItem,
         toggleSupplierSelection,
         isSupplierSelected,
@@ -144,10 +163,7 @@ export default function Create({
                 </SheetContent>
             </Sheet>
 
-            <Dialog
-                open={!!checkoutSupplierId}
-                onOpenChange={(open) => !open && setCheckoutSupplierId(null)}
-            >
+            <Dialog open={isCheckoutModalOpen} onOpenChange={handleCloseCheckout}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Detail Pembelian</DialogTitle>
@@ -156,21 +172,22 @@ export default function Create({
                             dari supplier ini
                         </DialogDescription>
                     </DialogHeader>
-                    <TransactionDetailsManager
-                        key={checkoutSupplierId}
-                        supplierId={checkoutSupplierId}
-                        locations={locations}
-                        suppliers={suppliers}
-                        paymentMethods={paymentMethods}
-                        cartItems={
-                            cartGroups[
-                                suppliers.find(
-                                    (s) => s.id === checkoutSupplierId,
-                                )?.name
-                            ]?.items || []
-                        }
-                        onClose={() => setCheckoutSupplierId(null)}
-                    />
+                    {checkoutSupplierId !== null ||
+                    cartGroups["Supplier Umum"] ? (
+                        <PurchaseDetailsManager
+                            key={
+                                checkoutSupplierId === null
+                                    ? "null"
+                                    : checkoutSupplierId
+                            }
+                            supplierId={checkoutSupplierId}
+                            locations={locations}
+                            suppliers={suppliers}
+                            paymentMethods={paymentMethods}
+                            cartItems={getCartItemsForCheckout()}
+                            onClose={handleCloseCheckout}
+                        />
+                    ) : null}
                 </DialogContent>
             </Dialog>
         </AuthenticatedLayout>

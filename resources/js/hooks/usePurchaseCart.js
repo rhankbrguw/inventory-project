@@ -12,7 +12,7 @@ const cleanNumberString = (numStr) => {
 export default function usePurchaseCart(initialCart = []) {
     const [cart, setCart] = useState(initialCart);
     const [processingItem, setProcessingItem] = useState(null);
-    const [processingGroup, setProcessingGroup] = useState(null);
+    const [processingGroup, setProcessingGroup] = useState(false);
     const [selectedSuppliers, setSelectedSuppliers] = useState({});
     const [localQuantities, setLocalQuantities] = useState({});
     const [localCosts, setLocalCosts] = useState({});
@@ -24,10 +24,10 @@ export default function usePurchaseCart(initialCart = []) {
 
     const cartGroups = useMemo(() => {
         return cart.reduce((acc, item) => {
-            const supplierName = item.supplier.name || "Tanpa Supplier";
+            const supplierName = item.supplier?.name || "Supplier Umum";
             if (!acc[supplierName]) {
                 acc[supplierName] = {
-                    supplier_id: item.supplier.id,
+                    supplier_id: item.supplier?.id || null,
                     items: [],
                 };
             }
@@ -102,38 +102,45 @@ export default function usePurchaseCart(initialCart = []) {
         (supplierId) => {
             if (processingGroup === supplierId) return;
             setProcessingGroup(supplierId);
+
             router.delete(route("purchase.cart.destroy.supplier"), {
                 data: { supplier_id: supplierId },
                 preserveScroll: true,
                 onFinish: () => {
-                    setProcessingGroup(null);
+                    setProcessingGroup(false);
                     setSelectedSuppliers((prev) => ({
                         ...prev,
                         [supplierId]: false,
                     }));
                 },
-                onError: () => {},
+                onError: () => setProcessingGroup(false),
             });
         },
         [processingGroup],
     );
 
     const toggleSupplierSelection = useCallback((supplierId) => {
+        const key = supplierId === null ? "null" : supplierId;
         setSelectedSuppliers((prev) => ({
             ...prev,
-            [supplierId]: !prev[supplierId],
+            [key]: !prev[key],
         }));
     }, []);
 
     const isSupplierSelected = useCallback(
-        (supplierId) => !!selectedSuppliers[supplierId],
+        (supplierId) => {
+            const key = supplierId === null ? "null" : supplierId;
+            return !!selectedSuppliers[key];
+        },
         [selectedSuppliers],
     );
 
     const removeSelectedGroups = useCallback(() => {
         const supplierIdsToRemove = Object.entries(selectedSuppliers)
             .filter(([, isSelected]) => isSelected)
-            .map(([supplierId]) => parseInt(supplierId));
+            .map(([supplierId]) =>
+                supplierId === "null" ? null : parseInt(supplierId),
+            );
 
         if (supplierIdsToRemove.length === 0) {
             return;

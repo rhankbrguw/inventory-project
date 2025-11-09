@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use App\Rules\UniqueRule;
@@ -13,9 +14,16 @@ class StorePurchaseCartItemRequest extends FormRequest
 
     public function rules(): array
     {
+        $supplierId = $this->input("supplier_id");
+
         $uniqueProductRule = new UniqueRule("purchase_cart_items");
         $uniqueProductRule->where("user_id", $this->user()->id);
-        $uniqueProductRule->where("supplier_id", $this->input("supplier_id"));
+
+        if (is_null($supplierId)) {
+            $uniqueProductRule->where("supplier_id", null);
+        } else {
+            $uniqueProductRule->where("supplier_id", $supplierId);
+        }
 
         return [
             "product_id" => [
@@ -24,7 +32,11 @@ class StorePurchaseCartItemRequest extends FormRequest
                 "exists:products,id,deleted_at,NULL",
                 $uniqueProductRule,
             ],
-            "supplier_id" => ["required", "integer", "exists:suppliers,id"],
+            "supplier_id" => [
+                "nullable",
+                "integer",
+                "exists:suppliers,id",
+            ],
             "quantity" => ["nullable", "numeric", "min:0.0001"],
             "cost_per_unit" => ["nullable", "numeric", "min:0"],
         ];

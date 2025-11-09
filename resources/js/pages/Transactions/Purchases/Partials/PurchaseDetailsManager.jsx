@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from "@/components/InputError";
 
-export default function TransactionDetailsManager({
+export default function PurchaseDetailsManager({
     supplierId,
     locations,
     suppliers,
@@ -25,7 +25,7 @@ export default function TransactionDetailsManager({
 }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         location_id: "",
-        supplier_id: supplierId?.toString() || "",
+        supplier_id: supplierId,
         transaction_date: new Date(),
         notes: "",
         payment_method_type_id: "",
@@ -36,9 +36,15 @@ export default function TransactionDetailsManager({
         })),
     });
 
-    const selectedSupplier = suppliers.find(
-        (s) => s.id.toString() === data.supplier_id,
-    );
+    const getSupplierName = () => {
+        if (data.supplier_id === null) {
+            return "Supplier Umum";
+        }
+        return (
+            suppliers.find((s) => s.id === data.supplier_id)?.name ||
+            "Supplier Tidak Ditemukan"
+        );
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -64,7 +70,7 @@ export default function TransactionDetailsManager({
                 >
                     <Input
                         id="supplier_id"
-                        value={selectedSupplier?.name || ""}
+                        value={getSupplierName()}
                         readOnly
                         disabled
                         className="h-9 text-xs bg-muted/50 cursor-not-allowed"

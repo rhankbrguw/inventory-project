@@ -77,7 +77,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                     </FormField>
 
                     <FormField
-                        label="Nama Koordinator"
+                        label="Koordinator"
                         htmlFor="supplierContactPerson"
                     >
                         <Input
@@ -117,6 +117,15 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             placeholder="81234567890"
                         />
                         <InputError message={errors.phone} />
+                    </FormField>
+
+                    <FormField label="Alamat" htmlFor="supplierAddress">
+                        <Input
+                            id="supplierAddress"
+                            value={data.address}
+                            onChange={(e) => setData("address", e.target.value)}
+                        />
+                        <InputError message={errors.address} />
                     </FormField>
 
                     <DialogFooter>

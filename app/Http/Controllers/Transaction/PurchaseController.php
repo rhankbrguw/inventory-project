@@ -55,10 +55,9 @@ class PurchaseController extends Controller
                     ->orWhere("sku", "like", "%{$search}%");
             })
             ->when(
-                $request->input("type_id") &&
-                    $request->input("type_id") !== "all",
-                function ($query, $typeId) {
-                    $query->where("type_id", $typeId);
+                $request->filled("type_id") && $request->input("type_id") !== "all",
+                function ($query) use ($request) {
+                    $query->where("type_id", $request->input("type_id"));
                 },
             )
             ->orderBy("name")

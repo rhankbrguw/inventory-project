@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use App\Models\Type;
@@ -16,7 +17,11 @@ class StorePurchaseRequest extends FormRequest
     {
         return [
             "location_id" => ["required", "exists:locations,id"],
-            "supplier_id" => ["required", "exists:suppliers,id"],
+            "supplier_id" => [
+                "nullable",
+                "integer",
+                "exists:suppliers,id",
+            ],
             "transaction_date" => ["required", "date"],
             "notes" => ["nullable", "string", "max:100"],
             "payment_method_type_id" => [

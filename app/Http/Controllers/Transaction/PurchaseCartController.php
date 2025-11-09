@@ -57,7 +57,11 @@ class PurchaseCartController extends Controller
     public function destroySupplier(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            "supplier_id" => ["required", "integer", "exists:suppliers,id"],
+            "supplier_id" => [
+                "nullable",
+                "integer",
+                "exists:suppliers,id",
+            ],
         ]);
 
         Auth::user()
