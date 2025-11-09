@@ -7,6 +7,7 @@ export default function ProductCard({
     onClick,
     selected,
     processing,
+    showPrice = true,
 }) {
     const imageUrl = product.image_path
         ? `/storage/${product.image_path}`
@@ -85,9 +86,11 @@ export default function ProductCard({
                 <p className="text-[11px] text-muted-foreground truncate">
                     {product.sku || "—"}
                 </p>
-                <p className="text-[15px] font-bold text-foreground pt-0.5">
-                    {formatCurrency(product.price)}
-                </p>
+                {showPrice && (
+                    <p className="text-[15px] font-bold text-foreground pt-0.5">
+                        {formatCurrency(product.price)}
+                    </p>
+                )}
             </div>
         </div>
     );

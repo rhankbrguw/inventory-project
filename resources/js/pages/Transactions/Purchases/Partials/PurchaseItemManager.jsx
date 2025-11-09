@@ -5,6 +5,9 @@ import { Trash2, ShoppingBag, Package } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
+import CurrencyInput from "@/components/CurrencyInput";
+import InputError from "@/components/InputError";
+import { usePage } from "@inertiajs/react";
 
 const cleanNumberString = (numStr) => {
     if (typeof numStr !== "string") {
@@ -17,14 +20,16 @@ export default function PurchaseItemManager({
     cartGroups,
     onRemoveItem,
     onRemoveSupplierGroup,
-    onUpdateQuantity,
+    onUpdateItem,
     getItemQuantity,
+    getItemCost,
     onCheckout,
     processingItem,
     processingGroup,
     toggleSupplierSelection,
     isSupplierSelected,
 }) {
+    const { errors } = usePage().props;
     const hasCartItems = Object.keys(cartGroups).length > 0;
 
     if (!hasCartItems) {
@@ -54,8 +59,8 @@ export default function PurchaseItemManager({
                     const quantity =
                         parseFloat(cleanNumberString(getItemQuantity(item))) ||
                         0;
-                    const price = parseFloat(item.product.price) || 0;
-                    return sum + quantity * price;
+                    const cost = parseFloat(getItemCost(item)) || 0;
+                    return sum + quantity * cost;
                 }, 0);
                 const isGroupProcessing =
                     processingGroup === groupData.supplier_id;
@@ -111,7 +116,7 @@ export default function PurchaseItemManager({
                         </div>
 
                         <div className="p-2.5 space-y-2">
-                            {groupData.items.map((item) => {
+                            {groupData.items.map((item, index) => {
                                 const isItemProcessing =
                                     processingItem === item.id;
                                 const subtotal =
@@ -120,7 +125,12 @@ export default function PurchaseItemManager({
                                             getItemQuantity(item),
                                         ),
                                     ) || 0) *
-                                    (parseFloat(item.product.price) || 0);
+                                    (parseFloat(getItemCost(item)) || 0);
+
+                                const qtyError =
+                                    errors[`items.${index}.quantity`];
+                                const costError =
+                                    errors[`items.${index}.cost_per_unit`];
 
                                 return (
                                     <div
@@ -157,9 +167,16 @@ export default function PurchaseItemManager({
                                             </Button>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1">
+                                        <div className="flex items-start gap-2">
+                                            <div className="flex-1 space-y-1">
+                                                <Label
+                                                    htmlFor={`qty-${item.id}`}
+                                                    className="text-[10px] font-medium"
+                                                >
+                                                    Jumlah
+                                                </Label>
                                                 <Input
+                                                    id={`qty-${item.id}`}
                                                     type="text"
                                                     inputMode="numeric"
                                                     value={getItemQuantity(
@@ -174,8 +191,9 @@ export default function PurchaseItemManager({
                                                                 value,
                                                             )
                                                         ) {
-                                                            onUpdateQuantity(
+                                                            onUpdateItem(
                                                                 item,
+                                                                "quantity",
                                                                 value,
                                                             );
                                                         }
@@ -190,18 +208,20 @@ export default function PurchaseItemManager({
 
                                                         if (
                                                             cleanedValue ===
-                                                                "" ||
+                                                            "" ||
                                                             parseFloat(
                                                                 cleanedValue,
                                                             ) <= 0
                                                         ) {
-                                                            onUpdateQuantity(
+                                                            onUpdateItem(
                                                                 item,
+                                                                "quantity",
                                                                 "1",
                                                             );
                                                         } else {
-                                                            onUpdateQuantity(
+                                                            onUpdateItem(
                                                                 item,
+                                                                "quantity",
                                                                 formatNumber(
                                                                     cleanedValue,
                                                                 ),
@@ -209,26 +229,7 @@ export default function PurchaseItemManager({
                                                         }
                                                     }}
                                                     onFocus={(e) => {
-                                                        const formattedValue =
-                                                            e.target.value;
-                                                        const cleanedValue =
-                                                            cleanNumberString(
-                                                                formattedValue,
-                                                            );
-                                                        e.target.value =
-                                                            cleanedValue;
-                                                        if (
-                                                            formattedValue !==
-                                                            cleanedValue
-                                                        ) {
-                                                            onUpdateQuantity(
-                                                                item,
-                                                                cleanedValue,
-                                                            );
-                                                        }
-                                                        setTimeout(() => {
-                                                            e.target.select();
-                                                        }, 0);
+                                                        e.target.select();
                                                     }}
                                                     disabled={
                                                         isItemProcessing ||
@@ -237,12 +238,42 @@ export default function PurchaseItemManager({
                                                     className="h-8 text-xs"
                                                     autoComplete="off"
                                                 />
+                                                <InputError
+                                                    message={qtyError}
+                                                />
                                             </div>
-                                            <div className="flex-shrink-0 min-w-[80px] text-right">
-                                                <p className="text-xs font-bold text-primary">
-                                                    {formatCurrency(subtotal)}
-                                                </p>
+                                            <div className="flex-1 space-y-1">
+                                                <Label
+                                                    htmlFor={`cost-${item.id}`}
+                                                    className="text-[10px] font-medium"
+                                                >
+                                                    Harga Beli
+                                                </Label>
+                                                <CurrencyInput
+                                                    id={`cost-${item.id}`}
+                                                    value={getItemCost(item)}
+                                                    onValueChange={(value) =>
+                                                        onUpdateItem(
+                                                            item,
+                                                            "cost_per_unit",
+                                                            value || "0",
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        isItemProcessing ||
+                                                        isGroupProcessing
+                                                    }
+                                                    className="h-8 text-xs"
+                                                />
+                                                <InputError
+                                                    message={costError}
+                                                />
                                             </div>
+                                        </div>
+                                        <div className="text-right mt-1.5">
+                                            <p className="text-xs font-bold text-primary">
+                                                {formatCurrency(subtotal)}
+                                            </p>
                                         </div>
                                     </div>
                                 );
