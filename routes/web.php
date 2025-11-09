@@ -13,8 +13,8 @@ use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Transaction\PurchaseCartController;
+use App\Http\Controllers\Transaction\SellCartController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -47,26 +47,25 @@ Route::middleware(["auth", "verified"])->group(function () {
         "getQuantity",
     ])->name("api.inventory.quantity");
 
-    Route::prefix("cart")
-        ->name("cart.")
+    Route::prefix("purchase-cart")
+        ->name("purchase.cart.")
+        ->controller(PurchaseCartController::class)
         ->group(function () {
-            Route::post("/", [CartController::class, "store"])->name("store");
-            Route::patch("/{cartItem}", [
-                CartController::class,
-                "update",
-            ])->name("update");
-            Route::delete("/", [CartController::class, "destroy"])->name(
-                "destroy.supplier",
-            );
-            Route::delete("/{cartItem}", [
-                CartController::class,
-                "destroyItem",
-            ])->name("destroy.item");
+            Route::post("/", "store")->name("store");
+            Route::patch("/{cartItem}", "update")->name("update");
+            Route::delete("/", "destroySupplier")->name("destroy.supplier");
+            Route::delete("/{cartItem}", "destroyItem")->name("destroy.item");
         });
 
-    Route::post("/checkout", [CheckoutController::class, "store"])->name(
-        "checkout.store",
-    );
+    Route::prefix("sell-cart")
+        ->name("sell.cart.")
+        ->controller(SellCartController::class)
+        ->group(function () {
+            Route::post("/", "store")->name("store");
+            Route::patch("/{cartItem}", "update")->name("update");
+            Route::delete("/", "destroyLocation")->name("destroy.location");
+            Route::delete("/{cartItem}", "destroyItem")->name("destroy.item");
+        });
 
     Route::middleware(["role:Super Admin"])->group(function () {
         Route::resource("users", UserController::class)->except(["destroy"]);

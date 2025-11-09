@@ -9,12 +9,128 @@ import {
 } from "@/components/ui/card";
 import { TableFooter, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
 import DataTable from "@/components/DataTable";
 import { sellDetailColumns } from "@/constants/tableColumns";
+import React from "react";
 
 export default function Show({ auth, sell }) {
     const { data } = sell;
+
+    const totals = React.useMemo(() => {
+        let totalSell = 0;
+        let totalCost = 0;
+
+        data.items.forEach((item) => {
+            const quantity = Math.abs(item.quantity || 0);
+            const sellPrice = item.cost_per_unit || 0;
+            const avgCost = item.average_cost_per_unit || 0;
+
+            totalSell += quantity * sellPrice;
+            totalCost += quantity * avgCost;
+        });
+
+        const totalMargin = totalSell - totalCost;
+        return { totalSell, totalCost, totalMargin };
+    }, [data.items]);
+
+    const renderMobileItem = (item) => {
+        const quantity = Math.abs(item.quantity || 0);
+        const sellPrice = item.cost_per_unit || 0;
+        const avgCost = item.average_cost_per_unit || 0;
+        const total = quantity * sellPrice;
+        const margin = (sellPrice - avgCost) * quantity;
+
+        return (
+            <Card
+                key={item.id}
+                className={cn(
+                    "p-3",
+                    item.product?.deleted_at && "opacity-60 bg-muted/50",
+                )}
+            >
+                <div className="space-y-2">
+                    <div>
+                        <p className="font-medium text-sm">
+                            {item.product?.name || "Produk Telah Dihapus"}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                            {item.product?.sku || "-"}
+                        </p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span>
+                            {formatNumber(quantity)} {item.product?.unit} ×{" "}
+                            {formatCurrency(sellPrice)}
+                        </span>
+                        <span className="font-semibold">
+                            {formatCurrency(total)}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs border-t pt-2 mt-2">
+                        <span className="text-muted-foreground">Margin</span>
+                        <span
+                            className={cn(
+                                "font-semibold",
+                                margin > 0
+                                    ? "text-success"
+                                    : "text-destructive",
+                            )}
+                        >
+                            {formatCurrency(margin)}
+                        </span>
+                    </div>
+                </div>
+            </Card>
+        );
+    };
+
+    const renderDesktopFooter = () => (
+        <TableFooter>
+            <TableRow>
+                <TableCell
+                    colSpan={6}
+                    className="text-right font-bold text-base"
+                >
+                    Total Penjualan
+                </TableCell>
+                <TableCell className="text-right font-bold text-base">
+                    {formatCurrency(totals.totalSell)}
+                </TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell
+                    colSpan={6}
+                    className="text-right font-medium text-muted-foreground"
+                >
+                    Total Modal (HPP)
+                </TableCell>
+                <TableCell className="text-right font-medium text-muted-foreground">
+                    {formatCurrency(totals.totalCost)}
+                </TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell
+                    colSpan={6}
+                    className="text-right font-bold text-base"
+                >
+                    Total Margin
+                </TableCell>
+                <TableCell
+                    className={cn(
+                        "text-right font-bold text-base",
+                        totals.totalMargin > 0
+                            ? "text-success"
+                            : "text-destructive",
+                    )}
+                >
+                    {formatCurrency(totals.totalMargin)}
+                </TableCell>
+            </TableRow>
+        </TableFooter>
+    );
+
     return (
         <ContentPageLayout
             auth={auth}
@@ -74,71 +190,44 @@ export default function Show({ auth, sell }) {
                     </PrintButton>
                 </CardHeader>
                 <CardContent>
+                    {/* Mobile View */}
                     <div className="md:hidden space-y-3">
-                        {data.items.map((item) => (
-                            <Card
-                                key={item.id}
-                                className={cn(
-                                    "p-3",
-                                    item.product?.deleted_at &&
-                                        "opacity-60 bg-muted/50",
-                                )}
-                            >
-                                <div className="space-y-2">
-                                    <div>
-                                        <p className="font-medium text-sm">
-                                            {item.product?.name ||
-                                                "Produk Telah Dihapus"}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground font-mono">
-                                            {item.product?.sku || "-"}
-                                        </p>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span>
-                                            {formatNumber(
-                                                Math.abs(item.quantity),
-                                            )}{" "}
-                                            {item.product?.unit} ×{" "}
-                                            {formatCurrency(
-                                                item.sell_price,
-                                            )}{" "}
-                                        </span>
-                                        <span className="font-semibold">
-                                            {formatCurrency(
-                                                Math.abs(item.quantity) *
-                                                    (item.sell_price || 0),
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                        <div className="flex justify-between items-center pt-3 border-t font-bold text-base">
-                            <span>Total Pembelian</span>
-                            <span>{formatCurrency(data.total_price)}</span>
+                        {data.items.map(renderMobileItem)}
+
+                        <Separator className="my-4" />
+
+                        <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-base">Total Penjualan</span>
+                                <span className="font-bold text-base">{formatCurrency(totals.totalSell)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Total Modal (HPP)</span>
+                                <span className="text-muted-foreground">{formatCurrency(totals.totalCost)}</span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-base">Total Margin</span>
+                                <span
+                                    className={cn(
+                                        "font-bold text-base",
+                                        totals.totalMargin > 0
+                                            ? "text-success"
+                                            : "text-destructive",
+                                    )}
+                                >
+                                    {formatCurrency(totals.totalMargin)}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
+                    {/* Desktop View */}
                     <div className="hidden md:block">
                         <DataTable
                             columns={sellDetailColumns}
                             data={data.items}
-                            footer={
-                                <TableFooter>
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={4}
-                                            className="text-right font-bold"
-                                        >
-                                            Total Pembelian
-                                        </TableCell>
-                                        <TableCell className="text-center font-bold">
-                                            {formatCurrency(data.total_price)}
-                                        </TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            }
+                            footer={renderDesktopFooter()}
                         />
                     </div>
                 </CardContent>

@@ -9,6 +9,7 @@ export const useIndexPageFilters = (routeName, filters = {}) => {
 
     const otherFilters = { ...params };
     delete otherFilters.search;
+    const otherFiltersString = JSON.stringify(otherFilters);
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -16,7 +17,7 @@ export const useIndexPageFilters = (routeName, filters = {}) => {
             return;
         }
 
-        const queryParams = { ...params };
+        const queryParams = { ...JSON.parse(otherFiltersString) };
         queryParams.search = debouncedSearch;
 
         Object.keys(queryParams).forEach((key) => {
@@ -33,7 +34,7 @@ export const useIndexPageFilters = (routeName, filters = {}) => {
             preserveState: true,
             replace: true,
         });
-    }, [debouncedSearch, JSON.stringify(otherFilters)]);
+    }, [debouncedSearch, otherFiltersString]);
 
     const setFilter = (key, value) => {
         setParams((prevParams) => ({ ...prevParams, [key]: value }));

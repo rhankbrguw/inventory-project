@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CartItem extends Model
+class SellCartItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ["user_id", "product_id", "supplier_id", "quantity"];
+    protected $table = "sell_cart_items";
+
+    protected $fillable = ["user_id", "location_id", "product_id", "quantity"];
 
     protected $casts = [
         "quantity" => "decimal:4",
@@ -21,13 +23,13 @@ class CartItem extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(Supplier::class);
     }
 }

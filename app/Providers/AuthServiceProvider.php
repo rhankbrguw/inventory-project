@@ -2,23 +2,19 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
+use App\Models\PurchaseCartItem;
+use App\Models\SellCartItem;
+use App\Policies\PurchaseCartItemPolicy;
+use App\Policies\SellCartItemPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The model to policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
     protected $policies = [
-        //
+        PurchaseCartItem::class => PurchaseCartItemPolicy::class,
+        SellCartItem::class => SellCartItemPolicy::class,
     ];
 
-    /**
-     * Register any authentication / authorization services.
-     */
     public function boot(): void
     {
         //

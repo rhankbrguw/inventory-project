@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateCartItemRequest extends FormRequest
+class UpdatePurchaseCartItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,7 +14,8 @@ class UpdateCartItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "quantity" => ["required", "numeric", "min:1"],
+            "quantity" => ["sometimes", "required", "numeric", "min:1"],
+            "cost_per_unit" => ["sometimes", "required", "numeric", "min:0"],
         ];
     }
 }

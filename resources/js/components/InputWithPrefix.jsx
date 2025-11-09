@@ -16,7 +16,7 @@ const InputWithPrefix = React.forwardRef(
                 />
             </div>
         );
-    }
+    },
 );
 InputWithPrefix.displayName = "InputWithPrefix";
 

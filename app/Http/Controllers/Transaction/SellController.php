@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSellRequest;
+use App\Http\Resources\Transaction\SellCartItemResource;
 use App\Http\Resources\Transaction\SellResource;
 use App\Models\Customer;
 use App\Models\Inventory;
@@ -12,6 +13,8 @@ use App\Models\Product;
 use App\Models\Sell;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -20,22 +23,63 @@ use Inertia\Response;
 
 class SellController extends Controller
 {
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        $locations = Location::orderBy("name")->get(["id", "name"]);
-        $customers = Customer::orderBy("name")->get(["id", "name"]);
-        $products = Product::whereNull("deleted_at")
-            ->orderBy("name")
-            ->get(["id", "name", "sku", "unit", "price"]);
-        $paymentMethods = Type::where("group", Type::GROUP_PAYMENT)
-            ->orderBy("name")
-            ->get(["id", "name"]);
+        $user = Auth::user();
+        $locationId = $request->input("location_id");
+        $search = $request->input("search");
+        $typeId = $request->input("type_id");
+
+        $cartItems = $user
+            ->sellCartItems()
+            ->with(["product", "location"])
+            ->get();
+
+        $productsQuery = Product::query()
+            ->with("defaultSupplier:id,name")
+            ->when($search, function ($query, $search) {
+                $query
+                    ->where("name", "like", "%{$search}%")
+                    ->orWhere("sku", "like", "%{$search}%");
+            })
+            ->when($typeId && $typeId !== "all", function ($query) use ($typeId) {
+                $query->where("type_id", $typeId);
+            })
+            ->orderBy("name");
+
+        if ($locationId) {
+            $productsQuery->whereHas("inventories", function ($query) use (
+                $locationId,
+            ) {
+                $query
+                    ->where("location_id", $locationId)
+                    ->where("quantity", ">", 0);
+            });
+        } else {
+            $productsQuery->whereRaw("1 = 0");
+        }
 
         return Inertia::render("Transactions/Sells/Create", [
-            "locations" => $locations,
-            "customers" => $customers,
-            "allProducts" => $products,
-            "paymentMethods" => $paymentMethods,
+            "locations" => Location::orderBy("name")->get(["id", "name"]),
+            "customers" => Customer::orderBy("name")->get(["id", "name"]),
+            "allProducts" => $productsQuery
+                ->paginate(12)
+                ->withQueryString(),
+            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
+                ->orderBy("name")
+                ->get(["id", "name"]),
+            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)
+                ->orderBy("name")
+                ->get(["id", "name"]),
+            "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)
+                ->orderBy("name")
+                ->get(["id", "name"]),
+            "cart" => SellCartItemResource::collection($cartItems),
+            "filters" => (object) $request->only([
+                "location_id",
+                "search",
+                "type_id",
+            ]),
         ]);
     }
 
@@ -81,7 +125,6 @@ class SellController extends Controller
                 ]);
 
                 foreach ($itemsData as $item) {
-                    $product = Product::find($item["product_id"]);
                     $inventory = Inventory::where(
                         "product_id",
                         $item["product_id"],
@@ -95,6 +138,7 @@ class SellController extends Controller
                         "type" => "sell",
                         "quantity" => -(float) $item["quantity"],
                         "cost_per_unit" => (float) $item["sell_price"],
+                        "average_cost_per_unit" => $inventory->average_cost,
                         "customer_id" => $validated["customer_id"],
                         "notes" => $validated["notes"],
                     ]);
@@ -104,6 +148,12 @@ class SellController extends Controller
                         (float) $item["quantity"],
                     );
                 }
+
+                $request
+                    ->user()
+                    ->sellCartItems()
+                    ->where("location_id", $validated["location_id"])
+                    ->delete();
             });
         } catch (\Exception $e) {
             return Redirect::back()->with(
