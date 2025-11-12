@@ -105,9 +105,12 @@ export default function Index({
                         trigger={
                             <Button
                                 variant="outline"
-                                className="hidden sm:flex items-center gap-2"
+                                className="flex items-center gap-2 px-2 sm:px-4"
                             >
-                                <PlusCircle className="w-4 h-4" /> Tambah Tipe
+                                <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4" />
+                                <span className="hidden sm:inline">
+                                    Tambah Tipe
+                                </span>
                             </Button>
                         }
                     />
