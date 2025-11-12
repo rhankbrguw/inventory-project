@@ -14,7 +14,14 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreVertical, Plus } from "lucide-react";
+import {
+    Eye,
+    MoreVertical,
+    Plus,
+    ShoppingCart,
+    Truck,
+    ArrowRightLeft,
+} from "lucide-react";
 
 export default function Index({
     auth,
@@ -39,6 +46,8 @@ export default function Index({
         hasRole("Super Admin") ||
         hasRole("Branch Manager") ||
         hasRole("Cashier");
+    const canCreateTransfer =
+        hasRole("Super Admin") || hasRole("Warehouse Manager");
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
@@ -66,54 +75,110 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Riwayat Transaksi"
-            buttonLabel="Tambah Transaksi"
             headerActions={
-                (canCreatePurchase || canCreateSell) && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <div>
+                <div className="flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2">
+                        {canCreatePurchase && (
+                            <Button
+                                onClick={() =>
+                                    router.get(
+                                        route("transactions.purchases.create"),
+                                    )
+                                }
+                                className="btn-purchase"
+                            >
+                                <Truck className="w-4 h-4 mr-2" />
+                                Tambah Pembelian
+                            </Button>
+                        )}
+                        {canCreateSell && (
+                            <Button
+                                onClick={() =>
+                                    router.get(
+                                        route("transactions.sells.create"),
+                                    )
+                                }
+                                className="btn-sell"
+                            >
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                Tambah Penjualan
+                            </Button>
+                        )}
+                        {canCreateTransfer && (
+                            <Button
+                                onClick={() =>
+                                    router.get(
+                                        route("transactions.transfers.create"),
+                                    )
+                                }
+                                className="btn-transfer"
+                            >
+                                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                                Transfer Stok
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="sm:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                                 <Button
                                     size="icon"
-                                    className="sm:hidden rounded-full h-10 w-10"
+                                    className="rounded-full h-10 w-10"
                                 >
                                     <Plus className="h-5 w-5" />
                                 </Button>
-                                <Button className="hidden sm:flex items-center gap-2">
-                                    <Plus className="w-4 h-4" />
-                                    <span>Tambah Transaksi</span>
-                                </Button>
-                            </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {canCreatePurchase && (
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onSelect={() =>
-                                        router.get(
-                                            route(
-                                                "transactions.purchases.create",
-                                            ),
-                                        )
-                                    }
-                                >
-                                    Pembelian (Purchases)
-                                </DropdownMenuItem>
-                            )}
-                            {canCreateSell && (
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onSelect={() =>
-                                        router.get(
-                                            route("transactions.sells.create"),
-                                        )
-                                    }
-                                >
-                                    Penjualan (Sells)
-                                </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {canCreatePurchase && (
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onSelect={() =>
+                                            router.get(
+                                                route(
+                                                    "transactions.purchases.create",
+                                                ),
+                                            )
+                                        }
+                                    >
+                                        <Truck className="w-4 h-4 mr-2" />
+                                        Pembelian
+                                    </DropdownMenuItem>
+                                )}
+                                {canCreateSell && (
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onSelect={() =>
+                                            router.get(
+                                                route(
+                                                    "transactions.sells.create",
+                                                ),
+                                            )
+                                        }
+                                    >
+                                        <ShoppingCart className="w-4 h-4 mr-2" />
+                                        Penjualan
+                                    </DropdownMenuItem>
+                                )}
+                                {canCreateTransfer && (
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onSelect={() =>
+                                            router.get(
+                                                route(
+                                                    "transactions.transfers.create",
+                                                ),
+                                            )
+                                        }
+                                    >
+                                        <ArrowRightLeft className="w-4 h-4 mr-2" />
+                                        Transfer Stok
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
             }
         >
             <div className="space-y-4">

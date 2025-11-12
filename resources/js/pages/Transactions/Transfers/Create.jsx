@@ -48,7 +48,7 @@ export default function Create({ auth, locations, products }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("stock-movements.transfers.store"), {
+        post(route("transactions.transfers.store"), {
             transform: (data) => ({
                 ...data,
                 transfer_date: format(data.transfer_date, "yyyy-MM-dd"),
@@ -60,7 +60,7 @@ export default function Create({ auth, locations, products }) {
         <ContentPageLayout
             auth={auth}
             title="Buat Transfer Stok"
-            backRoute="stock-movements.index"
+            backRoute="transactions.index"
         >
             <form onSubmit={submit} className="space-y-4">
                 <TransferDetailsManager
@@ -87,7 +87,7 @@ export default function Create({ auth, locations, products }) {
                         {formatNumber(totalQuantity)}
                     </div>
                     <div className="flex gap-2">
-                        <Link href={route("stock-movements.index")}>
+                        <Link href={route("transactions.index")}>
                             <Button
                                 variant="outline"
                                 type="button"

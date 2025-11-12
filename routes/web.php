@@ -9,7 +9,6 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockMovementController;
-use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
@@ -26,7 +25,7 @@ Route::get("/", function () {
 });
 
 Route::middleware(["auth", "verified"])->group(function () {
-    Route::get("/dashboard", fn() => Inertia::render("Dashboard"))->name(
+    Route::get("/dashboard", fn () => Inertia::render("Dashboard"))->name(
         "dashboard",
     );
 
@@ -206,6 +205,14 @@ Route::middleware(["auth", "verified"])->group(function () {
             PurchaseController::class,
             "show",
         ])->name("transactions.purchases.show");
+        Route::get("/transactions/transfers/create", [
+            TransactionController::class,
+            "createTransfer",
+        ])->name("transactions.transfers.create");
+        Route::post("/transactions/transfers", [
+            TransactionController::class,
+            "storeTransfer",
+        ])->name("transactions.transfers.store");
     });
 
     Route::middleware(["role:Super Admin|Branch Manager|Cashier"])->group(
@@ -247,14 +254,6 @@ Route::middleware(["auth", "verified"])->group(function () {
                 StockMovementController::class,
                 "index",
             ])->name("stock-movements.index");
-            Route::get("/stock-movements/transfers/create", [
-                StockTransferController::class,
-                "create",
-            ])->name("stock-movements.transfers.create");
-            Route::post("/stock-movements/transfers", [
-                StockTransferController::class,
-                "store",
-            ])->name("stock-movements.transfers.store");
         },
     );
 });
