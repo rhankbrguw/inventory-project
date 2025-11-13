@@ -66,7 +66,13 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        return $this->locations()->pluck('locations.id')->toArray();
+        $ids = $this->locations()->pluck('locations.id')->toArray();
+
+        if (empty($ids)) {
+            return [0];
+        }
+
+        return $ids;
     }
 
     public function sendOtpNotification(): void

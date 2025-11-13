@@ -55,8 +55,13 @@ class PurchaseController extends Controller
             ->with(["product", "supplier"])
             ->get();
 
-        $products = Product::query()
+        $productsQuery = Product::query()
             ->with("defaultSupplier:id,name")
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereHas('inventories', function ($q) use ($accessibleLocationIds) {
+                    $q->whereIn('location_id', $accessibleLocationIds);
+                });
+            })
             ->when($request->input("search"), function ($query, $search) {
                 $query
                     ->where("name", "like", "%{$search}%")
@@ -68,9 +73,9 @@ class PurchaseController extends Controller
                     $query->where("type_id", $request->input("type_id"));
                 },
             )
-            ->orderBy("name")
-            ->paginate(12)
-            ->withQueryString();
+            ->orderBy("name");
+
+        $products = $productsQuery->paginate(12)->withQueryString();
 
         $locationsQuery = Location::orderBy("name");
         if ($accessibleLocationIds) {
@@ -168,9 +173,18 @@ class PurchaseController extends Controller
                 ]);
             }
 
+
+            $supplierId = $validated["supplier_id"];
             Auth::user()
                 ->purchaseCartItems()
-                ->where("supplier_id", $validated["supplier_id"])
+                ->where(function ($query) use ($supplierId) {
+                    if (is_null($supplierId)) {
+                        $query->whereNull('supplier_id');
+                    } else {
+                        $query->where('supplier_id', $supplierId);
+                    }
+                })
+                ->whereIn('product_id', array_column($validated["items"], 'product_id'))
                 ->delete();
         });
 

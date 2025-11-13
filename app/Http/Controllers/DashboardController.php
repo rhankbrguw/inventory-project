@@ -12,60 +12,73 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): Response
+    public function __invoke(Request $request): Response
     {
         $user = Auth::user();
-        $locationIds = $user->getAccessibleLocationIds();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
 
-        $totalSalesToday = Sell::query()
+        $stats = $this->getDashboardStats($accessibleLocationIds);
+        $recentMovements = $this->getRecentMovements($accessibleLocationIds);
+
+        return Inertia::render('Dashboard', [
+            'stats' => $stats,
+            'recentMovements' => StockMovementResource::collection($recentMovements),
+        ]);
+    }
+
+    private function getDashboardStats(?array $locationIds): array
+    {
+        $today = Carbon::today();
+
+        $salesToday = Sell::query()
             ->when($locationIds, function ($query) use ($locationIds) {
                 $query->whereIn('location_id', $locationIds);
             })
-            ->whereDate('transaction_date', today())
+            ->whereDate('transaction_date', $today)
             ->sum('total_price');
 
-        $totalPurchasesToday = Purchase::query()
+        $purchasesToday = Purchase::query()
             ->when($locationIds, function ($query) use ($locationIds) {
                 $query->whereIn('location_id', $locationIds);
             })
-            ->whereDate('transaction_date', today())
+            ->whereDate('transaction_date', $today)
             ->sum('total_cost');
 
-        $totalInventoryValue = Inventory::query()
+        $inventoryValue = Inventory::query()
             ->when($locationIds, function ($query) use ($locationIds) {
                 $query->whereIn('location_id', $locationIds);
             })
             ->select(DB::raw('SUM(quantity * average_cost) as total_value'))
-            ->first()
-            ->total_value ?? 0;
+            ->value('total_value');
 
-        $lowStockItemsCount = Inventory::query()
+        $lowStockItems = Inventory::query()
             ->when($locationIds, function ($query) use ($locationIds) {
                 $query->whereIn('location_id', $locationIds);
             })
+            ->where('quantity', '<=', 5)
             ->where('quantity', '>', 0)
-            ->where('quantity', '<=', 10)
             ->count();
 
-        $recentMovements = StockMovement::with(['product', 'location'])
+        return [
+            'total_sales_today' => $salesToday,
+            'total_purchases_today' => $purchasesToday,
+            'total_inventory_value' => $inventoryValue,
+            'low_stock_items_count' => $lowStockItems,
+        ];
+    }
+
+    private function getRecentMovements(?array $locationIds)
+    {
+        return StockMovement::with(['product', 'location', 'reference'])
             ->when($locationIds, function ($query) use ($locationIds) {
                 $query->whereIn('location_id', $locationIds);
             })
-            ->latest()
-            ->limit(5)
+            ->latest('created_at')
+            ->take(5)
             ->get();
-
-        return Inertia::render('Dashboard', [
-            'stats' => [
-                'total_sales_today' => $totalSalesToday,
-                'total_purchases_today' => $totalPurchasesToday,
-                'total_inventory_value' => $totalInventoryValue,
-                'low_stock_items_count' => $lowStockItemsCount,
-            ],
-            'recentMovements' => StockMovementResource::collection($recentMovements),
-        ]);
     }
 }

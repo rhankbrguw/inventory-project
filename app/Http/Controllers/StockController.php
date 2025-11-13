@@ -40,7 +40,6 @@ class StockController extends Controller
             ->whereHas('product', function ($query) {
                 $query->whereNull('deleted_at');
             })
-
             ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
                 $query->whereIn('inventories.location_id', $accessibleLocationIds);
             })
@@ -129,7 +128,15 @@ class StockController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
-        $productsData = Product::orderBy('name')->get();
+        $productsQuery = Product::orderBy('name');
+
+        if ($accessibleLocationIds) {
+            $productsQuery->whereHas('inventories', function ($q) use ($accessibleLocationIds) {
+                $q->whereIn('location_id', $accessibleLocationIds);
+            });
+        }
+
+        $productsData = $productsQuery->get();
 
         $locationsQuery = Location::orderBy('name');
         if ($accessibleLocationIds) {
