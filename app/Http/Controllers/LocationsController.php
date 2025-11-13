@@ -12,6 +12,7 @@ use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,8 +22,14 @@ class LocationsController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $locations = Location::query()
             ->with(['type', 'users'])
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('id', $accessibleLocationIds);
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
