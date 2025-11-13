@@ -4,6 +4,7 @@ use App\Http\Controllers\Transaction\PurchaseController;
 use App\Http\Controllers\Transaction\SellController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -25,7 +26,7 @@ Route::get("/", function () {
 });
 
 Route::middleware(["auth", "verified"])->group(function () {
-    Route::get("/dashboard", fn() => Inertia::render("Dashboard"))->name(
+    Route::get("/dashboard", [DashboardController::class, 'index'])->name(
         "dashboard",
     );
 

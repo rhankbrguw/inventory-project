@@ -7,11 +7,14 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\SupplierResource;
 use App\Http\Resources\TypeResource;
+use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -21,9 +24,17 @@ class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $products = Product::query()
             ->with(['type', 'defaultSupplier'])
             ->withSum('inventories', 'quantity')
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereHas('inventories', function ($q) use ($accessibleLocationIds) {
+                    $q->whereIn('location_id', $accessibleLocationIds);
+                });
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query
                     ->where('name', 'like', "%{$search}%")
@@ -64,12 +75,29 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $user = $request->user();
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        Product::create($validated);
+        DB::transaction(function () use ($validated, $user) {
+            $product = Product::create($validated);
+
+            $accessibleLocationIds = $user->getAccessibleLocationIds();
+
+            if ($accessibleLocationIds) {
+                foreach ($accessibleLocationIds as $locationId) {
+                    Inventory::firstOrCreate([
+                        'product_id' => $product->id,
+                        'location_id' => $locationId,
+                    ], [
+                        'quantity' => 0,
+                        'average_cost' => 0,
+                    ]);
+                }
+            }
+        });
 
         return Redirect::route('products.index')->with('success', 'Produk baru berhasil ditambahkan.');
     }

@@ -15,6 +15,7 @@ class CustomerResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->formatPhone($this->phone),
             'address' => $this->address,
+            'type_id' => $this->type_id,
             'type' => $this->whenLoaded('type', fn() => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,

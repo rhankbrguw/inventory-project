@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -33,6 +34,9 @@ class TransactionController extends Controller
         $typeId = $request->input('type');
         $sort = $request->input('sort', 'newest');
 
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $purchasesQuery = DB::table('purchases')
             ->select(
                 'purchases.id',
@@ -46,6 +50,9 @@ class TransactionController extends Controller
                 'purchases.supplier_id AS party_id',
                 DB::raw("'supplier' AS party_type")
             )
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('purchases.location_id', $accessibleLocationIds);
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q
@@ -74,6 +81,9 @@ class TransactionController extends Controller
                 'sells.customer_id AS party_id',
                 DB::raw("'customer' AS party_type")
             )
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('sells.location_id', $accessibleLocationIds);
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q
@@ -152,9 +162,14 @@ class TransactionController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        $locationsQuery = Location::orderBy('name');
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
         return Inertia::render('Transactions/Index', [
             'transactions' => TransactionResource::collection($paginatedTransactions),
-            'locations' => Location::orderBy('name')->get(['id', 'name']),
+            'locations' => $locationsQuery->get(['id', 'name']),
             'transactionTypes' => Type::where('group', Type::GROUP_TRANSACTION)->orderBy('name')->get(['id', 'name']),
             'filters' => (object) $request->only(['search', 'sort', 'location_id', 'type', 'per_page']),
         ]);
@@ -162,8 +177,16 @@ class TransactionController extends Controller
 
     public function createTransfer(): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
+        $locationsQuery = Location::orderBy('name');
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
         return Inertia::render('Transactions/Transfers/Create', [
-            'locations' => Location::orderBy('name')->get(['id', 'name']),
+            'locations' => $locationsQuery->get(['id', 'name']),
             'products' => ProductResource::collection(
                 Product::with('locations:id')->orderBy('name')->get()
             ),
@@ -173,6 +196,12 @@ class TransactionController extends Controller
     public function storeTransfer(StoreStockTransferRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $user = $request->user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($validated['from_location_id'], $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke lokasi asal ini.');
+        }
 
         DB::transaction(function () use ($validated, $request) {
             $transfer = StockTransfer::create([

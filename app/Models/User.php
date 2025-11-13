@@ -14,7 +14,9 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory;
+    use Notifiable;
+    use HasRoles;
 
     protected $fillable = [
         "name",
@@ -56,6 +58,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Location::class)
             ->withPivot("role_id")
             ->withTimestamps();
+    }
+
+    public function getAccessibleLocationIds(): ?array
+    {
+        if ($this->hasRole('Super Admin')) {
+            return null;
+        }
+
+        return $this->locations()->pluck('locations.id')->toArray();
     }
 
     public function sendOtpNotification(): void

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -27,6 +28,9 @@ class StockController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $inventories = Inventory::with(['product.type', 'location'])
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->select('inventories.*')
@@ -35,6 +39,10 @@ class StockController extends Controller
             })
             ->whereHas('product', function ($query) {
                 $query->whereNull('deleted_at');
+            })
+
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('inventories.location_id', $accessibleLocationIds);
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -70,9 +78,14 @@ class StockController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $locationsQuery = Location::orderBy('name');
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
         return Inertia::render('Stock/Index', [
             'inventories' => InventoryResource::collection($inventories),
-            'locations' => Location::orderBy('name')->get(['id', 'name']),
+            'locations' => $locationsQuery->get(['id', 'name']),
             'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
             'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->get(['id', 'name']),
             'filters' => (object) $request->only(['search', 'location_id', 'type_id', 'sort', 'product_id']),
@@ -81,6 +94,12 @@ class StockController extends Controller
 
     public function show(Inventory $inventory): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($inventory->location_id, $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke stok lokasi ini.');
+        }
+
         $inventory->load(['product.type', 'location']);
 
         $stockMovements = StockMovement::where('product_id', $inventory->product_id)
@@ -107,8 +126,16 @@ class StockController extends Controller
 
     public function showAdjustForm(): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $productsData = Product::orderBy('name')->get();
-        $locationsData = Location::orderBy('name')->get(['id', 'name']);
+
+        $locationsQuery = Location::orderBy('name');
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+        $locationsData = $locationsQuery->get(['id', 'name']);
 
         return Inertia::render('Stock/Adjust', [
             'products' => ProductResource::collection($productsData),
@@ -124,6 +151,13 @@ class StockController extends Controller
     public function adjust(AdjustStockRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $user = $request->user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
+        }
+
         $quantityToRemove = (float) $validated['quantity'];
 
         if ($quantityToRemove <= 0) {
@@ -149,6 +183,7 @@ class StockController extends Controller
                     'type' => 'adjustment',
                     'quantity' => $quantityChange,
                     'cost_per_unit' => $inventory->average_cost,
+                    'average_cost_per_unit' => $inventory->average_cost,
                     'notes' => $validated['notes'] ?? null,
                 ]);
 

@@ -25,6 +25,12 @@ class PurchaseController extends Controller
 {
     public function show(Purchase $purchase): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($purchase->location_id, $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
+        }
+
         return Inertia::render("Transactions/Purchases/Show", [
             "purchase" => PurchaseResource::make(
                 $purchase->load([
@@ -42,6 +48,8 @@ class PurchaseController extends Controller
     public function create(Request $request): Response
     {
         $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $cartItems = $user
             ->purchaseCartItems()
             ->with(["product", "supplier"])
@@ -64,8 +72,13 @@ class PurchaseController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $locationsQuery = Location::orderBy("name");
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
         return Inertia::render("Transactions/Purchases/Create", [
-            "locations" => Location::orderBy("name")->get(["id", "name"]),
+            "locations" => $locationsQuery->get(["id", "name"]),
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
             "products" => $products,
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
@@ -82,6 +95,12 @@ class PurchaseController extends Controller
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $user = $request->user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
+        }
 
         $totalCost = collect($validated["items"])->sum(function ($item) {
             return $item["quantity"] * $item["cost_per_unit"];
@@ -108,7 +127,7 @@ class PurchaseController extends Controller
                 )->format("Y-m-d"),
                 "notes" => $validated["notes"],
                 "payment_method_type_id" =>
-                    $validated["payment_method_type_id"] ?? null,
+                $validated["payment_method_type_id"] ?? null,
                 "status" => "completed",
                 "total_cost" => $totalCost,
             ]);
@@ -121,6 +140,7 @@ class PurchaseController extends Controller
                     "type" => "purchase",
                     "quantity" => $item["quantity"],
                     "cost_per_unit" => $item["cost_per_unit"],
+                    "average_cost_per_unit" => $item["cost_per_unit"],
                     "notes" => $validated["notes"],
                 ]);
 

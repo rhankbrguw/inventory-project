@@ -13,6 +13,7 @@ use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,8 +21,12 @@ class StockMovementController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $stockMovements = StockMovement::with([
-            'product', 'location',
+            'product',
+            'location',
             'reference' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
                     Purchase::class => ['supplier'],
@@ -30,6 +35,9 @@ class StockMovementController extends Controller
                 ]);
             }
         ])
+            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('location_id', $accessibleLocationIds);
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->whereHas('product', function ($q) use ($search) {
                     $q
@@ -56,9 +64,14 @@ class StockMovementController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $locationsQuery = Location::orderBy('name');
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
         return Inertia::render('StockMovements/Index', [
             'stockMovements' => StockMovementResource::collection($stockMovements),
-            'locations' => Location::orderBy('name')->get(['id', 'name']),
+            'locations' => $locationsQuery->get(['id', 'name']),
             'products' => ProductResource::collection(Product::orderBy('name')->get()),
             'movementTypes' => StockMovement::getMovementTypes(),
             'filters' => (object) $request->only(['search', 'location_id', 'product_id', 'type']),
