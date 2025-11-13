@@ -17,6 +17,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/card";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function Create({ auth, roles }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
@@ -82,9 +83,8 @@ export default function Create({ auth, roles }) {
                                 htmlFor="password"
                                 error={errors.password}
                             >
-                                <Input
+                                <PasswordInput
                                     id="password"
-                                    type="password"
                                     value={data.password}
                                     onChange={(e) =>
                                         setData("password", e.target.value)
@@ -96,9 +96,8 @@ export default function Create({ auth, roles }) {
                                 htmlFor="password_confirmation"
                                 error={errors.password_confirmation}
                             >
-                                <Input
+                                <PasswordInput
                                     id="password_confirmation"
-                                    type="password"
                                     value={data.password_confirmation}
                                     onChange={(e) =>
                                         setData(

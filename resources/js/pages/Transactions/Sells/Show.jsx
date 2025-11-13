@@ -69,6 +69,14 @@ export default function Show({ auth, sell }) {
                         </span>
                     </div>
                     <div className="flex justify-between items-center text-xs border-t pt-2 mt-2">
+                        <span className="text-muted-foreground">
+                            Harga Modal
+                        </span>
+                        <span className="text-muted-foreground">
+                            {formatCurrency(avgCost)}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
                         <span className="text-muted-foreground">Margin</span>
                         <span
                             className={cn(
@@ -198,16 +206,26 @@ export default function Show({ auth, sell }) {
 
                         <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
                             <div className="flex justify-between items-center">
-                                <span className="font-bold text-base">Total Penjualan</span>
-                                <span className="font-bold text-base">{formatCurrency(totals.totalSell)}</span>
+                                <span className="font-bold text-base">
+                                    Total Penjualan
+                                </span>
+                                <span className="font-bold text-base">
+                                    {formatCurrency(totals.totalSell)}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground">Total Modal (HPP)</span>
-                                <span className="text-muted-foreground">{formatCurrency(totals.totalCost)}</span>
+                                <span className="text-muted-foreground">
+                                    Total Modal (HPP)
+                                </span>
+                                <span className="text-muted-foreground">
+                                    {formatCurrency(totals.totalCost)}
+                                </span>
                             </div>
                             <Separator />
                             <div className="flex justify-between items-center">
-                                <span className="font-bold text-base">Total Margin</span>
+                                <span className="font-bold text-base">
+                                    Total Margin
+                                </span>
                                 <span
                                     className={cn(
                                         "font-bold text-base",

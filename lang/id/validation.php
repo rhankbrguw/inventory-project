@@ -11,6 +11,7 @@ return [
     'image' => ':attribute harus berupa gambar.',
     'in' => ':attribute yang dipilih tidak valid.',
     'integer' => ':attribute harus berupa angka.',
+    'lowercase' => ':attribute harus berupa huruf kecil.',
     'max' => [
         'file' => ':attribute tidak boleh lebih besar dari :max kilobita.',
         'string' => ':attribute tidak boleh lebih dari :max karakter.',

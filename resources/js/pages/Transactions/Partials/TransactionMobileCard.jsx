@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import UnifiedBadge from "@/components/UnifiedBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { router } from "@inertiajs/react";
 
@@ -19,7 +19,7 @@ export default function TransactionMobileCard({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{transaction.type}</Badge>
+                    <UnifiedBadge text={transaction.type} />
                     {renderActionDropdown(transaction)}
                 </div>
             </CardHeader>

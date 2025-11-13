@@ -16,9 +16,9 @@ class StoreSupplierRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:50', new ValidName, new UniqueRule('suppliers', null, 'name')],
-            'contact_person' => ['required', 'string', 'max:50', new ValidName],
-            'email' => ['required', 'string', 'email:rfc,dns', 'max:50', new UniqueRule('suppliers', null, 'email')],
+            'name' => ['required', 'string', 'max:50', new ValidName(), new UniqueRule('suppliers', null, 'name')],
+            'contact_person' => ['required', 'string', 'max:50', new ValidName()],
+            'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50', new UniqueRule('suppliers', null, 'email')],
             'phone' => ['required', 'string', 'min:10', 'max:15', new UniqueRule('suppliers', null, 'phone')],
             'address' => ['required', 'string', 'max:150'],
             'notes' => ['nullable', 'string', 'max:100'],

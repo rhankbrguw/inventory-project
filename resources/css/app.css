@@ -1,9 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
     :root {
         --background: 0 0% 100%;
@@ -30,7 +28,6 @@
         --ring: 220 13% 18%;
         --radius: 0.5rem;
     }
-
     .dark {
         --background: 220 13% 9%;
         --foreground: 0 0% 95%;
@@ -56,7 +53,6 @@
         --ring: 0 0% 83%;
     }
 }
-
 @layer base {
     * {
         @apply border-border;
@@ -65,16 +61,13 @@
         @apply bg-background text-foreground;
         font-family: "Montserrat", sans-serif;
     }
-
     [data-state="open"] > div[vaul-overlay] {
         @apply backdrop-blur-sm bg-background/20;
     }
-
     [data-state="open"] > div[vaul-overlay][vaul-snap-points] {
         @apply backdrop-blur-sm bg-background/20;
     }
 }
-
 @layer components {
     .card {
         @apply bg-card text-card-foreground border-border rounded-xl;
@@ -103,6 +96,25 @@
     .customer-type-mitra {
         @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200;
     }
+    .btn-purchase {
+        background-color: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+    }
+    .btn-purchase:hover {
+        background-color: hsl(var(--secondary) / 0.8);
+    }
+    .btn-sell {
+        @apply bg-success text-primary-foreground;
+    }
+    .btn-sell:hover {
+        @apply bg-success/90;
+    }
+    .btn-transfer {
+        @apply bg-primary text-primary-foreground;
+    }
+    .btn-transfer:hover {
+        @apply bg-primary/90;
+    }
     @media print {
         .print-hidden {
             display: none !important;
@@ -121,12 +133,10 @@
         }
     }
 }
-
 @layer utilities {
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
     }
-
     .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;

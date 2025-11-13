@@ -26,9 +26,19 @@ class SellController extends Controller
     public function create(Request $request): Response
     {
         $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+
         $locationId = $request->input("location_id");
         $search = $request->input("search");
         $typeId = $request->input("type_id");
+
+        if ($accessibleLocationIds && $locationId && !in_array($locationId, $accessibleLocationIds)) {
+            $locationId = null;
+        }
+
+        if (!$locationId && $accessibleLocationIds && count($accessibleLocationIds) === 1) {
+            $locationId = $accessibleLocationIds[0];
+        }
 
         $cartItems = $user
             ->sellCartItems()
@@ -59,8 +69,13 @@ class SellController extends Controller
             $productsQuery->whereRaw("1 = 0");
         }
 
+        $locationsQuery = Location::orderBy("name");
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
         return Inertia::render("Transactions/Sells/Create", [
-            "locations" => Location::orderBy("name")->get(["id", "name"]),
+            "locations" => $locationsQuery->get(["id", "name"]),
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
             "allProducts" => $productsQuery
                 ->paginate(12)
@@ -86,6 +101,13 @@ class SellController extends Controller
     public function store(StoreSellRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $user = $request->user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
+        }
+
         $itemsData = $validated["items"];
 
         try {
@@ -120,7 +142,7 @@ class SellController extends Controller
                     "total_price" => $totalPrice,
                     "status" => $validated["status"],
                     "payment_method_type_id" =>
-                        $validated["payment_method_type_id"],
+                    $validated["payment_method_type_id"],
                     "notes" => $validated["notes"],
                 ]);
 
@@ -170,6 +192,12 @@ class SellController extends Controller
 
     public function show(Sell $sell): Response
     {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($sell->location_id, $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
+        }
+
         $sell->load([
             "location",
             "customer",

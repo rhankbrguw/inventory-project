@@ -6,7 +6,7 @@ import DataTable from "@/components/DataTable";
 import StockMovementFilterCard from "./Partials/StockMovementFilterCard";
 import MobileCardList from "@/components/MobileCardList";
 import StockMovementMobileCard from "./Partials/StockMovementMobileCard";
-import { Send } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 
 export default function Index({
     auth,
@@ -21,20 +21,8 @@ export default function Index({
         filters,
     );
 
-    const canCreateTransfer = ["Super Admin", "Warehouse Manager"].some(
-        (role) => auth.user.roles.includes(role),
-    );
-
     return (
-        <IndexPageLayout
-            auth={auth}
-            title="Riwayat Stok"
-            createRoute={
-                canCreateTransfer ? "stock-movements.transfers.create" : null
-            }
-            buttonLabel="Buat Transfer Baru"
-            icon={Send}
-        >
+        <IndexPageLayout auth={auth} title="Riwayat Stok" icon={ArrowRightLeft}>
             <div className="space-y-4">
                 <StockMovementFilterCard
                     params={params}

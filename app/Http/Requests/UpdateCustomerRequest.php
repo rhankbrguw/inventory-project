@@ -19,7 +19,7 @@ class UpdateCustomerRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'type_id' => ['required', 'integer', new ExistsInGroup('types', Type::GROUP_CUSTOMER)],
-            'email' => ['required', 'email:rfc,dns', 'max:50', new UniqueRule('customers', $this->customer->id)],
+            'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50', new UniqueRule('customers', $this->customer->id)],
             'phone' => ['nullable', 'string', 'min:10', 'max:15', new UniqueRule('customers', $this->customer->id)],
             'address' => ['nullable', 'string', 'max:255'],
         ];
