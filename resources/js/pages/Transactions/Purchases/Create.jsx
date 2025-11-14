@@ -14,14 +14,9 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
+import { formatNumber } from "@/lib/utils";
 
 export default function Create({
     auth,
@@ -62,15 +57,7 @@ export default function Create({
         filters,
     );
 
-    const supplierOptions = useMemo(
-        () =>
-            suppliers.filter((s) =>
-                Object.values(cartGroups).some(
-                    (group) => group.supplier_id === s.id,
-                ),
-            ),
-        [cartGroups, suppliers],
-    );
+    const supplierOptions = useMemo(() => suppliers, [suppliers]);
 
     const filteredCartGroups = useMemo(() => {
         if (supplierFilter === "all") {
@@ -82,6 +69,15 @@ export default function Create({
         const group = cartGroups[supplierName];
         return group ? { [supplierName]: group } : {};
     }, [cartGroups, supplierFilter, suppliers]);
+
+    const filteredProducts = useMemo(() => {
+        if (supplierFilter === "all") {
+            return products.data;
+        }
+        return products.data.filter((product) => {
+            return product.default_supplier_id == supplierFilter;
+        });
+    }, [products.data, supplierFilter]);
 
     const handleOpenCheckout = (supplierId) => {
         setCheckoutSupplierId(supplierId);
@@ -151,7 +147,7 @@ export default function Create({
             <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
                 <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
                     <PurchaseProductGrid
-                        products={products.data}
+                        products={filteredProducts}
                         productTypes={productTypes}
                         params={params}
                         setFilter={setFilter}
@@ -176,7 +172,7 @@ export default function Create({
                         <ShoppingCart className="h-6 w-6" />
                         {totalCartItems > 0 && (
                             <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center">
-                                {totalCartItems}
+                                {formatNumber(totalCartItems)}
                             </span>
                         )}
                     </Button>
@@ -189,7 +185,10 @@ export default function Create({
                 </SheetContent>
             </Sheet>
 
-            <Dialog open={isCheckoutModalOpen} onOpenChange={handleCloseCheckout}>
+            <Dialog
+                open={isCheckoutModalOpen}
+                onOpenChange={handleCloseCheckout}
+            >
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Detail Pembelian</DialogTitle>
@@ -199,7 +198,7 @@ export default function Create({
                         </DialogDescription>
                     </DialogHeader>
                     {checkoutSupplierId !== null ||
-                    cartGroups["Supplier Umum"] ? (
+                        cartGroups["Supplier Umum"] ? (
                         <PurchaseDetailsManager
                             key={
                                 checkoutSupplierId === null

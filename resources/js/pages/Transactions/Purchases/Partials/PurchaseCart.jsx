@@ -26,7 +26,6 @@ export default function PurchaseCart({
     toggleSupplierSelection,
     isSupplierSelected,
     totalCartItems,
-    suppliers,
     supplierFilter,
     setSupplierFilter,
     supplierOptions,
@@ -53,7 +52,7 @@ export default function PurchaseCart({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">
-                                    Supplier Umum
+                                    Semua Supplier
                                 </SelectItem>
                                 {supplierOptions.map((supplier) => (
                                     <SelectItem
@@ -65,7 +64,7 @@ export default function PurchaseCart({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <QuickAddSupplierModal onSuccess={() => {}}>
+                        <QuickAddSupplierModal onSuccess={() => { }}>
                             <Button
                                 type="button"
                                 variant="outline"
