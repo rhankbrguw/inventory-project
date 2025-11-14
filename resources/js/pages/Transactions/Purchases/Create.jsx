@@ -31,7 +31,6 @@ export default function Create({
     const [checkoutSupplierId, setCheckoutSupplierId] = useState(null);
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
-    const [supplierFilter, setSupplierFilter] = useState("all");
 
     const {
         cartGroups,
@@ -57,27 +56,24 @@ export default function Create({
         filters,
     );
 
+    const currentSupplierFilter = params.supplier_id || "all";
+
     const supplierOptions = useMemo(() => suppliers, [suppliers]);
 
     const filteredCartGroups = useMemo(() => {
-        if (supplierFilter === "all") {
+        if (currentSupplierFilter === "all") {
             return cartGroups;
         }
         const supplierName =
-            suppliers.find((s) => s.id.toString() === supplierFilter)?.name ||
-            "Supplier Umum";
+            suppliers.find((s) => s.id.toString() === currentSupplierFilter)
+                ?.name || "Supplier Umum";
         const group = cartGroups[supplierName];
         return group ? { [supplierName]: group } : {};
-    }, [cartGroups, supplierFilter, suppliers]);
+    }, [cartGroups, currentSupplierFilter, suppliers]);
 
-    const filteredProducts = useMemo(() => {
-        if (supplierFilter === "all") {
-            return products.data;
-        }
-        return products.data.filter((product) => {
-            return product.default_supplier_id == supplierFilter;
-        });
-    }, [products.data, supplierFilter]);
+    const handleSupplierFilterChange = (value) => {
+        setFilter("supplier_id", value);
+    };
 
     const handleOpenCheckout = (supplierId) => {
         setCheckoutSupplierId(supplierId);
@@ -117,8 +113,8 @@ export default function Create({
         totalCartItems,
         selectedSuppliers,
         suppliers,
-        supplierFilter,
-        setSupplierFilter,
+        supplierFilter: currentSupplierFilter,
+        setSupplierFilter: handleSupplierFilterChange,
         supplierOptions,
         filteredCartGroups,
     };
@@ -147,7 +143,7 @@ export default function Create({
             <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
                 <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
                     <PurchaseProductGrid
-                        products={filteredProducts}
+                        products={products.data}
                         productTypes={productTypes}
                         params={params}
                         setFilter={setFilter}

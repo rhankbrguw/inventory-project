@@ -73,6 +73,12 @@ class PurchaseController extends Controller
                     $query->where("type_id", $request->input("type_id"));
                 },
             )
+            ->when(
+                $request->filled("supplier_id") && $request->input("supplier_id") !== "all",
+                function ($query) use ($request) {
+                    $query->where("default_supplier_id", $request->input("supplier_id"));
+                },
+            )
             ->orderBy("name");
 
         $products = $productsQuery->paginate(12)->withQueryString();
@@ -93,7 +99,7 @@ class PurchaseController extends Controller
                 ->orderBy("name")
                 ->get(["id", "name"]),
             "cart" => PurchaseCartItemResource::collection($cartItems),
-            "filters" => (object) $request->only(["search", "type_id"]),
+            "filters" => (object) $request->only(["search", "type_id", "supplier_id"]),
         ]);
     }
 

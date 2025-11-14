@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import PurchaseItemManager from "./PurchaseItemManager";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ export default function PurchaseCart({
     toggleSupplierSelection,
     isSupplierSelected,
     totalCartItems,
+    suppliers,
     supplierFilter,
     setSupplierFilter,
     supplierOptions,
