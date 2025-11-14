@@ -64,9 +64,17 @@ export default function Create({
         if (currentSupplierFilter === "all") {
             return cartGroups;
         }
-        const supplierName =
-            suppliers.find((s) => s.id.toString() === currentSupplierFilter)
-                ?.name || "Supplier Umum";
+
+        if (currentSupplierFilter === "null") {
+            return cartGroups["Supplier Umum"]
+                ? { "Supplier Umum": cartGroups["Supplier Umum"] }
+                : {};
+        }
+
+        const supplierName = suppliers.find(
+            (s) => s.id.toString() === currentSupplierFilter,
+        )?.name;
+
         const group = cartGroups[supplierName];
         return group ? { [supplierName]: group } : {};
     }, [cartGroups, currentSupplierFilter, suppliers]);
