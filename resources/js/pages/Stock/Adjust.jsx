@@ -61,9 +61,8 @@ export default function Adjust({
                 <CardHeader>
                     <CardTitle>Formulir Penyesuaian Stok</CardTitle>
                     <CardDescription>
-                        Gunakan formulir ini untuk mengurangi stok karena rusak,
-                        hilang, atau alasan lainnya. Masukkan jumlah yang ingin
-                        dikurangi.
+                        Gunakan formulir ini untuk menyamakan stok sistem dengan
+                        stok fisik aktual.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -112,21 +111,19 @@ export default function Adjust({
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
-                                label={`Jumlah yang ingin Dikurangi (${
-                                    selectedProduct?.unit || "unit"
-                                })`}
+                                label="Jumlah Stok Terakhir"
                                 htmlFor="quantity"
                             >
                                 <Input
                                     id="quantity"
                                     type="number"
                                     step="any"
-                                    min="0.0001"
+                                    min="0"
                                     value={data.quantity}
                                     onChange={(e) =>
                                         setData("quantity", e.target.value)
                                     }
-                                    placeholder="Contoh: 5"
+                                    placeholder={`Contoh: 5`}
                                     disabled={
                                         !data.product_id || !data.location_id
                                     }
@@ -134,17 +131,14 @@ export default function Adjust({
                                 <InputError message={errors.quantity} />
                             </FormField>
                         </div>
-                        <FormField
-                            label="Catatan (Alasan Detail)"
-                            htmlFor="notes"
-                        >
+                        <FormField label="Catatan" htmlFor="notes">
                             <Textarea
                                 id="notes"
                                 value={data.notes}
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
-                                placeholder="Contoh: Rusak karena jatuh saat pengiriman."
+                                placeholder="Alasan penyesuaian..."
                                 disabled={!data.product_id || !data.location_id}
                             />
                             <InputError message={errors.notes} />
