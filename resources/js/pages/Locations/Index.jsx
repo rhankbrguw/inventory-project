@@ -29,7 +29,7 @@ export default function Index({
         "locations.index",
         filters
     );
-    const canCrudLocations = auth.user.roles.includes("Super Admin");
+    const canCrudLocations = auth.user.level === 1;
 
     const {
         confirmingDeletion,

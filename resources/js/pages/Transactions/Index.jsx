@@ -31,23 +31,18 @@ export default function Index({
     filters = {},
 }) {
     const { auth: authData } = usePage().props;
-    const hasRole = (roleName) => authData.user.roles.includes(roleName);
+    const user = authData.user;
+    const roleCode = user.role?.code;
+    const isSuperAdmin = user.level === 1;
 
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
         filters,
     );
 
-    const canCreatePurchase =
-        hasRole("Super Admin") ||
-        hasRole("Warehouse Manager") ||
-        hasRole("Branch Manager");
-    const canCreateSell =
-        hasRole("Super Admin") ||
-        hasRole("Branch Manager") ||
-        hasRole("Cashier");
-    const canCreateTransfer =
-        hasRole("Super Admin") || hasRole("Warehouse Manager");
+    const canCreatePurchase = isSuperAdmin || ["WHM", "BRM"].includes(roleCode);
+    const canCreateSell = isSuperAdmin || ["BRM", "CSH"].includes(roleCode);
+    const canCreateTransfer = isSuperAdmin || ["WHM"].includes(roleCode);
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>

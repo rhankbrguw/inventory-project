@@ -17,9 +17,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Determine the current asset version.
      *
-     * This helps Inertia automatically detect when frontend assets
-     * have been changed, so it can force a full page reload.
-     *
+     * @see https://inertiajs.com/asset-versioning
      * @param  \Illuminate\Http\Request  $request
      * @return string|null
      */
@@ -31,10 +29,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Define the props that are shared with every Inertia response.
      *
-     * This method runs on every request and allows global data
-     * such as the authenticated user and flash messages to be
-     * sent to the frontend.
-     *
+     * @see https://inertiajs.com/shared-data
      * @param  \Illuminate\Http\Request  $request
      * @return array<string, mixed>
      */
@@ -43,7 +38,6 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         if ($user) {
-            // Ensure roles are eager-loaded for permission usage on frontend
             $user->loadMissing('roles');
         }
 
@@ -52,24 +46,20 @@ class HandleInertiaRequests extends Middleware
 
             'auth' => [
                 'user' => $user ? [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
+                    'id' => $user->id,
+                    'name' => $user->name,
                     'email' => $user->email,
-
-                    // Hierarchy level exposed globally
                     'level' => $user->level,
-
-                    // First/primary role object (for badges, UI)
-                    'role' => $user->roles->first(),
-
-                    // Array of role names (sidebar guards, menus)
-                    'roles' => $user->getRoleNames(),
+                    'role' => $user->roles->first() ? [
+                        'name' => $user->roles->first()->name,
+                        'code' => $user->roles->first()->code,
+                    ] : null,
                 ] : null,
             ],
 
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
-                'error'   => fn() => $request->session()->get('error'),
+                'error' => fn() => $request->session()->get('error'),
             ],
         ];
     }
