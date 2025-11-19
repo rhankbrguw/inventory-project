@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import PurchaseItemManager from "./PurchaseItemManager";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { ShoppingBag } from "lucide-react";
+import { formatNumber } from "@/lib/utils";
 
 export default function PurchaseCart({
     cartGroups,
@@ -119,7 +120,7 @@ export default function PurchaseCart({
                         Total Item di Keranjang
                     </p>
                     <p className="text-base font-bold text-foreground">
-                        {totalCartItems}
+                        {formatNumber(totalCartItems)}
                     </p>
                 </div>
             </div>

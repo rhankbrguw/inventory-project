@@ -89,19 +89,19 @@ export default function SellCart({
             </div>
 
             <div className="flex-1 overflow-y-auto">
-                {!hasItems && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <ShoppingBag className="w-16 h-16 text-muted-foreground/30" />
-                        <p className="mt-3 text-sm font-semibold text-foreground">
-                            Keranjang kosong
+                {!hasItems ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+                        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                            <ShoppingBag className="w-8 h-8 text-muted-foreground/40" />
+                        </div>
+                        <p className="text-sm font-semibold text-foreground mb-1">
+                            Keranjang masih kosong
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            Pilih produk dari katalog untuk memulai.
+                            Pilih produk dari katalog untuk memulai
                         </p>
                     </div>
-                )}
-
-                {hasItems && (
+                ) : (
                     <SellItemManager
                         cart={cart}
                         removeItem={removeItem}
