@@ -19,6 +19,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         $user = Auth::user();
+
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
         $stats = $this->getDashboardStats($accessibleLocationIds);
@@ -33,39 +34,38 @@ class DashboardController extends Controller
     private function getDashboardStats(?array $locationIds): array
     {
         $today = Carbon::today();
+        $yesterday = Carbon::yesterday();
 
-        $salesToday = Sell::query()
-            ->when($locationIds, function ($query) use ($locationIds) {
-                $query->whereIn('location_id', $locationIds);
-            })
+        $salesToday = Sell::accessibleBy($locationIds)
             ->whereDate('transaction_date', $today)
             ->sum('total_price');
 
-        $purchasesToday = Purchase::query()
-            ->when($locationIds, function ($query) use ($locationIds) {
-                $query->whereIn('location_id', $locationIds);
-            })
+        $salesYesterday = Sell::accessibleBy($locationIds)
+            ->whereDate('transaction_date', $yesterday)
+            ->sum('total_price');
+
+        $purchasesToday = Purchase::accessibleBy($locationIds)
             ->whereDate('transaction_date', $today)
             ->sum('total_cost');
 
-        $inventoryValue = Inventory::query()
-            ->when($locationIds, function ($query) use ($locationIds) {
-                $query->whereIn('location_id', $locationIds);
-            })
-            ->select(DB::raw('SUM(quantity * average_cost) as total_value'))
-            ->value('total_value');
+        $purchasesYesterday = Purchase::accessibleBy($locationIds)
+            ->whereDate('transaction_date', $yesterday)
+            ->sum('total_cost');
 
-        $lowStockItems = Inventory::query()
-            ->when($locationIds, function ($query) use ($locationIds) {
-                $query->whereIn('location_id', $locationIds);
-            })
+        $inventoryValue = Inventory::accessibleBy($locationIds)
+            ->select(DB::raw('SUM(quantity * average_cost) as total_value'))
+            ->value('total_value') ?? 0;
+
+        $lowStockItems = Inventory::accessibleBy($locationIds)
             ->where('quantity', '<=', 5)
             ->where('quantity', '>', 0)
             ->count();
 
         return [
             'total_sales_today' => $salesToday,
+            'sales_trend' => $this->calculateTrend($salesToday, $salesYesterday),
             'total_purchases_today' => $purchasesToday,
+            'purchases_trend' => $this->calculateTrend($purchasesToday, $purchasesYesterday),
             'total_inventory_value' => $inventoryValue,
             'low_stock_items_count' => $lowStockItems,
         ];
@@ -74,11 +74,18 @@ class DashboardController extends Controller
     private function getRecentMovements(?array $locationIds)
     {
         return StockMovement::with(['product', 'location', 'reference'])
-            ->when($locationIds, function ($query) use ($locationIds) {
-                $query->whereIn('location_id', $locationIds);
-            })
+            ->accessibleBy($locationIds)
             ->latest('created_at')
             ->take(5)
             ->get();
+    }
+
+    private function calculateTrend(float $current, float $previous): float
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 1);
     }
 }

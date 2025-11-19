@@ -10,5 +10,13 @@ class Role extends SpatieRole
         'name',
         'guard_name',
         'code',
+        'level',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'level' => 'integer',
+        ];
+    }
 }

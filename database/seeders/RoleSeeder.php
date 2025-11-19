@@ -9,17 +9,20 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
-   public function run(): void
-   {
-      app()[PermissionRegistrar::class]->forgetCachedPermissions();
+    public function run(): void
+    {
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-      $rolesFromTypes = Type::where('group', Type::GROUP_USER_ROLE)->get();
+        $rolesFromTypes = Type::where('group', Type::GROUP_USER_ROLE)->get();
 
-      foreach ($rolesFromTypes as $type) {
-         Role::updateOrCreate(
-            ['name' => $type->name, 'guard_name' => 'web'],
-            ['code' => $type->code]
-         );
-      }
-   }
+        foreach ($rolesFromTypes as $type) {
+            Role::updateOrCreate(
+                ['name' => $type->name, 'guard_name' => 'web'],
+                [
+                    'code' => $type->code,
+                    'level' => $type->level ?? 100
+                ]
+            );
+        }
+    }
 }

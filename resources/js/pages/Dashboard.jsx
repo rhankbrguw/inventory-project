@@ -17,13 +17,56 @@ import {
     TrendingUp,
     TrendingDown,
     Eye,
+    Calendar,
+    User as UserIcon,
 } from "lucide-react";
 import { formatCurrency, formatNumber, cn, formatDate } from "@/lib/utils";
-import UnifiedBadge from "@/components/UnifiedBadge";
+
+const WelcomeBanner = ({ user }) => {
+    const roleName = user.role?.name || "Pengguna";
+
+    const currentDate = new Date().toLocaleDateString("id-ID", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+
+    return (
+        <div className="bg-primary text-primary-foreground rounded-xl p-6 shadow-lg relative overflow-hidden mb-6">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-foreground/5 rounded-full -ml-10 -mb-10 blur-2xl pointer-events-none"></div>
+
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">
+                        Selamat Datang, {user.name}! 👋
+                    </h2>
+                    <p className="text-primary-foreground/80 text-sm md:text-base max-w-xl">
+                        Lihat laporan hari ini.
+                    </p>
+                </div>
+
+                <div className="flex flex-col items-start md:items-end gap-2">
+                    <div className="flex items-center gap-2 bg-primary-foreground/10 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-primary-foreground/10">
+                        <UserIcon className="h-4 w-4" />
+                        <span className="text-sm font-medium uppercase tracking-wider">
+                            {roleName}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-primary-foreground/70">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>{currentDate}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const StatCard = ({ title, value, icon, description, trend }) => {
     return (
-        <Card className="hover:shadow-md transition-all duration-300 hover:border-primary/50 group">
+        <Card className="hover:shadow-md transition-all duration-300 hover:border-primary/50 group h-full">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
                 <CardTitle className="text-xs sm:text-sm font-semibold text-muted-foreground leading-tight">
                     {title}
@@ -41,7 +84,7 @@ const StatCard = ({ title, value, icon, description, trend }) => {
                         {description}
                     </p>
                 )}
-                {trend && (
+                {trend && trend.value !== undefined && (
                     <div className="flex items-center gap-1.5 mt-3 flex-wrap pt-2 border-t border-border">
                         {trend.value > 0 ? (
                             <>
@@ -50,13 +93,17 @@ const StatCard = ({ title, value, icon, description, trend }) => {
                                     +{trend.value}%
                                 </span>
                             </>
-                        ) : (
+                        ) : trend.value < 0 ? (
                             <>
                                 <TrendingDown className="h-3.5 w-3.5 text-destructive" />
                                 <span className="text-xs font-semibold text-destructive">
                                     {trend.value}%
                                 </span>
                             </>
+                        ) : (
+                            <span className="text-xs font-semibold text-muted-foreground">
+                                0%
+                            </span>
                         )}
                         <span className="text-xs text-muted-foreground">
                             vs kemarin
@@ -70,7 +117,7 @@ const StatCard = ({ title, value, icon, description, trend }) => {
 
 const RecentActivityCard = ({ movements }) => {
     return (
-        <Card className="col-span-1 md:col-span-2 hover:shadow-md transition-all duration-300 hover:border-primary/50">
+        <Card className="col-span-1 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/50 h-full">
             <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -169,58 +216,20 @@ const RecentActivityCard = ({ movements }) => {
     );
 };
 
-const WelcomeCard = ({ user }) => {
-    const roleName =
-        user.roles && user.roles.length > 0 ? user.roles[0] : "Pengguna";
-
-    return (
-        <Card className="col-span-1 md:col-span-2 lg:col-span-1 hover:shadow-md transition-all duration-300 hover:border-primary/50 border-primary/30">
-            <CardHeader>
-                <CardTitle className="text-lg font-semibold text-foreground">
-                    Selamat Datang! 👋
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-                        Login sebagai
-                    </p>
-                    <p className="text-base font-semibold mt-2 break-words text-foreground">
-                        {user.name}
-                    </p>
-                </div>
-                <div className="inline-block">
-                    <UnifiedBadge text={roleName} />
-                </div>
-                <div className="pt-3 border-t border-border">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                        Gunakan menu navigasi untuk mengelola inventaris dan
-                        melacak pergerakan stok.
-                    </p>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
-
 export default function Dashboard({ auth, stats, recentMovements }) {
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Dashboard" />
 
-            <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                    Dashboard
-                </h1>
-            </div>
+            <WelcomeBanner user={auth.user} />
 
             <div className="space-y-6">
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <StatCard
                         title="Penjualan Hari Ini"
                         value={formatCurrency(stats.total_sales_today)}
                         icon={<DollarSign className="h-4 w-4 text-success" />}
-                        trend={{ value: 12.5 }}
+                        trend={{ value: stats.sales_trend }}
                     />
                     <StatCard
                         title="Pembelian Hari Ini"
@@ -228,7 +237,7 @@ export default function Dashboard({ auth, stats, recentMovements }) {
                         icon={
                             <ArrowDownLeft className="h-4 w-4 text-destructive" />
                         }
-                        trend={{ value: -5.2 }}
+                        trend={{ value: stats.purchases_trend }}
                     />
                     <StatCard
                         title="Total Nilai Inventaris"
@@ -245,9 +254,8 @@ export default function Dashboard({ auth, stats, recentMovements }) {
                     />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4">
                     <RecentActivityCard movements={recentMovements.data} />
-                    <WelcomeCard user={auth.user} />
                 </div>
             </div>
         </AuthenticatedLayout>
