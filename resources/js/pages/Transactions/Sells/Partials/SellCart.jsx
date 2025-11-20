@@ -108,6 +108,7 @@ export default function SellCart({
                         updateItem={updateItem}
                         processingItem={processingItem}
                         getItemQuantity={getItemQuantity}
+                        locationId={locationId}
                     />
                 )}
             </div>

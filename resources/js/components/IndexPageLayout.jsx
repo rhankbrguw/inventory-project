@@ -1,7 +1,8 @@
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import NoLocationAssigned from "@/components/NoLocationAssigned";
 
 export default function IndexPageLayout({
     title,
@@ -13,6 +14,9 @@ export default function IndexPageLayout({
 }) {
     const ButtonIcon = icon || Plus;
 
+    const { auth } = usePage().props;
+    const hasLocations = auth.user?.has_locations;
+
     return (
         <AuthenticatedLayout>
             <Head title={title} />
@@ -22,8 +26,9 @@ export default function IndexPageLayout({
                     {title}
                 </h1>
                 <div className="flex items-center gap-2">
-                    {headerActions}
-                    {createRoute && (
+                    {hasLocations && headerActions}
+
+                    {hasLocations && createRoute && (
                         <Link href={route(createRoute)}>
                             <Button
                                 size="icon"
@@ -39,7 +44,8 @@ export default function IndexPageLayout({
                     )}
                 </div>
             </div>
-            {children}
+
+            {hasLocations ? children : <NoLocationAssigned />}
         </AuthenticatedLayout>
     );
 }

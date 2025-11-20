@@ -54,6 +54,7 @@ class HandleInertiaRequests extends Middleware
                         'name' => $user->roles->first()->name,
                         'code' => $user->roles->first()->code,
                     ] : null,
+                    'has_locations' => $user->level === 1 || $user->locations()->exists(),
                 ] : null,
             ],
 
