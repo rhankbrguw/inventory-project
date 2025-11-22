@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
@@ -21,6 +23,7 @@ export default function Create({ auth, types, suppliers }) {
         name: "",
         image: null,
         type_id: "",
+        suppliers: [],
         default_supplier_id: "",
         sku: "",
         price: "",
@@ -38,10 +41,28 @@ export default function Create({ auth, types, suppliers }) {
         }
     };
 
+    const handleSupplierToggle = (supplierId) => {
+        const id = parseInt(supplierId);
+        const currentSuppliers = [...data.suppliers];
+
+        if (currentSuppliers.includes(id)) {
+            const newSuppliers = currentSuppliers.filter(s => s !== id);
+            setData({
+                ...data,
+                suppliers: newSuppliers,
+                default_supplier_id: data.default_supplier_id == id ? "" : data.default_supplier_id
+            });
+        } else {
+            setData("suppliers", [...currentSuppliers, id]);
+        }
+    };
+
     const submit = (e) => {
         e.preventDefault();
         post(route("products.store"));
     };
+
+    const selectedSupplierObjects = suppliers.filter(s => data.suppliers.includes(s.id));
 
     return (
         <ContentPageLayout
@@ -83,16 +104,6 @@ export default function Create({ auth, types, suppliers }) {
                             </FormField>
                         </div>
 
-                        {imagePreview && (
-                            <div className="w-full flex justify-center">
-                                <img
-                                    src={imagePreview}
-                                    alt="Product Preview"
-                                    className="mt-2 h-40 w-40 rounded-md object-cover border"
-                                />
-                            </div>
-                        )}
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
                                 label="Tipe Produk"
@@ -119,32 +130,58 @@ export default function Create({ auth, types, suppliers }) {
                                     </SelectContent>
                                 </Select>
                             </FormField>
-                            <FormField
-                                label="Supplier Andalan (Opsional)"
-                                htmlFor="default_supplier_id"
-                                error={errors.default_supplier_id}
-                            >
-                                <Select
-                                    onValueChange={(value) =>
-                                        setData("default_supplier_id", value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih supplier" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {suppliers.map((supplier) => (
-                                            <SelectItem
-                                                key={supplier.id}
-                                                value={supplier.id.toString()}
+
+                            <div className="space-y-3">
+                                <Label>Supplier (Pilih Satu atau Lebih)</Label>
+                                <div className="border rounded-md p-3 max-h-40 overflow-y-auto space-y-2 bg-background">
+                                    {suppliers.map((supplier) => (
+                                        <div key={supplier.id} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`supp-${supplier.id}`}
+                                                checked={data.suppliers.includes(supplier.id)}
+                                                onCheckedChange={() => handleSupplierToggle(supplier.id)}
+                                            />
+                                            <label
+                                                htmlFor={`supp-${supplier.id}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                                             >
                                                 {supplier.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </FormField>
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                                {errors.suppliers && <p className="text-sm font-medium text-destructive">{errors.suppliers}</p>}
+                            </div>
                         </div>
+
+                        <FormField
+                            label="Supplier Utama (Default)"
+                            htmlFor="default_supplier_id"
+                            error={errors.default_supplier_id}
+                            description="Supplier ini akan otomatis terpilih saat membuat PO."
+                        >
+                            <Select
+                                value={data.default_supplier_id?.toString()}
+                                onValueChange={(value) =>
+                                    setData("default_supplier_id", value)
+                                }
+                                disabled={data.suppliers.length === 0}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={data.suppliers.length === 0 ? "Pilih supplier di atas dulu" : "Pilih supplier utama"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {selectedSupplierObjects.map((supplier) => (
+                                        <SelectItem
+                                            key={supplier.id}
+                                            value={supplier.id.toString()}
+                                        >
+                                            {supplier.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField

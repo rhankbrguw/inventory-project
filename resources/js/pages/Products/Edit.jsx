@@ -14,6 +14,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check } from "lucide-react";
 
 export default function Edit({
     auth,
@@ -22,7 +30,9 @@ export default function Edit({
     suppliers,
 }) {
     const { data: product } = productResource;
-    const [imagePreview, setImagePreview] = useState(product.image_url || null);
+    const [imagePreview, setImagePreview] = useState(
+        product.image_path ? `/storage/${product.image_path}` : null
+    );
 
     const { data, setData, post, errors, processing, isDirty } = useForm({
         name: product.name || "",
@@ -31,8 +41,9 @@ export default function Edit({
         unit: product.unit || "",
         description: product.description || "",
         image: null,
-        type_id: product.type?.id || "",
-        default_supplier_id: product.default_supplier?.id || "",
+        type_id: product.type?.id?.toString() || "",
+        suppliers: product.suppliers ? product.suppliers.map((s) => s.id) : [],
+        default_supplier_id: product.default_supplier?.id?.toString() || "",
         _method: "patch",
     });
 
@@ -46,11 +57,41 @@ export default function Edit({
         }
     };
 
+    const handleSupplierToggle = (supplierId) => {
+        const id = parseInt(supplierId);
+        const currentSuppliers = [...data.suppliers];
+
+        if (currentSuppliers.includes(id)) {
+            const newSuppliers = currentSuppliers.filter((s) => s !== id);
+            setData({
+                ...data,
+                suppliers: newSuppliers,
+                default_supplier_id:
+                    data.default_supplier_id == id ? "" : data.default_supplier_id,
+            });
+        } else {
+            setData("suppliers", [...currentSuppliers, id]);
+        }
+    };
+
     const submit = (e) => {
         e.preventDefault();
         post(route("products.update", product.id), {
             forceFormData: true,
         });
+    };
+
+    const selectedSupplierObjects = suppliers.filter((s) =>
+        data.suppliers.includes(s.id)
+    );
+
+    const getSupplierDisplayText = () => {
+        if (data.suppliers.length === 0) return "Pilih supplier...";
+        if (data.suppliers.length === 1) {
+            const supplier = suppliers.find(s => s.id === data.suppliers[0]);
+            return supplier?.name || "1 supplier dipilih";
+        }
+        return `${data.suppliers.length} supplier dipilih`;
     };
 
     return (
@@ -110,7 +151,7 @@ export default function Edit({
                                 error={errors.type_id}
                             >
                                 <Select
-                                    defaultValue={data.type_id.toString()}
+                                    value={data.type_id}
                                     onValueChange={(value) =>
                                         setData("type_id", value)
                                     }
@@ -130,33 +171,93 @@ export default function Edit({
                                     </SelectContent>
                                 </Select>
                             </FormField>
+
                             <FormField
-                                label="Supplier Andalan (Opsional)"
-                                htmlFor="default_supplier_id"
-                                error={errors.default_supplier_id}
+                                label="Supplier (Pilih Satu atau Lebih)"
+                                htmlFor="suppliers"
+                                error={errors.suppliers}
                             >
-                                <Select
-                                    defaultValue={data.default_supplier_id?.toString()}
-                                    onValueChange={(value) =>
-                                        setData("default_supplier_id", value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih supplier" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {suppliers.map((supplier) => (
-                                            <SelectItem
-                                                key={supplier.id}
-                                                value={supplier.id.toString()}
-                                            >
-                                                {supplier.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className="w-full justify-between font-normal"
+                                        >
+                                            {getSupplierDisplayText()}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0" align="start">
+                                        <div className="max-h-[300px] overflow-y-auto p-4">
+                                            <div className="space-y-3">
+                                                {suppliers.map((supplier) => (
+                                                    <div
+                                                        key={supplier.id}
+                                                        className="flex items-center space-x-2"
+                                                    >
+                                                        <Checkbox
+                                                            id={`supp-${supplier.id}`}
+                                                            checked={data.suppliers.includes(
+                                                                supplier.id
+                                                            )}
+                                                            onCheckedChange={() =>
+                                                                handleSupplierToggle(
+                                                                    supplier.id
+                                                                )
+                                                            }
+                                                        />
+                                                        <label
+                                                            htmlFor={`supp-${supplier.id}`}
+                                                            className="text-sm leading-none cursor-pointer flex-1"
+                                                        >
+                                                            {supplier.name}
+                                                        </label>
+                                                        {data.suppliers.includes(supplier.id) && (
+                                                            <Check className="h-4 w-4 text-primary" />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </FormField>
                         </div>
+
+                        <FormField
+                            label="Supplier Utama (Default)"
+                            htmlFor="default_supplier_id"
+                            error={errors.default_supplier_id}
+                            description="Supplier ini akan otomatis terpilih saat membuat PO."
+                        >
+                            <Select
+                                value={data.default_supplier_id}
+                                onValueChange={(value) =>
+                                    setData("default_supplier_id", value)
+                                }
+                                disabled={data.suppliers.length === 0}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue
+                                        placeholder={
+                                            data.suppliers.length === 0
+                                                ? "Pilih supplier di atas dulu"
+                                                : "Pilih supplier utama"
+                                        }
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {selectedSupplierObjects.map((supplier) => (
+                                        <SelectItem
+                                            key={supplier.id}
+                                            value={supplier.id.toString()}
+                                        >
+                                            {supplier.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField
@@ -233,7 +334,7 @@ export default function Edit({
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                Simpan
+                                Simpan Perubahan
                             </Button>
                         </div>
                     </form>
