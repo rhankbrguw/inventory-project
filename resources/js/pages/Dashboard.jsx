@@ -1,262 +1,462 @@
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
+    CardFooter,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    PieChart,
+    Pie,
+    Label,
+    ResponsiveContainer,
+} from "recharts";
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+} from "@/components/ui/chart";
 import {
     DollarSign,
     Package,
-    ArrowDownLeft,
-    AlertCircle,
-    ArrowUpRight,
     TrendingUp,
+    AlertTriangle,
     TrendingDown,
-    Eye,
-    Calendar,
-    User as UserIcon,
+    PackageX,
 } from "lucide-react";
-import { formatCurrency, formatNumber, cn, formatDate } from "@/lib/utils";
+import { formatCurrency, formatNumber } from "@/lib/utils";
+import StockMovementMobileCard from "./StockMovements/Partials/StockMovementMobileCard";
 
-const WelcomeBanner = ({ user }) => {
-    const roleName = user.role?.name || "Pengguna";
-
-    const currentDate = new Date().toLocaleDateString("id-ID", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-
-    return (
-        <div className="bg-primary text-primary-foreground rounded-xl p-6 shadow-lg relative overflow-hidden mb-6">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-foreground/5 rounded-full -ml-10 -mb-10 blur-2xl pointer-events-none"></div>
-
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">
-                        Selamat Datang, {user.name}! 👋
-                    </h2>
-                    <p className="text-primary-foreground/80 text-sm md:text-base max-w-xl">
-                        Lihat laporan hari ini.
-                    </p>
-                </div>
-
-                <div className="flex flex-col items-start md:items-end gap-2">
-                    <div className="flex items-center gap-2 bg-primary-foreground/10 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-primary-foreground/10">
-                        <UserIcon className="h-4 w-4" />
-                        <span className="text-sm font-medium uppercase tracking-wider">
-                            {roleName}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-primary-foreground/70">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>{currentDate}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+const salesChartConfig = {
+    total: {
+        label: "Penjualan",
+        color: "hsl(var(--primary))",
+    },
 };
 
-const StatCard = ({ title, value, icon, description, trend }) => {
-    return (
-        <Card className="hover:shadow-md transition-all duration-300 hover:border-primary/50 group h-full">
-            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                <CardTitle className="text-xs sm:text-sm font-semibold text-muted-foreground leading-tight">
-                    {title}
-                </CardTitle>
-                <div className="p-2 sm:p-2.5 rounded-lg bg-secondary group-hover:bg-primary/10 flex-shrink-0 transition-colors duration-300">
-                    {icon}
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-                <div className="text-2xl sm:text-3xl font-bold tracking-tight break-words text-foreground">
-                    {value}
-                </div>
-                {description && (
-                    <p className="text-xs text-muted-foreground">
-                        {description}
-                    </p>
-                )}
-                {trend && trend.value !== undefined && (
-                    <div className="flex items-center gap-1.5 mt-3 flex-wrap pt-2 border-t border-border">
-                        {trend.value > 0 ? (
-                            <>
-                                <TrendingUp className="h-3.5 w-3.5 text-success" />
-                                <span className="text-xs font-semibold text-success">
-                                    +{trend.value}%
-                                </span>
-                            </>
-                        ) : trend.value < 0 ? (
-                            <>
-                                <TrendingDown className="h-3.5 w-3.5 text-destructive" />
-                                <span className="text-xs font-semibold text-destructive">
-                                    {trend.value}%
-                                </span>
-                            </>
-                        ) : (
-                            <span className="text-xs font-semibold text-muted-foreground">
-                                0%
-                            </span>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                            vs kemarin
-                        </span>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
+const paymentChartConfig = {
+    count: {
+        label: "Transaksi",
+    },
+    Tunai: {
+        label: "Tunai",
+        color: "hsl(var(--chart-1))",
+    },
+    QRIS: {
+        label: "QRIS",
+        color: "hsl(var(--chart-2))",
+    },
+    "Transfer Bank": {
+        label: "Transfer",
+        color: "hsl(var(--chart-3))",
+    },
+    Other: {
+        label: "Lainnya",
+        color: "hsl(var(--chart-4))",
+    },
+    "No Data": {
+        label: "Tidak Ada Data",
+        color: "hsl(var(--muted))",
+    },
 };
 
-const RecentActivityCard = ({ movements }) => {
-    return (
-        <Card className="col-span-1 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/50 h-full">
-            <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <CardTitle className="text-lg font-semibold text-foreground">
-                            Aktivitas Terbaru
-                        </CardTitle>
-                        <CardDescription className="mt-1.5 text-sm">
-                            5 pergerakan stok terakhir
-                        </CardDescription>
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="self-start sm:self-auto bg-transparent"
-                        asChild
-                    >
-                        <Link href={route("stock-movements.index")}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            <span className="hidden sm:inline">
-                                Lihat Semua
-                            </span>
-                            <span className="sm:hidden">All</span>
-                        </Link>
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-1">
-                    {movements.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">
-                            <Package className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                            <p className="text-sm">Belum ada pergerakan stok</p>
-                        </div>
-                    ) : (
-                        movements.map((move, index) => (
-                            <div
-                                key={move.id}
-                                className={cn(
-                                    "flex items-center gap-4 p-3 rounded-lg transition-colors hover:bg-secondary/40",
-                                    index !== movements.length - 1 &&
-                                    "border-b border-border",
-                                )}
-                            >
-                                <div
-                                    className={cn(
-                                        "p-2.5 rounded-lg flex items-center justify-center flex-shrink-0 font-medium",
-                                        move.quantity > 0
-                                            ? "bg-success/10 text-success"
-                                            : "bg-destructive/10 text-destructive",
-                                    )}
-                                >
-                                    {move.quantity > 0 ? (
-                                        <ArrowUpRight className="h-4 w-4" />
-                                    ) : (
-                                        <ArrowDownLeft className="h-4 w-4" />
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">
-                                        {move.product?.name || "Produk Dihapus"}
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
-                                            {move.location?.name ||
-                                                "Lokasi Dihapus"}
-                                        </span>
-                                        {move.created_at && (
-                                            <span className="text-xs text-muted-foreground">
-                                                {formatDate(move.created_at)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end flex-shrink-0">
-                                    <span
-                                        className={cn(
-                                            "text-sm font-bold",
-                                            move.quantity > 0
-                                                ? "text-success"
-                                                : "text-destructive",
-                                        )}
-                                    >
-                                        {move.quantity > 0 ? "+" : ""}
-                                        {formatNumber(move.quantity)}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {move.product?.unit || "unit"}
-                                    </span>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </CardContent>
-        </Card>
-    );
+const topProductConfig = {
+    total_qty: {
+        label: "Terjual",
+        color: "hsl(var(--chart-2))",
+    },
 };
 
-export default function Dashboard({ auth, stats, recentMovements }) {
+export default function Dashboard({
+    auth,
+    stats,
+    charts,
+    recentMovements,
+    locations,
+    filters,
+}) {
+    const handleFilterChange = (key, value) => {
+        router.get(
+            route("dashboard"),
+            { ...filters, [key]: value },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const pieData = charts.channels.map((item, index) => ({
+        ...item,
+        fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+    }));
+
+    const hasTopProducts = charts.top_items && charts.top_items.length > 0;
+
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Dashboard" />
 
-            <WelcomeBanner user={auth.user} />
-
-            <div className="space-y-6">
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                    <StatCard
-                        title="Penjualan Hari Ini"
-                        value={formatCurrency(stats.total_sales_today)}
-                        icon={<DollarSign className="h-4 w-4 text-success" />}
-                        trend={{ value: stats.sales_trend }}
-                    />
-                    <StatCard
-                        title="Pembelian Hari Ini"
-                        value={formatCurrency(stats.total_purchases_today)}
-                        icon={
-                            <ArrowDownLeft className="h-4 w-4 text-destructive" />
-                        }
-                        trend={{ value: stats.purchases_trend }}
-                    />
-                    <StatCard
-                        title="Total Nilai Inventaris"
-                        value={formatCurrency(stats.total_inventory_value)}
-                        icon={<Package className="h-4 w-4 text-primary" />}
-                    />
-                    <StatCard
-                        title="Item Stok Menipis"
-                        value={formatNumber(stats.low_stock_items_count)}
-                        description="Stok ≤ 5 unit"
-                        icon={
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                        }
-                    />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        Dashboard
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Ringkasan performa bisnis Anda.
+                    </p>
                 </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <Select
+                        value={filters.date_range || "this_month"}
+                        onValueChange={(val) =>
+                            handleFilterChange("date_range", val)
+                        }
+                    >
+                        <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="Rentang Waktu" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="today">Hari Ini</SelectItem>
+                            <SelectItem value="last_7_days">
+                                7 Hari Terakhir
+                            </SelectItem>
+                            <SelectItem value="this_month">Bulan Ini</SelectItem>
+                        </SelectContent>
+                    </Select>
 
-                <div className="grid gap-4">
-                    <RecentActivityCard movements={recentMovements.data} />
+                    <Select
+                        value={filters.location_id || "all"}
+                        onValueChange={(val) =>
+                            handleFilterChange("location_id", val)
+                        }
+                    >
+                        <SelectTrigger className="w-[200px]">
+                            <SelectValue placeholder="Semua Lokasi" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {auth.user.level === 1 && (
+                                <SelectItem value="all">Semua Lokasi</SelectItem>
+                            )}
+                            {locations.map((loc) => (
+                                <SelectItem
+                                    key={loc.id}
+                                    value={loc.id.toString()}
+                                >
+                                    {loc.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Pendapatan Kotor
+                        </CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(stats.revenue)}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Total penjualan periode ini
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Profit Bersih (Est)
+                        </CardTitle>
+                        {stats.net_profit >= 0 ? (
+                            <TrendingUp className="h-4 w-4 text-success" />
+                        ) : (
+                            <TrendingDown className="h-4 w-4 text-destructive" />
+                        )}
+                    </CardHeader>
+                    <CardContent>
+                        <div
+                            className={`text-2xl font-bold ${stats.net_profit >= 0
+                                ? "text-success"
+                                : "text-destructive"
+                                }`}
+                        >
+                            {formatCurrency(stats.net_profit)}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Pendapatan - HPP (Modal)
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Nilai Aset Stok
+                        </CardTitle>
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">
+                            {formatCurrency(stats.inventory_value)}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Total nilai aset saat ini
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Stok Menipis
+                        </CardTitle>
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-destructive">
+                            {formatNumber(stats.low_stock_count)} Item
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Butuh restock segera
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-7 mb-8">
+                <Card className="col-span-4">
+                    <CardHeader>
+                        <CardTitle>Tren Penjualan</CardTitle>
+                        <CardDescription>
+                            Performa harian periode ini
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={salesChartConfig}>
+                            <BarChart accessibilityLayer data={charts.sales}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    tickLine={false}
+                                    tickMargin={10}
+                                    axisLine={false}
+                                    tickFormatter={(value) => value.slice(0, 5)}
+                                />
+                                <YAxis
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(value) =>
+                                        `Rp${value / 1000}k`
+                                    }
+                                    width={80}
+                                />
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={
+                                        <ChartTooltipContent
+                                            hideLabel
+                                            formatter={(value) =>
+                                                formatCurrency(value)
+                                            }
+                                        />
+                                    }
+                                />
+                                <Bar
+                                    dataKey="total"
+                                    fill="var(--color-total)"
+                                    radius={4}
+                                />
+                            </BarChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+
+                <Card className="col-span-3 flex flex-col">
+                    <CardHeader className="items-center pb-0">
+                        <CardTitle>Metode Pembayaran</CardTitle>
+                        <CardDescription>Distribusi Channel</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 pb-0">
+                        <ChartContainer
+                            config={paymentChartConfig}
+                            className="mx-auto aspect-square max-h-[250px]"
+                        >
+                            <PieChart>
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={<ChartTooltipContent hideLabel />}
+                                />
+                                <Pie
+                                    data={pieData}
+                                    dataKey="count"
+                                    nameKey="name"
+                                    innerRadius={60}
+                                    strokeWidth={5}
+                                >
+                                    <Label
+                                        content={({ viewBox }) => {
+                                            if (
+                                                viewBox &&
+                                                "cx" in viewBox &&
+                                                "cy" in viewBox
+                                            ) {
+                                                return (
+                                                    <text
+                                                        x={viewBox.cx}
+                                                        y={viewBox.cy}
+                                                        textAnchor="middle"
+                                                        dominantBaseline="middle"
+                                                    >
+                                                        <tspan
+                                                            x={viewBox.cx}
+                                                            y={viewBox.cy}
+                                                            className="fill-foreground text-3xl font-bold"
+                                                        >
+                                                            {pieData.reduce(
+                                                                (acc, curr) =>
+                                                                    acc +
+                                                                    curr.count,
+                                                                0
+                                                            )}
+                                                        </tspan>
+                                                        <tspan
+                                                            x={viewBox.cx}
+                                                            y={
+                                                                (viewBox.cy ||
+                                                                    0) + 24
+                                                            }
+                                                            className="fill-muted-foreground text-xs"
+                                                        >
+                                                            Transaksi
+                                                        </tspan>
+                                                    </text>
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </Pie>
+                            </PieChart>
+                        </ChartContainer>
+                    </CardContent>
+                    <CardFooter className="flex-col gap-2 text-sm">
+                        <div className="leading-none text-muted-foreground">
+                            Menampilkan total transaksi berdasarkan tipe
+                            pembayaran
+                        </div>
+                    </CardFooter>
+                </Card>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-7">
+                <Card className="col-span-4">
+                    <CardHeader>
+                        <CardTitle>Top 5 Produk Terlaris</CardTitle>
+                        <CardDescription>
+                            Berdasarkan kuantitas terjual
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {hasTopProducts ? (
+                            <ChartContainer
+                                config={topProductConfig}
+                                className="h-[300px]"
+                            >
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={charts.top_items}
+                                        layout="vertical"
+                                        margin={{ left: 20, right: 20, top: 5, bottom: 5 }}
+                                    >
+                                        <CartesianGrid
+                                            horizontal={false}
+                                            strokeDasharray="3 3"
+                                        />
+                                        <YAxis
+                                            dataKey="name"
+                                            type="category"
+                                            tickLine={false}
+                                            tickMargin={10}
+                                            axisLine={false}
+                                            width={120}
+                                            className="text-xs"
+                                        />
+                                        <XAxis
+                                            type="number"
+                                            tickLine={false}
+                                            axisLine={false}
+                                        />
+                                        <ChartTooltip
+                                            cursor={false}
+                                            content={
+                                                <ChartTooltipContent
+                                                    hideLabel
+                                                    formatter={(value) =>
+                                                        `${formatNumber(value)} unit`
+                                                    }
+                                                />
+                                            }
+                                        />
+                                        <Bar
+                                            dataKey="total_qty"
+                                            fill="var(--color-total_qty)"
+                                            radius={[0, 4, 4, 0]}
+                                            barSize={32}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                        ) : (
+                            <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
+                                <PackageX className="h-12 w-12 mb-4 opacity-50" />
+                                <p className="text-sm font-medium">
+                                    Belum ada data penjualan
+                                </p>
+                                <p className="text-xs mt-1">
+                                    Data akan muncul setelah ada transaksi penjualan
+                                </p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card className="col-span-3">
+                    <CardHeader>
+                        <CardTitle>Aktivitas Stok Terbaru</CardTitle>
+                        <CardDescription>Pergerakan Barang</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {recentMovements.data.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground text-sm">
+                                    Belum ada aktivitas.
+                                </div>
+                            ) : (
+                                recentMovements.data.map((movement) => (
+                                    <StockMovementMobileCard
+                                        key={movement.id}
+                                        movement={movement}
+                                    />
+                                ))
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </AuthenticatedLayout>
     );
