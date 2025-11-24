@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 
 export default function Create({ auth, types, suppliers }) {
-    const [imagePreview, setImagePreview] = useState(null);
+    const [setImagePreview] = useState(null);
     const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         image: null,

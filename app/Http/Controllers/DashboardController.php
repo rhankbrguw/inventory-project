@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Resources\StockMovementResource;
 use App\Models\Inventory;
 use App\Models\Location;
-use App\Models\Purchase;
 use App\Models\Sell;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -14,16 +13,24 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Http\RedirectResponse;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request): Response|RedirectResponse
     {
         $user = Auth::user();
-
         $accessibleLocationIds = $user->getAccessibleLocationIds();
-
         $selectedLocationId = $request->input('location_id');
+
+        if ($user->level !== 1 && !$selectedLocationId) {
+            if (!empty($accessibleLocationIds)) {
+                return to_route('dashboard', [
+                    'location_id' => $accessibleLocationIds[0],
+                    'date_range' => 'this_month'
+                ]);
+            }
+        }
 
         if ($selectedLocationId && $selectedLocationId !== 'all') {
             if ($user->level !== 1 && !in_array($selectedLocationId, $accessibleLocationIds ?? [])) {
@@ -34,53 +41,77 @@ class DashboardController extends Controller
             $filterIds = $accessibleLocationIds;
         }
 
-        $dateRange = $request->input('date_range', 'this_month');
+        $dateConfig = $this->parseDateRange($request);
 
-        return Inertia::render('Dashboard', [
-            'stats' => $this->getStats($filterIds, $dateRange),
+        return Inertia::render('Dashboard/Index', [
+            'stats' => $this->getStats($filterIds, $dateConfig),
             'charts' => [
-                'sales' => $this->getSalesChart($filterIds, $dateRange),
-                'channels' => $this->getPaymentChannelChart($filterIds, $dateRange),
-                'top_items' => $this->getTopSellingItems($filterIds, $dateRange),
+                'sales' => $this->getSalesChart($filterIds, $dateConfig),
+                'channels' => $this->getPaymentChannelChart($filterIds, $dateConfig),
+                'top_items' => $this->getTopSellingItems($filterIds, $dateConfig),
             ],
             'recentMovements' => StockMovementResource::collection($this->getRecentMovements($filterIds)),
             'locations' => $this->getLocationsForDropdown($user),
-            'filters' => $request->only(['location_id', 'date_range']),
+            'filters' => array_merge($request->only(['location_id', 'date_range', 'start_date', 'end_date']), [
+                'resolved_label' => $dateConfig['label'],
+            ]),
         ]);
     }
 
-    private function getStats(?array $locationIds, string $range): array
+    private function parseDateRange(Request $request): array
     {
-        $query = Sell::accessibleBy($locationIds)->where('status', 'Completed');
-        $purchaseQuery = Purchase::accessibleBy($locationIds)->where('status', 'Completed');
+        $range = $request->input('date_range', 'this_month');
 
-        $startDate = match ($range) {
-            'today' => Carbon::today(),
-            'last_7_days' => Carbon::today()->subDays(6),
-            'this_month' => Carbon::now()->startOfMonth(),
-            default => Carbon::now()->startOfMonth(),
+        if ($range === 'custom' && $request->filled(['start_date', 'end_date'])) {
+            $start = Carbon::parse($request->input('start_date'))->startOfDay();
+            $end = Carbon::parse($request->input('end_date'))->endOfDay();
+            return [
+                'start' => $start,
+                'end' => $end,
+                'label' => $start->format('d M') . ' - ' . $end->format('d M')
+            ];
+        }
+
+        return match ($range) {
+            'today' => [
+                'start' => Carbon::today(),
+                'end' => Carbon::today()->endOfDay(),
+                'label' => 'Hari Ini'
+            ],
+            'last_7_days' => [
+                'start' => Carbon::today()->subDays(6)->startOfDay(),
+                'end' => Carbon::today()->endOfDay(),
+                'label' => '7 Hari Terakhir'
+            ],
+            default => [
+                'start' => Carbon::now()->startOfMonth(),
+                'end' => Carbon::now()->endOfMonth(),
+                'label' => 'Bulan Ini'
+            ],
         };
+    }
 
-        $query->whereDate('transaction_date', '>=', $startDate);
-        $purchaseQuery->whereDate('transaction_date', '>=', $startDate);
+    private function getStats(?array $locationIds, array $dateConfig): array
+    {
+        $start = $dateConfig['start'];
+        $end = $dateConfig['end'];
 
-        $revenue = (clone $query)->sum('total_price') ?? 0;
+        $revenue = Sell::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->sum('total_price');
 
-        $procurementCost = (clone $purchaseQuery)->sum('total_cost') ?? 0;
-
-        $cogs = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $startDate) {
+        $cogs = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $start, $end) {
             $q->accessibleBy($locationIds)
                 ->where('status', 'Completed')
-                ->whereDate('transaction_date', '>=', $startDate);
+                ->whereBetween('transaction_date', [$start, $end]);
         })
-            ->select(DB::raw('SUM(quantity * average_cost_per_unit) as total_cogs'))
-            ->value('total_cogs') ?? 0;
+            ->sum(DB::raw('ABS(quantity) * average_cost_per_unit'));
 
         $netProfit = $revenue - $cogs;
 
         $inventoryValue = Inventory::accessibleBy($locationIds)
-            ->select(DB::raw('SUM(quantity * average_cost) as total_value'))
-            ->value('total_value') ?? 0;
+            ->sum(DB::raw('quantity * average_cost'));
 
         $lowStockCount = Inventory::accessibleBy($locationIds)
             ->where('quantity', '<=', 5)
@@ -89,107 +120,54 @@ class DashboardController extends Controller
 
         return [
             'revenue' => (float) $revenue,
-            'procurement_cost' => (float) $procurementCost,
             'net_profit' => (float) $netProfit,
             'inventory_value' => (float) $inventoryValue,
             'low_stock_count' => $lowStockCount,
         ];
     }
 
-    private function getSalesChart(?array $locationIds, string $range): array
+    private function getSalesChart(?array $locationIds, array $dateConfig): array
     {
-        $startDate = match ($range) {
-            'today' => Carbon::today(),
-            'last_7_days' => Carbon::today()->subDays(6),
-            'this_month' => Carbon::now()->startOfMonth(),
-            default => Carbon::now()->startOfMonth(),
-        };
-
-        $endDate = Carbon::now();
-
         $sales = Sell::accessibleBy($locationIds)
             ->where('status', 'Completed')
-            ->whereDate('transaction_date', '>=', $startDate)
-            ->whereDate('transaction_date', '<=', $endDate)
+            ->whereBetween('transaction_date', [$dateConfig['start'], $dateConfig['end']])
             ->selectRaw('DATE(transaction_date) as date, SUM(total_price) as total')
             ->groupBy('date')
             ->orderBy('date')
-            ->get()
-            ->keyBy('date');
+            ->get();
 
-        $dateRangeArray = [];
-        $currentDate = $startDate->copy();
-
-        while ($currentDate <= $endDate) {
-            $dateKey = $currentDate->format('Y-m-d');
-            $dateRangeArray[] = [
-                'date' => $currentDate->format('d M'),
-                'total' => (float) ($sales->get($dateKey)?->total ?? 0),
-            ];
-            $currentDate->addDay();
-        }
-
-        return $dateRangeArray;
+        return $sales->map(fn($s) => [
+            'date' => Carbon::parse($s->date)->format('d M'),
+            'total' => (float) $s->total,
+        ])->toArray();
     }
 
-    private function getPaymentChannelChart(?array $locationIds, string $range): array
+    private function getPaymentChannelChart(?array $locationIds, array $dateConfig): array
     {
-        $startDate = match ($range) {
-            'today' => Carbon::today(),
-            'last_7_days' => Carbon::today()->subDays(6),
-            'this_month' => Carbon::now()->startOfMonth(),
-            default => Carbon::now()->startOfMonth(),
-        };
-
-        $data = Sell::accessibleBy($locationIds)
+        return Sell::accessibleBy($locationIds)
             ->where('status', 'Completed')
-            ->whereDate('transaction_date', '>=', $startDate)
+            ->whereBetween('transaction_date', [$dateConfig['start'], $dateConfig['end']])
             ->join('types', 'sells.payment_method_type_id', '=', 'types.id')
             ->selectRaw('types.name as name, COUNT(*) as count')
             ->groupBy('types.name')
-            ->get();
-
-        if ($data->isEmpty()) {
-            return [
-                ['name' => 'No Data', 'count' => 1]
-            ];
-        }
-
-        return $data->map(fn ($item) => [
-            'name' => $item->name,
-            'count' => (int) $item->count,
-        ])->toArray();
+            ->get()
+            ->toArray();
     }
 
-    private function getTopSellingItems(?array $locationIds, string $range): array
+    private function getTopSellingItems(?array $locationIds, array $dateConfig): array
     {
-        $startDate = match ($range) {
-            'today' => Carbon::today(),
-            'last_7_days' => Carbon::today()->subDays(6),
-            'this_month' => Carbon::now()->startOfMonth(),
-            default => Carbon::now()->startOfMonth(),
-        };
-
-        $items = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $startDate) {
+        return StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $dateConfig) {
             $q->accessibleBy($locationIds)
                 ->where('status', 'Completed')
-                ->whereDate('transaction_date', '>=', $startDate);
+                ->whereBetween('transaction_date', [$dateConfig['start'], $dateConfig['end']]);
         })
             ->join('products', 'stock_movements.product_id', '=', 'products.id')
             ->selectRaw('products.name, SUM(ABS(stock_movements.quantity)) as total_qty')
-            ->groupBy('products.name')
+            ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_qty')
             ->take(5)
-            ->get();
-
-        if ($items->isEmpty()) {
-            return [];
-        }
-
-        return $items->map(fn ($item) => [
-            'name' => $item->name,
-            'total_qty' => (float) $item->total_qty,
-        ])->toArray();
+            ->get()
+            ->toArray();
     }
 
     private function getRecentMovements(?array $locationIds)
@@ -197,7 +175,7 @@ class DashboardController extends Controller
         return StockMovement::with(['product', 'location', 'reference'])
             ->accessibleBy($locationIds)
             ->latest('created_at')
-            ->take(5)
+            ->take(6)
             ->get();
     }
 
