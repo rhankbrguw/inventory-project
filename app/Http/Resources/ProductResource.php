@@ -19,14 +19,15 @@ class ProductResource extends JsonResource
             'unit' => $this->unit,
             'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
             'total_stock' => $this->inventories_sum_quantity ?? 0,
-            'type' => $this->whenLoaded('type', fn() => [
+            'type' => $this->whenLoaded('type', fn () => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,
             ]),
-            'default_supplier' => $this->whenLoaded('defaultSupplier', fn() => [
+            'default_supplier' => $this->whenLoaded('defaultSupplier', fn () => [
                 'id' => $this->defaultSupplier->id,
                 'name' => $this->defaultSupplier->name,
             ]),
+            'suppliers' => SupplierResource::collection($this->whenLoaded('suppliers')),
             'locations' => $this->whenLoaded('locations'),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

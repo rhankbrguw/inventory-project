@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import Checkbox from "@/components/Checkbox";
 import {
     Select,
     SelectContent,
@@ -16,9 +15,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, Upload } from "lucide-react";
 
 export default function Create({ auth, types, suppliers }) {
-    const [setImagePreview] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         image: null,
@@ -46,11 +51,14 @@ export default function Create({ auth, types, suppliers }) {
         const currentSuppliers = [...data.suppliers];
 
         if (currentSuppliers.includes(id)) {
-            const newSuppliers = currentSuppliers.filter(s => s !== id);
+            const newSuppliers = currentSuppliers.filter((s) => s !== id);
             setData({
                 ...data,
                 suppliers: newSuppliers,
-                default_supplier_id: data.default_supplier_id == id ? "" : data.default_supplier_id
+                default_supplier_id:
+                    data.default_supplier_id == id
+                        ? ""
+                        : data.default_supplier_id,
             });
         } else {
             setData("suppliers", [...currentSuppliers, id]);
@@ -62,7 +70,18 @@ export default function Create({ auth, types, suppliers }) {
         post(route("products.store"));
     };
 
-    const selectedSupplierObjects = suppliers.filter(s => data.suppliers.includes(s.id));
+    const selectedSupplierObjects = suppliers.filter((s) =>
+        data.suppliers.includes(s.id),
+    );
+
+    const getSupplierDisplayText = () => {
+        if (data.suppliers.length === 0) return "Pilih supplier...";
+        if (data.suppliers.length === 1) {
+            const supplier = suppliers.find((s) => s.id === data.suppliers[0]);
+            return supplier?.name || "1 supplier dipilih";
+        }
+        return `${data.suppliers.length} supplier dipilih`;
+    };
 
     return (
         <ContentPageLayout
@@ -76,7 +95,7 @@ export default function Create({ auth, types, suppliers }) {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <FormField
                                 label="Nama Produk"
                                 htmlFor="name"
@@ -88,6 +107,7 @@ export default function Create({ auth, types, suppliers }) {
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
+                                    placeholder="Contoh: Pakan Ayam A"
                                 />
                             </FormField>
                             <FormField
@@ -95,14 +115,30 @@ export default function Create({ auth, types, suppliers }) {
                                 htmlFor="image"
                                 error={errors.image}
                             >
-                                <Input
-                                    id="image"
-                                    type="file"
-                                    onChange={handleImageChange}
-                                    className="file:text-foreground"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="image"
+                                        type="file"
+                                        onChange={handleImageChange}
+                                        className="file:text-foreground cursor-pointer pr-10"
+                                        accept="image/*"
+                                    />
+                                    <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                                </div>
                             </FormField>
                         </div>
+
+                        {imagePreview && (
+                            <div className="flex justify-center w-full">
+                                <div className="bg-muted/30 p-2 rounded-lg border border-dashed">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Preview"
+                                        className="h-40 w-auto object-contain rounded-md"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
@@ -131,27 +167,61 @@ export default function Create({ auth, types, suppliers }) {
                                 </Select>
                             </FormField>
 
-                            <div className="space-y-3">
-                                <Label>Supplier (Pilih Satu atau Lebih)</Label>
-                                <div className="border rounded-md p-3 max-h-40 overflow-y-auto space-y-2 bg-background">
-                                    {suppliers.map((supplier) => (
-                                        <div key={supplier.id} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`supp-${supplier.id}`}
-                                                checked={data.suppliers.includes(supplier.id)}
-                                                onCheckedChange={() => handleSupplierToggle(supplier.id)}
-                                            />
-                                            <label
-                                                htmlFor={`supp-${supplier.id}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                            >
-                                                {supplier.name}
-                                            </label>
+                            <FormField
+                                label="Supplier (Pilih Satu atau Lebih)"
+                                htmlFor="suppliers"
+                                error={errors.suppliers}
+                            >
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className="w-full justify-between font-normal"
+                                        >
+                                            {getSupplierDisplayText()}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                                        align="start"
+                                    >
+                                        <div className="max-h-[300px] overflow-y-auto p-4">
+                                            <div className="space-y-3">
+                                                {suppliers.map((supplier) => (
+                                                    <div
+                                                        key={supplier.id}
+                                                        className="flex items-center space-x-2"
+                                                    >
+                                                        <Checkbox
+                                                            id={`supp-${supplier.id}`}
+                                                            checked={data.suppliers.includes(
+                                                                supplier.id,
+                                                            )}
+                                                            onChange={() =>
+                                                                handleSupplierToggle(
+                                                                    supplier.id,
+                                                                )
+                                                            }
+                                                        />
+                                                        <label
+                                                            htmlFor={`supp-${supplier.id}`}
+                                                            className="text-sm leading-none cursor-pointer flex-1 select-none"
+                                                        >
+                                                            {supplier.name}
+                                                        </label>
+                                                        {data.suppliers.includes(
+                                                            supplier.id,
+                                                        ) && (
+                                                                <Check className="h-4 w-4 text-primary" />
+                                                            )}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
-                                {errors.suppliers && <p className="text-sm font-medium text-destructive">{errors.suppliers}</p>}
-                            </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </FormField>
                         </div>
 
                         <FormField
@@ -168,7 +238,13 @@ export default function Create({ auth, types, suppliers }) {
                                 disabled={data.suppliers.length === 0}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={data.suppliers.length === 0 ? "Pilih supplier di atas dulu" : "Pilih supplier utama"} />
+                                    <SelectValue
+                                        placeholder={
+                                            data.suppliers.length === 0
+                                                ? "Pilih supplier di atas dulu"
+                                                : "Pilih supplier utama"
+                                        }
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {selectedSupplierObjects.map((supplier) => (
@@ -248,6 +324,7 @@ export default function Create({ auth, types, suppliers }) {
                                 onChange={(e) =>
                                     setData("description", e.target.value)
                                 }
+                                className="h-24"
                             />
                         </FormField>
 

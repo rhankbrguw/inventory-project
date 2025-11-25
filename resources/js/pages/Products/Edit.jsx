@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import Checkbox from "@/components/Checkbox";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check } from "lucide-react";
+import { Check, Upload } from "lucide-react";
 
 export default function Edit({
     auth,
@@ -29,8 +29,9 @@ export default function Edit({
     suppliers,
 }) {
     const { data: product } = productResource;
+
     const [imagePreview, setImagePreview] = useState(
-        product.image_path ? `/storage/${product.image_path}` : null
+        product.image_url ? product.image_url : null,
     );
 
     const { data, setData, post, errors, processing, isDirty } = useForm({
@@ -66,7 +67,9 @@ export default function Edit({
                 ...data,
                 suppliers: newSuppliers,
                 default_supplier_id:
-                    data.default_supplier_id == id ? "" : data.default_supplier_id,
+                    data.default_supplier_id == id
+                        ? ""
+                        : data.default_supplier_id,
             });
         } else {
             setData("suppliers", [...currentSuppliers, id]);
@@ -81,13 +84,13 @@ export default function Edit({
     };
 
     const selectedSupplierObjects = suppliers.filter((s) =>
-        data.suppliers.includes(s.id)
+        data.suppliers.includes(s.id),
     );
 
     const getSupplierDisplayText = () => {
         if (data.suppliers.length === 0) return "Pilih supplier...";
         if (data.suppliers.length === 1) {
-            const supplier = suppliers.find(s => s.id === data.suppliers[0]);
+            const supplier = suppliers.find((s) => s.id === data.suppliers[0]);
             return supplier?.name || "1 supplier dipilih";
         }
         return `${data.suppliers.length} supplier dipilih`;
@@ -105,7 +108,7 @@ export default function Edit({
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <FormField
                                 label="Nama Produk"
                                 htmlFor="name"
@@ -124,22 +127,28 @@ export default function Edit({
                                 htmlFor="image"
                                 error={errors.image}
                             >
-                                <Input
-                                    id="image"
-                                    type="file"
-                                    onChange={handleImageChange}
-                                    className="file:text-foreground"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="image"
+                                        type="file"
+                                        onChange={handleImageChange}
+                                        className="file:text-foreground cursor-pointer pr-10"
+                                        accept="image/*"
+                                    />
+                                    <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                                </div>
                             </FormField>
                         </div>
 
                         {imagePreview && (
-                            <div className="w-full flex justify-center">
-                                <img
-                                    src={imagePreview}
-                                    alt="Product Preview"
-                                    className="mt-2 h-40 w-40 rounded-md object-cover border"
-                                />
+                            <div className="flex justify-center w-full">
+                                <div className="bg-muted/30 p-2 rounded-lg border border-dashed">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Preview"
+                                        className="h-40 w-auto object-contain rounded-md shadow-sm"
+                                    />
+                                </div>
                             </div>
                         )}
 
@@ -186,7 +195,10 @@ export default function Edit({
                                             {getSupplierDisplayText()}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-full p-0" align="start">
+                                    <PopoverContent
+                                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                                        align="start"
+                                    >
                                         <div className="max-h-[300px] overflow-y-auto p-4">
                                             <div className="space-y-3">
                                                 {suppliers.map((supplier) => (
@@ -197,23 +209,25 @@ export default function Edit({
                                                         <Checkbox
                                                             id={`supp-${supplier.id}`}
                                                             checked={data.suppliers.includes(
-                                                                supplier.id
+                                                                supplier.id,
                                                             )}
-                                                            onCheckedChange={() =>
+                                                            onChange={() =>
                                                                 handleSupplierToggle(
-                                                                    supplier.id
+                                                                    supplier.id,
                                                                 )
                                                             }
                                                         />
                                                         <label
                                                             htmlFor={`supp-${supplier.id}`}
-                                                            className="text-sm leading-none cursor-pointer flex-1"
+                                                            className="text-sm leading-none cursor-pointer flex-1 select-none"
                                                         >
                                                             {supplier.name}
                                                         </label>
-                                                        {data.suppliers.includes(supplier.id) && (
-                                                            <Check className="h-4 w-4 text-primary" />
-                                                        )}
+                                                        {data.suppliers.includes(
+                                                            supplier.id,
+                                                        ) && (
+                                                                <Check className="h-4 w-4 text-primary" />
+                                                            )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -230,7 +244,7 @@ export default function Edit({
                             description="Supplier ini akan otomatis terpilih saat membuat PO."
                         >
                             <Select
-                                value={data.default_supplier_id}
+                                value={data.default_supplier_id?.toString()}
                                 onValueChange={(value) =>
                                     setData("default_supplier_id", value)
                                 }
@@ -323,6 +337,7 @@ export default function Edit({
                                 onChange={(e) =>
                                     setData("description", e.target.value)
                                 }
+                                className="h-24"
                             />
                         </FormField>
 
