@@ -46,9 +46,9 @@ export default function Index({
         restoreItem,
     } = useSoftDeletes({ resourceName: "products", data: products.data });
 
-    const canCrudProducts = ["Super Admin", "Branch Manager"].some((role) =>
-        auth.user.roles.includes(role),
-    );
+    const roleCode = auth.user.role?.code;
+    const canCrudProducts =
+        auth.user.level === 1 || ["WHM", "BRM"].includes(roleCode);
 
     const renderActionDropdown = (product) => (
         <DropdownMenu>
@@ -122,6 +122,7 @@ export default function Index({
                     params={params}
                     setFilter={setFilter}
                     allProducts={allProducts}
+                    productTypes={productTypes}
                 />
 
                 <MobileCardList

@@ -148,12 +148,12 @@ class StockController extends Controller
             'products' => ProductResource::collection($productsData),
             'locations' => $locationsData,
             'adjustmentReasons' => [
+                ['value' => 'Stock Opname', 'label' => 'Penyesuaian Stok Fisik'],
                 ['value' => 'Rusak', 'label' => 'Barang Rusak'],
                 ['value' => 'Retur', 'label' => 'Barang Retur'],
             ],
         ]);
     }
-
 
     public function adjust(AdjustStockRequest $request): RedirectResponse
     {
@@ -165,43 +165,42 @@ class StockController extends Controller
             abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
         }
 
-        $quantityToRemove = (float) $validated['quantity'];
-
-        if ($quantityToRemove <= 0) {
-            return Redirect::back()->withErrors(['quantity' => 'Jumlah yang disesuaikan harus lebih besar dari 0.'])->withInput();
-        }
-
         try {
-            DB::transaction(function () use ($validated, $quantityToRemove) {
-                $inventory = Inventory::where('product_id', $validated['product_id'])
-                    ->where('location_id', $validated['location_id'])
-                    ->lockForUpdate()
-                    ->first();
+            DB::transaction(function () use ($validated) {
+                $inventory = Inventory::firstOrCreate(
+                    [
+                        'product_id' => $validated['product_id'],
+                        'location_id' => $validated['location_id']
+                    ],
+                    ['quantity' => 0, 'average_cost' => 0]
+                );
 
-                if (!$inventory || $inventory->quantity < $quantityToRemove) {
-                    throw new \Exception('Stok tidak mencukupi untuk penyesuaian.');
+                $currentQuantity = (float) $inventory->quantity;
+                $newQuantity = (float) $validated['quantity'];
+                $quantityDifference = $newQuantity - $currentQuantity;
+
+                if ($quantityDifference == 0) {
+                    return;
                 }
-
-                $quantityChange = -$quantityToRemove;
 
                 StockMovement::create([
                     'product_id' => $validated['product_id'],
                     'location_id' => $validated['location_id'],
                     'type' => 'adjustment',
-                    'quantity' => $quantityChange,
+                    'quantity' => $quantityDifference,
                     'cost_per_unit' => $inventory->average_cost,
                     'average_cost_per_unit' => $inventory->average_cost,
-                    'notes' => $validated['notes'] ?? null,
+                    'notes' => $validated['notes'] . " (Stok terakhir: {$currentQuantity} -> Input: {$newQuantity})",
                 ]);
 
-                $inventory->decrement('quantity', $quantityToRemove);
+                $inventory->update(['quantity' => $newQuantity]);
             });
         } catch (\Exception $e) {
             return Redirect::back()->with('error', 'Gagal menyesuaikan stok: ' . $e->getMessage())->withInput();
         }
 
         return Redirect::route('stock.index')
-            ->with('success', 'Stok berhasil disesuaikan.');
+            ->with('success', 'Stok berhasil disesuaikan dengan jumlah fisik.');
     }
 
     public function getQuantity(Request $request): JsonResponse

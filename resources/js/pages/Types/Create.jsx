@@ -43,8 +43,8 @@ export default function Create({ auth, availableGroups, allTypes }) {
                 <CardHeader>
                     <CardTitle>Informasi Tipe</CardTitle>
                     <CardDescription>
-                        Isi detail untuk tipe baru yang akan dibuat. Tipe ini
-                        akan muncul sebagai pilihan di dropdown pada modul lain.
+                        Isi detail untuk tipe baru yang akan digunakan pada
+                        modul lain.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -61,9 +61,10 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    placeholder="Contoh: Bahan Baku"
+                                    placeholder="Masukkan nama tipe"
                                 />
                             </FormField>
+
                             <FormField
                                 label="Grup Tipe"
                                 htmlFor="group"
@@ -80,7 +81,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                     }
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Pilih grup..." />
+                                        <SelectValue placeholder="Pilih grup tipe" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(availableGroups).map(
@@ -101,9 +102,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                         {data.group && allTypes[data.group] && (
                             <Alert>
                                 <Info className="h-4 w-4" />
-                                <AlertTitle>
-                                    Tipe yang Sudah Ada di Grup Ini:
-                                </AlertTitle>
+                                <AlertTitle>Tipe pada grup ini</AlertTitle>
                                 <AlertDescription className="flex flex-wrap gap-2 pt-2">
                                     {allTypes[data.group].map((type) => (
                                         <Badge
@@ -121,7 +120,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                             label="Kode (Opsional)"
                             htmlFor="code"
                             error={errors.code}
-                            description="Kode unik singkat untuk referensi cepat jika diperlukan."
+                            description="Kode singkat untuk referensi cepat."
                         >
                             <Input
                                 id="code"
@@ -129,7 +128,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                 onChange={(e) =>
                                     setData("code", e.target.value)
                                 }
-                                placeholder="Contoh: BB"
+                                placeholder="Masukkan kode tipe"
                             />
                         </FormField>
 

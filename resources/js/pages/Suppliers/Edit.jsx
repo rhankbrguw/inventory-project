@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Edit({ auth, supplier: supplierResource }) {
     const { data: supplier } = supplierResource;
+
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: supplier.name,
+        name: supplier.name || "",
         contact_person: supplier.contact_person || "",
         email: supplier.email || "",
         phone: supplier.phone
@@ -35,6 +36,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                 <CardHeader>
                     <CardTitle>{supplier.name}</CardTitle>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -45,12 +47,14 @@ export default function Edit({ auth, supplier: supplierResource }) {
                             >
                                 <Input
                                     id="name"
+                                    placeholder="Nama Perusahaan Supplier"
                                     value={data.name}
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
                                 />
                             </FormField>
+
                             <FormField
                                 label="Narahubung"
                                 htmlFor="contact_person"
@@ -58,6 +62,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                             >
                                 <Input
                                     id="contact_person"
+                                    placeholder="Nama PIC / Sales"
                                     value={data.contact_person}
                                     onChange={(e) =>
                                         setData(
@@ -68,6 +73,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                 />
                             </FormField>
                         </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 label="Email"
@@ -77,12 +83,14 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                 <Input
                                     id="email"
                                     type="email"
+                                    placeholder="email@supplier.com"
                                     value={data.email}
                                     onChange={(e) =>
                                         setData("email", e.target.value)
                                     }
                                 />
                             </FormField>
+
                             <FormField
                                 label="Telepon"
                                 htmlFor="phone"
@@ -91,6 +99,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                 <InputWithPrefix
                                     prefix="+62"
                                     id="phone"
+                                    placeholder="81234567890"
                                     value={data.phone}
                                     onChange={(e) =>
                                         setData(
@@ -98,10 +107,10 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                             e.target.value.replace(/\D/g, ""),
                                         )
                                     }
-                                    placeholder="81234567890"
                                 />
                             </FormField>
                         </div>
+
                         <FormField
                             label="Alamat"
                             htmlFor="address"
@@ -109,12 +118,14 @@ export default function Edit({ auth, supplier: supplierResource }) {
                         >
                             <Textarea
                                 id="address"
+                                placeholder="Alamat kantor/gudang supplier..."
                                 value={data.address}
                                 onChange={(e) =>
                                     setData("address", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <FormField
                             label="Catatan (Opsional)"
                             htmlFor="notes"
@@ -122,12 +133,14 @@ export default function Edit({ auth, supplier: supplierResource }) {
                         >
                             <Textarea
                                 id="notes"
+                                placeholder="Catatan tambahan tentang supplier ini..."
                                 value={data.notes}
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <div className="flex items-center justify-end gap-4 pt-2">
                             <Link href={route("suppliers.index")}>
                                 <Button type="button" variant="outline">

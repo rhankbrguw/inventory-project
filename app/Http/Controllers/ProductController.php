@@ -40,6 +40,9 @@ class ProductController extends Controller
                     ->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%");
             })
+            ->when($request->input('type_id') && $request->input('type_id') !== 'all', function ($query, $typeId) {
+                $query->where('type_id', $typeId);
+            })
             ->when($request->input('status'), function ($query, $status) {
                 if ($status === 'active') {
                     $query->whereNull('deleted_at');
@@ -47,11 +50,18 @@ class ProductController extends Controller
                     $query->whereNotNull('deleted_at');
                 }
             })
-            ->when($request->input('product_id'), function ($query, $productId) {
-                $query->where('id', $productId);
+            ->when($request->input('sort'), function ($query, $sort) {
+                match ($sort) {
+                    'newest' => $query->latest(),
+                    'oldest' => $query->oldest(),
+                    'price_desc' => $query->orderBy('price', 'desc'),
+                    'price_asc' => $query->orderBy('price', 'asc'),
+                    default => $query->latest(),
+                };
+            }, function ($query) {
+                $query->latest();
             })
             ->withTrashed()
-            ->latest()
             ->paginate(15)
             ->withQueryString();
 
@@ -59,8 +69,8 @@ class ProductController extends Controller
             'products' => ProductResource::collection($products),
             'allProducts' => Product::orderBy('name')->get(['id', 'name', 'sku']),
             'suppliers' => SupplierResource::collection(Supplier::orderBy('name')->get()),
-            'productTypes' => TypeResource::collection(Type::where('group', Type::GROUP_PRODUCT)->get()),
-            'filters' => (object) $request->only(['search', 'status', 'sort', 'product_id']),
+            'productTypes' => TypeResource::collection(Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get()),
+            'filters' => (object) $request->only(['search', 'status', 'sort', 'type_id']),
         ]);
     }
 
@@ -75,14 +85,25 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $supplierIds = $validated['suppliers'] ?? [];
+        unset($validated['suppliers']);
+
         $user = $request->user();
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        DB::transaction(function () use ($validated, $user) {
+        DB::transaction(function () use ($validated, $supplierIds, $user) {
             $product = Product::create($validated);
+
+            if (!empty($supplierIds)) {
+                $product->suppliers()->sync($supplierIds);
+            }
+
+            if ($product->default_supplier_id && !in_array($product->default_supplier_id, $supplierIds)) {
+                $product->suppliers()->attach($product->default_supplier_id);
+            }
 
             $accessibleLocationIds = $user->getAccessibleLocationIds();
 
@@ -105,7 +126,7 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         return Inertia::render('Products/Edit', [
-            'product' => ProductResource::make($product->load(['type', 'defaultSupplier'])),
+            'product' => ProductResource::make($product->load(['type', 'defaultSupplier', 'suppliers'])),
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
         ]);
@@ -114,6 +135,8 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $validated = $request->validated();
+        $supplierIds = $validated['suppliers'] ?? [];
+        unset($validated['suppliers']);
 
         if ($request->hasFile('image')) {
             if ($product->image_path) {
@@ -123,7 +146,15 @@ class ProductController extends Controller
             $validated['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        $product->update($validated);
+        DB::transaction(function () use ($product, $validated, $supplierIds) {
+            $product->update($validated);
+
+            $product->suppliers()->sync($supplierIds);
+
+            if ($product->default_supplier_id && !in_array($product->default_supplier_id, $supplierIds)) {
+                $product->suppliers()->attach($product->default_supplier_id);
+            }
+        });
 
         return Redirect::route('products.index')
             ->with('success', 'Produk berhasil diperbarui.');

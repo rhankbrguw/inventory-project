@@ -1,7 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, ShoppingBag, Package } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,23 +30,6 @@ export default function PurchaseItemManager({
     isSupplierSelected,
 }) {
     const { errors } = usePage().props;
-    const hasCartItems = Object.keys(cartGroups).length > 0;
-
-    if (!hasCartItems) {
-        return (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                    <ShoppingBag className="w-8 h-8 text-muted-foreground/40" />
-                </div>
-                <p className="text-sm font-semibold text-foreground mb-1">
-                    Keranjang masih kosong
-                </p>
-                <p className="text-xs text-muted-foreground">
-                    Pilih produk dari katalog untuk memulai
-                </p>
-            </div>
-        );
-    }
 
     const LoadingSpinner = () => (
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -87,7 +70,6 @@ export default function PurchaseItemManager({
                                 htmlFor={`supplier-${groupData.supplier_id}`}
                                 className="text-sm font-semibold text-foreground truncate cursor-pointer flex-1 min-w-0 flex items-center gap-1.5"
                             >
-                                <Package className="w-4 h-4 text-primary flex-shrink-0" />
                                 {supplierName}
                             </Label>
                             {isSelected && (

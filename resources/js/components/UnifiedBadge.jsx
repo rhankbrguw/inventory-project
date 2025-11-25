@@ -1,21 +1,27 @@
 import { generateHslColorFromString } from "@/lib/utils";
 
-export default function UnifiedBadge({ text }) {
+export default function UnifiedBadge({ text, code }) {
+
     if (!text) {
         return <span>-</span>;
     }
 
     const staticClassMap = {
+        "ADM": "role-super-admin",
+        "WHM": "role-warehouse-manager",
+        "BRM": "role-branch-manager",
+        "CSH": "role-cashier",
+
+        "IND": "customer-type-individu",
+        "CBG": "customer-type-cabang",
+        "MTR": "customer-type-mitra",
+
         "Super Admin": "role-super-admin",
         "Warehouse Manager": "role-warehouse-manager",
-        "Branch Manager": "role-branch-manager",
-        Cashier: "role-cashier",
-        Individu: "customer-type-individu",
-        Cabang: "customer-type-cabang",
-        Mitra: "customer-type-mitra",
     };
 
-    const preDefinedClass = staticClassMap[text];
+    const preDefinedClass = staticClassMap[code] || staticClassMap[text];
+
     const baseClasses =
         "px-3 py-1 text-xs font-semibold rounded-full inline-block";
 

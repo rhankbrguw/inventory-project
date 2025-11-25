@@ -53,7 +53,7 @@ export default function TransferDetailsManager({
                             }
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Pilih lokasi asal..." />
+                                <SelectValue placeholder="Pilih Lokasi Asal" />
                             </SelectTrigger>
                             <SelectContent>
                                 {locations.map((loc) => (
@@ -67,6 +67,7 @@ export default function TransferDetailsManager({
                             </SelectContent>
                         </Select>
                     </FormField>
+
                     <FormField
                         label="Ke Lokasi (Tujuan)"
                         error={errors.to_location_id}
@@ -78,7 +79,7 @@ export default function TransferDetailsManager({
                             }
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Pilih lokasi tujuan..." />
+                                <SelectValue placeholder="Pilih Lokasi Tujuan" />
                             </SelectTrigger>
                             <SelectContent>
                                 {locations.map((loc) => (
@@ -97,6 +98,7 @@ export default function TransferDetailsManager({
                         </Select>
                     </FormField>
                 </div>
+
                 <FormField
                     label="Tanggal Transfer"
                     error={errors.transfer_date}
@@ -104,11 +106,11 @@ export default function TransferDetailsManager({
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
-                                variant={"outline"}
+                                variant="outline"
                                 className={cn(
                                     "w-full justify-start text-left font-normal",
                                     !data.transfer_date &&
-                                        "text-muted-foreground",
+                                    "text-muted-foreground",
                                 )}
                                 disabled={isDetailsLocked}
                             >
@@ -132,11 +134,13 @@ export default function TransferDetailsManager({
                         </PopoverContent>
                     </Popover>
                 </FormField>
+
                 <FormField label="Catatan (Opsional)" error={errors.notes}>
                     <Textarea
                         value={data.notes}
                         onChange={(e) => setData("notes", e.target.value)}
                         disabled={isDetailsLocked}
+                        placeholder="Keterangan transfer..."
                     />
                 </FormField>
             </CardContent>

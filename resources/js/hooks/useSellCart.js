@@ -44,7 +44,7 @@ export function useSellCart(cart = [], locationId) {
     );
 
     const updateCartItem = useCallback(
-        (item, field, value) => {
+        (item, value) => {
             const localStateSetter = setLocalQuantities;
             const cleanedValue = cleanNumberString(value);
 

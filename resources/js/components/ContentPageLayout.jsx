@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
 export default function ContentPageLayout({
-    auth,
     title,
     backRoute,
     action = null,

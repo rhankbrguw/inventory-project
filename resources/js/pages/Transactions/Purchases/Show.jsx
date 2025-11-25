@@ -35,7 +35,7 @@ export default function Show({ auth, purchase }) {
                     <div>
                         <p className="text-muted-foreground">Supplier Utama</p>
                         <p className="font-semibold">
-                            {data.supplier?.name || "Multi-Supplier"}
+                            {data.supplier?.name || "Supplier Umum"}
                         </p>
                     </div>
                     <div>
@@ -80,7 +80,7 @@ export default function Show({ auth, purchase }) {
                                 className={cn(
                                     "p-3",
                                     item.product?.deleted_at &&
-                                        "opacity-60 bg-muted/50",
+                                    "opacity-60 bg-muted/50",
                                 )}
                             >
                                 <div className="space-y-2">
@@ -102,7 +102,7 @@ export default function Show({ auth, purchase }) {
                                         <span className="font-semibold">
                                             {formatCurrency(
                                                 item.quantity *
-                                                    item.cost_per_unit,
+                                                item.cost_per_unit,
                                             )}
                                         </span>
                                     </div>

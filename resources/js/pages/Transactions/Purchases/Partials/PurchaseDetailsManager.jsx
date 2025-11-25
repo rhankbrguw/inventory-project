@@ -37,9 +37,7 @@ export default function PurchaseDetailsManager({
     });
 
     const getSupplierName = () => {
-        if (data.supplier_id === null) {
-            return "Supplier Umum";
-        }
+        if (data.supplier_id === null) return "Supplier Umum";
         return (
             suppliers.find((s) => s.id === data.supplier_id)?.name ||
             "Supplier Tidak Ditemukan"
@@ -74,6 +72,7 @@ export default function PurchaseDetailsManager({
                         readOnly
                         disabled
                         className="h-9 text-xs bg-muted/50 cursor-not-allowed"
+                        placeholder="Supplier Umum"
                     />
                     <InputError message={errors.supplier_id} />
                 </FormField>
@@ -88,7 +87,7 @@ export default function PurchaseDetailsManager({
                         onValueChange={(value) => setData("location_id", value)}
                     >
                         <SelectTrigger id="location_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pilih lokasi" />
+                            <SelectValue placeholder="Pilih Lokasi Penerimaan" />
                         </SelectTrigger>
                         <SelectContent>
                             {locations.map((loc) => (
@@ -134,7 +133,7 @@ export default function PurchaseDetailsManager({
                                 id="payment_method_type_id"
                                 className="h-9 text-xs"
                             >
-                                <SelectValue placeholder="Pilih metode" />
+                                <SelectValue placeholder="Pilih Metode Pembayaran" />
                             </SelectTrigger>
                             <SelectContent>
                                 {paymentMethods.map((method) => (
@@ -161,7 +160,7 @@ export default function PurchaseDetailsManager({
                         id="notes"
                         value={data.notes}
                         onChange={(e) => setData("notes", e.target.value)}
-                        placeholder="Nomor faktur, referensi, dll"
+                        placeholder="No. Faktur / Referensi PO..."
                         className="h-9 text-xs"
                     />
                     <InputError message={errors.notes} />

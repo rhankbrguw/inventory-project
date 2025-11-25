@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import InputError from "@/components/InputError";
 import FormField from "@/components/FormField";
 import {
@@ -40,6 +39,7 @@ export default function QuickAddCustomerModal({
             _from_modal: true,
         },
     );
+
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
@@ -48,9 +48,7 @@ export default function QuickAddCustomerModal({
             preserveScroll: true,
             onSuccess: (page) => {
                 const newCustomer = page.props.flash.newCustomer;
-                if (newCustomer) {
-                    onSuccess(newCustomer);
-                }
+                if (newCustomer) onSuccess(newCustomer);
                 setOpen(false);
                 reset();
                 router.reload({
@@ -63,14 +61,13 @@ export default function QuickAddCustomerModal({
 
     const handleOpenChange = (isOpen) => {
         setOpen(isOpen);
-        if (!isOpen) {
-            reset();
-        }
+        if (!isOpen) reset();
     };
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
+
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
@@ -78,10 +75,12 @@ export default function QuickAddCustomerModal({
                         Masukkan detail untuk pelanggan baru.
                     </DialogDescription>
                 </DialogHeader>
+
                 <form onSubmit={submit} className="space-y-4 py-4">
                     <FormField label="Nama Pelanggan" htmlFor="customerName">
                         <Input
                             id="customerName"
+                            placeholder="Nama Lengkap Pelanggan"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                         />
@@ -92,6 +91,7 @@ export default function QuickAddCustomerModal({
                         <Input
                             id="customerEmail"
                             type="email"
+                            placeholder="email@contoh.com"
                             value={data.email}
                             onChange={(e) => setData("email", e.target.value)}
                         />
@@ -104,7 +104,7 @@ export default function QuickAddCustomerModal({
                             onValueChange={(value) => setData("type_id", value)}
                         >
                             <SelectTrigger id="customerType">
-                                <SelectValue placeholder="Pilih tipe" />
+                                <SelectValue placeholder="Pilih Tipe Pelanggan" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
@@ -129,6 +129,7 @@ export default function QuickAddCustomerModal({
                         <InputWithPrefix
                             prefix="+62"
                             id="customerPhone"
+                            placeholder="81234567890"
                             value={data.phone}
                             onChange={(e) =>
                                 setData(
@@ -136,7 +137,6 @@ export default function QuickAddCustomerModal({
                                     e.target.value.replace(/\D/g, ""),
                                 )
                             }
-                            placeholder="81234567890"
                         />
                         <InputError message={errors.phone} />
                     </FormField>

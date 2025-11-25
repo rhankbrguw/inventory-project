@@ -40,7 +40,7 @@ export default function SellProductGrid({
                         onValueChange={onLocationChange}
                     >
                         <SelectTrigger id="location_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pilih lokasi untuk memulai" />
+                            <SelectValue placeholder="Pilih Lokasi Penjualan untuk Memulai" />
                         </SelectTrigger>
                         <SelectContent>
                             {locations.map((loc) => (

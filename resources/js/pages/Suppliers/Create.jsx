@@ -51,12 +51,14 @@ export default function Create({ auth }) {
                             >
                                 <Input
                                     id="name"
+                                    placeholder="Nama Perusahaan Supplier"
                                     value={data.name}
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
                                 />
                             </FormField>
+
                             <FormField
                                 label="Koordinator"
                                 htmlFor="contact_person"
@@ -64,6 +66,7 @@ export default function Create({ auth }) {
                             >
                                 <Input
                                     id="contact_person"
+                                    placeholder="Nama PIC / Sales"
                                     value={data.contact_person}
                                     onChange={(e) =>
                                         setData(
@@ -84,12 +87,14 @@ export default function Create({ auth }) {
                                 <Input
                                     id="email"
                                     type="email"
+                                    placeholder="email@supplier.com"
                                     value={data.email}
                                     onChange={(e) =>
                                         setData("email", e.target.value)
                                     }
                                 />
                             </FormField>
+
                             <FormField
                                 label="Telepon"
                                 htmlFor="phone"
@@ -98,6 +103,7 @@ export default function Create({ auth }) {
                                 <InputWithPrefix
                                     prefix="+62"
                                     id="phone"
+                                    placeholder="81234567890"
                                     value={data.phone}
                                     onChange={(e) =>
                                         setData(
@@ -105,7 +111,6 @@ export default function Create({ auth }) {
                                             e.target.value.replace(/\D/g, ""),
                                         )
                                     }
-                                    placeholder="81234567890"
                                 />
                             </FormField>
                         </div>
@@ -117,6 +122,7 @@ export default function Create({ auth }) {
                         >
                             <Textarea
                                 id="address"
+                                placeholder="Alamat kantor/gudang supplier..."
                                 value={data.address}
                                 onChange={(e) =>
                                     setData("address", e.target.value)
@@ -131,6 +137,7 @@ export default function Create({ auth }) {
                         >
                             <Textarea
                                 id="notes"
+                                placeholder="Catatan tambahan tentang supplier ini..."
                                 value={data.notes}
                                 onChange={(e) =>
                                     setData("notes", e.target.value)

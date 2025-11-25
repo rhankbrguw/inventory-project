@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import UnifiedBadge from "@/components/UnifiedBadge";
 import { Link } from "@inertiajs/react";
-import { Package, Warehouse, ArrowUp, ArrowDown } from "lucide-react";
+import { Package, Warehouse } from "lucide-react";
 
 export const productColumns = [
     {
@@ -177,7 +177,7 @@ export const stockColumns = [
     },
 ];
 
-export const transactionColumns = (auth) => [
+export const transactionColumns = () => [
     {
         accessorKey: "reference_code",
         header: "Referensi",
@@ -449,9 +449,8 @@ export const sellDetailColumns = [
         header: "Qty",
         cell: ({ row }) => {
             const item = row;
-            return `${formatNumber(Math.abs(item.quantity))} ${
-                item.product?.unit || ""
-            }`;
+            return `${formatNumber(Math.abs(item.quantity))} ${item.product?.unit || ""
+                }`;
         },
         className: "text-center whitespace-nowrap px-4",
     },
