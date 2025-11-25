@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import StockAvailability from "@/components/StockAvailability";
 
 const cleanNumberString = (numStr) => {
     if (typeof numStr !== "string") {
@@ -17,6 +18,7 @@ export default function SellItemManager({
     updateItem,
     processingItem,
     getItemQuantity,
+    locationId,
 }) {
     const LoadingSpinner = () => (
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -27,8 +29,7 @@ export default function SellItemManager({
             {cart.map((item) => {
                 const isItemProcessing = processingItem === item.id;
                 const subtotal =
-                    Number(item.quantity) *
-                    (Number(item.product.price) || 0);
+                    Number(item.quantity) * (Number(item.product.price) || 0);
 
                 return (
                     <div
@@ -60,42 +61,50 @@ export default function SellItemManager({
                             </Button>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <Input
-                                id={`qty-${item.id}`}
-                                type="text"
-                                inputMode="numeric"
-                                value={getItemQuantity(item)}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    updateItem(item, "quantity", value);
-                                }}
-                                onBlur={(e) => {
-                                    const value = e.target.value;
-                                    const cleanedValue =
-                                        cleanNumberString(value);
+                        <div className="flex items-start gap-2">
+                            <div className="flex flex-col gap-1">
+                                <Input
+                                    id={`qty-${item.id}`}
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={getItemQuantity(item)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        updateItem(item, "quantity", value);
+                                    }}
+                                    onBlur={(e) => {
+                                        const value = e.target.value;
+                                        const cleanedValue =
+                                            cleanNumberString(value);
 
-                                    if (
-                                        cleanedValue === "" ||
-                                        parseFloat(cleanedValue) <= 0
-                                    ) {
-                                        updateItem(item, "quantity", "1");
-                                    } else {
-                                        updateItem(
-                                            item,
-                                            "quantity",
-                                            formatNumber(cleanedValue),
-                                        );
-                                    }
-                                }}
-                                onFocus={(e) => {
-                                    e.target.select();
-                                }}
-                                disabled={isItemProcessing}
-                                className="h-8 text-xs w-20 text-center"
-                                autoComplete="off"
-                            />
-                            <div className="flex-1 text-right">
+                                        if (
+                                            cleanedValue === "" ||
+                                            parseFloat(cleanedValue) <= 0
+                                        ) {
+                                            updateItem(item, "quantity", "1");
+                                        } else {
+                                            updateItem(
+                                                item,
+                                                "quantity",
+                                                formatNumber(cleanedValue),
+                                            );
+                                        }
+                                    }}
+                                    onFocus={(e) => {
+                                        e.target.select();
+                                    }}
+                                    disabled={isItemProcessing}
+                                    className="h-8 text-xs w-20 text-center"
+                                    autoComplete="off"
+                                />
+                                <StockAvailability
+                                    productId={item.product.id}
+                                    locationId={locationId}
+                                    unit={item.product.unit}
+                                />
+                            </div>
+
+                            <div className="flex-1 text-right pt-1.5">
                                 <p className="text-sm font-bold text-primary">
                                     {formatCurrency(subtotal)}
                                 </p>

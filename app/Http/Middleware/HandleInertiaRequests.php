@@ -7,43 +7,61 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-   /**
-    * The root template that is loaded on the first page visit.
-    *
-    * @var string
-    */
-   protected $rootView = 'app';
+    /**
+     * The root template that is loaded on the initial Inertia page load.
+     *
+     * @var string
+     */
+    protected $rootView = 'app';
 
-   /**
-    * Determine the current asset version.
-    */
-   public function version(Request $request): string|null
-   {
-      return parent::version($request);
-   }
+    /**
+     * Determine the current asset version.
+     *
+     * @see https://inertiajs.com/asset-versioning
+     * @param  \Illuminate\Http\Request  $request
+     * @return string|null
+     */
+    public function version(Request $request): ?string
+    {
+        return parent::version($request);
+    }
 
-   /**
-    * Define the props that are shared by default.
-    *
-    * @return array<string, mixed>
-    */
-   public function share(Request $request): array
-   {
-      return [
-         ...parent::share($request),
-         'auth' => [
-            'user' => $request->user() ? [
-               'id' => $request->user()->id,
-               'name' => $request->user()->name,
-               'email' => $request->user()->email,
-               'role' => $request->user()->roles->first(),
-               'roles' => $request->user()->getRoleNames(),
-            ] : null,
-         ],
-         'flash' => [
-            'success' => fn() => $request->session()->get('success'),
-            'error' => fn() => $request->session()->get('error'),
-         ],
-      ];
-   }
+    /**
+     * Define the props that are shared with every Inertia response.
+     *
+     * @see https://inertiajs.com/shared-data
+     * @param  \Illuminate\Http\Request  $request
+     * @return array<string, mixed>
+     */
+    public function share(Request $request): array
+    {
+        $user = $request->user();
+
+        if ($user) {
+            $user->loadMissing('roles');
+        }
+
+        return [
+            ...parent::share($request),
+
+            'auth' => [
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'level' => $user->level,
+                    'role' => $user->roles->first() ? [
+                        'name' => $user->roles->first()->name,
+                        'code' => $user->roles->first()->code,
+                    ] : null,
+                    'has_locations' => $user->level === 1 || $user->locations()->exists(),
+                ] : null,
+            ],
+
+            'flash' => [
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error'),
+            ],
+        ];
+    }
 }

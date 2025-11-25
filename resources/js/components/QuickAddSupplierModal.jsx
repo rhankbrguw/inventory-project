@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import InputError from "@/components/InputError";
 import FormField from "@/components/FormField";
 import { InputWithPrefix } from "@/components/InputWithPrefix";
@@ -28,6 +27,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
             _from_modal: true,
         },
     );
+
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
@@ -36,11 +36,11 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
             preserveScroll: true,
             onSuccess: (page) => {
                 const newSupplier = page.props.flash.newSupplier;
-                if (newSupplier) {
-                    onSuccess(newSupplier);
-                }
+                if (newSupplier) onSuccess(newSupplier);
+
                 setOpen(false);
                 reset();
+
                 router.reload({
                     only: ["suppliers"],
                     preserveScroll: true,
@@ -51,14 +51,13 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
 
     const handleOpenChange = (isOpen) => {
         setOpen(isOpen);
-        if (!isOpen) {
-            reset();
-        }
+        if (!isOpen) reset();
     };
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
+
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Tambah Supplier Baru</DialogTitle>
@@ -66,10 +65,12 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         Masukkan detail untuk supplier baru.
                     </DialogDescription>
                 </DialogHeader>
+
                 <form onSubmit={submit} className="space-y-4 py-4">
                     <FormField label="Nama Supplier" htmlFor="supplierName">
                         <Input
                             id="supplierName"
+                            placeholder="Nama Perusahaan Supplier"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                         />
@@ -82,6 +83,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                     >
                         <Input
                             id="supplierContactPerson"
+                            placeholder="Nama PIC / Sales"
                             value={data.contact_person}
                             onChange={(e) =>
                                 setData("contact_person", e.target.value)
@@ -94,6 +96,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         <Input
                             id="supplierEmail"
                             type="email"
+                            placeholder="email@supplier.com"
                             value={data.email}
                             onChange={(e) => setData("email", e.target.value)}
                         />
@@ -107,6 +110,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         <InputWithPrefix
                             prefix="+62"
                             id="supplierPhone"
+                            placeholder="81234567890"
                             value={data.phone}
                             onChange={(e) =>
                                 setData(
@@ -114,7 +118,6 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                                     e.target.value.replace(/\D/g, ""),
                                 )
                             }
-                            placeholder="81234567890"
                         />
                         <InputError message={errors.phone} />
                     </FormField>
@@ -122,6 +125,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                     <FormField label="Alamat" htmlFor="supplierAddress">
                         <Input
                             id="supplierAddress"
+                            placeholder="Alamat kantor/gudang supplier..."
                             value={data.address}
                             onChange={(e) => setData("address", e.target.value)}
                         />

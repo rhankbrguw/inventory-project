@@ -47,11 +47,12 @@ export default function Edit({
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>{type.name}</CardTitle> ame
+                    <CardTitle>{type.name}</CardTitle>
                     <CardDescription>
-                        Ubah detail untuk tipe yang sudah ada.
+                        Ubah detail tipe sesuai kebutuhan.
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -66,8 +67,10 @@ export default function Edit({
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
+                                    placeholder="Masukkan nama tipe"
                                 />
                             </FormField>
+
                             <FormField
                                 label="Grup Tipe"
                                 htmlFor="group"
@@ -84,7 +87,7 @@ export default function Edit({
                                     }
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Pilih grup..." />
+                                        <SelectValue placeholder="Pilih grup tipe" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(availableGroups).map(
@@ -105,9 +108,7 @@ export default function Edit({
                         {data.group && allTypes[data.group] && (
                             <Alert>
                                 <Info className="h-4 w-4" />
-                                <AlertTitle>
-                                    Tipe yang Sudah Ada di Grup Ini:
-                                </AlertTitle>
+                                <AlertTitle>Tipe pada grup ini</AlertTitle>
                                 <AlertDescription className="flex flex-wrap gap-2 pt-2">
                                     {allTypes[data.group]
                                         .filter((t) => t.id !== type.id)
@@ -127,7 +128,7 @@ export default function Edit({
                             label="Kode (Opsional)"
                             htmlFor="code"
                             error={errors.code}
-                            description="Kode unik singkat untuk referensi cepat jika diperlukan."
+                            description="Kode singkat untuk referensi cepat."
                         >
                             <Input
                                 id="code"
@@ -135,6 +136,7 @@ export default function Edit({
                                 onChange={(e) =>
                                     setData("code", e.target.value)
                                 }
+                                placeholder="Masukkan kode tipe"
                             />
                         </FormField>
 

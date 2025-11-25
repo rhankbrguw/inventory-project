@@ -26,6 +26,7 @@ export default function Edit({
     customerTypes = { data: [] },
 }) {
     const { data: customer } = customerResource;
+
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: customer.name || "",
         type_id: customer.type_id || "",
@@ -54,6 +55,7 @@ export default function Edit({
                         Perbarui detail untuk pelanggan yang sudah ada.
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <FormField
@@ -63,12 +65,14 @@ export default function Edit({
                         >
                             <Input
                                 id="name"
+                                placeholder="Nama Lengkap Pelanggan"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData("name", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <FormField
                             label="Tipe Pelanggan"
                             htmlFor="type_id"
@@ -81,7 +85,7 @@ export default function Edit({
                                 }
                             >
                                 <SelectTrigger id="type_id">
-                                    <SelectValue placeholder="Pilih tipe pelanggan" />
+                                    <SelectValue placeholder="Pilih Tipe Pelanggan" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {customerTypes.data.map((type) => (
@@ -95,6 +99,7 @@ export default function Edit({
                                 </SelectContent>
                             </Select>
                         </FormField>
+
                         <FormField
                             label="Email"
                             htmlFor="email"
@@ -103,12 +108,14 @@ export default function Edit({
                             <Input
                                 id="email"
                                 type="email"
+                                placeholder="email@contoh.com"
                                 value={data.email}
                                 onChange={(e) =>
                                     setData("email", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <FormField
                             label="Telepon"
                             htmlFor="phone"
@@ -117,16 +124,17 @@ export default function Edit({
                             <InputWithPrefix
                                 prefix="+62"
                                 id="phone"
+                                placeholder="81234567890"
                                 value={data.phone}
                                 onChange={(e) =>
                                     setData(
                                         "phone",
-                                        e.target.value.replace(/\D/g, "")
+                                        e.target.value.replace(/\D/g, ""),
                                     )
                                 }
-                                placeholder="81234567890"
                             />
                         </FormField>
+
                         <FormField
                             label="Alamat (Opsional)"
                             htmlFor="address"
@@ -134,12 +142,14 @@ export default function Edit({
                         >
                             <Textarea
                                 id="address"
+                                placeholder="Alamat domisili pelanggan..."
                                 value={data.address}
                                 onChange={(e) =>
                                     setData("address", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <div className="flex items-center gap-4 justify-end">
                             <Link href={route("customers.index")}>
                                 <Button type="button" variant="outline">

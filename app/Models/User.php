@@ -60,9 +60,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    public function getLevelAttribute(): int
+    {
+        return $this->roles->min('level') ?? 999;
+    }
+
     public function getAccessibleLocationIds(): ?array
     {
-        if ($this->hasRole('Super Admin')) {
+        if ($this->level === 1) {
             return null;
         }
 

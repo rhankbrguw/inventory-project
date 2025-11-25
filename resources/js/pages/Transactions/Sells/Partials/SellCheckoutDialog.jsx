@@ -80,8 +80,9 @@ export default function SellCheckoutDialog({
                 <DialogHeader>
                     <DialogTitle>Konfirmasi Penjualan</DialogTitle>
                     <DialogDescription>
-                        Selesaikan transaksi dengan total{" "}
+                        Selesaikan transaksi dengan total
                         <span className="font-bold text-primary">
+                            {" "}
                             {formatCurrency(totalPrice)}
                         </span>
                         .
@@ -118,7 +119,7 @@ export default function SellCheckoutDialog({
                                     id="payment_method_type_id"
                                     className="h-9 text-xs"
                                 >
-                                    <SelectValue placeholder="Pilih metode" />
+                                    <SelectValue placeholder="Pilih Metode Pembayaran" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {paymentMethods.map((method) => (
@@ -148,11 +149,12 @@ export default function SellCheckoutDialog({
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
-                                placeholder="Nomor referensi, dll"
+                                placeholder="Catatan transaksi..."
                                 className="h-9 text-xs"
                             />
                             <InputError message={errors.notes} />
                         </FormField>
+
                         {errors.items && (
                             <InputError message="Error pada data item." />
                         )}

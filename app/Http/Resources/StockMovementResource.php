@@ -15,7 +15,6 @@ class StockMovementResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->type,
-            'reason' => $this->reason,
             'quantity' => $this->quantity,
             'cost_per_unit' => $this->cost_per_unit,
             'average_cost_per_unit' => $this->average_cost_per_unit,
@@ -42,14 +41,14 @@ class StockMovementResource extends JsonResource
                     'url' => $url,
                 ];
             }),
-            'product' => $this->whenLoaded('product', fn () => [
+            'product' => $this->whenLoaded('product', fn() => [
                 'id' => $this->product->id,
                 'name' => $this->product->name,
                 'sku' => $this->product->sku,
                 'unit' => $this->product->unit,
                 'deleted_at' => $this->product->deleted_at?->toISOString(),
             ]),
-            'location' => $this->whenLoaded('location', fn () => [
+            'location' => $this->whenLoaded('location', fn() => [
                 'id' => $this->location->id,
                 'name' => $this->location->name,
             ]),
@@ -74,7 +73,7 @@ class StockMovementResource extends JsonResource
         return match ($this->type) {
             'purchase' => [
                 'label' => 'Diterima dari',
-                'name' => $this->reference?->supplier?->name,
+                'name' => $this->reference?->supplier?->name ?? 'Supplier Umum',
             ],
             'sell' => [
                 'label' => 'Dijual ke',

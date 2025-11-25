@@ -20,6 +20,7 @@ import {
 
 export default function Edit({ auth, user: userResource, roles }) {
     const { data: user } = userResource;
+
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: user.name || "",
         email: user.email || "",
@@ -46,6 +47,7 @@ export default function Edit({ auth, user: userResource, roles }) {
                         Ubah detail untuk akun pengguna yang sudah ada.
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <FormField
@@ -55,6 +57,7 @@ export default function Edit({ auth, user: userResource, roles }) {
                         >
                             <Input
                                 id="name"
+                                placeholder="Nama Lengkap Staf"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData("name", e.target.value)
@@ -70,6 +73,7 @@ export default function Edit({ auth, user: userResource, roles }) {
                             <Input
                                 id="email"
                                 type="email"
+                                placeholder="email.kerja@perusahaan.com"
                                 value={data.email}
                                 onChange={(e) =>
                                     setData("email", e.target.value)
@@ -89,7 +93,7 @@ export default function Edit({ auth, user: userResource, roles }) {
                                 }
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Pilih jabatan" />
+                                    <SelectValue placeholder="Pilih Jabatan / Role" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {roles.map((roleName) => (
@@ -110,6 +114,7 @@ export default function Edit({ auth, user: userResource, roles }) {
                                     Batal
                                 </Button>
                             </Link>
+
                             <Button disabled={processing || !isDirty}>
                                 Simpan
                             </Button>

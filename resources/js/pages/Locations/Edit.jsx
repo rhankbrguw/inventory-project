@@ -39,7 +39,7 @@ export default function Edit({
 
     const selectedLocationType = useMemo(() => {
         return locationTypes.find(
-            (type) => type.id.toString() === data.type_id
+            (type) => type.id.toString() === data.type_id,
         );
     }, [data.type_id, locationTypes]);
 
@@ -50,12 +50,12 @@ export default function Edit({
 
         if (typeCode === "WH") {
             return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "branch manager"
+                (role) => role.name.toLowerCase() !== "branch manager",
             );
         }
         if (typeCode === "BR") {
             return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "warehouse manager"
+                (role) => role.name.toLowerCase() !== "warehouse manager",
             );
         }
         return allRoles;
@@ -85,12 +85,14 @@ export default function Edit({
                         >
                             <Input
                                 id="name"
+                                placeholder="Contoh: Gudang Pusat A"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData("name", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <FormField
                             label="Tipe Lokasi"
                             htmlFor="type_id"
@@ -103,7 +105,7 @@ export default function Edit({
                                 }}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Pilih tipe..." />
+                                    <SelectValue placeholder="Pilih Tipe Lokasi" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {locationTypes.map((type) => (
@@ -117,6 +119,7 @@ export default function Edit({
                                 </SelectContent>
                             </Select>
                         </FormField>
+
                         <FormField
                             label="Alamat (Opsional)"
                             htmlFor="address"
@@ -124,6 +127,7 @@ export default function Edit({
                         >
                             <Textarea
                                 id="address"
+                                placeholder="Masukkan alamat lengkap lokasi..."
                                 value={data.address}
                                 onChange={(e) =>
                                     setData("address", e.target.value)

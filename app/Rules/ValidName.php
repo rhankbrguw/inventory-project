@@ -9,8 +9,8 @@ class ValidName implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!preg_match('/^[\pL\s\-]+$/u', $value)) {
-            $fail(':attribute hanya boleh berisi huruf, spasi, dan tanda hubung.');
+        if (!preg_match('/^[\pL0-9\s\-\(\)\.\',&]+$/u', $value)) {
+            $fail(':attribute hanya boleh berisi huruf, angka, spasi, tanda hubung, tanda kurung, titik, koma, apostrophe, dan ampersand.');
         }
     }
 }

@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Mail, Lock, LogIn } from "lucide-react";
 import { PasswordInput } from "@/components/PasswordInput";
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
         password: "",

@@ -14,14 +14,9 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
+import { formatNumber } from "@/lib/utils";
 
 export default function Create({
     auth,
@@ -36,7 +31,6 @@ export default function Create({
     const [checkoutSupplierId, setCheckoutSupplierId] = useState(null);
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
-    const [supplierFilter, setSupplierFilter] = useState("all");
 
     const {
         cartGroups,
@@ -62,26 +56,32 @@ export default function Create({
         filters,
     );
 
-    const supplierOptions = useMemo(
-        () =>
-            suppliers.filter((s) =>
-                Object.values(cartGroups).some(
-                    (group) => group.supplier_id === s.id,
-                ),
-            ),
-        [cartGroups, suppliers],
-    );
+    const currentSupplierFilter = params.supplier_id || "all";
+
+    const supplierOptions = useMemo(() => suppliers, [suppliers]);
 
     const filteredCartGroups = useMemo(() => {
-        if (supplierFilter === "all") {
+        if (currentSupplierFilter === "all") {
             return cartGroups;
         }
-        const supplierName =
-            suppliers.find((s) => s.id.toString() === supplierFilter)?.name ||
-            "Supplier Umum";
+
+        if (currentSupplierFilter === "null") {
+            return cartGroups["Supplier Umum"]
+                ? { "Supplier Umum": cartGroups["Supplier Umum"] }
+                : {};
+        }
+
+        const supplierName = suppliers.find(
+            (s) => s.id.toString() === currentSupplierFilter,
+        )?.name;
+
         const group = cartGroups[supplierName];
         return group ? { [supplierName]: group } : {};
-    }, [cartGroups, supplierFilter, suppliers]);
+    }, [cartGroups, currentSupplierFilter, suppliers]);
+
+    const handleSupplierFilterChange = (value) => {
+        setFilter("supplier_id", value);
+    };
 
     const handleOpenCheckout = (supplierId) => {
         setCheckoutSupplierId(supplierId);
@@ -121,8 +121,8 @@ export default function Create({
         totalCartItems,
         selectedSuppliers,
         suppliers,
-        supplierFilter,
-        setSupplierFilter,
+        supplierFilter: currentSupplierFilter,
+        setSupplierFilter: handleSupplierFilterChange,
         supplierOptions,
         filteredCartGroups,
     };
@@ -176,7 +176,7 @@ export default function Create({
                         <ShoppingCart className="h-6 w-6" />
                         {totalCartItems > 0 && (
                             <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center">
-                                {totalCartItems}
+                                {formatNumber(totalCartItems)}
                             </span>
                         )}
                     </Button>
@@ -189,7 +189,10 @@ export default function Create({
                 </SheetContent>
             </Sheet>
 
-            <Dialog open={isCheckoutModalOpen} onOpenChange={handleCloseCheckout}>
+            <Dialog
+                open={isCheckoutModalOpen}
+                onOpenChange={handleCloseCheckout}
+            >
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Detail Pembelian</DialogTitle>
@@ -199,7 +202,7 @@ export default function Create({
                         </DialogDescription>
                     </DialogHeader>
                     {checkoutSupplierId !== null ||
-                    cartGroups["Supplier Umum"] ? (
+                        cartGroups["Supplier Umum"] ? (
                         <PurchaseDetailsManager
                             key={
                                 checkoutSupplierId === null

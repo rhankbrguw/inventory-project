@@ -19,8 +19,13 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
+        $currentUserLevel = $request->user()->level;
+
         $users = User::query()
             ->with("roles")
+            ->whereHas('roles', function ($q) use ($currentUserLevel) {
+                $q->where('level', '>=', $currentUserLevel);
+            })
             ->when($request->input("search"), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where("name", "like", "%{$search}%")->orWhere(
@@ -54,15 +59,18 @@ class UserController extends Controller
 
         return Inertia::render("Users/Index", [
             "users" => UserResource::collection($users),
-            "roles" => Role::orderBy("name")->get(["name"]),
+            "roles" => Role::where('level', '>=', $currentUserLevel)->orderBy("name")->get(["name"]),
             "filters" => (object) $request->only(["search", "sort", "role"]),
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $currentUserLevel = $request->user()->level;
+
         return Inertia::render("Users/Create", [
             "roles" => Type::where("group", Type::GROUP_USER_ROLE)
+                ->where('level', '>', $currentUserLevel)
                 ->orderBy("name")
                 ->pluck("name")
                 ->toArray(),
@@ -72,6 +80,14 @@ class UserController extends Controller
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $roleType = Type::where('group', Type::GROUP_USER_ROLE)
+            ->where('name', $validated["role"])
+            ->first();
+
+        if (!$roleType || $roleType->level <= $request->user()->level) {
+            abort(403, 'You cannot assign a role equal to or higher than your own.');
+        }
 
         $user = User::create([
             "name" => $validated["name"],
@@ -87,11 +103,14 @@ class UserController extends Controller
         );
     }
 
-    public function edit(User $user): Response
+    public function edit(Request $request, User $user): Response
     {
+        $currentUserLevel = $request->user()->level;
+
         return Inertia::render("Users/Edit", [
             "user" => UserResource::make($user->load("roles")),
             "roles" => Type::where("group", Type::GROUP_USER_ROLE)
+                ->where('level', '>=', $currentUserLevel)
                 ->orderBy("name")
                 ->pluck("name")
                 ->toArray(),
@@ -103,6 +122,16 @@ class UserController extends Controller
         User $user,
     ): RedirectResponse {
         $validated = $request->validated();
+
+        if (isset($validated["role"])) {
+            $roleType = Type::where('group', Type::GROUP_USER_ROLE)
+                ->where('name', $validated["role"])
+                ->first();
+
+            if (!$roleType || $roleType->level < $request->user()->level) {
+                abort(403, 'You cannot promote a user above your own level.');
+            }
+        }
 
         $user->update([
             "name" => $validated["name"],
