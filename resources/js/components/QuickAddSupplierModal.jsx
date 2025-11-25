@@ -1,3 +1,4 @@
+
 import { useForm, router } from "@inertiajs/react";
 import { useState } from "react";
 import {
@@ -12,22 +13,20 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import InputError from "@/components/InputError";
 import FormField from "@/components/FormField";
 import { InputWithPrefix } from "@/components/InputWithPrefix";
 
 export default function QuickAddSupplierModal({ children, onSuccess }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
-        {
-            name: "",
-            email: "",
-            phone: "",
-            address: "",
-            contact_person: "",
-            _from_modal: true,
-        },
-    );
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        contact_person: "",
+        _from_modal: true,
+    });
+
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
@@ -36,11 +35,11 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
             preserveScroll: true,
             onSuccess: (page) => {
                 const newSupplier = page.props.flash.newSupplier;
-                if (newSupplier) {
-                    onSuccess(newSupplier);
-                }
+                if (newSupplier) onSuccess(newSupplier);
+
                 setOpen(false);
                 reset();
+
                 router.reload({
                     only: ["suppliers"],
                     preserveScroll: true,
@@ -51,14 +50,13 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
 
     const handleOpenChange = (isOpen) => {
         setOpen(isOpen);
-        if (!isOpen) {
-            reset();
-        }
+        if (!isOpen) reset();
     };
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
+
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Tambah Supplier Baru</DialogTitle>
@@ -66,26 +64,24 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         Masukkan detail untuk supplier baru.
                     </DialogDescription>
                 </DialogHeader>
+
                 <form onSubmit={submit} className="space-y-4 py-4">
                     <FormField label="Nama Supplier" htmlFor="supplierName">
                         <Input
                             id="supplierName"
+                            placeholder="Nama Perusahaan Supplier"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                         />
                         <InputError message={errors.name} />
                     </FormField>
 
-                    <FormField
-                        label="Koordinator"
-                        htmlFor="supplierContactPerson"
-                    >
+                    <FormField label="Koordinator" htmlFor="supplierContactPerson">
                         <Input
                             id="supplierContactPerson"
+                            placeholder="Nama PIC / Sales"
                             value={data.contact_person}
-                            onChange={(e) =>
-                                setData("contact_person", e.target.value)
-                            }
+                            onChange={(e) => setData("contact_person", e.target.value)}
                         />
                         <InputError message={errors.contact_person} />
                     </FormField>
@@ -94,27 +90,20 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         <Input
                             id="supplierEmail"
                             type="email"
+                            placeholder="email@supplier.com"
                             value={data.email}
                             onChange={(e) => setData("email", e.target.value)}
                         />
                         <InputError message={errors.email} />
                     </FormField>
 
-                    <FormField
-                        label="Nomor Telepon (Opsional)"
-                        htmlFor="supplierPhone"
-                    >
+                    <FormField label="Nomor Telepon (Opsional)" htmlFor="supplierPhone">
                         <InputWithPrefix
                             prefix="+62"
                             id="supplierPhone"
-                            value={data.phone}
-                            onChange={(e) =>
-                                setData(
-                                    "phone",
-                                    e.target.value.replace(/\D/g, ""),
-                                )
-                            }
                             placeholder="81234567890"
+                            value={data.phone}
+                            onChange={(e) => setData("phone", e.target.value.replace(/\D/g, ""))}
                         />
                         <InputError message={errors.phone} />
                     </FormField>
@@ -122,6 +111,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                     <FormField label="Alamat" htmlFor="supplierAddress">
                         <Input
                             id="supplierAddress"
+                            placeholder="Alamat kantor/gudang supplier..."
                             value={data.address}
                             onChange={(e) => setData("address", e.target.value)}
                         />
@@ -130,9 +120,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
 
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">
-                                Batal
-                            </Button>
+                            <Button type="button" variant="outline">Batal</Button>
                         </DialogClose>
                         <Button disabled={processing || !isDirty}>
                             {processing ? "Menyimpan..." : "Simpan"}
@@ -143,3 +131,4 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
         </Dialog>
     );
 }
+

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "@inertiajs/react";
 import { format } from "date-fns";
@@ -37,13 +38,8 @@ export default function PurchaseDetailsManager({
     });
 
     const getSupplierName = () => {
-        if (data.supplier_id === null) {
-            return "Supplier Umum";
-        }
-        return (
-            suppliers.find((s) => s.id === data.supplier_id)?.name ||
-            "Supplier Tidak Ditemukan"
-        );
+        if (data.supplier_id === null) return "Supplier Umum";
+        return suppliers.find((s) => s.id === data.supplier_id)?.name || "Supplier Tidak Ditemukan";
     };
 
     const submit = (e) => {
@@ -51,10 +47,7 @@ export default function PurchaseDetailsManager({
         post(route("transactions.purchases.store"), {
             transform: (formData) => ({
                 ...formData,
-                transaction_date: format(
-                    formData.transaction_date,
-                    "yyyy-MM-dd",
-                ),
+                transaction_date: format(formData.transaction_date, "yyyy-MM-dd"),
             }),
             onSuccess: () => onClose(),
         });
@@ -63,39 +56,26 @@ export default function PurchaseDetailsManager({
     return (
         <form onSubmit={submit} className="space-y-4">
             <div className="space-y-3 max-h-[60vh] overflow-y-auto px-1">
-                <FormField
-                    label="Supplier"
-                    htmlFor="supplier_id"
-                    labelClassName="text-xs font-semibold text-foreground"
-                >
+                <FormField label="Supplier" htmlFor="supplier_id" labelClassName="text-xs font-semibold text-foreground">
                     <Input
                         id="supplier_id"
                         value={getSupplierName()}
                         readOnly
                         disabled
                         className="h-9 text-xs bg-muted/50 cursor-not-allowed"
+                        placeholder="Supplier Umum"
                     />
                     <InputError message={errors.supplier_id} />
                 </FormField>
 
-                <FormField
-                    label="Lokasi Penerimaan"
-                    htmlFor="location_id"
-                    labelClassName="text-xs font-semibold text-foreground"
-                >
-                    <Select
-                        value={data.location_id}
-                        onValueChange={(value) => setData("location_id", value)}
-                    >
+                <FormField label="Lokasi Penerimaan" htmlFor="location_id" labelClassName="text-xs font-semibold text-foreground">
+                    <Select value={data.location_id} onValueChange={(value) => setData("location_id", value)}>
                         <SelectTrigger id="location_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pilih lokasi" />
+                            <SelectValue placeholder="Pilih Lokasi Penerimaan" />
                         </SelectTrigger>
                         <SelectContent>
                             {locations.map((loc) => (
-                                <SelectItem
-                                    key={loc.id}
-                                    value={loc.id.toString()}
-                                >
+                                <SelectItem key={loc.id} value={loc.id.toString()}>
                                     {loc.name}
                                 </SelectItem>
                             ))}
@@ -105,15 +85,10 @@ export default function PurchaseDetailsManager({
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                        label="Tanggal"
-                        labelClassName="text-xs font-semibold text-foreground"
-                    >
+                    <FormField label="Tanggal" labelClassName="text-xs font-semibold text-foreground">
                         <DatePicker
                             value={data.transaction_date}
-                            onSelect={(date) =>
-                                setData("transaction_date", date)
-                            }
+                            onSelect={(date) => setData("transaction_date", date)}
                             className="h-9 text-xs [&>button]:h-9"
                         />
                         <InputError message={errors.transaction_date} />
@@ -126,22 +101,14 @@ export default function PurchaseDetailsManager({
                     >
                         <Select
                             value={data.payment_method_type_id}
-                            onValueChange={(value) =>
-                                setData("payment_method_type_id", value)
-                            }
+                            onValueChange={(value) => setData("payment_method_type_id", value)}
                         >
-                            <SelectTrigger
-                                id="payment_method_type_id"
-                                className="h-9 text-xs"
-                            >
-                                <SelectValue placeholder="Pilih metode" />
+                            <SelectTrigger id="payment_method_type_id" className="h-9 text-xs">
+                                <SelectValue placeholder="Pilih Metode Pembayaran" />
                             </SelectTrigger>
                             <SelectContent>
                                 {paymentMethods.map((method) => (
-                                    <SelectItem
-                                        key={method.id}
-                                        value={method.id.toString()}
-                                    >
+                                    <SelectItem key={method.id} value={method.id.toString()}>
                                         {method.name}
                                     </SelectItem>
                                 ))}
@@ -151,17 +118,12 @@ export default function PurchaseDetailsManager({
                     </FormField>
                 </div>
 
-                <FormField
-                    label="Catatan"
-                    htmlFor="notes"
-                    optional
-                    labelClassName="text-xs font-semibold text-foreground"
-                >
+                <FormField label="Catatan" htmlFor="notes" optional labelClassName="text-xs font-semibold text-foreground">
                     <Input
                         id="notes"
                         value={data.notes}
                         onChange={(e) => setData("notes", e.target.value)}
-                        placeholder="Nomor faktur, referensi, dll"
+                        placeholder="No. Faktur / Referensi PO..."
                         className="h-9 text-xs"
                     />
                     <InputError message={errors.notes} />
@@ -173,23 +135,14 @@ export default function PurchaseDetailsManager({
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onClose}
-                    disabled={processing}
-                    className="h-9 text-xs font-semibold"
-                >
+                <Button type="button" variant="outline" onClick={onClose} disabled={processing} className="h-9 text-xs font-semibold">
                     Batal
                 </Button>
-                <Button
-                    type="submit"
-                    disabled={processing || !isDirty}
-                    className="h-9 text-xs font-semibold"
-                >
+                <Button type="submit" disabled={processing || !isDirty} className="h-9 text-xs font-semibold">
                     {processing ? "Memproses..." : "Buat Pesanan"}
                 </Button>
             </DialogFooter>
         </form>
     );
 }
+

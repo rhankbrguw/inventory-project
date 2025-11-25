@@ -1,3 +1,4 @@
+
 import { Link, useForm } from "@inertiajs/react";
 import { useMemo } from "react";
 import ContentPageLayout from "@/components/ContentPageLayout";
@@ -85,12 +86,14 @@ export default function Edit({
                         >
                             <Input
                                 id="name"
+                                placeholder="Contoh: Gudang Pusat A"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData("name", e.target.value)
                                 }
                             />
                         </FormField>
+
                         <FormField
                             label="Tipe Lokasi"
                             htmlFor="type_id"
@@ -103,7 +106,7 @@ export default function Edit({
                                 }}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Pilih tipe..." />
+                                    <SelectValue placeholder="Pilih Tipe Lokasi" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {locationTypes.map((type) => (
@@ -117,6 +120,7 @@ export default function Edit({
                                 </SelectContent>
                             </Select>
                         </FormField>
+
                         <FormField
                             label="Alamat (Opsional)"
                             htmlFor="address"
@@ -124,6 +128,7 @@ export default function Edit({
                         >
                             <Textarea
                                 id="address"
+                                placeholder="Masukkan alamat lengkap lokasi..."
                                 value={data.address}
                                 onChange={(e) =>
                                     setData("address", e.target.value)
@@ -153,3 +158,4 @@ export default function Edit({
         </ContentPageLayout>
     );
 }
+

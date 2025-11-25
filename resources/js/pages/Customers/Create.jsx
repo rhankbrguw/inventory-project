@@ -1,3 +1,4 @@
+
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import FormField from "@/components/FormField";
@@ -48,99 +49,74 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                         sistem.
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
-                        <FormField
-                            label="Nama Pelanggan"
-                            htmlFor="name"
-                            error={errors.name}
-                        >
+                        <FormField label="Nama Pelanggan" htmlFor="name" error={errors.name}>
                             <Input
                                 id="name"
+                                placeholder="Nama Lengkap Pelanggan"
                                 value={data.name}
-                                onChange={(e) =>
-                                    setData("name", e.target.value)
-                                }
+                                onChange={(e) => setData("name", e.target.value)}
                             />
                         </FormField>
-                        <FormField
-                            label="Tipe Pelanggan"
-                            htmlFor="type_id"
-                            error={errors.type_id}
-                        >
+
+                        <FormField label="Tipe Pelanggan" htmlFor="type_id" error={errors.type_id}>
                             <Select
                                 value={data.type_id}
-                                onValueChange={(value) =>
-                                    setData("type_id", value)
-                                }
+                                onValueChange={(value) => setData("type_id", value)}
                             >
                                 <SelectTrigger id="type_id">
-                                    <SelectValue placeholder="Pilih tipe pelanggan" />
+                                    <SelectValue placeholder="Pilih Tipe Pelanggan" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {customerTypes.data.map((type) => (
-                                        <SelectItem
-                                            key={type.id}
-                                            value={type.id.toString()}
-                                        >
+                                        <SelectItem key={type.id} value={type.id.toString()}>
                                             {type.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </FormField>
-                        <FormField
-                            label="Email"
-                            htmlFor="email"
-                            error={errors.email}
-                        >
+
+                        <FormField label="Email" htmlFor="email" error={errors.email}>
                             <Input
                                 id="email"
                                 type="email"
+                                placeholder="email@contoh.com"
                                 value={data.email}
-                                onChange={(e) =>
-                                    setData("email", e.target.value)
-                                }
+                                onChange={(e) => setData("email", e.target.value)}
                             />
                         </FormField>
-                        <FormField
-                            label="Telepon"
-                            htmlFor="phone"
-                            error={errors.phone}
-                        >
+
+                        <FormField label="Telepon" htmlFor="phone" error={errors.phone}>
                             <InputWithPrefix
                                 prefix="+62"
                                 id="phone"
+                                placeholder="81234567890"
                                 value={data.phone}
                                 onChange={(e) =>
-                                    setData(
-                                        "phone",
-                                        e.target.value.replace(/\D/g, "")
-                                    )
+                                    setData("phone", e.target.value.replace(/\D/g, ""))
                                 }
-                                placeholder="81234567890"
                             />
                         </FormField>
-                        <FormField
-                            label="Alamat (Opsional)"
-                            htmlFor="address"
-                            error={errors.address}
-                        >
+
+                        <FormField label="Alamat (Opsional)" htmlFor="address" error={errors.address}>
                             <Textarea
                                 id="address"
+                                placeholder="Alamat domisili pelanggan..."
                                 value={data.address}
-                                onChange={(e) =>
-                                    setData("address", e.target.value)
-                                }
+                                onChange={(e) => setData("address", e.target.value)}
                             />
                         </FormField>
+
                         <div className="flex items-center gap-4 justify-end">
                             <Link href={route("customers.index")}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>
                             </Link>
-                            <Button disabled={processing | !isDirty}>
+                            <Button disabled={processing || !isDirty}>
                                 {processing ? "Menyimpan..." : "Simpan"}
                             </Button>
                         </div>
@@ -150,3 +126,4 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
         </ContentPageLayout>
     );
 }
+

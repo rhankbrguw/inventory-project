@@ -1,3 +1,4 @@
+
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import FormField from "@/components/FormField";
@@ -46,6 +47,7 @@ export default function Create({ auth, roles }) {
                         Isi detail untuk akun pengguna baru.
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <FormField
@@ -55,6 +57,7 @@ export default function Create({ auth, roles }) {
                         >
                             <Input
                                 id="name"
+                                placeholder="Nama Lengkap Staf"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData("name", e.target.value)
@@ -70,6 +73,7 @@ export default function Create({ auth, roles }) {
                             <Input
                                 id="email"
                                 type="email"
+                                placeholder="email.kerja@perusahaan.com"
                                 value={data.email}
                                 onChange={(e) =>
                                     setData("email", e.target.value)
@@ -85,12 +89,14 @@ export default function Create({ auth, roles }) {
                             >
                                 <PasswordInput
                                     id="password"
+                                    placeholder="Minimal 8 karakter"
                                     value={data.password}
                                     onChange={(e) =>
                                         setData("password", e.target.value)
                                     }
                                 />
                             </FormField>
+
                             <FormField
                                 label="Konfirmasi Password"
                                 htmlFor="password_confirmation"
@@ -98,6 +104,7 @@ export default function Create({ auth, roles }) {
                             >
                                 <PasswordInput
                                     id="password_confirmation"
+                                    placeholder="Ulangi password"
                                     value={data.password_confirmation}
                                     onChange={(e) =>
                                         setData(
@@ -120,7 +127,7 @@ export default function Create({ auth, roles }) {
                                 }
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Pilih jabatan" />
+                                    <SelectValue placeholder="Pilih Jabatan / Role" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {roles.map((roleName) => (
@@ -141,6 +148,7 @@ export default function Create({ auth, roles }) {
                                     Batal
                                 </Button>
                             </Link>
+
                             <Button disabled={processing || !isDirty}>
                                 Simpan
                             </Button>
@@ -151,3 +159,4 @@ export default function Create({ auth, roles }) {
         </ContentPageLayout>
     );
 }
+

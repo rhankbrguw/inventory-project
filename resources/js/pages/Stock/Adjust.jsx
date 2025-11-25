@@ -26,16 +26,13 @@ export default function Adjust({
     auth,
     products,
     locations,
-    adjustmentReasons,
 }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
-        {
-            product_id: "",
-            location_id: "",
-            quantity: "",
-            notes: "",
-        },
-    );
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
+        product_id: "",
+        location_id: "",
+        quantity: "",
+        notes: "",
+    });
 
     const productsData = products.data || products || [];
     const locationsData = locations.data || locations || [];
@@ -61,12 +58,13 @@ export default function Adjust({
                 <CardHeader>
                     <CardTitle>Formulir Penyesuaian Stok</CardTitle>
                     <CardDescription>
-                        Gunakan formulir ini untuk menyamakan stok sistem dengan
-                        stok fisik aktual.
+                        Gunakan formulir ini untuk menyamakan stok sistem dengan stok fisik aktual.
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField label="Produk" htmlFor="product_id">
                                 <ProductCombobox
@@ -76,7 +74,9 @@ export default function Adjust({
                                         setData("product_id", product.id)
                                     }
                                     error={errors.product_id}
+                                    placeholder="Cari produk berdasarkan nama atau SKU..."
                                 />
+
                                 {data.location_id && data.product_id && (
                                     <StockAvailability
                                         productId={data.product_id}
@@ -85,6 +85,7 @@ export default function Adjust({
                                     />
                                 )}
                             </FormField>
+
                             <FormField label="Lokasi" htmlFor="location_id">
                                 <Select
                                     value={data.location_id?.toString()}
@@ -93,8 +94,9 @@ export default function Adjust({
                                     }
                                 >
                                     <SelectTrigger id="location_id">
-                                        <SelectValue placeholder="Pilih lokasi..." />
+                                        <SelectValue placeholder="Pilih lokasi penyimpanan..." />
                                     </SelectTrigger>
+
                                     <SelectContent>
                                         {locationsData.map((location) => (
                                             <SelectItem
@@ -106,14 +108,13 @@ export default function Adjust({
                                         ))}
                                     </SelectContent>
                                 </Select>
+
                                 <InputError message={errors.location_id} />
                             </FormField>
                         </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                                label="Jumlah Stok Terakhir"
-                                htmlFor="quantity"
-                            >
+                            <FormField label="Jumlah Stok Aktual" htmlFor="quantity">
                                 <Input
                                     id="quantity"
                                     type="number"
@@ -123,14 +124,13 @@ export default function Adjust({
                                     onChange={(e) =>
                                         setData("quantity", e.target.value)
                                     }
-                                    placeholder={`Contoh: 5`}
-                                    disabled={
-                                        !data.product_id || !data.location_id
-                                    }
+                                    placeholder="Masukkan jumlah stok fisik aktual"
+                                    disabled={!data.product_id || !data.location_id}
                                 />
                                 <InputError message={errors.quantity} />
                             </FormField>
                         </div>
+
                         <FormField label="Catatan" htmlFor="notes">
                             <Textarea
                                 id="notes"
@@ -138,7 +138,7 @@ export default function Adjust({
                                 onChange={(e) =>
                                     setData("notes", e.target.value)
                                 }
-                                placeholder="Alasan penyesuaian..."
+                                placeholder="Alasan penyesuaian (contoh: selisih stok opname, barang rusak, koreksi input)"
                                 disabled={!data.product_id || !data.location_id}
                             />
                             <InputError message={errors.notes} />
@@ -150,6 +150,7 @@ export default function Adjust({
                                     Batal
                                 </Button>
                             </Link>
+
                             <Button
                                 disabled={
                                     processing ||
@@ -167,3 +168,4 @@ export default function Adjust({
         </ContentPageLayout>
     );
 }
+

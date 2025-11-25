@@ -1,3 +1,4 @@
+
 import { useForm } from "@inertiajs/react";
 import { useState } from "react";
 import {
@@ -25,14 +26,13 @@ export default function QuickAddTypeModal({
     existingTypes = [],
     trigger,
 }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
-        {
-            name: "",
-            code: "",
-            group: group,
-            _from_modal: true,
-        }
-    );
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
+        name: "",
+        code: "",
+        group: group,
+        _from_modal: true,
+    });
+
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
@@ -54,6 +54,7 @@ export default function QuickAddTypeModal({
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
+
                 <form onSubmit={submit} className="space-y-4 py-4">
                     <div>
                         <Label htmlFor="typeName">Nama Tipe</Label>
@@ -61,24 +62,28 @@ export default function QuickAddTypeModal({
                             id="typeName"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
+                            placeholder="Masukkan nama tipe"
                             className="mt-1"
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
+
                     <div>
                         <Label htmlFor="typeCode">Kode (Opsional)</Label>
                         <Input
                             id="typeCode"
                             value={data.code}
                             onChange={(e) => setData("code", e.target.value)}
+                            placeholder="Masukkan kode tipe"
                             className="mt-1"
                         />
                         <InputError message={errors.code} className="mt-2" />
                     </div>
+
                     {existingTypes.length > 0 && (
                         <Alert>
                             <Info className="h-4 w-4" />
-                            <AlertTitle>Tipe yang Sudah Ada</AlertTitle>
+                            <AlertTitle>Tipe yang sudah ada</AlertTitle>
                             <AlertDescription className="flex flex-wrap gap-2 pt-2">
                                 {existingTypes.map((type) => (
                                     <Badge key={type.id} variant="secondary">
@@ -88,18 +93,18 @@ export default function QuickAddTypeModal({
                             </AlertDescription>
                         </Alert>
                     )}
+
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button type="button" variant="outline">
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing || !isDirty}>
-                            Simpan
-                        </Button>
+                        <Button disabled={processing || !isDirty}>Simpan</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     );
 }
+
