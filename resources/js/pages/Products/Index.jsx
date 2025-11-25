@@ -47,7 +47,8 @@ export default function Index({
     } = useSoftDeletes({ resourceName: "products", data: products.data });
 
     const roleCode = auth.user.role?.code;
-    const canCrudProducts = auth.user.level === 1 || ['WHM', 'BRM'].includes(roleCode);
+    const canCrudProducts =
+        auth.user.level === 1 || ["WHM", "BRM"].includes(roleCode);
 
     const renderActionDropdown = (product) => (
         <DropdownMenu>
@@ -121,6 +122,7 @@ export default function Index({
                     params={params}
                     setFilter={setFilter}
                     allProducts={allProducts}
+                    productTypes={productTypes}
                 />
 
                 <MobileCardList

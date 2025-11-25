@@ -1,4 +1,3 @@
-
 import { Link, useForm } from "@inertiajs/react";
 import { useMemo } from "react";
 import ContentPageLayout from "@/components/ContentPageLayout";
@@ -40,7 +39,7 @@ export default function Edit({
 
     const selectedLocationType = useMemo(() => {
         return locationTypes.find(
-            (type) => type.id.toString() === data.type_id
+            (type) => type.id.toString() === data.type_id,
         );
     }, [data.type_id, locationTypes]);
 
@@ -51,12 +50,12 @@ export default function Edit({
 
         if (typeCode === "WH") {
             return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "branch manager"
+                (role) => role.name.toLowerCase() !== "branch manager",
             );
         }
         if (typeCode === "BR") {
             return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "warehouse manager"
+                (role) => role.name.toLowerCase() !== "warehouse manager",
             );
         }
         return allRoles;
@@ -158,4 +157,3 @@ export default function Edit({
         </ContentPageLayout>
     );
 }
-

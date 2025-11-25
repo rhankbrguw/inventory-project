@@ -14,7 +14,7 @@ export const useSoftDeletes = ({ resourceName, data }) => {
 
     const itemToDeactivate = useMemo(
         () => data.find((item) => item.id === confirmingDeletion),
-        [data, confirmingDeletion]
+        [data, confirmingDeletion],
     );
 
     const safeSetProcessing = useCallback((value) => {
@@ -51,10 +51,10 @@ export const useSoftDeletes = ({ resourceName, data }) => {
                     preserveScroll: true,
                     preserveState: false,
                     onFinish: () => safeSetProcessing(false),
-                }
+                },
             );
         },
-        [resourceName, safeSetProcessing]
+        [resourceName, safeSetProcessing],
     );
 
     return {

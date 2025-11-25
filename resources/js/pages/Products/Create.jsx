@@ -1,4 +1,3 @@
-
 import { useForm, Link } from "@inertiajs/react";
 import { useState } from "react";
 import ContentPageLayout from "@/components/ContentPageLayout";
@@ -57,7 +56,9 @@ export default function Create({ auth, types, suppliers }) {
                 ...data,
                 suppliers: newSuppliers,
                 default_supplier_id:
-                    data.default_supplier_id == id ? "" : data.default_supplier_id,
+                    data.default_supplier_id == id
+                        ? ""
+                        : data.default_supplier_id,
             });
         } else {
             setData("suppliers", [...currentSuppliers, id]);
@@ -70,11 +71,12 @@ export default function Create({ auth, types, suppliers }) {
     };
 
     const selectedSupplierObjects = suppliers.filter((s) =>
-        data.suppliers.includes(s.id)
+        data.suppliers.includes(s.id),
     );
 
     const getSupplierDisplayText = () => {
-        if (data.suppliers.length === 0) return "Pilih Supplier (Bisa lebih dari satu)";
+        if (data.suppliers.length === 0)
+            return "Pilih Supplier (Bisa lebih dari satu)";
         if (data.suppliers.length === 1) {
             const supplier = suppliers.find((s) => s.id === data.suppliers[0]);
             return supplier?.name || "1 supplier dipilih";
@@ -95,16 +97,26 @@ export default function Create({ auth, types, suppliers }) {
                 <CardContent>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                            <FormField label="Nama Produk" htmlFor="name" error={errors.name}>
+                            <FormField
+                                label="Nama Produk"
+                                htmlFor="name"
+                                error={errors.name}
+                            >
                                 <Input
                                     id="name"
                                     value={data.name}
                                     placeholder="Masukkan nama produk lengkap"
-                                    onChange={(e) => setData("name", e.target.value)}
+                                    onChange={(e) =>
+                                        setData("name", e.target.value)
+                                    }
                                 />
                             </FormField>
 
-                            <FormField label="Gambar Produk" htmlFor="image" error={errors.image}>
+                            <FormField
+                                label="Gambar Produk"
+                                htmlFor="image"
+                                error={errors.image}
+                            >
                                 <div className="relative">
                                     <Input
                                         id="image"
@@ -137,14 +149,19 @@ export default function Create({ auth, types, suppliers }) {
                                 error={errors.type_id}
                             >
                                 <Select
-                                    onValueChange={(value) => setData("type_id", value)}
+                                    onValueChange={(value) =>
+                                        setData("type_id", value)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Tipe Produk" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {types.map((type) => (
-                                            <SelectItem key={type.id} value={type.id.toString()}>
+                                            <SelectItem
+                                                key={type.id}
+                                                value={type.id.toString()}
+                                            >
                                                 {type.name}
                                             </SelectItem>
                                         ))}
@@ -159,19 +176,35 @@ export default function Create({ auth, types, suppliers }) {
                             >
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className="w-full justify-between font-normal"
+                                        >
                                             {getSupplierDisplayText()}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                                    <PopoverContent
+                                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                                        align="start"
+                                    >
                                         <div className="max-h-[300px] overflow-y-auto p-4">
                                             <div className="space-y-3">
                                                 {suppliers.map((supplier) => (
-                                                    <div key={supplier.id} className="flex items-center space-x-2">
+                                                    <div
+                                                        key={supplier.id}
+                                                        className="flex items-center space-x-2"
+                                                    >
                                                         <Checkbox
                                                             id={`supp-${supplier.id}`}
-                                                            checked={data.suppliers.includes(supplier.id)}
-                                                            onChange={() => handleSupplierToggle(supplier.id)}
+                                                            checked={data.suppliers.includes(
+                                                                supplier.id,
+                                                            )}
+                                                            onChange={() =>
+                                                                handleSupplierToggle(
+                                                                    supplier.id,
+                                                                )
+                                                            }
                                                         />
                                                         <label
                                                             htmlFor={`supp-${supplier.id}`}
@@ -179,9 +212,11 @@ export default function Create({ auth, types, suppliers }) {
                                                         >
                                                             {supplier.name}
                                                         </label>
-                                                        {data.suppliers.includes(supplier.id) && (
-                                                            <Check className="h-4 w-4 text-primary" />
-                                                        )}
+                                                        {data.suppliers.includes(
+                                                            supplier.id,
+                                                        ) && (
+                                                                <Check className="h-4 w-4 text-primary" />
+                                                            )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -209,7 +244,10 @@ export default function Create({ auth, types, suppliers }) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {selectedSupplierObjects.map((supplier) => (
-                                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                                        <SelectItem
+                                            key={supplier.id}
+                                            value={supplier.id.toString()}
+                                        >
                                             {supplier.name}
                                         </SelectItem>
                                     ))}
@@ -218,28 +256,46 @@ export default function Create({ auth, types, suppliers }) {
                         </FormField>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <FormField label="SKU" htmlFor="sku" error={errors.sku}>
+                            <FormField
+                                label="SKU"
+                                htmlFor="sku"
+                                error={errors.sku}
+                            >
                                 <Input
                                     id="sku"
                                     value={data.sku}
                                     placeholder="Masukkan kode SKU unik"
-                                    onChange={(e) => setData("sku", e.target.value)}
+                                    onChange={(e) =>
+                                        setData("sku", e.target.value)
+                                    }
                                 />
                             </FormField>
 
-                            <FormField label="Harga Jual" htmlFor="price" error={errors.price}>
+                            <FormField
+                                label="Harga Jual"
+                                htmlFor="price"
+                                error={errors.price}
+                            >
                                 <CurrencyInput
                                     id="price"
                                     placeholder="Contoh: 50000"
                                     value={data.price}
-                                    onValueChange={(value) => setData("price", value)}
+                                    onValueChange={(value) =>
+                                        setData("price", value)
+                                    }
                                 />
                             </FormField>
 
-                            <FormField label="Satuan" htmlFor="unit" error={errors.unit}>
+                            <FormField
+                                label="Satuan"
+                                htmlFor="unit"
+                                error={errors.unit}
+                            >
                                 <Select
                                     value={data.unit}
-                                    onValueChange={(value) => setData("unit", value)}
+                                    onValueChange={(value) =>
+                                        setData("unit", value)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Satuan Unit" />
@@ -247,7 +303,8 @@ export default function Create({ auth, types, suppliers }) {
                                     <SelectContent>
                                         {productUnits.map((unit) => (
                                             <SelectItem key={unit} value={unit}>
-                                                {unit.charAt(0).toUpperCase() + unit.slice(1)}
+                                                {unit.charAt(0).toUpperCase() +
+                                                    unit.slice(1)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -255,21 +312,31 @@ export default function Create({ auth, types, suppliers }) {
                             </FormField>
                         </div>
 
-                        <FormField label="Deskripsi (Opsional)" htmlFor="description" error={errors.description}>
+                        <FormField
+                            label="Deskripsi (Opsional)"
+                            htmlFor="description"
+                            error={errors.description}
+                        >
                             <Textarea
                                 id="description"
                                 value={data.description}
                                 placeholder="Tulis deskripsi detail produk..."
-                                onChange={(e) => setData("description", e.target.value)}
+                                onChange={(e) =>
+                                    setData("description", e.target.value)
+                                }
                                 className="h-24"
                             />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
                             <Link href={route("products.index")}>
-                                <Button type="button" variant="outline">Batal</Button>
+                                <Button type="button" variant="outline">
+                                    Batal
+                                </Button>
                             </Link>
-                            <Button disabled={processing || !isDirty}>Simpan</Button>
+                            <Button disabled={processing || !isDirty}>
+                                Simpan
+                            </Button>
                         </div>
                     </form>
                 </CardContent>
@@ -277,4 +344,3 @@ export default function Create({ auth, types, suppliers }) {
         </ContentPageLayout>
     );
 }
-

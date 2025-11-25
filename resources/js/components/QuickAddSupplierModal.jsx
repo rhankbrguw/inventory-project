@@ -1,4 +1,3 @@
-
 import { useForm, router } from "@inertiajs/react";
 import { useState } from "react";
 import {
@@ -18,14 +17,16 @@ import FormField from "@/components/FormField";
 import { InputWithPrefix } from "@/components/InputWithPrefix";
 
 export default function QuickAddSupplierModal({ children, onSuccess }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        contact_person: "",
-        _from_modal: true,
-    });
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
+        {
+            name: "",
+            email: "",
+            phone: "",
+            address: "",
+            contact_person: "",
+            _from_modal: true,
+        },
+    );
 
     const [open, setOpen] = useState(false);
 
@@ -76,12 +77,17 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         <InputError message={errors.name} />
                     </FormField>
 
-                    <FormField label="Koordinator" htmlFor="supplierContactPerson">
+                    <FormField
+                        label="Koordinator"
+                        htmlFor="supplierContactPerson"
+                    >
                         <Input
                             id="supplierContactPerson"
                             placeholder="Nama PIC / Sales"
                             value={data.contact_person}
-                            onChange={(e) => setData("contact_person", e.target.value)}
+                            onChange={(e) =>
+                                setData("contact_person", e.target.value)
+                            }
                         />
                         <InputError message={errors.contact_person} />
                     </FormField>
@@ -97,13 +103,21 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                         <InputError message={errors.email} />
                     </FormField>
 
-                    <FormField label="Nomor Telepon (Opsional)" htmlFor="supplierPhone">
+                    <FormField
+                        label="Nomor Telepon (Opsional)"
+                        htmlFor="supplierPhone"
+                    >
                         <InputWithPrefix
                             prefix="+62"
                             id="supplierPhone"
                             placeholder="81234567890"
                             value={data.phone}
-                            onChange={(e) => setData("phone", e.target.value.replace(/\D/g, ""))}
+                            onChange={(e) =>
+                                setData(
+                                    "phone",
+                                    e.target.value.replace(/\D/g, ""),
+                                )
+                            }
                         />
                         <InputError message={errors.phone} />
                     </FormField>
@@ -120,7 +134,9 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
 
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">Batal</Button>
+                            <Button type="button" variant="outline">
+                                Batal
+                            </Button>
                         </DialogClose>
                         <Button disabled={processing || !isDirty}>
                             {processing ? "Menyimpan..." : "Simpan"}
@@ -131,4 +147,3 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
         </Dialog>
     );
 }
-

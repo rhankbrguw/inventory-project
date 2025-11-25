@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Search, PackageOpen } from "lucide-react";
@@ -36,13 +35,19 @@ export default function SellProductGrid({
                 <h3 className="text-base font-semibold">Katalog Produk</h3>
                 <div className="mt-2 space-y-2">
                     <Label htmlFor="location_id">Lokasi Penjualan</Label>
-                    <Select value={selectedLocationId} onValueChange={onLocationChange}>
+                    <Select
+                        value={selectedLocationId}
+                        onValueChange={onLocationChange}
+                    >
                         <SelectTrigger id="location_id" className="h-9 text-xs">
                             <SelectValue placeholder="Pilih Lokasi Penjualan untuk Memulai" />
                         </SelectTrigger>
                         <SelectContent>
                             {locations.map((loc) => (
-                                <SelectItem key={loc.id} value={loc.id.toString()}>
+                                <SelectItem
+                                    key={loc.id}
+                                    value={loc.id.toString()}
+                                >
                                     {loc.name}
                                 </SelectItem>
                             ))}
@@ -71,7 +76,9 @@ export default function SellProductGrid({
                             <Input
                                 placeholder="Cari produk (Nama atau SKU)..."
                                 value={searchQuery}
-                                onChange={(e) => setFilter("search", e.target.value)}
+                                onChange={(e) =>
+                                    setFilter("search", e.target.value)
+                                }
                                 className="pl-9 h-9 text-sm"
                             />
                         </div>
@@ -92,7 +99,9 @@ export default function SellProductGrid({
                                 <button
                                     key={type.id}
                                     type="button"
-                                    onClick={() => setFilter("type_id", type.id.toString())}
+                                    onClick={() =>
+                                        setFilter("type_id", type.id.toString())
+                                    }
                                     className={cn(
                                         "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
                                         selectedType === type.id.toString()
@@ -114,9 +123,15 @@ export default function SellProductGrid({
                                         <ProductCard
                                             key={product.id}
                                             product={product}
-                                            onClick={() => onProductClick(product)}
-                                            selected={selectedProductIds.includes(product.id)}
-                                            processing={processingItem === product.id}
+                                            onClick={() =>
+                                                onProductClick(product)
+                                            }
+                                            selected={selectedProductIds.includes(
+                                                product.id,
+                                            )}
+                                            processing={
+                                                processingItem === product.id
+                                            }
                                             showPrice={true}
                                         />
                                     ))
@@ -134,11 +149,15 @@ export default function SellProductGrid({
                             </div>
                         </div>
 
-                        {paginationLinks.length > 3 && <Pagination links={paginationLinks} className="mt-6" />}
+                        {paginationLinks.length > 3 && (
+                            <Pagination
+                                links={paginationLinks}
+                                className="mt-6"
+                            />
+                        )}
                     </div>
                 </div>
             )}
         </div>
     );
 }
-

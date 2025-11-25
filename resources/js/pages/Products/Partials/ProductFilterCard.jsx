@@ -1,7 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import ProductCombobox from "@/components/ProductCombobox";
-import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -9,7 +7,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { X } from "lucide-react";
 
 const sortOptions = [
     { value: "newest", label: "Produk Terbaru" },
@@ -24,7 +21,7 @@ const statusOptions = [
     { value: "inactive", label: "Nonaktif" },
 ];
 
-export default function ProductFilterCard({ params, setFilter, allProducts }) {
+export default function ProductFilterCard({ params, setFilter, productTypes }) {
     return (
         <Card>
             <CardContent className="flex flex-col sm:flex-row items-center gap-2 pt-6">
@@ -35,25 +32,25 @@ export default function ProductFilterCard({ params, setFilter, allProducts }) {
                     onChange={(e) => setFilter("search", e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
-                <div className="relative w-full sm:w-[200px]">
-                    <ProductCombobox
-                        products={allProducts}
-                        value={params.product_id}
-                        onChange={(product) =>
-                            setFilter("product_id", product.id)
-                        }
-                    />
-                    {params.product_id && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full"
-                            onClick={() => setFilter("product_id", null)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
+                <Select
+                    value={params.type_id || "all"}
+                    onValueChange={(value) => setFilter("type_id", value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Pilih produk..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Tipe</SelectItem>
+                        {productTypes.data.map((type) => (
+                            <SelectItem
+                                key={type.id}
+                                value={type.id.toString()}
+                            >
+                                {type.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
                 <Select
                     value={params.status || "all"}
                     onValueChange={(value) => setFilter("status", value)}

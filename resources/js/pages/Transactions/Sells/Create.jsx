@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import { Head, Link, router } from "@inertiajs/react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 import { useSellCart } from "@/hooks/useSellCart";
 import SellProductGrid from "./Partials/SellProductGrid";
@@ -9,13 +9,7 @@ import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { formatNumber } from "@/lib/utils";
 
 export default function Create({
@@ -57,11 +51,14 @@ export default function Create({
     } = useSellCart(initialCart, selectedLocationId);
 
     useEffect(() => {
-        if (!selectedLocationId && locations.length > 0 && !filters.location_id) {
+        if (
+            !selectedLocationId &&
+            locations.length > 0 &&
+            !filters.location_id
+        ) {
             setFilter("location_id", locations[0].id.toString());
         }
     }, [selectedLocationId, locations, filters.location_id]);
-
 
     const handleLocationChange = (locationId) => {
         if (locationId === selectedLocationId) return;

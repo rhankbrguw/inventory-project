@@ -1,4 +1,3 @@
-
 import { useForm, router } from "@inertiajs/react";
 import { useState } from "react";
 import {
@@ -25,15 +24,21 @@ import {
 } from "@/components/ui/select";
 import { InputWithPrefix } from "@/components/InputWithPrefix";
 
-export default function QuickAddCustomerModal({ children, customerTypes, onSuccess }) {
-    const { data, setData, post, processing, errors, isDirty, reset } = useForm({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        type_id: "",
-        _from_modal: true,
-    });
+export default function QuickAddCustomerModal({
+    children,
+    customerTypes,
+    onSuccess,
+}) {
+    const { data, setData, post, processing, errors, isDirty, reset } = useForm(
+        {
+            name: "",
+            email: "",
+            phone: "",
+            address: "",
+            type_id: "",
+            _from_modal: true,
+        },
+    );
 
     const [open, setOpen] = useState(false);
 
@@ -104,7 +109,10 @@ export default function QuickAddCustomerModal({ children, customerTypes, onSucce
                             <SelectContent>
                                 <SelectGroup>
                                     {customerTypes.map((type) => (
-                                        <SelectItem key={type.id} value={type.id.toString()}>
+                                        <SelectItem
+                                            key={type.id}
+                                            value={type.id.toString()}
+                                        >
                                             {type.name}
                                         </SelectItem>
                                     ))}
@@ -114,14 +122,20 @@ export default function QuickAddCustomerModal({ children, customerTypes, onSucce
                         <InputError message={errors.type_id} />
                     </FormField>
 
-                    <FormField label="Nomor Telepon (Opsional)" htmlFor="customerPhone">
+                    <FormField
+                        label="Nomor Telepon (Opsional)"
+                        htmlFor="customerPhone"
+                    >
                         <InputWithPrefix
                             prefix="+62"
                             id="customerPhone"
                             placeholder="81234567890"
                             value={data.phone}
                             onChange={(e) =>
-                                setData("phone", e.target.value.replace(/\D/g, ""))
+                                setData(
+                                    "phone",
+                                    e.target.value.replace(/\D/g, ""),
+                                )
                             }
                         />
                         <InputError message={errors.phone} />
@@ -129,7 +143,9 @@ export default function QuickAddCustomerModal({ children, customerTypes, onSucce
 
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">Batal</Button>
+                            <Button type="button" variant="outline">
+                                Batal
+                            </Button>
                         </DialogClose>
                         <Button disabled={processing || !isDirty}>
                             {processing ? "Menyimpan..." : "Simpan"}
@@ -140,4 +156,3 @@ export default function QuickAddCustomerModal({ children, customerTypes, onSucce
         </Dialog>
     );
 }
-

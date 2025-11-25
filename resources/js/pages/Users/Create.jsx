@@ -1,4 +1,3 @@
-
 import { Link, useForm } from "@inertiajs/react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import FormField from "@/components/FormField";
@@ -159,4 +158,3 @@ export default function Create({ auth, roles }) {
         </ContentPageLayout>
     );
 }
-

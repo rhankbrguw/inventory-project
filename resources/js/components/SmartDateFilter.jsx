@@ -44,7 +44,7 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
 
     const [date, setDate] = useState(getInitialState());
     const [isOpen, setIsOpen] = useState(false);
-    const [isDirty, setIsDirty] = useState(false);
+    const [setIsDirty] = useState(false);
 
     useEffect(() => {
         setDate(getInitialState());
@@ -93,7 +93,9 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
             onFilterChange({
                 date_range: "custom",
                 start_date: format(date.from, "yyyy-MM-dd"),
-                end_date: date.to ? format(date.to, "yyyy-MM-dd") : format(date.from, "yyyy-MM-dd"),
+                end_date: date.to
+                    ? format(date.to, "yyyy-MM-dd")
+                    : format(date.from, "yyyy-MM-dd"),
             });
             setIsOpen(false);
             setIsDirty(false);
