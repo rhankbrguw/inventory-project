@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\StockMovementResource;
 use App\Models\Inventory;
 use App\Models\Location;
+use App\Models\Purchase;
 use App\Models\Sell;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -48,8 +49,10 @@ class DashboardController extends Controller
             'stats' => $this->getStats($filterIds, $dateConfig),
             'charts' => [
                 'sales' => $this->getSalesChart($filterIds, $dateConfig),
+                'purchases' => $this->getPurchasesChart($filterIds, $dateConfig),
                 'channels' => $this->getPaymentChannelChart($filterIds, $dateConfig),
                 'top_items' => $this->getTopSellingItems($filterIds, $dateConfig),
+                'comparison' => $this->getSalesPurchaseComparison($filterIds, $dateConfig),
             ],
             'recentMovements' => StockMovementResource::collection($this->getRecentMovements($filterIds)),
             'locations' => $this->getLocationsForDropdown($user),
@@ -97,11 +100,13 @@ class DashboardController extends Controller
         $start = $dateConfig['start'];
         $end = $dateConfig['end'];
 
+        // Sales Revenue
         $revenue = Sell::accessibleBy($locationIds)
             ->where('status', 'Completed')
             ->whereBetween('transaction_date', [$start, $end])
             ->sum('total_price');
 
+        // COGS from Sales
         $cogs = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $start, $end) {
             $q->accessibleBy($locationIds)
                 ->where('status', 'Completed')
@@ -109,21 +114,45 @@ class DashboardController extends Controller
         })
             ->sum(DB::raw('ABS(quantity) * average_cost_per_unit'));
 
+        // Purchase Total
+        $totalPurchases = Purchase::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->sum('total_cost');
+
+        // Net Profit
         $netProfit = $revenue - $cogs;
 
+        // Inventory Value
         $inventoryValue = Inventory::accessibleBy($locationIds)
             ->sum(DB::raw('quantity * average_cost'));
 
+        // Low Stock Count
         $lowStockCount = Inventory::accessibleBy($locationIds)
             ->where('quantity', '<=', 5)
             ->where('quantity', '>', 0)
             ->count();
 
+        // Transaction Counts
+        $salesCount = Sell::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->count();
+
+        $purchaseCount = Purchase::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->count();
+
         return [
             'revenue' => (float) $revenue,
             'net_profit' => (float) $netProfit,
+            'total_purchases' => (float) $totalPurchases,
             'inventory_value' => (float) $inventoryValue,
             'low_stock_count' => $lowStockCount,
+            'sales_count' => $salesCount,
+            'purchase_count' => $purchaseCount,
+            'gross_margin' => $revenue > 0 ? (($revenue - $cogs) / $revenue) * 100 : 0,
         ];
     }
 
@@ -141,6 +170,51 @@ class DashboardController extends Controller
             'date' => Carbon::parse($s->date)->format('d M'),
             'total' => (float) $s->total,
         ])->toArray();
+    }
+
+    private function getPurchasesChart(?array $locationIds, array $dateConfig): array
+    {
+        $purchases = Purchase::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$dateConfig['start'], $dateConfig['end']])
+            ->selectRaw('DATE(transaction_date) as date, SUM(total_cost) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        return $purchases->map(fn($p) => [
+            'date' => Carbon::parse($p->date)->format('d M'),
+            'total' => (float) $p->total,
+        ])->toArray();
+    }
+
+    private function getSalesPurchaseComparison(?array $locationIds, array $dateConfig): array
+    {
+        $sales = Sell::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$dateConfig['start'], $dateConfig['end']])
+            ->selectRaw('DATE(transaction_date) as date, SUM(total_price) as sales')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $purchases = Purchase::accessibleBy($locationIds)
+            ->where('status', 'Completed')
+            ->whereBetween('transaction_date', [$dateConfig['start'], $dateConfig['end']])
+            ->selectRaw('DATE(transaction_date) as date, SUM(total_cost) as purchases')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $allDates = $sales->keys()->merge($purchases->keys())->unique()->sort();
+
+        return $allDates->map(function ($date) use ($sales, $purchases) {
+            return [
+                'date' => Carbon::parse($date)->format('d M'),
+                'sales' => (float) ($sales[$date]->sales ?? 0),
+                'purchases' => (float) ($purchases[$date]->purchases ?? 0),
+            ];
+        })->values()->toArray();
     }
 
     private function getPaymentChannelChart(?array $locationIds, array $dateConfig): array
