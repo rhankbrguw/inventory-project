@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Trash2, ShoppingBag, UserPlus } from "lucide-react";
+import { ShoppingBag, UserPlus } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import {
     Select,
@@ -21,7 +21,6 @@ export default function SellCart({
     onCustomerChange,
     removeItem,
     updateItem,
-    clearCart,
     processingItem,
     totalCartItems,
     totalCartPrice,
@@ -37,11 +36,16 @@ export default function SellCart({
     };
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="p-3 border-b flex-shrink-0">
-                <h3 className="text-base font-semibold">Keranjang</h3>
-                <div className="mt-2 space-y-2">
-                    <Label htmlFor="customer_id">Pelanggan</Label>
+        <div className="flex flex-col h-full bg-card">
+            <div className="p-4 border-b flex-shrink-0 space-y-4">
+                <h3 className="text-base font-semibold">Keranjang Penjualan</h3>
+                <div className="space-y-2">
+                    <Label
+                        htmlFor="customer_id"
+                        className="text-xs text-muted-foreground"
+                    >
+                        Pelanggan
+                    </Label>
                     <div className="flex gap-2">
                         <Select
                             value={selectedCustomerId || ""}
@@ -90,7 +94,7 @@ export default function SellCart({
 
             <div className="flex-1 overflow-y-auto">
                 {!hasItems ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+                    <div className="flex flex-col items-center justify-center py-12 text-center h-full p-6">
                         <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                             <ShoppingBag className="w-8 h-8 text-muted-foreground/40" />
                         </div>
@@ -102,54 +106,39 @@ export default function SellCart({
                         </p>
                     </div>
                 ) : (
-                    <SellItemManager
-                        cart={cart}
-                        removeItem={removeItem}
-                        updateItem={updateItem}
-                        processingItem={processingItem}
-                        getItemQuantity={getItemQuantity}
-                        locationId={locationId}
-                    />
-                )}
-            </div>
+                    <div className="flex flex-col h-full">
+                        <SellItemManager
+                            cart={cart}
+                            removeItem={removeItem}
+                            updateItem={updateItem}
+                            processingItem={processingItem}
+                            getItemQuantity={getItemQuantity}
+                            locationId={locationId}
+                        />
 
-            <div className="flex-shrink-0 border-t bg-muted/30 p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Total Item
-                    </p>
-                    <p className="text-sm font-bold text-foreground">
-                        {formatNumber(totalCartItems)}
-                    </p>
-                </div>
-                <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-muted-foreground">
-                        Total Harga
-                    </p>
-                    <p className="text-lg font-bold text-primary">
-                        {formatCurrency(totalCartPrice)}
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9 text-destructive hover:text-destructive"
-                        onClick={clearCart}
-                        disabled={isCartDisabled || !hasItems}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        type="button"
-                        className="w-full h-9 font-semibold"
-                        onClick={onCheckout}
-                        disabled={isCartDisabled || !hasItems}
-                    >
-                        Checkout
-                    </Button>
-                </div>
+                        <div className="p-4 mt-auto border-t bg-muted/10 space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                        Total Penjualan
+                                    </span>
+                                    <span className="text-lg font-bold text-foreground">
+                                        {formatCurrency(totalCartPrice)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <Button
+                                type="button"
+                                className="w-full font-semibold"
+                                onClick={onCheckout}
+                                disabled={isCartDisabled}
+                            >
+                                Checkout
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
