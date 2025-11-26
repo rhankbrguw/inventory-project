@@ -21,9 +21,8 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
-        $selectedLocationId = $request->input('location_id');
 
-        if ($user->level !== 1 && !$selectedLocationId) {
+        if ($user->level !== 1 && !$request->has('location_id')) {
             if (!empty($accessibleLocationIds)) {
                 return to_route('dashboard', [
                     'location_id' => $accessibleLocationIds[0],
@@ -32,8 +31,10 @@ class DashboardController extends Controller
             }
         }
 
-        if ($selectedLocationId && $selectedLocationId !== 'all') {
-            if ($user->level !== 1 && !in_array($selectedLocationId, $accessibleLocationIds ?? [])) {
+        $selectedLocationId = $request->input('location_id');
+
+        if ($selectedLocationId !== null && $selectedLocationId !== 'all') {
+            if ($user->level !== 1 && !in_array((int)$selectedLocationId, $accessibleLocationIds ?? [])) {
                 abort(403, 'Unauthorized access to this location.');
             }
             $filterIds = [$selectedLocationId];
