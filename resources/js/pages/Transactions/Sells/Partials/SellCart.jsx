@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ShoppingBag, UserPlus } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import {
     Select,
     SelectContent,
@@ -22,7 +22,6 @@ export default function SellCart({
     removeItem,
     updateItem,
     processingItem,
-    totalCartItems,
     totalCartPrice,
     onCheckout,
     locationId,
