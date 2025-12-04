@@ -80,7 +80,7 @@ export function formatNumber(value) {
     }
 
     return numberValue.toLocaleString("id-ID", {
-        useGrouping: false,
+        useGrouping: true,
         maximumFractionDigits: 4,
         minimumFractionDigits: 0,
     });
