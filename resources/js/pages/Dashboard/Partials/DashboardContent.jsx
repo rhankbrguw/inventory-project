@@ -12,9 +12,6 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    PieChart,
-    Pie,
-    Label,
     LineChart,
     Line,
     Legend,
@@ -23,7 +20,6 @@ import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
-    ChartLegend,
     ChartLegendContent,
 } from "@/components/ui/chart";
 import {
@@ -36,10 +32,11 @@ import {
     PackageX,
     Activity,
     ShoppingCart,
+    AlertTriangle,
     Receipt,
     Percent,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 import DashboardMobileCard from "./DashboardMobileCard";
 
 export default function DashboardContent({
@@ -50,50 +47,52 @@ export default function DashboardContent({
 }) {
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
                 <StatCard
                     title="Pendapatan"
                     value={formatCurrency(stats.revenue)}
-                    subtext={`${stats.sales_count} transaksi`}
+                    subtext={`${formatNumber(stats.sales_count)} transaksi`}
                     icon={DollarSign}
-                    className="col-span-1"
+                    iconBg="bg-primary/10"
+                    iconColor="text-primary"
                 />
                 <StatCard
                     title="Profit Bersih"
                     value={formatCurrency(stats.net_profit)}
                     subtext={`Margin ${stats.gross_margin.toFixed(1)}%`}
                     icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
-                    trend={stats.net_profit >= 0 ? "up" : "down"}
-                    className="col-span-1"
+                    iconBg={stats.net_profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}
+                    iconColor={stats.net_profit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-red-600 dark:text-red-500"}
                 />
                 <StatCard
                     title="Pembelian"
                     value={formatCurrency(stats.total_purchases)}
-                    subtext={`${stats.purchase_count} transaksi`}
+                    subtext={`${formatNumber(stats.purchase_count)} transaksi`}
                     icon={ShoppingCart}
-                    className="col-span-1"
+                    iconBg="bg-orange-500/10"
+                    iconColor="text-orange-600 dark:text-orange-500"
                 />
                 <StatCard
                     title="Nilai Stok"
                     value={formatCurrency(stats.inventory_value)}
-                    subtext={`${stats.low_stock_count} item rendah`}
-                    icon={Package}
-                    trend={stats.low_stock_count > 0 ? "warning" : "neutral"}
-                    className="col-span-1"
+                    subtext={stats.low_stock_count > 0 ? `${formatNumber(stats.low_stock_count)} item rendah` : "Stok normal"}
+                    icon={stats.low_stock_count > 0 ? AlertTriangle : Package}
+                    iconBg={stats.low_stock_count > 0 ? "bg-amber-500/10" : "bg-blue-500/10"}
+                    iconColor={stats.low_stock_count > 0 ? "text-amber-600 dark:text-amber-500" : "text-blue-600 dark:text-blue-500"}
                 />
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-12">
-                <Card className="lg:col-span-8 shadow-sm">
+            <div className="grid gap-4 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-base font-semibold">
                             Penjualan vs Pembelian
                         </CardTitle>
                         <CardDescription className="text-xs">
                             Perbandingan trend {dateRangeLabel}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-2">
+                    <CardContent className="pt-2 pb-4 pl-0">
                         {charts.comparison?.length > 0 ? (
                             <ChartContainer
                                 config={{
@@ -106,9 +105,9 @@ export default function DashboardContent({
                                         color: "hsl(var(--destructive))",
                                     },
                                 }}
-                                className="h-[280px] w-full"
+                                className="h-[200px] sm:h-[240px] w-full"
                             >
-                                <LineChart data={charts.comparison}>
+                                <LineChart data={charts.comparison} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                                     <CartesianGrid
                                         strokeDasharray="3 3"
                                         vertical={false}
@@ -118,13 +117,13 @@ export default function DashboardContent({
                                         dataKey="date"
                                         tickLine={false}
                                         axisLine={false}
-                                        fontSize={11}
-                                        tickMargin={10}
+                                        fontSize={10}
+                                        tickMargin={8}
                                     />
                                     <YAxis
                                         tickLine={false}
                                         axisLine={false}
-                                        fontSize={11}
+                                        fontSize={10}
                                         width={55}
                                         tickFormatter={(v) =>
                                             `${(v / 1000).toFixed(0)}k`
@@ -141,7 +140,7 @@ export default function DashboardContent({
                                     />
                                     <Legend
                                         content={<ChartLegendContent />}
-                                        wrapperStyle={{ paddingTop: "10px" }}
+                                        wrapperStyle={{ paddingTop: "8px", fontSize: "12px" }}
                                     />
                                     <Line
                                         type="monotone"
@@ -174,43 +173,27 @@ export default function DashboardContent({
                 <ActivityList data={recentMovements.data} />
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-12">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <TopProductsChart data={charts.top_items} />
-
                 <PaymentMethodsChart data={charts.channels} />
-
                 <QuickStatsCard stats={stats} dateRangeLabel={dateRangeLabel} />
             </div>
         </div>
     );
 }
 
-const StatCard = ({ title, value, subtext, icon: Icon, trend, className }) => (
-    <Card className={`shadow-sm ${className || ""}`}>
+const StatCard = ({ title, value, subtext, icon: Icon, iconBg, iconColor }) => (
+    <Card className="border-l-4 border-l-transparent hover:border-l-primary/50 transition-all">
         <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
                 {title}
             </CardTitle>
-            <Icon
-                className={`h-4 w-4 ${trend === "down"
-                        ? "text-destructive"
-                        : trend === "warning"
-                            ? "text-accent-foreground"
-                            : trend === "up"
-                                ? "text-success"
-                                : "text-muted-foreground"
-                    }`}
-            />
+            <div className={`p-2 rounded-lg ${iconBg}`}>
+                <Icon className={`h-4 w-4 ${iconColor}`} />
+            </div>
         </CardHeader>
-        <CardContent className="pt-0">
-            <div
-                className={`text-xl font-bold mb-1 ${trend === "up"
-                        ? "text-success"
-                        : trend === "down"
-                            ? "text-destructive"
-                            : ""
-                    }`}
-            >
+        <CardContent className="pt-0 space-y-1">
+            <div className="text-xl sm:text-2xl font-bold">
                 {value}
             </div>
             <p className="text-xs text-muted-foreground">{subtext}</p>
@@ -219,7 +202,7 @@ const StatCard = ({ title, value, subtext, icon: Icon, trend, className }) => (
 );
 
 const EmptyState = ({ icon: Icon, title, description }) => (
-    <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-muted-foreground">
+    <div className="h-full min-h-[180px] flex flex-col items-center justify-center text-muted-foreground">
         <div className="p-3 bg-muted/30 rounded-full mb-3">
             <Icon className="h-6 w-6 opacity-40" />
         </div>
@@ -229,16 +212,16 @@ const EmptyState = ({ icon: Icon, title, description }) => (
 );
 
 const ActivityList = ({ data }) => (
-    <Card className="lg:col-span-4 shadow-sm flex flex-col">
-        <CardHeader className="pb-2">
-            <CardTitle className="text-base">Aktivitas Terbaru</CardTitle>
+    <Card className="flex flex-col">
+        <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Aktivitas Terbaru</CardTitle>
             <CardDescription className="text-xs">
                 6 mutasi stok terakhir
             </CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 overflow-auto px-2 pb-2">
+        <CardContent className="flex-1 overflow-auto pt-0 px-3 pb-3">
             {data?.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-0">
                     {data.map((movement) => (
                         <DashboardMobileCard
                             key={movement.id}
@@ -259,20 +242,20 @@ const ActivityList = ({ data }) => (
 );
 
 const TopProductsChart = ({ data }) => (
-    <Card className="lg:col-span-4 shadow-sm">
-        <CardHeader className="pb-2">
-            <CardTitle className="text-base">Produk Terlaris</CardTitle>
+    <Card>
+        <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Produk Terlaris</CardTitle>
             <CardDescription className="text-xs">
                 Top 5 berdasarkan kuantitas
             </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0 pr-2">
             {data?.length > 0 ? (
                 <ChartContainer
                     config={{
                         total_qty: {
                             label: "Terjual",
-                            color: "hsl(var(--secondary))",
+                            color: "hsl(var(--chart-2))",
                         },
                     }}
                     className="h-[220px] w-full"
@@ -280,7 +263,7 @@ const TopProductsChart = ({ data }) => (
                     <BarChart
                         data={data}
                         layout="vertical"
-                        margin={{ left: 0, right: 10 }}
+                        margin={{ left: 0, right: 50 }}
                     >
                         <CartesianGrid
                             horizontal={false}
@@ -292,16 +275,21 @@ const TopProductsChart = ({ data }) => (
                             type="category"
                             tickLine={false}
                             axisLine={false}
-                            width={100}
+                            width={90}
                             fontSize={11}
                         />
-                        <XAxis dataKey="total_qty" type="number" hide />
+                        <XAxis
+                            dataKey="total_qty"
+                            type="number"
+                            hide
+                        />
                         <ChartTooltip
                             cursor={false}
                             content={
                                 <ChartTooltipContent
                                     hideLabel
                                     indicator="line"
+                                    formatter={(value) => formatNumber(value)}
                                 />
                             }
                         />
@@ -309,7 +297,13 @@ const TopProductsChart = ({ data }) => (
                             dataKey="total_qty"
                             fill="var(--color-total_qty)"
                             radius={4}
-                            barSize={20}
+                            barSize={18}
+                            label={{
+                                position: "right",
+                                formatter: (value) => formatNumber(value),
+                                fontSize: 11,
+                                fill: "hsl(var(--foreground))",
+                            }}
                         />
                     </BarChart>
                 </ChartContainer>
@@ -324,92 +318,58 @@ const TopProductsChart = ({ data }) => (
     </Card>
 );
 
-const PaymentMethodsChart = ({ data }) => {
-    const pieData =
-        data?.length > 0
-            ? data.map((item, index) => ({
-                ...item,
-                fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-            }))
-            : [];
+const CHART_COLORS = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+];
 
-    const totalTransactions = pieData.reduce(
-        (acc, curr) => acc + curr.count,
-        0,
-    );
+const PaymentMethodsChart = ({ data }) => {
+    const totalTransactions = data?.reduce((acc, curr) => acc + curr.count, 0) || 0;
 
     return (
-        <Card className="lg:col-span-4 shadow-sm">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-base">Metode Pembayaran</CardTitle>
+        <Card>
+            <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Metode Pembayaran</CardTitle>
                 <CardDescription className="text-xs">
                     Distribusi pembayaran penjualan
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-center">
+            <CardContent className="pt-0">
                 {data?.length > 0 ? (
-                    <ChartContainer
-                        config={{
-                            count: { label: "Transaksi" },
-                        }}
-                        className="h-[220px] w-full max-w-[220px]"
-                    >
-                        <PieChart>
-                            <ChartTooltip
-                                cursor={false}
-                                content={<ChartTooltipContent hideLabel />}
-                            />
-                            <Pie
-                                data={pieData}
-                                dataKey="count"
-                                nameKey="name"
-                                innerRadius={50}
-                                outerRadius={75}
-                                strokeWidth={2}
-                            >
-                                <Label
-                                    content={({ viewBox }) => {
-                                        if (
-                                            viewBox &&
-                                            "cx" in viewBox &&
-                                            "cy" in viewBox
-                                        ) {
-                                            return (
-                                                <text
-                                                    x={viewBox.cx}
-                                                    y={viewBox.cy}
-                                                    textAnchor="middle"
-                                                    dominantBaseline="middle"
-                                                >
-                                                    <tspan
-                                                        x={viewBox.cx}
-                                                        y={viewBox.cy}
-                                                        className="fill-foreground text-2xl font-bold"
-                                                    >
-                                                        {totalTransactions}
-                                                    </tspan>
-                                                    <tspan
-                                                        x={viewBox.cx}
-                                                        y={
-                                                            (viewBox.cy || 0) +
-                                                            20
-                                                        }
-                                                        className="fill-muted-foreground text-xs"
-                                                    >
-                                                        Transaksi
-                                                    </tspan>
-                                                </text>
-                                            );
-                                        }
-                                    }}
-                                />
-                            </Pie>
-                            <ChartLegend
-                                content={<ChartLegendContent nameKey="name" />}
-                                className="flex-wrap gap-2 text-xs"
-                            />
-                        </PieChart>
-                    </ChartContainer>
+                    <div className="space-y-4">
+                        {data.map((item, index) => {
+                            const percentage = ((item.count / totalTransactions) * 100).toFixed(1);
+                            return (
+                                <div key={index} className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-medium">{item.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold">{formatNumber(item.count)}</span>
+                                            <span className="text-muted-foreground">({percentage}%)</span>
+                                        </div>
+                                    </div>
+                                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                                        <div
+                                            className="absolute top-0 left-0 h-full rounded-full transition-all"
+                                            style={{
+                                                width: `${percentage}%`,
+                                                backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        <div className="pt-2 mt-4 border-t">
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="font-medium text-muted-foreground">Total Transaksi</span>
+                                <span className="font-bold text-base">{formatNumber(totalTransactions)}</span>
+                            </div>
+                        </div>
+                    </div>
                 ) : (
                     <EmptyState
                         icon={PieChartIcon}
@@ -423,71 +383,58 @@ const PaymentMethodsChart = ({ data }) => {
 };
 
 const QuickStatsCard = ({ stats, dateRangeLabel }) => (
-    <Card className="lg:col-span-4 shadow-sm">
-        <CardHeader className="pb-2">
-            <CardTitle className="text-base">Ringkasan Cepat</CardTitle>
+    <Card>
+        <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Ringkasan Cepat</CardTitle>
             <CardDescription className="text-xs">
                 Metrik {dateRangeLabel}
             </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 pt-0">
             <QuickStatItem
                 icon={Receipt}
                 label="Total Transaksi"
-                value={`${stats.sales_count + stats.purchase_count}`}
-                subvalue={`${stats.sales_count} jual, ${stats.purchase_count} beli`}
+                value={formatNumber(stats.sales_count + stats.purchase_count)}
+                subvalue={`${formatNumber(stats.sales_count)} jual, ${formatNumber(stats.purchase_count)} beli`}
+                iconBg="bg-purple-500/10"
+                iconColor="text-purple-600 dark:text-purple-500"
             />
             <QuickStatItem
                 icon={Percent}
                 label="Gross Margin"
                 value={`${stats.gross_margin.toFixed(1)}%`}
                 subvalue="Dari penjualan"
-                trend={stats.gross_margin > 20 ? "up" : "neutral"}
+                iconBg={stats.gross_margin > 20 ? "bg-emerald-500/10" : "bg-muted"}
+                iconColor={stats.gross_margin > 20 ? "text-emerald-600 dark:text-emerald-500" : "text-muted-foreground"}
             />
             <QuickStatItem
                 icon={Package}
                 label="Nilai Aset Stok"
                 value={formatCurrency(stats.inventory_value)}
-                subvalue={`${stats.low_stock_count} item perlu restock`}
-                trend={stats.low_stock_count > 0 ? "warning" : "neutral"}
+                subvalue={stats.low_stock_count > 0 ? `${formatNumber(stats.low_stock_count)} item perlu restock` : "Semua stok normal"}
+                iconBg={stats.low_stock_count > 0 ? "bg-amber-500/10" : "bg-blue-500/10"}
+                iconColor={stats.low_stock_count > 0 ? "text-amber-600 dark:text-amber-500" : "text-blue-600 dark:text-blue-500"}
             />
             <QuickStatItem
-                icon={TrendingUp}
+                icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
                 label="Net Profit"
                 value={formatCurrency(stats.net_profit)}
                 subvalue="Setelah HPP"
-                trend={stats.net_profit >= 0 ? "up" : "down"}
+                iconBg={stats.net_profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}
+                iconColor={stats.net_profit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-red-600 dark:text-red-500"}
             />
         </CardContent>
     </Card>
 );
 
-const QuickStatItem = ({ icon: Icon, label, value, subvalue, trend }) => (
+const QuickStatItem = ({ icon: Icon, label, value, subvalue, iconBg, iconColor }) => (
     <div className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
-        <div
-            className={`p-2 rounded-lg ${trend === "up"
-                    ? "bg-success/10 text-success"
-                    : trend === "warning"
-                        ? "bg-accent/50 text-accent-foreground"
-                        : trend === "down"
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-muted/50 text-muted-foreground"
-                }`}
-        >
-            <Icon className="h-4 w-4" />
+        <div className={`p-2 rounded-lg flex-shrink-0 ${iconBg}`}>
+            <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
         <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p
-                className={`text-sm font-semibold ${trend === "up"
-                        ? "text-success"
-                        : trend === "down"
-                            ? "text-destructive"
-                            : ""
-                    }`}
-            >
-                {value}
-            </p>
+            <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+            <p className="text-base font-bold">{value}</p>
             <p className="text-xs text-muted-foreground">{subvalue}</p>
         </div>
     </div>
