@@ -12,9 +12,13 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
+    PieChart,
+    Pie,
+    Cell,
     LineChart,
     Line,
     Legend,
+    ResponsiveContainer,
 } from "recharts";
 import {
     ChartContainer,
@@ -327,7 +331,35 @@ const CHART_COLORS = [
 ];
 
 const PaymentMethodsChart = ({ data }) => {
-    const totalTransactions = data?.reduce((acc, curr) => acc + curr.count, 0) || 0;
+    const pieData = data?.length > 0
+        ? data.map((item, index) => ({
+            ...item,
+            fill: CHART_COLORS[index % CHART_COLORS.length],
+        }))
+        : [];
+
+    const totalTransactions = pieData.reduce((acc, curr) => acc + curr.count, 0);
+
+    const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+        if (percent < 0.05) return null;
+        const RADIAN = Math.PI / 180;
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text
+                x={x}
+                y={y}
+                fill="white"
+                textAnchor={x > cx ? 'start' : 'end'}
+                dominantBaseline="central"
+                className="font-bold text-xs"
+            >
+                {`${(percent * 100).toFixed(0)}%`}
+            </text>
+        );
+    };
 
     return (
         <Card>
@@ -340,34 +372,62 @@ const PaymentMethodsChart = ({ data }) => {
             <CardContent className="pt-0">
                 {data?.length > 0 ? (
                     <div className="space-y-4">
-                        {data.map((item, index) => {
-                            const percentage = ((item.count / totalTransactions) * 100).toFixed(1);
-                            return (
-                                <div key={index} className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-medium">{item.name}</span>
-                                        <div className="flex items-center gap-2">
+                        <ResponsiveContainer width="100%" height={180}>
+                            <PieChart>
+                                <Pie
+                                    data={pieData}
+                                    dataKey="count"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={70}
+                                    strokeWidth={3}
+                                    stroke="hsl(var(--background))"
+                                    label={renderCustomLabel}
+                                    labelLine={false}
+                                >
+                                    {pieData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                <ChartTooltip
+                                    content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0];
+                                            const percentage = ((data.value / totalTransactions) * 100).toFixed(1);
+                                            return (
+                                                <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2">
+                                                    <p className="text-xs font-medium">{data.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {formatNumber(data.value)} transaksi ({percentage}%)
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="space-y-2 pt-2">
+                            {pieData.map((item, index) => {
+                                const percentage = ((item.count / totalTransactions) * 100).toFixed(1);
+                                return (
+                                    <div key={index} className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                            <div
+                                                className="w-3 h-3 rounded-full flex-shrink-0"
+                                                style={{ backgroundColor: item.fill }}
+                                            />
+                                            <span className="truncate font-medium">{item.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 flex-shrink-0">
                                             <span className="font-bold">{formatNumber(item.count)}</span>
                                             <span className="text-muted-foreground">({percentage}%)</span>
                                         </div>
                                     </div>
-                                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                                        <div
-                                            className="absolute top-0 left-0 h-full rounded-full transition-all"
-                                            style={{
-                                                width: `${percentage}%`,
-                                                backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        <div className="pt-2 mt-4 border-t">
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="font-medium text-muted-foreground">Total Transaksi</span>
-                                <span className="font-bold text-base">{formatNumber(totalTransactions)}</span>
-                            </div>
+                                );
+                            })}
                         </div>
                     </div>
                 ) : (
