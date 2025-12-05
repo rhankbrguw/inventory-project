@@ -79,7 +79,7 @@ export default function DashboardContent({
                 <StatCard
                     title="Nilai Stok"
                     value={formatCurrency(stats.inventory_value)}
-                    subtext={stats.low_stock_count > 0 ? `${formatNumber(stats.low_stock_count)} item rendah` : "Stok normal"}
+                    subtext={stats.low_stock_count > 0 ? `${formatNumber(stats.low_stock_count)} item butuh restock` : "Stok normal"}
                     icon={stats.low_stock_count > 0 ? AlertTriangle : Package}
                     iconBg={stats.low_stock_count > 0 ? "bg-amber-500/10" : "bg-blue-500/10"}
                     iconColor={stats.low_stock_count > 0 ? "text-amber-600 dark:text-amber-500" : "text-blue-600 dark:text-blue-500"}
