@@ -13,27 +13,29 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-   public function create(): Response
-   {
-      return Inertia::render('Auth/Register');
-   }
+    public function create(): Response
+    {
+        return Inertia::render('Auth/Register');
+    }
 
-   public function store(Request $request): RedirectResponse
-   {
-      $request->validate([
-         'name' => ['required', 'string', 'min:3', 'max:255'],
-         'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:' . User::class],
-         'password' => ['required', 'confirmed', Rules\Password::defaults()],
-      ]);
+    public function store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'min:3', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:' . User::class],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
 
-      $user = User::create([
-         'name' => $request->name,
-         'email' => $request->email,
-         'password' => Hash::make($request->password),
-      ]);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
 
-      $user->sendOtpNotification();
+        $user->assignRole('Staff');
 
-      return redirect()->route('verification.notice')->with('email', $user->email);
-   }
+        $user->sendOtpNotification();
+
+        return redirect()->route('verification.notice')->with('email', $user->email);
+    }
 }

@@ -32,12 +32,12 @@ export default function SellCheckoutDialog({
     customerId,
     paymentMethods,
 }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, isDirty } = useForm({
         location_id: locationId || "",
         customer_id: customerId || null,
         transaction_date: new Date(),
         notes: "",
-        payment_method_type_id: paymentMethods[0]?.id.toString() || "",
+        payment_method_type_id: "",
         status: "Completed",
         items: [],
     });
@@ -49,6 +49,7 @@ export default function SellCheckoutDialog({
                 location_id: locationId,
                 customer_id: customerId,
                 transaction_date: new Date(),
+                payment_method_type_id: paymentMethods[0]?.id.toString() || "",
                 items: cartItems.map((item) => ({
                     product_id: item.product.id,
                     quantity: item.quantity,
@@ -76,66 +77,66 @@ export default function SellCheckoutDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Konfirmasi Penjualan</DialogTitle>
                     <DialogDescription>
-                        Selesaikan transaksi dengan total
+                        Selesaikan transaksi dengan total{" "}
                         <span className="font-bold text-primary">
-                            {" "}
                             {formatCurrency(totalPrice)}
                         </span>
-                        .
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={submit} className="space-y-4">
-                    <div className="space-y-3 max-h-[60vh] overflow-y-auto px-1 py-2">
-                        <FormField
-                            label="Tanggal"
-                            labelClassName="text-xs font-semibold text-foreground"
-                        >
-                            <DatePicker
-                                value={data.transaction_date}
-                                onSelect={(date) =>
-                                    setData("transaction_date", date)
-                                }
-                                className="h-9 text-xs [&>button]:h-9"
-                            />
-                            <InputError message={errors.transaction_date} />
-                        </FormField>
-
-                        <FormField
-                            label="Pembayaran"
-                            htmlFor="payment_method_type_id"
-                            labelClassName="text-xs font-semibold text-foreground"
-                        >
-                            <Select
-                                value={data.payment_method_type_id}
-                                onValueChange={(value) =>
-                                    setData("payment_method_type_id", value)
-                                }
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto px-1">
+                        <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                                label="Tanggal"
+                                labelClassName="text-xs font-semibold text-foreground"
                             >
-                                <SelectTrigger
-                                    id="payment_method_type_id"
-                                    className="h-9 text-xs"
+                                <DatePicker
+                                    value={data.transaction_date}
+                                    onSelect={(date) =>
+                                        setData("transaction_date", date)
+                                    }
+                                    className="h-9 text-xs [&>button]:h-9"
+                                />
+                                <InputError message={errors.transaction_date} />
+                            </FormField>
+
+                            <FormField
+                                label="Pembayaran"
+                                htmlFor="payment_method_type_id"
+                                labelClassName="text-xs font-semibold text-foreground"
+                            >
+                                <Select
+                                    value={data.payment_method_type_id}
+                                    onValueChange={(value) =>
+                                        setData("payment_method_type_id", value)
+                                    }
                                 >
-                                    <SelectValue placeholder="Pilih Metode Pembayaran" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {paymentMethods.map((method) => (
-                                        <SelectItem
-                                            key={method.id}
-                                            value={method.id.toString()}
-                                        >
-                                            {method.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError
-                                message={errors.payment_method_type_id}
-                            />
-                        </FormField>
+                                    <SelectTrigger
+                                        id="payment_method_type_id"
+                                        className="h-9 text-xs"
+                                    >
+                                        <SelectValue placeholder="Pilih Metode Pembayaran" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {paymentMethods.map((method) => (
+                                            <SelectItem
+                                                key={method.id}
+                                                value={method.id.toString()}
+                                            >
+                                                {method.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError
+                                    message={errors.payment_method_type_id}
+                                />
+                            </FormField>
+                        </div>
 
                         <FormField
                             label="Catatan"
@@ -156,7 +157,7 @@ export default function SellCheckoutDialog({
                         </FormField>
 
                         {errors.items && (
-                            <InputError message="Error pada data item." />
+                            <InputError message="Error pada data item, cek keranjang Anda." />
                         )}
                     </div>
 
@@ -172,7 +173,7 @@ export default function SellCheckoutDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={processing || cartItems.length === 0}
+                            disabled={processing || !isDirty}
                             className="h-9 text-xs font-semibold"
                         >
                             {processing ? "Memproses..." : "Selesaikan"}

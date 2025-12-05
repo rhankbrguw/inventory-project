@@ -22,8 +22,22 @@ export default function usePurchaseCart(initialCart = []) {
         setCart(initialCart);
     }, [initialCart]);
 
+    const effectiveCart = useMemo(() => {
+        return cart.map((item) => {
+            const localQty = localQuantities[item.id];
+            const localCost = localCosts[item.id];
+
+            return {
+                ...item,
+                quantity: localQty !== undefined ? localQty : item.quantity,
+                cost_per_unit:
+                    localCost !== undefined ? localCost : item.cost_per_unit,
+            };
+        });
+    }, [cart, localQuantities, localCosts]);
+
     const cartGroups = useMemo(() => {
-        return cart.reduce((acc, item) => {
+        return effectiveCart.reduce((acc, item) => {
             const supplierName = item.supplier?.name || "Supplier Umum";
             if (!acc[supplierName]) {
                 acc[supplierName] = {
@@ -34,11 +48,11 @@ export default function usePurchaseCart(initialCart = []) {
             acc[supplierName].items.push(item);
             return acc;
         }, {});
-    }, [cart]);
+    }, [effectiveCart]);
 
     const selectedProductIds = useMemo(
-        () => cart.map((item) => item.product.id),
-        [cart],
+        () => effectiveCart.map((item) => item.product.id),
+        [effectiveCart],
     );
 
     const removeItem = useCallback(
@@ -48,7 +62,7 @@ export default function usePurchaseCart(initialCart = []) {
             router.delete(route("purchase.cart.destroy.item", cartItemId), {
                 preserveScroll: true,
                 onFinish: () => setProcessingItem(null),
-                onError: () => {},
+                onError: () => { },
             });
         },
         [processingItem],
@@ -75,7 +89,7 @@ export default function usePurchaseCart(initialCart = []) {
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                        onError: () => {},
+                        onError: () => { },
                     },
                 );
             } else {
@@ -90,7 +104,7 @@ export default function usePurchaseCart(initialCart = []) {
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                        onError: () => {},
+                        onError: () => { },
                     },
                 );
             }
@@ -189,10 +203,6 @@ export default function usePurchaseCart(initialCart = []) {
                     (isNaN(newNumericValue) || newNumericValue <= 0)) ||
                 !isQty
             ) {
-                localStateSetter((prev) => ({
-                    ...prev,
-                    [item.id]: isQty ? "1" : payload.cost_per_unit.toString(),
-                }));
             }
 
             setProcessingItem(item.id);
@@ -209,7 +219,7 @@ export default function usePurchaseCart(initialCart = []) {
                             return newState;
                         });
                     },
-                    onError: () => {},
+                    onError: () => { },
                 },
             );
         }, 800);
@@ -238,7 +248,7 @@ export default function usePurchaseCart(initialCart = []) {
     const totalCartItems = cart.length;
 
     return {
-        cart,
+        cart: effectiveCart,
         cartGroups,
         selectedProductIds,
         processingItem,

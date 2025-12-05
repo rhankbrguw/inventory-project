@@ -24,24 +24,6 @@ export default function AuthenticatedLayout({ children }) {
         }
     }, [errors]);
 
-    useEffect(() => {
-        const handleWheelOnNumberInput = (event) => {
-            if (
-                document.activeElement === event.target &&
-                event.target.type === "number"
-            ) {
-                event.target.blur();
-                event.preventDefault();
-            }
-        };
-
-        document.addEventListener("wheel", handleWheelOnNumberInput);
-
-        return () => {
-            document.removeEventListener("wheel", handleWheelOnNumberInput);
-        };
-    }, []);
-
     return (
         <>
             <div className="relative min-h-screen lg:flex">
@@ -69,8 +51,21 @@ export default function AuthenticatedLayout({ children }) {
                     ></div>
                 )}
             </div>
+
             <div className="print-hidden">
-                <Toaster richColors position="top-right" />
+                <Toaster
+                    richColors
+                    position="top-right"
+                    duration={2000}
+                    visibleToasts={1}
+                    toastOptions={{
+                        classNames: {
+                            toast: "w-[90vw] sm:w-full mx-auto sm:mx-0 right-0 top-2 sm:top-0 rounded-xl shadow-lg",
+                            title: "text-sm font-bold",
+                            description: "text-xs",
+                        },
+                    }}
+                />
             </div>
         </>
     );

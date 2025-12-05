@@ -40,8 +40,10 @@ class ProductController extends Controller
                     ->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%");
             })
-            ->when($request->input('type_id') && $request->input('type_id') !== 'all', function ($query, $typeId) {
-                $query->where('type_id', $typeId);
+            ->when($request->input('type_id'), function ($query, $typeId) {
+                if ($typeId !== 'all') {
+                    $query->where('type_id', $typeId);
+                }
             })
             ->when($request->input('status'), function ($query, $status) {
                 if ($status === 'active') {

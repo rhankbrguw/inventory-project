@@ -1,8 +1,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Trash2, ShoppingBag, UserPlus } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { ShoppingBag, UserPlus } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 import {
     Select,
     SelectContent,
@@ -21,9 +21,7 @@ export default function SellCart({
     onCustomerChange,
     removeItem,
     updateItem,
-    clearCart,
     processingItem,
-    totalCartItems,
     totalCartPrice,
     onCheckout,
     locationId,
@@ -39,9 +37,14 @@ export default function SellCart({
     return (
         <div className="flex flex-col h-full">
             <div className="p-3 border-b flex-shrink-0">
-                <h3 className="text-base font-semibold">Keranjang</h3>
+                <h3 className="text-base font-semibold">Keranjang Penjualan</h3>
                 <div className="mt-2 space-y-2">
-                    <Label htmlFor="customer_id">Pelanggan</Label>
+                    <Label
+                        htmlFor="customer_id"
+                        className="text-xs font-medium text-muted-foreground"
+                    >
+                        Pelanggan
+                    </Label>
                     <div className="flex gap-2">
                         <Select
                             value={selectedCustomerId || ""}
@@ -102,55 +105,43 @@ export default function SellCart({
                         </p>
                     </div>
                 ) : (
-                    <SellItemManager
-                        cart={cart}
-                        removeItem={removeItem}
-                        updateItem={updateItem}
-                        processingItem={processingItem}
-                        getItemQuantity={getItemQuantity}
-                        locationId={locationId}
-                    />
+                    <div className="p-3 pb-4">
+                        <SellItemManager
+                            cart={cart}
+                            removeItem={removeItem}
+                            updateItem={updateItem}
+                            processingItem={processingItem}
+                            getItemQuantity={getItemQuantity}
+                            locationId={locationId}
+                        />
+                    </div>
                 )}
             </div>
 
-            <div className="flex-shrink-0 border-t bg-muted/30 p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Total Item
-                    </p>
-                    <p className="text-sm font-bold text-foreground">
-                        {formatNumber(totalCartItems)}
-                    </p>
+            {hasItems && (
+                <div className="flex-shrink-0 border-t">
+                    <div className="bg-muted/30 px-3 py-2.5">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Total Penjualan
+                            </p>
+                            <p className="text-base font-bold text-foreground">
+                                {formatCurrency(totalCartPrice)}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="p-3">
+                        <Button
+                            type="button"
+                            className="w-full h-10 font-semibold"
+                            onClick={onCheckout}
+                            disabled={isCartDisabled}
+                        >
+                            Checkout
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-muted-foreground">
-                        Total Harga
-                    </p>
-                    <p className="text-lg font-bold text-primary">
-                        {formatCurrency(totalCartPrice)}
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9 text-destructive hover:text-destructive"
-                        onClick={clearCart}
-                        disabled={isCartDisabled || !hasItems}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        type="button"
-                        className="w-full h-9 font-semibold"
-                        onClick={onCheckout}
-                        disabled={isCartDisabled || !hasItems}
-                    >
-                        Checkout
-                    </Button>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

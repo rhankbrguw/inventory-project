@@ -1,20 +1,12 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { router } from "@inertiajs/react";
-import { formatNumber } from "@/lib/utils";
-
-const cleanNumberString = (numStr) => {
-    if (typeof numStr !== "string") {
-        return String(numStr);
-    }
-    return numStr.replace(/\./g, "").replace(/,/g, ".");
-};
 
 export function useSellCart(cart = [], locationId) {
     const [processingItem, setProcessingItem] = useState(null);
     const [localQuantities, setLocalQuantities] = useState({});
     const updateTimeoutRef = useRef({});
 
-    const activeCart = useMemo(() => {
+    const serverCart = useMemo(() => {
         if (cart.length === 0) return [];
         if (!locationId) return [];
         return cart.filter(
@@ -22,79 +14,81 @@ export function useSellCart(cart = [], locationId) {
         );
     }, [cart, locationId]);
 
+    const effectiveCart = useMemo(() => {
+        return serverCart.map((item) => {
+            const localQty = localQuantities[item.id];
+            return {
+                ...item,
+                quantity: localQty !== undefined ? localQty : item.quantity,
+            };
+        });
+    }, [serverCart, localQuantities]);
+
     const selectedProductIds = useMemo(
-        () => activeCart.map((item) => item.product.id),
-        [activeCart],
+        () => effectiveCart.map((item) => item.product.id),
+        [effectiveCart],
     );
 
     const totalCartItems = useMemo(
-        () => activeCart.reduce((sum, item) => sum + Number(item.quantity), 0),
-        [activeCart],
+        () =>
+            effectiveCart.reduce(
+                (sum, item) => sum + (parseFloat(item.quantity) || 0),
+                0,
+            ),
+        [effectiveCart],
     );
 
     const totalCartPrice = useMemo(
         () =>
-            activeCart.reduce(
+            effectiveCart.reduce(
                 (sum, item) =>
                     sum +
-                    Number(item.quantity) * (Number(item.product.price) || 0),
+                    (parseFloat(item.quantity) || 0) *
+                        (Number(item.product.price) || 0),
                 0,
             ),
-        [activeCart],
+        [effectiveCart],
     );
 
-    const updateCartItem = useCallback(
-        (item, value) => {
-            const localStateSetter = setLocalQuantities;
-            const cleanedValue = cleanNumberString(value);
+    const updateCartItem = useCallback((item, value) => {
+        setLocalQuantities((prev) => ({ ...prev, [item.id]: value }));
 
-            localStateSetter((prev) => ({ ...prev, [item.id]: value }));
+        if (updateTimeoutRef.current[item.id]) {
+            clearTimeout(updateTimeoutRef.current[item.id]);
+        }
 
-            if (updateTimeoutRef.current[item.id]) {
-                clearTimeout(updateTimeoutRef.current[item.id]);
-            }
+        if (value === "") return;
 
-            if (value === "") return;
+        updateTimeoutRef.current[item.id] = setTimeout(() => {
+            const normalizedValue =
+                typeof value === "string" ? value.replace(/,/g, ".") : value;
 
-            updateTimeoutRef.current[item.id] = setTimeout(() => {
-                const newNumericValue = parseFloat(cleanedValue);
-                const payload = {};
+            const newQty = parseFloat(normalizedValue);
 
-                payload.quantity =
-                    isNaN(newNumericValue) || newNumericValue <= 0
-                        ? 1
-                        : newNumericValue;
+            const payload = {
+                quantity: isNaN(newQty) || newQty <= 0 ? 1 : newQty,
+            };
 
-                if (
-                    payload.quantity === 1 &&
-                    (isNaN(newNumericValue) || newNumericValue <= 0)
-                ) {
-                    localStateSetter((prev) => ({
-                        ...prev,
-                        [item.id]: "1",
-                    }));
-                }
+            setProcessingItem(item.id);
 
-                setProcessingItem(item.id);
-                router.patch(
-                    route("sell.cart.update", { cartItem: item.id }),
-                    payload,
-                    {
-                        preserveScroll: true,
-                        onFinish: () => {
-                            setProcessingItem(null);
-                            localStateSetter((prev) => {
-                                const newState = { ...prev };
-                                delete newState[item.id];
-                                return newState;
-                            });
-                        },
+            router.patch(
+                route("sell.cart.update", { cartItem: item.id }),
+                payload,
+                {
+                    preserveScroll: true,
+                    onFinish: () => {
+                        setProcessingItem(null);
+                        setLocalQuantities((prev) => {
+                            const newState = { ...prev };
+                            delete newState[item.id];
+                            return newState;
+                        });
                     },
-                );
-            }, 800);
-        },
-        [locationId],
-    );
+                    onError: () => setProcessingItem(null),
+                },
+            );
+        }, 800);
+    }, []);
 
     const removeItem = useCallback(
         (itemId) => {
@@ -115,15 +109,16 @@ export function useSellCart(cart = [], locationId) {
         (product) => {
             if (!locationId || processingItem === product.id) return;
 
-            const existingItem = activeCart.find(
+            const existingItem = effectiveCart.find(
                 (item) => item.product.id === product.id,
             );
 
             setProcessingItem(product.id);
 
             if (existingItem) {
-                const newQuantity =
-                    parseFloat(String(existingItem.quantity)) + 1;
+                const currentQty = parseFloat(existingItem.quantity) || 0;
+                const newQuantity = currentQty + 1;
+
                 router.patch(
                     route("sell.cart.update", {
                         cartItem: existingItem.id,
@@ -149,31 +144,31 @@ export function useSellCart(cart = [], locationId) {
                 );
             }
         },
-        [locationId, processingItem, activeCart],
+        [locationId, processingItem, effectiveCart],
     );
 
     const clearCart = useCallback(() => {
-        if (!locationId || activeCart.length === 0 || processingItem) return;
+        if (!locationId || effectiveCart.length === 0 || processingItem) return;
         setProcessingItem("all");
         router.delete(route("sell.cart.destroy.location"), {
             data: { location_id: locationId },
             preserveScroll: true,
             onFinish: () => setProcessingItem(null),
         });
-    }, [locationId, activeCart, processingItem]);
+    }, [locationId, effectiveCart, processingItem]);
 
     const getItemQuantity = useCallback(
         (item) => {
             if (localQuantities[item.id] !== undefined) {
                 return localQuantities[item.id];
             }
-            return formatNumber(item.quantity);
+            return item.quantity;
         },
         [localQuantities],
     );
 
     return {
-        cart: activeCart,
+        cart: effectiveCart,
         selectedProductIds,
         processingItem,
         setProcessingItem,

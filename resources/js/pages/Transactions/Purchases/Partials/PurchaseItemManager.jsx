@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import CurrencyInput from "@/components/CurrencyInput";
 import InputError from "@/components/InputError";
@@ -165,50 +165,16 @@ export default function PurchaseItemManager({
                                                         item,
                                                     )}
                                                     onChange={(e) => {
-                                                        const value =
-                                                            e.target.value;
-                                                        if (
-                                                            value === "" ||
-                                                            /^[0-9.,]*$/.test(
-                                                                value,
-                                                            )
-                                                        ) {
-                                                            onUpdateItem(
-                                                                item,
-                                                                "quantity",
-                                                                value,
+                                                        const rawValue =
+                                                            e.target.value.replace(
+                                                                /\./g,
+                                                                "",
                                                             );
-                                                        }
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        const value =
-                                                            e.target.value;
-                                                        const cleanedValue =
-                                                            cleanNumberString(
-                                                                value,
-                                                            );
-
-                                                        if (
-                                                            cleanedValue ===
-                                                            "" ||
-                                                            parseFloat(
-                                                                cleanedValue,
-                                                            ) <= 0
-                                                        ) {
-                                                            onUpdateItem(
-                                                                item,
-                                                                "quantity",
-                                                                "1",
-                                                            );
-                                                        } else {
-                                                            onUpdateItem(
-                                                                item,
-                                                                "quantity",
-                                                                formatNumber(
-                                                                    cleanedValue,
-                                                                ),
-                                                            );
-                                                        }
+                                                        onUpdateItem(
+                                                            item,
+                                                            "quantity",
+                                                            rawValue,
+                                                        );
                                                     }}
                                                     onFocus={(e) => {
                                                         e.target.select();
