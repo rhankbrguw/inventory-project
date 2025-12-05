@@ -75,8 +75,9 @@ Access points:
 For production, update these values in `.env` before running the setup script.
 
 Note:
-Mailpit is enabled by default for development environments, you can use that default user.
-If SMTP is preferred (e.g., Gmail, SendGrid, SES), update the `MAIL_*` values in `.env`.
+
+- Mailpit is enabled by default for development environments, you can use that default user.
+- If SMTP is preferred (e.g., Gmail, SendGrid, SES), update the `MAIL_*` values in `.env`.
 
 No code changes required — the application follows the environment configuration.
 
