@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # A script to initialize the application after 'docker-compose up'.
 
 echo -e "\n========================================"
@@ -14,6 +15,7 @@ fi
 
 # Check if APP_KEY already exists
 APP_KEY_VALUE=$(grep "^APP_KEY=" .env | cut -d '=' -f2)
+
 if [ ! -z "$APP_KEY_VALUE" ] && [ "$APP_KEY_VALUE" != "" ]; then
     echo "⚠️  Warning: APP_KEY already exists in .env"
     echo "Current value: $APP_KEY_VALUE"
@@ -31,7 +33,6 @@ read -p "Press Enter to continue..."
 
 echo -e "\n[STEP 1] Checking container status..."
 docker-compose ps
-
 echo ""
 read -p "Verify all services are 'Up', then press Enter to continue..."
 
@@ -92,15 +93,26 @@ echo "✓ Done"
 echo -e "\n========================================"
 echo "✅ Setup Complete!"
 echo "========================================"
+
 echo -e "\n📌 Access Information:"
 echo "   - Application: http://localhost:8000"
 echo "   - Vite Dev:    http://localhost:5173"
+echo "   - Mailpit UI:  http://localhost:8025 📧"
+
 echo -e "\n🔐 Default Login Credentials:"
 echo "   - Email:    admin@example.com"
 echo "   - Password: password"
 echo "   (Change these in .env before setup if desired)"
+
+echo -e "\n📧 Email Testing:"
+echo "   - All emails are captured by Mailpit (no real emails sent)"
+echo "   - View emails at: http://localhost:8025"
+echo "   - Test features: User registration, OTP verification, password reset"
+
 echo -e "\n📝 Useful Commands:"
-echo "   - View logs: docker-compose logs -f app"
-echo "   - Stop all:  docker-compose down"
-echo "   - Restart:   docker-compose restart"
+echo "   - View logs:      docker-compose logs -f app"
+echo "   - View emails:    Open http://localhost:8025 in browser"
+echo "   - Stop all:       docker-compose down"
+echo "   - Restart:        docker-compose restart"
+
 echo ""

@@ -14,7 +14,8 @@ services:
         networks:
             - inventory_network
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
 
     nginx:
         image: nginx:alpine
@@ -46,6 +47,22 @@ services:
             - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
         networks:
             - inventory_network
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "mysqladmin",
+                    "ping",
+                    "-h",
+                    "localhost",
+                    "-u",
+                    "root",
+                    "-p${DB_ROOT_PASSWORD}",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
 
     node:
         image: node:20-alpine
@@ -60,6 +77,19 @@ services:
             - inventory_network
         stdin_open: true
         tty: true
+
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: inventory_mailpit
+        restart: unless-stopped
+        ports:
+            - "8025:8025"
+            - "1025:1025"
+        networks:
+            - inventory_network
+        environment:
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
 networks:
     inventory_network:
