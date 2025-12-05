@@ -65,8 +65,21 @@ export default function DashboardContent({
                     value={formatCurrency(stats.net_profit)}
                     subtext={`Margin ${stats.gross_margin.toFixed(1)}%`}
                     icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
-                    iconBg={stats.net_profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}
-                    iconColor={stats.net_profit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-red-600 dark:text-red-500"}
+                    iconBg={
+                        stats.net_profit >= 0
+                            ? "bg-emerald-500/10"
+                            : "bg-red-500/10"
+                    }
+                    iconColor={
+                        stats.net_profit >= 0
+                            ? "text-emerald-600 dark:text-emerald-500"
+                            : "text-red-600 dark:text-red-500"
+                    }
+                    valueColor={
+                        stats.net_profit >= 0
+                            ? "text-emerald-600 dark:text-emerald-500"
+                            : "text-red-600 dark:text-red-500"
+                    }
                 />
                 <StatCard
                     title="Pembelian"
@@ -79,10 +92,22 @@ export default function DashboardContent({
                 <StatCard
                     title="Nilai Stok"
                     value={formatCurrency(stats.inventory_value)}
-                    subtext={stats.low_stock_count > 0 ? `${formatNumber(stats.low_stock_count)} item butuh restock` : "Stok normal"}
+                    subtext={
+                        stats.low_stock_count > 0
+                            ? `${formatNumber(stats.low_stock_count)} item butuh restock`
+                            : "Stok normal"
+                    }
                     icon={stats.low_stock_count > 0 ? AlertTriangle : Package}
-                    iconBg={stats.low_stock_count > 0 ? "bg-amber-500/10" : "bg-blue-500/10"}
-                    iconColor={stats.low_stock_count > 0 ? "text-amber-600 dark:text-amber-500" : "text-blue-600 dark:text-blue-500"}
+                    iconBg={
+                        stats.low_stock_count > 0
+                            ? "bg-amber-500/10"
+                            : "bg-blue-500/10"
+                    }
+                    iconColor={
+                        stats.low_stock_count > 0
+                            ? "text-amber-600 dark:text-amber-500"
+                            : "text-blue-600 dark:text-blue-500"
+                    }
                 />
             </div>
 
@@ -102,7 +127,7 @@ export default function DashboardContent({
                                 config={{
                                     sales: {
                                         label: "Penjualan",
-                                        color: "hsl(var(--primary))",
+                                        color: "hsl(var(--success))",
                                     },
                                     purchases: {
                                         label: "Pembelian",
@@ -111,7 +136,15 @@ export default function DashboardContent({
                                 }}
                                 className="h-[200px] sm:h-[240px] w-full"
                             >
-                                <LineChart data={charts.comparison} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                                <LineChart
+                                    data={charts.comparison}
+                                    margin={{
+                                        top: 5,
+                                        right: 20,
+                                        left: 10,
+                                        bottom: 5,
+                                    }}
+                                >
                                     <CartesianGrid
                                         strokeDasharray="3 3"
                                         vertical={false}
@@ -134,17 +167,63 @@ export default function DashboardContent({
                                         }
                                     />
                                     <ChartTooltip
-                                        content={
-                                            <ChartTooltipContent
-                                                formatter={(v) =>
-                                                    formatCurrency(v)
-                                                }
-                                            />
-                                        }
+                                        content={({ active, payload }) => {
+                                            if (
+                                                active &&
+                                                payload &&
+                                                payload.length
+                                            ) {
+                                                return (
+                                                    <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2">
+                                                        <p className="text-xs font-medium mb-1">
+                                                            {
+                                                                payload[0]
+                                                                    .payload
+                                                                    .date
+                                                            }
+                                                        </p>
+                                                        {payload.map(
+                                                            (entry, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="flex items-center justify-between gap-3 text-xs"
+                                                                >
+                                                                    <span className="text-muted-foreground">
+                                                                        {entry.name ===
+                                                                        "sales"
+                                                                            ? "Penjualan"
+                                                                            : "Pembelian"}
+                                                                        :
+                                                                    </span>
+                                                                    <span
+                                                                        className="font-bold"
+                                                                        style={{
+                                                                            color:
+                                                                                entry.name ===
+                                                                                "sales"
+                                                                                    ? "hsl(var(--success))"
+                                                                                    : "hsl(var(--destructive))",
+                                                                        }}
+                                                                    >
+                                                                        {formatCurrency(
+                                                                            entry.value,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
                                     />
                                     <Legend
                                         content={<ChartLegendContent />}
-                                        wrapperStyle={{ paddingTop: "8px", fontSize: "12px" }}
+                                        wrapperStyle={{
+                                            paddingTop: "8px",
+                                            fontSize: "12px",
+                                        }}
                                     />
                                     <Line
                                         type="monotone"
@@ -186,7 +265,15 @@ export default function DashboardContent({
     );
 }
 
-const StatCard = ({ title, value, subtext, icon: Icon, iconBg, iconColor }) => (
+const StatCard = ({
+    title,
+    value,
+    subtext,
+    icon: Icon,
+    iconBg,
+    iconColor,
+    valueColor,
+}) => (
     <Card className="border-l-4 border-l-transparent hover:border-l-primary/50 transition-all">
         <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
@@ -197,7 +284,9 @@ const StatCard = ({ title, value, subtext, icon: Icon, iconBg, iconColor }) => (
             </div>
         </CardHeader>
         <CardContent className="pt-0 space-y-1">
-            <div className="text-xl sm:text-2xl font-bold">
+            <div
+                className={`text-xl sm:text-2xl font-bold ${valueColor || ""}`}
+            >
                 {value}
             </div>
             <p className="text-xs text-muted-foreground">{subtext}</p>
@@ -218,7 +307,9 @@ const EmptyState = ({ icon: Icon, title, description }) => (
 const ActivityList = ({ data }) => (
     <Card className="flex flex-col">
         <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Aktivitas Terbaru</CardTitle>
+            <CardTitle className="text-base font-semibold">
+                Aktivitas Terbaru
+            </CardTitle>
             <CardDescription className="text-xs">
                 6 mutasi stok terakhir
             </CardDescription>
@@ -248,7 +339,9 @@ const ActivityList = ({ data }) => (
 const TopProductsChart = ({ data }) => (
     <Card>
         <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Produk Terlaris</CardTitle>
+            <CardTitle className="text-base font-semibold">
+                Produk Terlaris
+            </CardTitle>
             <CardDescription className="text-xs">
                 Top 5 berdasarkan kuantitas
             </CardDescription>
@@ -282,11 +375,7 @@ const TopProductsChart = ({ data }) => (
                             width={90}
                             fontSize={11}
                         />
-                        <XAxis
-                            dataKey="total_qty"
-                            type="number"
-                            hide
-                        />
+                        <XAxis dataKey="total_qty" type="number" hide />
                         <ChartTooltip
                             cursor={false}
                             content={
@@ -331,16 +420,27 @@ const CHART_COLORS = [
 ];
 
 const PaymentMethodsChart = ({ data }) => {
-    const pieData = data?.length > 0
-        ? data.map((item, index) => ({
-            ...item,
-            fill: CHART_COLORS[index % CHART_COLORS.length],
-        }))
-        : [];
+    const pieData =
+        data?.length > 0
+            ? data.map((item, index) => ({
+                  ...item,
+                  fill: CHART_COLORS[index % CHART_COLORS.length],
+              }))
+            : [];
 
-    const totalTransactions = pieData.reduce((acc, curr) => acc + curr.count, 0);
+    const totalTransactions = pieData.reduce(
+        (acc, curr) => acc + curr.count,
+        0,
+    );
 
-    const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+    const renderCustomLabel = ({
+        cx,
+        cy,
+        midAngle,
+        innerRadius,
+        outerRadius,
+        percent,
+    }) => {
         if (percent < 0.05) return null;
         const RADIAN = Math.PI / 180;
         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -352,7 +452,7 @@ const PaymentMethodsChart = ({ data }) => {
                 x={x}
                 y={y}
                 fill="white"
-                textAnchor={x > cx ? 'start' : 'end'}
+                textAnchor={x > cx ? "start" : "end"}
                 dominantBaseline="central"
                 className="font-bold text-xs"
             >
@@ -364,7 +464,9 @@ const PaymentMethodsChart = ({ data }) => {
     return (
         <Card>
             <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Metode Pembayaran</CardTitle>
+                <CardTitle className="text-base font-semibold">
+                    Metode Pembayaran
+                </CardTitle>
                 <CardDescription className="text-xs">
                     Distribusi pembayaran penjualan
                 </CardDescription>
@@ -387,19 +489,36 @@ const PaymentMethodsChart = ({ data }) => {
                                     labelLine={false}
                                 >
                                     {pieData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.fill}
+                                        />
                                     ))}
                                 </Pie>
                                 <ChartTooltip
                                     content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
+                                        if (
+                                            active &&
+                                            payload &&
+                                            payload.length
+                                        ) {
                                             const data = payload[0];
-                                            const percentage = ((data.value / totalTransactions) * 100).toFixed(1);
+                                            const percentage = (
+                                                (data.value /
+                                                    totalTransactions) *
+                                                100
+                                            ).toFixed(1);
                                             return (
                                                 <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2">
-                                                    <p className="text-xs font-medium">{data.name}</p>
+                                                    <p className="text-xs font-medium">
+                                                        {data.name}
+                                                    </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {formatNumber(data.value)} transaksi ({percentage}%)
+                                                        {formatNumber(
+                                                            data.value,
+                                                        )}{" "}
+                                                        transaksi ({percentage}
+                                                        %)
                                                     </p>
                                                 </div>
                                             );
@@ -411,19 +530,33 @@ const PaymentMethodsChart = ({ data }) => {
                         </ResponsiveContainer>
                         <div className="space-y-2 pt-2">
                             {pieData.map((item, index) => {
-                                const percentage = ((item.count / totalTransactions) * 100).toFixed(1);
+                                const percentage = (
+                                    (item.count / totalTransactions) *
+                                    100
+                                ).toFixed(1);
                                 return (
-                                    <div key={index} className="flex items-center justify-between text-xs">
+                                    <div
+                                        key={index}
+                                        className="flex items-center justify-between text-xs"
+                                    >
                                         <div className="flex items-center gap-2 min-w-0 flex-1">
                                             <div
                                                 className="w-3 h-3 rounded-full flex-shrink-0"
-                                                style={{ backgroundColor: item.fill }}
+                                                style={{
+                                                    backgroundColor: item.fill,
+                                                }}
                                             />
-                                            <span className="truncate font-medium">{item.name}</span>
+                                            <span className="truncate font-medium">
+                                                {item.name}
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
-                                            <span className="font-bold">{formatNumber(item.count)}</span>
-                                            <span className="text-muted-foreground">({percentage}%)</span>
+                                            <span className="font-bold">
+                                                {formatNumber(item.count)}
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                                ({percentage}%)
+                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -445,7 +578,9 @@ const PaymentMethodsChart = ({ data }) => {
 const QuickStatsCard = ({ stats, dateRangeLabel }) => (
     <Card>
         <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Ringkasan Cepat</CardTitle>
+            <CardTitle className="text-base font-semibold">
+                Ringkasan Cepat
+            </CardTitle>
             <CardDescription className="text-xs">
                 Metrik {dateRangeLabel}
             </CardDescription>
@@ -464,30 +599,63 @@ const QuickStatsCard = ({ stats, dateRangeLabel }) => (
                 label="Gross Margin"
                 value={`${stats.gross_margin.toFixed(1)}%`}
                 subvalue="Dari penjualan"
-                iconBg={stats.gross_margin > 20 ? "bg-emerald-500/10" : "bg-muted"}
-                iconColor={stats.gross_margin > 20 ? "text-emerald-600 dark:text-emerald-500" : "text-muted-foreground"}
+                iconBg={
+                    stats.gross_margin > 20 ? "bg-emerald-500/10" : "bg-muted"
+                }
+                iconColor={
+                    stats.gross_margin > 20
+                        ? "text-emerald-600 dark:text-emerald-500"
+                        : "text-muted-foreground"
+                }
             />
             <QuickStatItem
                 icon={Package}
                 label="Nilai Aset Stok"
                 value={formatCurrency(stats.inventory_value)}
-                subvalue={stats.low_stock_count > 0 ? `${formatNumber(stats.low_stock_count)} item perlu restock` : "Semua stok normal"}
-                iconBg={stats.low_stock_count > 0 ? "bg-amber-500/10" : "bg-blue-500/10"}
-                iconColor={stats.low_stock_count > 0 ? "text-amber-600 dark:text-amber-500" : "text-blue-600 dark:text-blue-500"}
+                subvalue={
+                    stats.low_stock_count > 0
+                        ? `${formatNumber(stats.low_stock_count)} item perlu restock`
+                        : "Semua stok normal"
+                }
+                iconBg={
+                    stats.low_stock_count > 0
+                        ? "bg-amber-500/10"
+                        : "bg-blue-500/10"
+                }
+                iconColor={
+                    stats.low_stock_count > 0
+                        ? "text-amber-600 dark:text-amber-500"
+                        : "text-blue-600 dark:text-blue-500"
+                }
             />
             <QuickStatItem
                 icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
                 label="Net Profit"
                 value={formatCurrency(stats.net_profit)}
                 subvalue="Setelah HPP"
-                iconBg={stats.net_profit >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}
-                iconColor={stats.net_profit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-red-600 dark:text-red-500"}
+                iconBg={
+                    stats.net_profit >= 0
+                        ? "bg-emerald-500/10"
+                        : "bg-red-500/10"
+                }
+                iconColor={
+                    stats.net_profit >= 0
+                        ? "text-emerald-600 dark:text-emerald-500"
+                        : "text-red-600 dark:text-red-500"
+                }
             />
         </CardContent>
     </Card>
 );
 
-const QuickStatItem = ({ icon: Icon, label, value, subvalue, iconBg, iconColor }) => (
+const QuickStatItem = ({
+    icon: Icon,
+    label,
+    value,
+    subvalue,
+    iconBg,
+    iconColor,
+}) => (
     <div className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
         <div className={`p-2 rounded-lg flex-shrink-0 ${iconBg}`}>
             <Icon className={`h-4 w-4 ${iconColor}`} />

@@ -20,8 +20,17 @@ export default function DatePicker({
     const [isOpen, setIsOpen] = useState(false);
 
     const handleSelect = (selectedDate) => {
-        if (onSelect) {
-            onSelect(selectedDate);
+        if (onSelect && selectedDate) {
+            const normalizedDate = new Date(
+                selectedDate.getFullYear(),
+                selectedDate.getMonth(),
+                selectedDate.getDate(),
+                12,
+                0,
+                0,
+                0,
+            );
+            onSelect(normalizedDate);
         }
         setIsOpen(false);
     };
