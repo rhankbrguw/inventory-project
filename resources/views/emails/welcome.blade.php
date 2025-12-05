@@ -28,7 +28,7 @@
                                 Halo <strong>{{ $user->name }}</strong>,
                             </p>
                             <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #52525B;">
-                                Akun Anda telah berhasil diverifikasi. Sekarang Anda memiliki akses penuh ke <strong>Inventory System</strong>
+                                Akun Anda telah berhasil diverifikasi. Sekarang Anda memiliki akses penuh ke <strong>Inventory System</strong> untuk mengelola stok, memantau transaksi, dan mengatur laporan dengan lebih efisien.
                             </p>
 
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
