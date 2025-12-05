@@ -4,42 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selamat Datang</title>
-    <style>
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #f4ebd3;
-            color: #555879;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #555879;
-        }
-        p {
-            line-height: 1.6;
-        }
-    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Halo, {{ $user->name }}!</h1>
-        <p>
-            Terima kasih telah mendaftar di <strong>Inventory SAE RASA</strong>. Akun Anda telah berhasil dibuat dan siap untuk digunakan.
+<body style="font-family: sans-serif; color: #333; margin: 0; padding: 0;">
+    <div style="padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px;">
+        <h1 style="color: #845369; margin-bottom: 10px;">Inventory System</h1>
+        <h2 style="color: #555879; margin-top: 0;">Selamat Datang, {{ $user->name }}!</h2>
+
+        <p style="line-height: 1.6; color: #555;">
+            Terima kasih telah bergabung. Akun Anda telah berhasil diverifikasi sepenuhnya.
+            Sekarang Anda memiliki akses penuh untuk mengelola inventaris Anda dengan lebih efisien.
         </p>
-        <p>
-            Anda sekarang dapat login ke dalam sistem untuk memulai.
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ $loginUrl }}" style="background-color: #845369; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Masuk ke Dashboard
+            </a>
+        </div>
+
+        <p style="line-height: 1.6; color: #555;">
+            Jika tombol di atas tidak berfungsi, salin dan tempel tautan berikut ke browser Anda:<br>
+            <span style="color: #845369; word-break: break-all;">{{ $loginUrl }}</span>
         </p>
-        <br>
-        <p>Hormat kami,</p>
-        <p><strong>Tim Developer</strong></p>
+
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <p style="color: #999; font-size: 12px;">
+            Hormat kami,<br><b>Tim Developer</b>
+        </p>
     </div>
 </body>
 </html>
