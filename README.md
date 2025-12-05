@@ -1,113 +1,127 @@
-# Inventory Management System
+## 📦 Inventory Management System
 
-A modern, containerized **Inventory Management System** built with **Laravel 11**, **React 18**, and **Docker**.
+<p align="center">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Laravel_11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Inertia.js-7952B3?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Tailwind-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL_8.0-005C84?style=for-the-badge&logo=mysql&logoColor=white" />
+</p>
+
+<p align="center">
+  A modern, Docker-based inventory solution powered by Laravel and React.
+</p>
 
 ---
 
-## 🧰 Tech Stack
+## 🚀 Tech Overview
 
-- **Backend:** Laravel 11 (PHP 8.3)
-- **Frontend:** React 18 + Vite + Inertia.js
-- **UI:** Tailwind CSS, shadcn/ui
-- **Database:** MySQL 8.0
-- **Container:** Docker & Docker Compose
+| Layer            | Stack                                           |
+| ---------------- | ----------------------------------------------- |
+| Backend          | Laravel 11 (PHP 8.3)                            |
+| Frontend         | React 18, Vite, Inertia.js, shadcn/ui           |
+| Database         | MySQL 8.0                                       |
+| Email            | Mailpit by default (SMTP selectable via `.env`) |
+| Containerization | Docker & Docker Compose                         |
+
+Key capabilities:
+
+- Modular and service-oriented backend architecture
+- Role-based access control (Admin/User)
+- Product, supplier, stock, transaction, and reporting modules
+- Transaction-safe inventory operations & logging
+- Hot reload for both backend and frontend
 
 ---
 
 ## ⚙️ Prerequisites
 
-- **WSL2 (Ubuntu)**
-- **Docker Desktop** (with WSL2 integration)
-- **Git**
+- WSL2 (Ubuntu) or Linux
+- Docker Desktop (or native Docker)
+- Git
 
 ---
 
 ## 🚀 Quick Start
 
-Run all commands **inside your WSL terminal**.
-
 ```bash
-# 1. Clone repository
 git clone https://github.com/MCN-maganger/inventory-management-system-laravel-react.git
 cd inventory-management-system-laravel-react
 
-# 2. Copy environment file
 cp .env.example .env
+docker compose up -d --build
 
-# 3. Start containers
-docker-compose up -d --build
-
-# 4. Run setup (wait for containers to be fully up)
 chmod +x setup.sh
 ./setup.sh
 ```
 
-**Access the app:**
+Access points:
 
-- Application: [http://localhost:8000](http://localhost:8000)
-- Vite Dev: [http://localhost:5173](http://localhost:5173)
-
----
-
-## 🔧 Daily Commands
-
-```bash
-# Start
-docker-compose up -d
-
-# Stop
-docker-compose down
-
-# View logs
-docker-compose logs -f app
-
-# Run artisan commands
-docker-compose exec app php artisan [command]
-```
+| Service         | URL                                            |
+| --------------- | ---------------------------------------------- |
+| Application     | [http://localhost:8000](http://localhost:8000) |
+| Vite Dev Server | [http://localhost:5173](http://localhost:5173) |
+| Mailpit         | [http://localhost:8025](http://localhost:8025) |
 
 ---
 
-## 🛠️ Troubleshooting
+## 🔐 Default Admin Credentials
 
-**Database connection errors:**
+| Email               | Password   |
+| ------------------- | ---------- |
+| `admin@example.com` | `password` |
 
-```bash
-# Wait 30-60 seconds for MySQL initialization
-docker-compose logs mysql
-```
+For production, update these values in `.env` before running the setup script.
 
-**Permission errors:**
+Note:
 
-```bash
-docker-compose exec app chmod -R 777 storage bootstrap/cache
-```
+- Mailpit is enabled by default for development environments, you can use that default user.
+- If SMTP is preferred (e.g., Gmail, SendGrid, SES), update the `MAIL_*` values in `.env`.
 
-**APP_KEY errors:**
+No code changes required — the application follows the environment configuration.
 
-```bash
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan config:clear
-```
+---
 
-**Rebuild containers:**
+## 🛠️ Daily Useful Commands
 
 ```bash
-docker-compose down
-docker-compose up -d --build
+docker compose up -d
+docker compose down
+docker compose logs -f app
+docker compose exec app php artisan migrate
+docker compose exec node npm run build
 ```
 
 ---
 
-## 🏗️ Architecture
+## 🔍 Troubleshooting
 
-- **Lean Controllers** - Logic in Models, FormRequests, Resources
-- **Component-Based Frontend** - Modular React components
-- **Docker-First** - Consistent dev environment
+| Issue                        | Action                                                   |
+| ---------------------------- | -------------------------------------------------------- |
+| Database initializing slowly | `docker compose logs mysql`                              |
+| APP_KEY missing              | `docker compose exec app php artisan key:generate`       |
+| Emails not appearing         | `php artisan config:clear` and ensure Mailpit is running |
+| Frontend not updating        | `docker compose exec node npm install && npm run build`  |
+
+---
+
+## 🏗️ Architecture Summary
+
+- Repository/Service pattern
+- FormRequest validation and API Resources
+- Component-based UI with shadcn
+- Secure session authentication with Inertia
+- Fully isolated Docker development environment
+
+---
+
+## 🤝 Contribution
+
+Contributions, issues, and feature requests are welcome.
 
 ---
 
 ## 📄 License
 
-Open source - created for educational purposes.
-
----
+MIT — free for personal, commercial, and educational use.
