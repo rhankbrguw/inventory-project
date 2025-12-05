@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail;
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,11 @@ class OtpController extends Controller
             'otp_code' => null,
             'otp_expires_at' => null,
         ])->save();
+
+        try {
+            Mail::to($user)->send(new WelcomeMail($user));
+        } catch (\Exception) {
+        }
 
         Auth::login($user);
 
