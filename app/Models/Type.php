@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Type extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
-    protected $fillable = ['name', 'group', 'code'];
+    protected $fillable = ['name', 'group', 'code', 'level'];
 
     public const GROUP_PRODUCT = 'product_type';
     public const GROUP_USER_ROLE = 'user_role';
@@ -29,7 +30,7 @@ class Type extends Model
             ],
             self::GROUP_USER_ROLE => [
                 'label' => 'Role Pengguna',
-                'description' => 'Digunakan untuk menentukan role/jabatan pengguna.',
+                'description' => 'Digunakan untuk menentukan role/jabatan pengguna. Membutuhkan Level Akses.',
             ],
             self::GROUP_LOCATION => [
                 'label' => 'Tipe Lokasi',

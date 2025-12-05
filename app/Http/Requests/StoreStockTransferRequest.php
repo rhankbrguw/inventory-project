@@ -1,9 +1,8 @@
 <?php
+
 namespace App\Http\Requests;
 
 use App\Rules\SufficientStock;
-use App\Rules\ExistsInGroup;
-use App\Models\Type;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreStockTransferRequest extends FormRequest

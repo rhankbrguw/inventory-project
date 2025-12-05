@@ -26,6 +26,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
         name: "",
         group: "",
         code: "",
+        level: "",
     });
 
     const submit = (e) => {
@@ -61,7 +62,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    placeholder="Masukkan nama tipe"
+                                    placeholder="Masukan nama tipe baru"
                                 />
                             </FormField>
 
@@ -99,6 +100,29 @@ export default function Create({ auth, availableGroups, allTypes }) {
                             </FormField>
                         </div>
 
+                        {data.group === "user_role" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    label="Level Akses (Hierarki)"
+                                    htmlFor="level"
+                                    error={errors.level}
+                                    description="1=Admin, 10=Manager, 20=Staff/Lainnya. User tidak bisa melihat level diatasnya."
+                                >
+                                    <Input
+                                        id="level"
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={data.level}
+                                        onChange={(e) =>
+                                            setData("level", e.target.value)
+                                        }
+                                        placeholder="Contoh: 20"
+                                    />
+                                </FormField>
+                            </div>
+                        )}
+
                         {data.group && allTypes[data.group] && (
                             <Alert>
                                 <Info className="h-4 w-4" />
@@ -110,6 +134,7 @@ export default function Create({ auth, availableGroups, allTypes }) {
                                             variant="secondary"
                                         >
                                             {type.name}
+                                            {type.level ? ` (Lvl ${type.level})` : ''}
                                         </Badge>
                                     ))}
                                 </AlertDescription>
