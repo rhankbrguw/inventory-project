@@ -87,6 +87,8 @@ class PurchaseController extends Controller
     {
         $validated = $request->validated();
 
+        $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
+
         $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
         if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {

@@ -38,4 +38,14 @@ class StockTransferPolicy
 
         return $user->level <= 10 && $user->roles->first()?->code === 'WHM';
     }
+
+    public function createAtLocation(User $user, $fromLocationId, $toLocationId): bool
+    {
+        if ($user->level === 1) {
+            return true;
+        }
+
+        return $user->hasRoleAtLocation($fromLocationId, 'WHM') &&
+            in_array($toLocationId, $user->getAccessibleLocationIds() ?? []);
+    }
 }

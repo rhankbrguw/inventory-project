@@ -30,17 +30,26 @@ class PurchasePolicy
         return $user->level <= 10;
     }
 
+    public function createAtLocation(User $user, $locationId): bool
+    {
+        if ($user->level === 1) {
+            return true;
+        }
+
+        return $user->hasRoleAtLocation($locationId, ['WHM', 'BRM']);
+    }
+
     public function update(User $user, Purchase $purchase): bool
     {
         if ($purchase->status !== 'Pending') {
             return false;
         }
+
         if ($user->level === 1) {
             return true;
         }
 
-        return $user->level <= 10 &&
-            in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
+        return $user->hasRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
     }
 
     public function delete(User $user, Purchase $purchase): bool
@@ -48,11 +57,11 @@ class PurchasePolicy
         if ($purchase->status !== 'Pending') {
             return false;
         }
+
         if ($user->level === 1) {
             return true;
         }
 
-        return $user->level <= 10 &&
-            in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
+        return $user->hasRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
     }
 }

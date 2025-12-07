@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Mail\OtpMail;
+use App\Models\Role;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -78,6 +79,39 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $ids;
+    }
+
+    public function getRoleCodeAtLocation($locationId): ?string
+    {
+        if ($this->level === 1) {
+            return 'SUPERADMIN';
+        }
+
+        $pivot = $this->locations()
+            ->where('locations.id', $locationId)
+            ->first();
+
+        if (!$pivot) {
+            return null;
+        }
+
+        $role = Role::find($pivot->pivot->role_id);
+        return $role?->code;
+    }
+
+    public function hasRoleAtLocation($locationId, $roleCodes): bool
+    {
+        if ($this->level === 1) {
+            return true;
+        }
+
+        $roleCode = $this->getRoleCodeAtLocation($locationId);
+
+        if (is_array($roleCodes)) {
+            return in_array($roleCode, $roleCodes);
+        }
+
+        return $roleCode === $roleCodes;
     }
 
     public function sendOtpNotification(): void
