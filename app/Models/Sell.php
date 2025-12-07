@@ -22,8 +22,10 @@ class Sell extends Model
         'transaction_date',
         'total_price',
         'status',
-        'payment_method_type_id',
         'notes',
+        'payment_method_type_id',
+        'installment_terms',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -59,5 +61,30 @@ class Sell extends Model
     public function stockMovements(): MorphMany
     {
         return $this->morphMany(StockMovement::class, 'reference');
+    }
+
+    public function installments(): MorphMany
+    {
+        return $this->morphMany(Installment::class, 'installmentable');
+    }
+
+    public function hasInstallments(): bool
+    {
+        return $this->installment_terms > 1;
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->payment_status === 'pending';
+    }
+
+    public function isPartiallyPaid(): bool
+    {
+        return $this->payment_status === 'partial';
     }
 }

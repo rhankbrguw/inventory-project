@@ -27,15 +27,11 @@ class StoreSellRequest extends FormRequest
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'transaction_date' => ['required', 'date'],
             'payment_method_type_id' => ['nullable', 'integer', new ExistsInGroup('types', Type::GROUP_PAYMENT)],
+            'installment_terms' => ['required', 'integer', 'in:1,2,3'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'status' => ['required', 'string', Rule::in(['Completed', 'Draft'])],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => [
-                'required',
-                'integer',
-                'exists:products,id,deleted_at,NULL',
-                'distinct',
-            ],
+            'items.*.product_id' => ['required', 'integer', 'exists:products,id,deleted_at,NULL', 'distinct'],
             'items.*.sell_price' => ['required', 'numeric', 'min:0'],
         ];
 

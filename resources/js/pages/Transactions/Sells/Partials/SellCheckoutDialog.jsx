@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import FormField from "@/components/FormField";
 import InputError from "@/components/InputError";
 import { formatCurrency } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function SellCheckoutDialog({
     isOpen,
@@ -32,15 +34,18 @@ export default function SellCheckoutDialog({
     customerId,
     paymentMethods,
 }) {
-    const { data, setData, post, processing, errors, reset, isDirty } = useForm({
-        location_id: locationId || "",
-        customer_id: customerId || null,
-        transaction_date: new Date(),
-        notes: "",
-        payment_method_type_id: "",
-        status: "Completed",
-        items: [],
-    });
+    const { data, setData, post, processing, errors, reset, isDirty } = useForm(
+        {
+            location_id: locationId || "",
+            customer_id: customerId || null,
+            transaction_date: new Date(),
+            notes: "",
+            payment_method_type_id: "",
+            installment_terms: "1",
+            status: "Completed",
+            items: [],
+        },
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -50,6 +55,7 @@ export default function SellCheckoutDialog({
                 customer_id: customerId,
                 transaction_date: new Date(),
                 payment_method_type_id: paymentMethods[0]?.id.toString() || "",
+                installment_terms: "1", // NEW
                 items: cartItems.map((item) => ({
                     product_id: item.product.id,
                     quantity: item.quantity,
@@ -70,6 +76,7 @@ export default function SellCheckoutDialog({
                     formData.transaction_date,
                     "yyyy-MM-dd",
                 ),
+                installment_terms: parseInt(formData.installment_terms),
             }),
             onSuccess: () => onOpenChange(false),
         });
@@ -137,6 +144,57 @@ export default function SellCheckoutDialog({
                                 />
                             </FormField>
                         </div>
+
+                        <FormField
+                            label="Cara Bayar"
+                            labelClassName="text-xs font-semibold text-foreground"
+                        >
+                            <RadioGroup
+                                value={data.installment_terms}
+                                onValueChange={(value) =>
+                                    setData("installment_terms", value)
+                                }
+                                className="flex flex-col space-y-2"
+                            >
+                                <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem
+                                        value="1"
+                                        id="sell-installment-1"
+                                    />
+                                    <Label
+                                        htmlFor="sell-installment-1"
+                                        className="flex-1 cursor-pointer text-xs font-medium"
+                                    >
+                                        Lunas (Bayar Penuh)
+                                    </Label>
+                                </div>
+                                <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem
+                                        value="2"
+                                        id="sell-installment-2"
+                                    />
+                                    <Label
+                                        htmlFor="sell-installment-2"
+                                        className="flex-1 cursor-pointer text-xs font-medium"
+                                    >
+                                        Cicilan 2x (Bulanan)
+                                    </Label>
+                                </div>
+                                <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem
+                                        value="3"
+                                        id="sell-installment-3"
+                                    />
+                                    <Label
+                                        htmlFor="sell-installment-3"
+                                        className="flex-1 cursor-pointer text-xs font-medium"
+                                    >
+                                        Cicilan 3x (Bulanan)
+                                    </Label>
+                                </div>
+                            </RadioGroup>
+                            <InputError message={errors.installment_terms} />
+                        </FormField>
 
                         <FormField
                             label="Catatan"

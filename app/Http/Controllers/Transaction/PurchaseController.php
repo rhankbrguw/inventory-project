@@ -23,28 +23,6 @@ use Inertia\Response;
 
 class PurchaseController extends Controller
 {
-    public function show(Purchase $purchase): Response
-    {
-        $user = Auth::user();
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($purchase->location_id, $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
-        }
-
-        return Inertia::render("Transactions/Purchases/Show", [
-            "purchase" => PurchaseResource::make(
-                $purchase->load([
-                    "location",
-                    "supplier",
-                    "user",
-                    "stockMovements.product",
-                    "paymentMethodType",
-                    "type",
-                ]),
-            ),
-        ]);
-    }
-
     public function create(Request $request): Response
     {
         $user = Auth::user();
@@ -123,27 +101,25 @@ class PurchaseController extends Controller
             ->where("name", "Pembelian")
             ->firstOrFail();
 
-        DB::transaction(function () use (
-            $validated,
-            $totalCost,
-            $purchaseType,
-            $request,
-        ) {
+        DB::transaction(function () use ($validated, $totalCost, $purchaseType, $request) {
             $purchase = Purchase::create([
                 "type_id" => $purchaseType->id,
                 "location_id" => $validated["location_id"],
                 "supplier_id" => $validated["supplier_id"],
                 "user_id" => $request->user()->id,
                 "reference_code" => "PO-" . now()->format("Ymd-His"),
-                "transaction_date" => Carbon::parse(
-                    $validated["transaction_date"],
-                )->format("Y-m-d"),
+                "transaction_date" => Carbon::parse($validated["transaction_date"])->format("Y-m-d"),
                 "notes" => $validated["notes"],
-                "payment_method_type_id" =>
-                $validated["payment_method_type_id"] ?? null,
+                "payment_method_type_id" => $validated["payment_method_type_id"] ?? null,
                 "status" => "completed",
                 "total_cost" => $totalCost,
+                "installment_terms" => $validated["installment_terms"],
+                "payment_status" => $validated["installment_terms"] > 1 ? "pending" : "paid",
             ]);
+
+            if ($validated["installment_terms"] > 1) {
+                $this->createInstallments($purchase, $totalCost, $validated["installment_terms"], $validated["transaction_date"]);
+            }
 
             foreach ($validated["items"] as $item) {
                 $purchase->stockMovements()->create([
@@ -171,16 +147,13 @@ class PurchaseController extends Controller
                 $newCost = $item["cost_per_unit"];
 
                 $newTotalQty = $oldQty + $newQty;
-                $newAvgCost =
-                    ($oldQty * $oldAvgCost + $newQty * $newCost) /
-                    ($newTotalQty > 0 ? $newTotalQty : 1);
+                $newAvgCost = ($oldQty * $oldAvgCost + $newQty * $newCost) / ($newTotalQty > 0 ? $newTotalQty : 1);
 
                 $inventory->update([
                     "quantity" => $newTotalQty,
                     "average_cost" => $newAvgCost,
                 ]);
             }
-
 
             $supplierId = $validated["supplier_id"];
             Auth::user()
@@ -200,5 +173,43 @@ class PurchaseController extends Controller
             "success",
             "Transaksi pembelian berhasil disimpan.",
         );
+    }
+
+    private function createInstallments($transaction, $totalAmount, $terms, $startDate)
+    {
+        $amountPerInstallment = $totalAmount / $terms;
+        $startDate = Carbon::parse($startDate);
+
+        for ($i = 1; $i <= $terms; $i++) {
+            $transaction->installments()->create([
+                'installment_number' => $i,
+                'amount' => $amountPerInstallment,
+                'due_date' => $startDate->copy()->addMonths($i - 1),
+                'status' => 'pending',
+            ]);
+        }
+    }
+
+    public function show(Purchase $purchase): Response
+    {
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($purchase->location_id, $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
+        }
+
+        $purchase->load([
+            "location",
+            "supplier",
+            "user",
+            "paymentMethodType",
+            "stockMovements.product",
+            "type",
+            "installments",
+        ]);
+
+        return Inertia::render("Transactions/Purchases/Show", [
+            "purchase" => PurchaseResource::make($purchase),
+        ]);
     }
 }
