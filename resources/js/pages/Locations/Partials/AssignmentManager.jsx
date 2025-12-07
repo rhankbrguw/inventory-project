@@ -24,13 +24,17 @@ export default function AssignmentManager({
     const removeAssignment = (index) => {
         setData(
             "assignments",
-            assignments.filter((_, i) => i !== index)
+            assignments.filter((_, i) => i !== index),
         );
     };
 
     const updateAssignment = (index, field, value) => {
-        const updated = [...assignments];
-        updated[index][field] = value;
+        const updated = assignments.map((assignment, i) => {
+            if (i === index) {
+                return { ...assignment, [field]: value };
+            }
+            return assignment;
+        });
         setData("assignments", updated);
     };
 
@@ -62,7 +66,7 @@ export default function AssignmentManager({
                                         updateAssignment(
                                             index,
                                             "user_id",
-                                            value
+                                            value,
                                         )
                                     }
                                 >
@@ -90,7 +94,7 @@ export default function AssignmentManager({
                                         updateAssignment(
                                             index,
                                             "role_id",
-                                            value
+                                            value,
                                         )
                                     }
                                 >

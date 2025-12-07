@@ -1,5 +1,5 @@
 import { Link, useForm } from "@inertiajs/react";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import FormField from "@/components/FormField";
 import { Button } from "@/components/ui/button";
@@ -26,16 +26,30 @@ export default function Edit({
     const { data: allUsers } = allUsersResource;
     const { data: allRoles } = allRolesResource;
 
-    const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: location.name || "",
-        type_id: location.type?.id?.toString() || "",
-        address: location.address || "",
-        assignments:
+    const initialAssignments = useMemo(
+        () =>
             location.users?.map((user) => ({
                 user_id: user.id.toString(),
                 role_id: user.pivot.role_id.toString(),
             })) || [],
+        [location.users],
+    );
+
+    const { data, setData, patch, processing, errors, isDirty } = useForm({
+        name: location.name || "",
+        type_id: location.type?.id?.toString() || "",
+        address: location.address || "",
+        assignments: initialAssignments,
     });
+
+    const [isFormDirty, setIsFormDirty] = useState(false);
+
+    useEffect(() => {
+        const assignmentsChanged =
+            JSON.stringify(data.assignments) !==
+            JSON.stringify(initialAssignments);
+        setIsFormDirty(isDirty || assignmentsChanged);
+    }, [data, isDirty, initialAssignments]);
 
     const selectedLocationType = useMemo(() => {
         return locationTypes.find(
@@ -151,7 +165,9 @@ export default function Edit({
                             Batal
                         </Button>
                     </Link>
-                    <Button disabled={processing || !isDirty}>Simpan</Button>
+                    <Button disabled={processing || !isFormDirty}>
+                        Simpan
+                    </Button>
                 </div>
             </form>
         </ContentPageLayout>
