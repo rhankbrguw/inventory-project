@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -113,23 +114,12 @@ class SellController extends Controller
         try {
             DB::transaction(function () use ($validated, $itemsData, $request) {
                 $totalPrice = collect($itemsData)->sum(function ($item) {
-                    return (float) $item["quantity"] *
-                        (float) $item["sell_price"];
+                    return (float) $item["quantity"] * (float) $item["sell_price"];
                 });
 
-                $referenceCode =
-                    "SL-" .
-                    now()->format("Ymd") .
-                    "-" .
-                    strtoupper(Str::random(4));
-                while (
-                    Sell::where("reference_code", $referenceCode)->exists()
-                ) {
-                    $referenceCode =
-                        "SL-" .
-                        now()->format("Ymd") .
-                        "-" .
-                        strtoupper(Str::random(4));
+                $referenceCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
+                while (Sell::where("reference_code", $referenceCode)->exists()) {
+                    $referenceCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
                 }
 
                 $sell = Sell::create([
@@ -141,16 +131,18 @@ class SellController extends Controller
                     "transaction_date" => $validated["transaction_date"],
                     "total_price" => $totalPrice,
                     "status" => $validated["status"],
-                    "payment_method_type_id" =>
-                    $validated["payment_method_type_id"],
+                    "payment_method_type_id" => $validated["payment_method_type_id"],
                     "notes" => $validated["notes"],
+                    "installment_terms" => $validated["installment_terms"],
+                    "payment_status" => $validated["installment_terms"] > 1 ? "pending" : "paid",
                 ]);
 
+                if ($validated["installment_terms"] > 1) {
+                    $this->createInstallments($sell, $totalPrice, $validated["installment_terms"], $validated["transaction_date"]);
+                }
+
                 foreach ($itemsData as $item) {
-                    $inventory = Inventory::where(
-                        "product_id",
-                        $item["product_id"],
-                    )
+                    $inventory = Inventory::where("product_id", $item["product_id"])
                         ->where("location_id", $validated["location_id"])
                         ->firstOrFail();
 
@@ -165,10 +157,7 @@ class SellController extends Controller
                         "notes" => $validated["notes"],
                     ]);
 
-                    $inventory->decrement(
-                        "quantity",
-                        (float) $item["quantity"],
-                    );
+                    $inventory->decrement("quantity", (float) $item["quantity"]);
                 }
 
                 $request
@@ -178,16 +167,25 @@ class SellController extends Controller
                     ->delete();
             });
         } catch (\Exception $e) {
-            return Redirect::back()->with(
-                "error",
-                "Gagal menyimpan penjualan: " . $e->getMessage(),
-            );
+            return Redirect::back()->with("error", "Gagal menyimpan penjualan: " . $e->getMessage());
         }
 
-        return Redirect::route("transactions.index")->with(
-            "success",
-            "Penjualan berhasil disimpan.",
-        );
+        return Redirect::route("transactions.index")->with("success", "Penjualan berhasil disimpan.");
+    }
+
+    private function createInstallments($transaction, $totalAmount, $terms, $startDate)
+    {
+        $amountPerInstallment = $totalAmount / $terms;
+        $startDate = Carbon::parse($startDate);
+
+        for ($i = 1; $i <= $terms; $i++) {
+            $transaction->installments()->create([
+                'installment_number' => $i,
+                'amount' => $amountPerInstallment,
+                'due_date' => $startDate->copy()->addMonths($i - 1),
+                'status' => 'pending',
+            ]);
+        }
     }
 
     public function show(Sell $sell): Response
@@ -205,6 +203,7 @@ class SellController extends Controller
             "paymentMethod",
             "stockMovements.product",
             "type",
+            "installments",
         ]);
 
         return Inertia::render("Transactions/Sells/Show", [
