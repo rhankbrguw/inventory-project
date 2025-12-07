@@ -35,7 +35,6 @@ class PurchasePolicy
         if ($purchase->status !== 'Pending') {
             return false;
         }
-
         if ($user->level === 1) {
             return true;
         }
@@ -49,7 +48,6 @@ class PurchasePolicy
         if ($purchase->status !== 'Pending') {
             return false;
         }
-
         if ($user->level === 1) {
             return true;
         }

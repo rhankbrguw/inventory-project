@@ -1,50 +1,42 @@
 import { Link, router } from "@inertiajs/react";
-import { useState } from "react";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { customerColumns } from "@/constants/tableColumns.jsx";
 import IndexPageLayout from "@/components/IndexPageLayout";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import DataTable from "@/components/DataTable";
 import MobileCardList from "@/components/MobileCardList";
 import CustomerMobileCard from "./Partials/CustomerMobileCard";
+import { customerColumns } from "@/constants/tableColumns";
+import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
+import { useSoftDeletes } from "@/hooks/useSoftDeletes";
 import Pagination from "@/components/Pagination";
-import QuickAddTypeModal from "@/components/QuickAddTypeModal";
+import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
 import CustomerFilterCard from "./Partials/CustomerFilterCard";
+import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2, MoreVertical, PlusCircle } from "lucide-react";
+import { Edit, MoreVertical, Archive, ArchiveRestore, Eye } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export default function Index({
-    auth,
-    customers,
-    filters = {},
-    customerTypes = { data: [] },
-}) {
+export default function Index({ auth, customers, customerTypes, filters }) {
     const { params, setFilter } = useIndexPageFilters(
         "customers.index",
         filters,
     );
-    const [confirmingDeletion, setConfirmingDeletion] = useState(null);
-    const [isProcessing, setIsProcessing] = useState(false);
 
-    const deleteCustomer = () => {
-        setIsProcessing(true);
+    const roleCode = auth.user.role?.code;
+    const canCrudCustomers = auth.user.level === 1 || roleCode === "BRM";
+    const canViewCustomers = auth.user.level <= 20 && roleCode !== "WHM";
 
-        router.delete(route("customers.destroy", confirmingDeletion), {
-            preserveScroll: true,
-            onSuccess: () => setConfirmingDeletion(null),
-            onFinish: () => setIsProcessing(false),
-        });
-    };
-
-    const customerToDelete = customers.data.find(
-        (c) => c.id === confirmingDeletion,
-    );
+    const {
+        confirmingDeletion,
+        setConfirmingDeletion,
+        isProcessing,
+        itemToDeactivate,
+        deactivateItem,
+        restoreItem,
+    } = useSoftDeletes({ resourceName: "customers", data: customers.data });
 
     const renderActionDropdown = (customer) => (
         <DropdownMenu>
@@ -58,17 +50,45 @@ export default function Index({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <Link href={route("customers.edit", customer.id)}>
-                    <DropdownMenuItem className="cursor-pointer">
-                        <Edit className="w-4 h-4 mr-2" /> Edit
+                {canCrudCustomers ? (
+                    <>
+                        <DropdownMenuItem
+                            className="cursor-pointer"
+                            onSelect={() =>
+                                router.get(route("customers.edit", customer.id))
+                            }
+                        >
+                            <Edit className="w-4 h-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        {customer.deleted_at ? (
+                            <DropdownMenuItem
+                                className="cursor-pointer text-success focus:text-success"
+                                onSelect={() => restoreItem(customer.id)}
+                            >
+                                <ArchiveRestore className="w-4 h-4 mr-2" />{" "}
+                                Aktifkan
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem
+                                className="text-destructive focus:text-destructive cursor-pointer"
+                                onSelect={() =>
+                                    setConfirmingDeletion(customer.id)
+                                }
+                            >
+                                <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
+                            </DropdownMenuItem>
+                        )}
+                    </>
+                ) : (
+                    <DropdownMenuItem
+                        className="cursor-pointer"
+                        onSelect={() =>
+                            router.get(route("customers.edit", customer.id))
+                        }
+                    >
+                        <Eye className="w-4 h-4 mr-2" /> Lihat
                     </DropdownMenuItem>
-                </Link>
-                <DropdownMenuItem
-                    className="text-destructive focus:text-destructive cursor-pointer"
-                    onClick={() => setConfirmingDeletion(customer.id)}
-                >
-                    <Trash2 className="w-4 h-4 mr-2" /> Hapus
-                </DropdownMenuItem>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -77,27 +97,8 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Pelanggan"
-            createRoute="customers.create"
+            createRoute={canCrudCustomers ? "customers.create" : null}
             buttonLabel="Tambah Pelanggan"
-            headerActions={
-                <QuickAddTypeModal
-                    group="customer_type"
-                    title="Tambah Tipe Pelanggan Cepat"
-                    description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                    existingTypes={customerTypes.data}
-                    trigger={
-                        <Button
-                            variant="outline"
-                            className="flex items-center gap-2 px-2 sm:px-4"
-                        >
-                            <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">
-                                Tambah Tipe
-                            </span>
-                        </Button>
-                    }
-                />
-            }
         >
             <div className="space-y-4">
                 <CustomerFilterCard
@@ -105,45 +106,58 @@ export default function Index({
                     setFilter={setFilter}
                     customerTypes={customerTypes}
                 />
-
                 <MobileCardList
                     data={customers.data}
                     renderItem={(customer) => (
                         <Link
-                            href={route("customers.edit", customer.id)}
+                            href={
+                                canViewCustomers
+                                    ? route("customers.edit", customer.id)
+                                    : "#"
+                            }
                             key={customer.id}
+                            className={cn(
+                                !canViewCustomers && "pointer-events-none",
+                                customer.deleted_at && "opacity-50",
+                            )}
                         >
                             <CustomerMobileCard
                                 customer={customer}
-                                renderActionDropdown={renderActionDropdown}
+                                renderActionDropdown={
+                                    canViewCustomers
+                                        ? renderActionDropdown
+                                        : null
+                                }
                             />
                         </Link>
                     )}
                 />
-
                 <div className="hidden md:block">
                     <DataTable
                         columns={customerColumns}
                         data={customers.data}
-                        actions={renderActionDropdown}
-                        showRoute={"customers.edit"}
+                        actions={canViewCustomers ? renderActionDropdown : null}
+                        showRoute={canViewCustomers ? "customers.edit" : null}
+                        rowClassName={(row) =>
+                            row.deleted_at ? "opacity-50" : ""
+                        }
                     />
                 </div>
-
                 {customers.data.length > 0 && (
                     <Pagination links={customers.meta.links} />
                 )}
             </div>
-
-            <DeleteConfirmationDialog
-                open={confirmingDeletion !== null}
-                onOpenChange={() => setConfirmingDeletion(null)}
-                onConfirm={deleteCustomer}
-                isDeleting={isProcessing}
-                title={`Hapus Pelanggan ${customerToDelete?.name}?`}
-                confirmText="Hapus Pelanggan"
-                description="Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data pelanggan secara permanen."
-            />
+            {canCrudCustomers && (
+                <DeleteConfirmationDialog
+                    open={confirmingDeletion !== null}
+                    onOpenChange={() => setConfirmingDeletion(null)}
+                    onConfirm={deactivateItem}
+                    isDeleting={isProcessing}
+                    confirmText="Nonaktifkan"
+                    title={`Nonaktifkan ${itemToDeactivate?.name}?`}
+                    description="Tindakan ini akan menyembunyikan pelanggan dari daftar. Anda bisa mengaktifkannya kembali nanti."
+                />
+            )}
         </IndexPageLayout>
     );
 }

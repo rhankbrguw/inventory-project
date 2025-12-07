@@ -22,22 +22,21 @@ class ProductPolicy
 
     public function create(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 
     public function update(User $user, Product $product): bool
     {
-        return $user->level <= 10;
+        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 
     public function delete(User $user, Product $product): bool
     {
-        // Prevent deleting if product has stock (logic usually in controller, but policy can block too)
-        return $user->level <= 10;
+        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 
     public function restore(User $user, Product $product): bool
     {
-        return $user->level <= 10;
+        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 }

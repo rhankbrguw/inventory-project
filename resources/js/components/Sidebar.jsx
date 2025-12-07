@@ -17,11 +17,10 @@ const NavLink = ({ href, active, children, onClick }) => (
     <Link
         href={href}
         onClick={onClick}
-        className={`flex items-center px-3 py-2.5 rounded-lg transition-colors duration-200 text-sm font-medium ${
-            active
+        className={`flex items-center px-3 py-2.5 rounded-lg transition-colors duration-200 text-sm font-medium ${active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-        }`}
+            }`}
     >
         {children}
     </Link>
@@ -31,10 +30,18 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const userLevel = user.level;
+    const userCode = user.role?.code;
 
     const hasAccess = (link) => {
-        if (!link.requiredLevel) return true;
-        return userLevel <= link.requiredLevel;
+        if (link.requiredLevel && userLevel > link.requiredLevel) return false;
+
+        if (link.excludedCodes && link.excludedCodes.includes(userCode))
+            return false;
+
+        if (link.allowedCodes && !link.allowedCodes.includes(userCode))
+            return false;
+
+        return true;
     };
 
     const navLinks = [
@@ -67,6 +74,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 route().current("stock.*") &&
                 !route().current("stock-movements.*"),
             requiredLevel: 10,
+            allowedCodes: ["WHM"],
         },
         {
             name: "Stock Movements",
@@ -95,6 +103,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: Contact,
             current: route().current("customers.*"),
             requiredLevel: 20,
+            excludedCodes: ["WHM"],
         },
         {
             name: "Report",
@@ -121,9 +130,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
     return (
         <aside
-            className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ease-in-out ${
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } lg:translate-x-0`}
+            className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                } lg:translate-x-0`}
         >
             <div className="h-16 flex items-center justify-center px-4 border-b">
                 <h1 className="text-xl font-bold text-foreground">Welcome!</h1>

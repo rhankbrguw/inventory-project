@@ -32,16 +32,19 @@ export default function Index({
 }) {
     const { auth: authData } = usePage().props;
     const user = authData.user;
-    const userLevel = user.level;
+    const roleCode = user.role?.code;
+    const isSuperAdmin = user.level === 1;
 
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
         filters,
     );
 
-    const canCreatePurchase = userLevel <= 10;
-    const canCreateSell = userLevel <= 20;
-    const canCreateTransfer = userLevel <= 10;
+    const canCreatePurchase = isSuperAdmin || user.level <= 10;
+    const canCreateSell =
+        isSuperAdmin || (user.level <= 20 && roleCode !== "WHM");
+    const canCreateTransfer =
+        isSuperAdmin || (user.level <= 10 && roleCode === "WHM");
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
@@ -112,7 +115,6 @@ export default function Index({
                             </Button>
                         )}
                     </div>
-
                     <div className="sm:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -182,7 +184,6 @@ export default function Index({
                     locations={locations}
                     transactionTypes={transactionTypes}
                 />
-
                 <MobileCardList
                     data={transactions.data}
                     renderItem={(transaction) => (
@@ -197,7 +198,6 @@ export default function Index({
                         </Link>
                     )}
                 />
-
                 <div className="hidden md:block">
                     <DataTable
                         columns={transactionColumns(authData)}
@@ -207,7 +207,6 @@ export default function Index({
                         keyExtractor={(row) => row.unique_key}
                     />
                 </div>
-
                 {transactions.data.length > 0 && (
                     <Pagination links={transactions.meta.links} />
                 )}

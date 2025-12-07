@@ -12,7 +12,7 @@ class SellPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 20;
+        return $user->level <= 20 && $user->roles->first()?->code !== 'WHM';
     }
 
     public function view(User $user, Sell $sell): bool
@@ -21,13 +21,20 @@ class SellPolicy
             return true;
         }
 
+        if ($user->roles->first()?->code === 'WHM') {
+            return false;
+        }
+
         return $user->level <= 20 &&
             in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        return $user->level <= 20;
+        if ($user->level === 1) {
+            return true;
+        }
+        return $user->level <= 20 && $user->roles->first()?->code !== 'WHM';
     }
 
     public function update(User $user, Sell $sell): bool
@@ -35,9 +42,11 @@ class SellPolicy
         if ($sell->status !== 'Pending') {
             return false;
         }
-
         if ($user->level === 1) {
             return true;
+        }
+        if ($user->roles->first()?->code === 'WHM') {
+            return false;
         }
 
         return $user->level <= 20 &&
@@ -49,9 +58,11 @@ class SellPolicy
         if ($sell->status !== 'Pending') {
             return false;
         }
-
         if ($user->level === 1) {
             return true;
+        }
+        if ($user->roles->first()?->code === 'WHM') {
+            return false;
         }
 
         return $user->level <= 20 &&

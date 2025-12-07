@@ -96,7 +96,6 @@ export default function Index({
                     setFilter={setFilter}
                     locationTypes={locationTypes}
                 />
-
                 <MobileCardList
                     data={locationsResource.data}
                     renderItem={(location) => (
@@ -108,8 +107,8 @@ export default function Index({
                             }
                             key={location.id}
                             className={cn(
-                                !canCrudLocations ? "pointer-events-none" : "",
-                                location.deleted_at ? "opacity-50" : "",
+                                !canCrudLocations && "pointer-events-none",
+                                location.deleted_at && "opacity-50",
                             )}
                         >
                             <LocationMobileCard
@@ -123,7 +122,6 @@ export default function Index({
                         </Link>
                     )}
                 />
-
                 <div className="hidden md:block">
                     <DataTable
                         columns={locationColumns}
@@ -135,12 +133,10 @@ export default function Index({
                         }
                     />
                 </div>
-
                 {locationsResource.data.length > 0 && (
                     <Pagination links={locationsResource.meta.links} />
                 )}
             </div>
-
             {canCrudLocations && (
                 <DeleteConfirmationDialog
                     open={confirmingDeletion !== null}
