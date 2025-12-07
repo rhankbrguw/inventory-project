@@ -17,11 +17,7 @@ class StorePurchaseRequest extends FormRequest
     {
         return [
             "location_id" => ["required", "exists:locations,id"],
-            "supplier_id" => [
-                "nullable",
-                "integer",
-                "exists:suppliers,id",
-            ],
+            "supplier_id" => ["nullable", "integer", "exists:suppliers,id"],
             "transaction_date" => ["required", "date"],
             "notes" => ["nullable", "string", "max:100"],
             "payment_method_type_id" => [
@@ -29,12 +25,9 @@ class StorePurchaseRequest extends FormRequest
                 "integer",
                 new ExistsInGroup("types", Type::GROUP_PAYMENT),
             ],
+            "installment_terms" => ["required", "integer", "in:1,2,3"],
             "items" => ["required", "array", "min:1"],
-            "items.*.product_id" => [
-                "required",
-                "exists:products,id",
-                "distinct",
-            ],
+            "items.*.product_id" => ["required", "exists:products,id", "distinct"],
             "items.*.quantity" => ["required", "numeric", "min:0.01"],
             "items.*.cost_per_unit" => ["required", "numeric", "min:0.01"],
         ];

@@ -1,5 +1,6 @@
 import ContentPageLayout from "@/components/ContentPageLayout";
 import PrintButton from "@/components/PrintButton";
+import InstallmentSchedule from "@/components/InstallmentSchedule";
 import {
     Card,
     CardContent,
@@ -53,6 +54,37 @@ export default function Show({ auth, purchase }) {
                         </Badge>
                     </div>
                     <div>
+                        <p className="text-muted-foreground">Pembayaran</p>
+                        <div className="flex items-center gap-2">
+                            <span className="font-semibold">
+                                {data.installment_terms === 1
+                                    ? "Lunas"
+                                    : `Cicilan ${data.installment_terms}x`}
+                            </span>
+                            {data.has_installments && (
+                                <Badge
+                                    variant={
+                                        data.payment_status === "paid"
+                                            ? "default"
+                                            : data.payment_status === "partial"
+                                                ? "secondary"
+                                                : "outline"
+                                    }
+                                    className={cn(
+                                        data.payment_status === "paid" &&
+                                        "bg-success/10 text-success border-success/20",
+                                    )}
+                                >
+                                    {data.payment_status === "paid"
+                                        ? "Lunas"
+                                        : data.payment_status === "partial"
+                                            ? "Sebagian"
+                                            : "Belum Bayar"}
+                                </Badge>
+                            )}
+                        </div>
+                    </div>
+                    <div>
                         <p className="text-muted-foreground">PIC</p>
                         <p className="font-semibold">{data.user.name}</p>
                     </div>
@@ -64,6 +96,13 @@ export default function Show({ auth, purchase }) {
                     )}
                 </CardContent>
             </Card>
+
+            {data.has_installments && (
+                <InstallmentSchedule
+                    installments={data.installments}
+                    paymentStatus={data.payment_status}
+                />
+            )}
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-3">

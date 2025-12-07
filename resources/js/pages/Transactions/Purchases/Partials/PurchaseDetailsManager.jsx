@@ -14,6 +14,8 @@ import DatePicker from "@/components/DatePicker";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from "@/components/InputError";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function PurchaseDetailsManager({
     supplierId,
@@ -29,6 +31,7 @@ export default function PurchaseDetailsManager({
         transaction_date: new Date(),
         notes: "",
         payment_method_type_id: "",
+        installment_terms: "1",
         items: cartItems.map((item) => ({
             product_id: item.product.id,
             quantity: item.quantity,
@@ -53,6 +56,7 @@ export default function PurchaseDetailsManager({
                     formData.transaction_date,
                     "yyyy-MM-dd",
                 ),
+                installment_terms: parseInt(formData.installment_terms),
             }),
             onSuccess: () => onClose(),
         });
@@ -149,6 +153,48 @@ export default function PurchaseDetailsManager({
                         <InputError message={errors.payment_method_type_id} />
                     </FormField>
                 </div>
+
+                <FormField
+                    label="Cara Bayar"
+                    labelClassName="text-xs font-semibold text-foreground"
+                >
+                    <RadioGroup
+                        value={data.installment_terms}
+                        onValueChange={(value) =>
+                            setData("installment_terms", value)
+                        }
+                        className="flex flex-col space-y-2"
+                    >
+                        <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                            <RadioGroupItem value="1" id="installment-1" />
+                            <Label
+                                htmlFor="installment-1"
+                                className="flex-1 cursor-pointer text-xs font-medium"
+                            >
+                                Lunas (Bayar Penuh)
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                            <RadioGroupItem value="2" id="installment-2" />
+                            <Label
+                                htmlFor="installment-2"
+                                className="flex-1 cursor-pointer text-xs font-medium"
+                            >
+                                Cicilan 2x (Bulanan)
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                            <RadioGroupItem value="3" id="installment-3" />
+                            <Label
+                                htmlFor="installment-3"
+                                className="flex-1 cursor-pointer text-xs font-medium"
+                            >
+                                Cicilan 3x (Bulanan)
+                            </Label>
+                        </div>
+                    </RadioGroup>
+                    <InputError message={errors.installment_terms} />
+                </FormField>
 
                 <FormField
                     label="Catatan"
