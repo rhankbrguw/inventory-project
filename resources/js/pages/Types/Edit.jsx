@@ -28,10 +28,12 @@ export default function Edit({
     allTypes,
 }) {
     const { data: type } = typeResource;
+
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: type.name || "",
         group: type.group || "",
         code: type.code || "",
+        level: type.level || "",
     });
 
     const submit = (e) => {
@@ -105,6 +107,29 @@ export default function Edit({
                             </FormField>
                         </div>
 
+                        {data.group === "user_role" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    label="Level Akses (Hierarki)"
+                                    htmlFor="level"
+                                    error={errors.level}
+                                    description="1=Admin, 10=Manager, 20=Staff/Lainnya."
+                                >
+                                    <Input
+                                        id="level"
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={data.level}
+                                        onChange={(e) =>
+                                            setData("level", e.target.value)
+                                        }
+                                        placeholder="Contoh: 20"
+                                    />
+                                </FormField>
+                            </div>
+                        )}
+
                         {data.group && allTypes[data.group] && (
                             <Alert>
                                 <Info className="h-4 w-4" />
@@ -118,6 +143,9 @@ export default function Edit({
                                                 variant="secondary"
                                             >
                                                 {t.name}
+                                                {t.level
+                                                    ? ` (Lvl ${t.level})`
+                                                    : ""}
                                             </Badge>
                                         ))}
                                 </AlertDescription>

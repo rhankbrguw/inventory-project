@@ -1,39 +1,33 @@
 import { generateHslColorFromString } from "@/lib/utils";
 
 export default function UnifiedBadge({ text, code }) {
-
-    if (!text) {
-        return <span>-</span>;
-    }
+    if (!text) return <span>-</span>;
 
     const staticClassMap = {
-        "ADM": "role-super-admin",
-        "WHM": "role-warehouse-manager",
-        "BRM": "role-branch-manager",
-        "CSH": "role-cashier",
+        ADM: "role-super-admin",
+        WHM: "role-warehouse-manager",
+        BRM: "role-branch-manager",
+        CSH: "role-cashier",
 
-        "IND": "customer-type-individu",
-        "CBG": "customer-type-cabang",
-        "MTR": "customer-type-mitra",
+        IND: "customer-type-individu",
+        CBG: "customer-type-cabang",
+        MTR: "customer-type-mitra",
 
         "Super Admin": "role-super-admin",
         "Warehouse Manager": "role-warehouse-manager",
+        "Branch Manager": "role-branch-manager",
+        Cashier: "role-cashier",
     };
 
     const preDefinedClass = staticClassMap[code] || staticClassMap[text];
 
-    const baseClasses =
-        "px-3 py-1 text-xs font-semibold rounded-full inline-block";
-
     if (preDefinedClass) {
-        return (
-            <span className={`${baseClasses} ${preDefinedClass}`}>{text}</span>
-        );
+        return <span className={`badge-base ${preDefinedClass}`}>{text}</span>;
     }
 
     const dynamicStyle = generateHslColorFromString(text);
     return (
-        <span className={baseClasses} style={dynamicStyle}>
+        <span className="badge-base" style={dynamicStyle}>
             {text}
         </span>
     );

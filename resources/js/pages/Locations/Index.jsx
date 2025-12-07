@@ -27,8 +27,9 @@ export default function Index({
 }) {
     const { params, setFilter } = useIndexPageFilters(
         "locations.index",
-        filters
+        filters,
     );
+
     const canCrudLocations = auth.user.level === 1;
 
     const {
@@ -108,7 +109,7 @@ export default function Index({
                             key={location.id}
                             className={cn(
                                 !canCrudLocations ? "pointer-events-none" : "",
-                                location.deleted_at ? "opacity-50" : ""
+                                location.deleted_at ? "opacity-50" : "",
                             )}
                         >
                             <LocationMobileCard

@@ -12,7 +12,7 @@ class SellPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['BRM', 'CSH']);
+        return $user->level <= 20;
     }
 
     public function view(User $user, Sell $sell): bool
@@ -21,13 +21,13 @@ class SellPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['BRM', 'CSH']) &&
+        return $user->level <= 20 &&
             in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['BRM', 'CSH']);
+        return $user->level <= 20;
     }
 
     public function update(User $user, Sell $sell): bool
@@ -40,7 +40,7 @@ class SellPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['BRM', 'CSH']) &&
+        return $user->level <= 20 &&
             in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
@@ -54,7 +54,7 @@ class SellPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['BRM', 'CSH']) &&
+        return $user->level <= 20 &&
             in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 }

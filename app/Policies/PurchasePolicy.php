@@ -12,7 +12,7 @@ class PurchasePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['WHM', 'BRM']);
+        return $user->level <= 10;
     }
 
     public function view(User $user, Purchase $purchase): bool
@@ -21,13 +21,13 @@ class PurchasePolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['WHM', 'BRM']) &&
+        return $user->level <= 10 &&
             in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['WHM', 'BRM']);
+        return $user->level <= 10;
     }
 
     public function update(User $user, Purchase $purchase): bool
@@ -40,7 +40,7 @@ class PurchasePolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['WHM', 'BRM']) &&
+        return $user->level <= 10 &&
             in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
@@ -54,7 +54,7 @@ class PurchasePolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['WHM', 'BRM']) &&
+        return $user->level <= 10 &&
             in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 }

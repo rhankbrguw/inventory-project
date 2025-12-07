@@ -18,6 +18,7 @@ class UserResource extends JsonResource
                 return $firstRole ? [
                     'name' => $firstRole->name,
                     'code' => $firstRole->code,
+                    'level' => $firstRole->level,
                 ] : null;
             }),
             'pivot' => $this->whenPivotLoaded('location_user', fn() => [

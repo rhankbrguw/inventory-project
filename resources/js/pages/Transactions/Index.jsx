@@ -32,17 +32,16 @@ export default function Index({
 }) {
     const { auth: authData } = usePage().props;
     const user = authData.user;
-    const roleCode = user.role?.code;
-    const isSuperAdmin = user.level === 1;
+    const userLevel = user.level;
 
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
         filters,
     );
 
-    const canCreatePurchase = isSuperAdmin || ["WHM", "BRM"].includes(roleCode);
-    const canCreateSell = isSuperAdmin || ["BRM", "CSH"].includes(roleCode);
-    const canCreateTransfer = isSuperAdmin || ["WHM"].includes(roleCode);
+    const canCreatePurchase = userLevel <= 10;
+    const canCreateSell = userLevel <= 20;
+    const canCreateTransfer = userLevel <= 10;
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>

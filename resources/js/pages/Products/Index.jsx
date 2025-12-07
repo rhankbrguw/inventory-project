@@ -46,9 +46,7 @@ export default function Index({
         restoreItem,
     } = useSoftDeletes({ resourceName: "products", data: products.data });
 
-    const roleCode = auth.user.role?.code;
-    const canCrudProducts =
-        auth.user.level === 1 || ["WHM", "BRM"].includes(roleCode);
+    const canCrudProducts = auth.user.level <= 10;
 
     const renderActionDropdown = (product) => (
         <DropdownMenu>

@@ -594,14 +594,18 @@ export const userColumns = [
         accessorKey: "role.code",
         header: "Kode",
         cell: ({ row }) => (
-            <span className="font-mono">{row.role?.code || "-"}</span>
+            <span className="font-mono text-xs text-muted-foreground">
+                {row.role?.code || "-"}
+            </span>
         ),
         className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "role",
         header: "Jabatan",
-        cell: ({ row }) => <UnifiedBadge text={row.role?.name} />,
+        cell: ({ row }) => (
+            <UnifiedBadge text={row.role?.name} level={row.role?.level} />
+        ),
         className: "text-center whitespace-nowrap",
     },
 ];
