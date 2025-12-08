@@ -22,6 +22,12 @@ class StockMovementController extends Controller
     public function index(Request $request): Response
     {
         $user = Auth::user();
+        $roleCode = $user->roles->first()?->code;
+
+        if ($user->level > 20 || $roleCode === 'CSH') {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
         $stockMovements = StockMovement::with([

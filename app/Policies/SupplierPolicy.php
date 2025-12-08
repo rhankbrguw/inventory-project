@@ -22,21 +22,21 @@ class SupplierPolicy
 
     public function create(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 
     public function update(User $user, Supplier $supplier): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 
     public function delete(User $user, Supplier $supplier): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 
     public function restore(User $user, Supplier $supplier): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 }

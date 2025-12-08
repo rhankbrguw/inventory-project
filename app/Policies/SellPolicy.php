@@ -44,7 +44,7 @@ class SellPolicy
             return true;
         }
 
-        return $user->hasRoleAtLocation($locationId, ['BRM', 'CSH']);
+        return $user->canActAsRoleAtLocation($locationId, ['BRM', 'CSH']);
     }
 
     public function update(User $user, Sell $sell): bool
@@ -57,7 +57,7 @@ class SellPolicy
             return true;
         }
 
-        return $user->hasRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
+        return $user->canActAsRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
     }
 
     public function delete(User $user, Sell $sell): bool
@@ -70,6 +70,6 @@ class SellPolicy
             return true;
         }
 
-        return $user->hasRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
+        return $user->canActAsRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
     }
 }

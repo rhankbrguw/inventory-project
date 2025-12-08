@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Mail\OtpMail;
 use App\Models\Role;
+use App\Models\Location;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -97,6 +98,44 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $role = Role::find($pivot->pivot->role_id);
         return $role?->code;
+    }
+
+    public function getEffectiveRoleAtLocation($locationId): ?string
+    {
+        if ($this->level === 1) {
+            return 'SUPERADMIN';
+        }
+
+        $roleCode = $this->getRoleCodeAtLocation($locationId);
+
+        if ($roleCode === 'STF') {
+            $location = Location::find($locationId);
+            if ($location) {
+                $locationType = $location->type->code;
+                if ($locationType === 'WH') {
+                    return 'WHM';
+                } elseif ($locationType === 'BR') {
+                    return 'BRM';
+                }
+            }
+        }
+
+        return $roleCode;
+    }
+
+    public function canActAsRoleAtLocation($locationId, $requiredRoles): bool
+    {
+        if ($this->level === 1) {
+            return true;
+        }
+
+        $effectiveRole = $this->getEffectiveRoleAtLocation($locationId);
+
+        if (is_array($requiredRoles)) {
+            return in_array($effectiveRole, $requiredRoles);
+        }
+
+        return $effectiveRole === $requiredRoles;
     }
 
     public function hasRoleAtLocation($locationId, $roleCodes): bool

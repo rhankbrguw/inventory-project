@@ -40,7 +40,8 @@ export default function Index({
         filters,
     );
 
-    const canCreatePurchase = isSuperAdmin || user.level <= 10;
+    const canCreatePurchase =
+        isSuperAdmin || (user.level <= 20 && roleCode !== "CSH");
     const canCreateSell =
         isSuperAdmin || (user.level <= 20 && roleCode !== "WHM");
     const canCreateTransfer =

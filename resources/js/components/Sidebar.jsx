@@ -74,7 +74,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 route().current("stock.*") &&
                 !route().current("stock-movements.*"),
             requiredLevel: 10,
-            allowedCodes: ["WHM"],
+            excludedCodes: ["CSH"],
         },
         {
             name: "Stock Movements",
@@ -82,6 +82,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: ArrowRightLeft,
             current: route().current("stock-movements.*"),
             requiredLevel: 10,
+            excludedCodes: ["CSH"],
         },
         {
             name: "Transactions",
@@ -96,6 +97,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: Truck,
             current: route().current("suppliers.*"),
             requiredLevel: 10,
+            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Customers",
@@ -111,6 +113,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: BarChart2,
             current: false,
             requiredLevel: 10,
+            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Users",

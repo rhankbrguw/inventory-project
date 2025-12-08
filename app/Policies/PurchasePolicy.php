@@ -12,7 +12,7 @@ class PurchasePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 20 && $user->roles->first()?->code !== 'CSH';
     }
 
     public function view(User $user, Purchase $purchase): bool
@@ -21,13 +21,14 @@ class PurchasePolicy
             return true;
         }
 
-        return $user->level <= 10 &&
+        return $user->level <= 20 &&
+            $user->roles->first()?->code !== 'CSH' &&
             in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 20 && $user->roles->first()?->code !== 'CSH';
     }
 
     public function createAtLocation(User $user, $locationId): bool
@@ -36,7 +37,7 @@ class PurchasePolicy
             return true;
         }
 
-        return $user->hasRoleAtLocation($locationId, ['WHM', 'BRM']);
+        return $user->canActAsRoleAtLocation($locationId, ['WHM', 'BRM']);
     }
 
     public function update(User $user, Purchase $purchase): bool
@@ -49,7 +50,7 @@ class PurchasePolicy
             return true;
         }
 
-        return $user->hasRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
+        return $user->canActAsRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
     }
 
     public function delete(User $user, Purchase $purchase): bool
@@ -62,6 +63,6 @@ class PurchasePolicy
             return true;
         }
 
-        return $user->hasRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
+        return $user->canActAsRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
     }
 }

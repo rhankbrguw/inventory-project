@@ -12,12 +12,12 @@ class ProductPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 20;
     }
 
     public function view(User $user, Product $product): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 20;
     }
 
     public function create(User $user): bool
