@@ -47,6 +47,18 @@ export default function PurchaseDetailsManager({
         );
     };
 
+    const getRoleDisplayName = (code) => {
+        const roleNames = {
+            WHM: "Warehouse Manager",
+            BRM: "Branch Manager",
+            CSH: "Cashier",
+            STF: "Staff",
+        };
+        return roleNames[code] || code;
+    };
+
+    const availableLocations = locations.filter((loc) => loc.can_purchase);
+
     const submit = (e) => {
         e.preventDefault();
         post(route("transactions.purchases.store"), {
@@ -94,16 +106,27 @@ export default function PurchaseDetailsManager({
                             <SelectValue placeholder="Pilih Lokasi Penerimaan" />
                         </SelectTrigger>
                         <SelectContent>
-                            {locations.map((loc) => (
-                                <SelectItem
-                                    key={loc.id}
-                                    value={loc.id.toString()}
-                                >
-                                    {loc.name}
+                            {availableLocations.length > 0 ? (
+                                availableLocations.map((loc) => (
+                                    <SelectItem
+                                        key={loc.id}
+                                        value={loc.id.toString()}
+                                    >
+                                        {loc.name}
+                                    </SelectItem>
+                                ))
+                            ) : (
+                                <SelectItem value="none" disabled>
+                                    Tidak ada lokasi yang tersedia
                                 </SelectItem>
-                            ))}
+                            )}
                         </SelectContent>
                     </Select>
+                    {availableLocations.length === 0 && (
+                        <p className="text-xs text-destructive mt-1">
+                            Anda tidak memiliki izin pembelian di lokasi manapun
+                        </p>
+                    )}
                     <InputError message={errors.location_id} />
                 </FormField>
 
@@ -229,7 +252,11 @@ export default function PurchaseDetailsManager({
                 </Button>
                 <Button
                     type="submit"
-                    disabled={processing || !isDirty}
+                    disabled={
+                        processing ||
+                        !isDirty ||
+                        availableLocations.length === 0
+                    }
                     className="h-9 text-xs font-semibold"
                 >
                     {processing ? "Memproses..." : "Buat Pesanan"}

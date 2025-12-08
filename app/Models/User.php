@@ -114,6 +114,29 @@ class User extends Authenticatable implements MustVerifyEmail
         return $roleCode === $roleCodes;
     }
 
+    public function canTransactAtLocation($locationId, $transactionType): bool
+    {
+        if ($this->level === 1) {
+            return true;
+        }
+
+        $roleCode = $this->getRoleCodeAtLocation($locationId);
+
+        if ($transactionType === 'purchase') {
+            return in_array($roleCode, ['WHM', 'BRM']);
+        }
+
+        if ($transactionType === 'sell') {
+            return in_array($roleCode, ['BRM', 'CSH']);
+        }
+
+        if ($transactionType === 'transfer') {
+            return $roleCode === 'WHM';
+        }
+
+        return false;
+    }
+
     public function sendOtpNotification(): void
     {
         $otp = random_int(100000, 999999);

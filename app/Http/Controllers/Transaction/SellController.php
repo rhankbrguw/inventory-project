@@ -75,8 +75,19 @@ class SellController extends Controller
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $locations = $locationsQuery->get(["id", "name"]);
+
+        $locationsWithPermissions = $locations->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'can_sell' => $user->canTransactAtLocation($location->id, 'sell'),
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         return Inertia::render("Transactions/Sells/Create", [
-            "locations" => $locationsQuery->get(["id", "name"]),
+            "locations" => $locationsWithPermissions,
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
             "allProducts" => $productsQuery
                 ->paginate(12)

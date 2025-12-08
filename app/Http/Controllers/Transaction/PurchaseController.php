@@ -68,8 +68,19 @@ class PurchaseController extends Controller
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $locations = $locationsQuery->get(["id", "name"]);
+
+        $locationsWithPermissions = $locations->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'can_purchase' => $user->canTransactAtLocation($location->id, 'purchase'),
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         return Inertia::render("Transactions/Purchases/Create", [
-            "locations" => $locationsQuery->get(["id", "name"]),
+            "locations" => $locationsWithPermissions,
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
             "products" => $products,
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)

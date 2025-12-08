@@ -91,11 +91,20 @@ export default function Create({
         totalCartItems,
         totalCartPrice,
         onCheckout: () => {
+            const selectedLocation = locations.find(
+                (loc) => loc.id.toString() === selectedLocationId,
+            );
+            if (!selectedLocation?.can_sell) {
+                return;
+            }
             setIsCheckoutOpen(true);
             setCartOpen(false);
         },
         locationId: selectedLocationId,
         getItemQuantity,
+        canCheckout:
+            locations.find((loc) => loc.id.toString() === selectedLocationId)
+                ?.can_sell ?? false,
     };
 
     return (

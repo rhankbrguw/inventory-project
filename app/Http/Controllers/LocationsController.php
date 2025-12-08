@@ -74,7 +74,9 @@ class LocationsController extends Controller
 
     public function edit(Location $location): Response
     {
-        $location->load(['type', 'users.roles']);
+        $location->load(['type', 'users' => function ($query) {
+            $query->with('roles');
+        }]);
 
         $users = User::with('roles')->orderBy('name')->get();
 
@@ -113,7 +115,12 @@ class LocationsController extends Controller
 
         $assignments = collect($validated['assignments'] ?? [])
             ->mapWithKeys(function ($assignment) {
-                return [$assignment['user_id'] => ['role_id' => $assignment['role_id']]];
+                $user = User::with('roles')->find($assignment['user_id']);
+                $currentGlobalRole = $user->roles->first();
+
+                return [$assignment['user_id'] => [
+                    'role_id' => $currentGlobalRole->id
+                ]];
             });
 
         $location->users()->sync($assignments);
