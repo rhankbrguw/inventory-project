@@ -28,6 +28,8 @@ class TransactionController extends Controller
 {
     public function index(Request $request): Response
     {
+        $request->user()->load(['locations.type']);
+
         $perPage = $request->input('per_page', 15);
         $search = $request->input('search');
         $locationId = $request->input('location_id');

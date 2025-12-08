@@ -21,6 +21,18 @@ class UserResource extends JsonResource
                     'level' => $firstRole->level,
                 ] : null;
             }),
+            'locations' => $this->whenLoaded('locations', function () {
+                return $this->locations->map(function ($location) {
+                    return [
+                        'id' => $location->id,
+                        'name' => $location->name,
+                        'type' => $location->type ? [
+                            'code' => $location->type->code,
+                            'name' => $location->type->name,
+                        ] : null,
+                    ];
+                });
+            }),
             'pivot' => $this->whenPivotLoaded('location_user', fn() => [
                 'role_id' => $this->pivot->role_id,
             ]),

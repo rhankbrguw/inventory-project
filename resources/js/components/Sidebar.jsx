@@ -18,8 +18,8 @@ const NavLink = ({ href, active, children, onClick }) => (
         href={href}
         onClick={onClick}
         className={`flex items-center px-3 py-2.5 rounded-lg transition-colors duration-200 text-sm font-medium ${active
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             }`}
     >
         {children}
@@ -57,7 +57,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             href: route("products.index"),
             icon: Package,
             current: route().current("products.*"),
-            requiredLevel: 10,
+            requiredLevel: 20,
         },
         {
             name: "Locations",
@@ -65,6 +65,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: MapPin,
             current: route().current("locations.*"),
             requiredLevel: 10,
+            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Stock",
@@ -73,7 +74,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             current:
                 route().current("stock.*") &&
                 !route().current("stock-movements.*"),
-            requiredLevel: 10,
+            requiredLevel: 20,
             excludedCodes: ["CSH"],
         },
         {
@@ -82,7 +83,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: ArrowRightLeft,
             current: route().current("stock-movements.*"),
             requiredLevel: 10,
-            excludedCodes: ["CSH"],
         },
         {
             name: "Transactions",

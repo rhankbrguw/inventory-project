@@ -40,10 +40,26 @@ export default function Index({
         filters,
     );
 
+    const userLocations = user.locations || [];
+    const hasWarehouseLocation = userLocations.some(
+        (loc) => loc.type?.code === "WH",
+    );
+    const hasBranchLocation = userLocations.some(
+        (loc) => loc.type?.code === "BR",
+    );
+
     const canCreatePurchase =
-        isSuperAdmin || (user.level <= 20 && roleCode !== "CSH");
+        isSuperAdmin ||
+        (user.level <= 20 &&
+            roleCode !== "CSH" &&
+            (roleCode !== "STF" || hasWarehouseLocation));
+
     const canCreateSell =
-        isSuperAdmin || (user.level <= 20 && roleCode !== "WHM");
+        isSuperAdmin ||
+        (user.level <= 20 &&
+            roleCode !== "WHM" &&
+            (roleCode !== "STF" || hasBranchLocation));
+
     const canCreateTransfer =
         isSuperAdmin || (user.level <= 10 && roleCode === "WHM");
 
