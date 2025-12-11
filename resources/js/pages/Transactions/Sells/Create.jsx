@@ -91,10 +91,7 @@ export default function Create({
         totalCartItems,
         totalCartPrice,
         onCheckout: () => {
-            const selectedLocation = locations.find(
-                (loc) => loc.id.toString() === selectedLocationId,
-            );
-            if (!selectedLocation?.can_sell) {
+            if (!selectedLocationId) {
                 return;
             }
             setIsCheckoutOpen(true);
@@ -102,9 +99,7 @@ export default function Create({
         },
         locationId: selectedLocationId,
         getItemQuantity,
-        canCheckout:
-            locations.find((loc) => loc.id.toString() === selectedLocationId)
-                ?.can_sell ?? false,
+        canCheckout: !!selectedLocationId,
     };
 
     return (

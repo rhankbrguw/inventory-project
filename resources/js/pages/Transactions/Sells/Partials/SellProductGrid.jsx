@@ -1,6 +1,6 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Search, PackageOpen, ShieldAlert } from "lucide-react";
+import { Search, PackageOpen } from "lucide-react"; // ShieldAlert dihapus
 import { cn } from "@/lib/utils";
 import ProductCard from "../../Purchases/Partials/ProductCard";
 import {
@@ -11,7 +11,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import Pagination from "@/components/Pagination";
 
 export default function SellProductGrid({
@@ -29,23 +28,6 @@ export default function SellProductGrid({
     const selectedLocationId = params.location_id || "";
     const searchQuery = params.search || "";
     const selectedType = params.type_id || "all";
-
-    const selectedLocation = locations.find(
-        (loc) => loc.id.toString() === selectedLocationId,
-    );
-
-    const canSellAtLocation = selectedLocation?.can_sell ?? false;
-    const roleAtLocation = selectedLocation?.role_at_location;
-
-    const getRoleDisplayName = (code) => {
-        const roleNames = {
-            WHM: "Warehouse Manager",
-            BRM: "Branch Manager",
-            CSH: "Cashier",
-            STF: "Staff",
-        };
-        return roleNames[code] || code;
-    };
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -65,37 +47,14 @@ export default function SellProductGrid({
                                 <SelectItem
                                     key={loc.id}
                                     value={loc.id.toString()}
-                                    disabled={!loc.can_sell}
                                 >
                                     <div className="flex items-center gap-2">
                                         <span>{loc.name}</span>
-                                        {!loc.can_sell && (
-                                            <span className="text-xs text-muted-foreground">
-                                                (
-                                                {getRoleDisplayName(
-                                                    loc.role_at_location,
-                                                )}{" "}
-                                                - Tidak dapat menjual)
-                                            </span>
-                                        )}
                                     </div>
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-
-                    {selectedLocation && !canSellAtLocation && (
-                        <Alert variant="destructive" className="mt-2">
-                            <ShieldAlert className="h-4 w-4" />
-                            <AlertDescription>
-                                Anda tidak memiliki izin untuk menjual di lokasi
-                                ini. Peran Anda:{" "}
-                                <strong>
-                                    {getRoleDisplayName(roleAtLocation)}
-                                </strong>
-                            </AlertDescription>
-                        </Alert>
-                    )}
                 </div>
             </div>
 
@@ -111,21 +70,7 @@ export default function SellProductGrid({
                 </div>
             )}
 
-            {selectedLocationId && !canSellAtLocation && (
-                <div className="flex flex-col h-full flex-1 items-center justify-center p-6">
-                    <ShieldAlert className="h-16 w-16 text-destructive/50" />
-                    <p className="mt-4 text-sm font-semibold text-foreground">
-                        Akses Ditolak
-                    </p>
-                    <p className="text-xs text-muted-foreground text-center max-w-sm">
-                        Anda tidak memiliki izin untuk melakukan penjualan di
-                        lokasi ini. Peran Anda di sini adalah{" "}
-                        <strong>{getRoleDisplayName(roleAtLocation)}</strong>.
-                    </p>
-                </div>
-            )}
-
-            {selectedLocationId && canSellAtLocation && (
+            {selectedLocationId && (
                 <div className="flex flex-col flex-1 overflow-hidden p-3">
                     <div className="flex-shrink-0 space-y-3 mb-4">
                         <div className="relative">

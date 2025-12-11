@@ -32,10 +32,7 @@ export default function Create({
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
 
-    const canPurchaseAnywhere = useMemo(
-        () => locations.some((loc) => loc.can_purchase),
-        [locations],
-    );
+    const canPurchaseAnywhere = locations.length > 0;
 
     const {
         cartGroups,

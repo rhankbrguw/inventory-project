@@ -70,7 +70,11 @@ class SellController extends Controller
             $productsQuery->whereRaw("1 = 0");
         }
 
-        $locationsQuery = Location::orderBy("name");
+        $branchTypeId = Type::where('code', 'BR')->value('id');
+
+        $locationsQuery = Location::orderBy("name")
+            ->where('type_id', $branchTypeId);
+
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
@@ -81,7 +85,6 @@ class SellController extends Controller
             return [
                 'id' => $location->id,
                 'name' => $location->name,
-                'can_sell' => $user->canTransactAtLocation($location->id, 'sell'),
                 'role_at_location' => $user->getRoleCodeAtLocation($location->id),
             ];
         });
@@ -115,6 +118,13 @@ class SellController extends Controller
         $validated = $request->validated();
 
         $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
+
+        $location = Location::findOrFail($validated['location_id']);
+        $branchTypeId = Type::where('code', 'BR')->value('id');
+
+        if ($location->type_id !== $branchTypeId) {
+            abort(403, 'Transaksi Penjualan hanya boleh dilakukan di Cabang/Branch.');
+        }
 
         $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();

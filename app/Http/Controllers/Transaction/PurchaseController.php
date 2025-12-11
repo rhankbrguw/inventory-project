@@ -63,7 +63,11 @@ class PurchaseController extends Controller
 
         $products = $productsQuery->paginate(12)->withQueryString();
 
-        $locationsQuery = Location::orderBy("name");
+        $warehouseTypeId = Type::where('code', 'WH')->value('id');
+
+        $locationsQuery = Location::orderBy("name")
+            ->where('type_id', $warehouseTypeId);
+
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
@@ -74,7 +78,6 @@ class PurchaseController extends Controller
             return [
                 'id' => $location->id,
                 'name' => $location->name,
-                'can_purchase' => $user->canTransactAtLocation($location->id, 'purchase'),
                 'role_at_location' => $user->getRoleCodeAtLocation($location->id),
             ];
         });
@@ -99,6 +102,13 @@ class PurchaseController extends Controller
         $validated = $request->validated();
 
         $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
+
+        $location = Location::findOrFail($validated['location_id']);
+        $warehouseTypeId = Type::where('code', 'WH')->value('id');
+
+        if ($location->type_id !== $warehouseTypeId) {
+            abort(403, 'Transaksi Pembelian (Restock) hanya boleh dilakukan di Gudang/Warehouse.');
+        }
 
         $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();

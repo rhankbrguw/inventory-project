@@ -47,17 +47,7 @@ export default function PurchaseDetailsManager({
         );
     };
 
-    const getRoleDisplayName = (code) => {
-        const roleNames = {
-            WHM: "Warehouse Manager",
-            BRM: "Branch Manager",
-            CSH: "Cashier",
-            STF: "Staff",
-        };
-        return roleNames[code] || code;
-    };
-
-    const availableLocations = locations.filter((loc) => loc.can_purchase);
+    const availableLocations = locations;
 
     const submit = (e) => {
         e.preventDefault();
@@ -94,7 +84,7 @@ export default function PurchaseDetailsManager({
                 </FormField>
 
                 <FormField
-                    label="Lokasi Penerimaan"
+                    label="Lokasi Penerimaan (Gudang)"
                     htmlFor="location_id"
                     labelClassName="text-xs font-semibold text-foreground"
                 >
@@ -103,7 +93,7 @@ export default function PurchaseDetailsManager({
                         onValueChange={(value) => setData("location_id", value)}
                     >
                         <SelectTrigger id="location_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pilih Lokasi Penerimaan" />
+                            <SelectValue placeholder="Pilih Gudang Penerimaan" />
                         </SelectTrigger>
                         <SelectContent>
                             {availableLocations.length > 0 ? (
@@ -117,14 +107,14 @@ export default function PurchaseDetailsManager({
                                 ))
                             ) : (
                                 <SelectItem value="none" disabled>
-                                    Tidak ada lokasi yang tersedia
+                                    Tidak ada gudang tersedia
                                 </SelectItem>
                             )}
                         </SelectContent>
                     </Select>
                     {availableLocations.length === 0 && (
                         <p className="text-xs text-destructive mt-1">
-                            Anda tidak memiliki izin pembelian di lokasi manapun
+                            Anda tidak memiliki akses ke gudang manapun.
                         </p>
                     )}
                     <InputError message={errors.location_id} />
