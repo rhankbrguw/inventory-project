@@ -68,23 +68,6 @@ export const productColumns = [
         cell: ({ row }) => formatCurrency(row.price),
         className: "text-center font-semibold whitespace-nowrap",
     },
-    {
-        accessorKey: "total_stock",
-        header: "Total Stok",
-        cell: ({ row }) => (
-            <span
-                className={cn(
-                    "font-semibold",
-                    row.total_stock > 0
-                        ? "text-foreground"
-                        : "text-muted-foreground",
-                )}
-            >
-                {formatNumber(row.total_stock)} {row.unit}
-            </span>
-        ),
-        className: "text-center whitespace-nowrap",
-    },
 ];
 
 export const locationColumns = [

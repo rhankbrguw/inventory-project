@@ -18,7 +18,6 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'unit' => $this->unit,
             'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
-            'total_stock' => $this->inventories_sum_quantity ?? 0,
             'type' => $this->whenLoaded('type', fn () => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,

@@ -29,7 +29,6 @@ class ProductController extends Controller
 
         $products = Product::query()
             ->with(['type', 'defaultSupplier'])
-            ->withSum('inventories', 'quantity')
             ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
                 $query->whereHas('inventories', function ($q) use ($accessibleLocationIds) {
                     $q->whereIn('location_id', $accessibleLocationIds);
