@@ -159,7 +159,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        $roleCode = $this->getRoleCodeAtLocation($locationId);
+        $roleCode = $this->getEffectiveRoleAtLocation($locationId);
 
         if ($transactionType === 'purchase') {
             return in_array($roleCode, ['WHM', 'BRM']);
