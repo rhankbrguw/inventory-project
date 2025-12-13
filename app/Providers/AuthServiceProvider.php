@@ -47,7 +47,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Gate::before(function ($user, $ability) {
+        Gate::before(function ($user) {
             if ($user->level === 1) {
                 return true;
             }
