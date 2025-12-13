@@ -29,11 +29,12 @@ class UserResource extends JsonResource
                         'type' => $location->type ? [
                             'code' => $location->type->code,
                             'name' => $location->type->name,
+                            'level' => $location->type->level,
                         ] : null,
                     ];
                 });
             }),
-            'pivot' => $this->whenPivotLoaded('location_user', fn() => [
+            'pivot' => $this->whenPivotLoaded('location_user', fn () => [
                 'role_id' => $this->pivot->role_id,
             ]),
             'created_at' => $this->created_at?->toISOString(),

@@ -13,29 +13,34 @@ import { useMemo } from "react";
 
 export default function AssignmentManager({
     assignments,
-    allUsers,
-    allRoles,
-    locationType,
+    allUsers = [],
+    allRoles = [],
+    locationType = {},
     errors,
     setData,
 }) {
-    const baseRoles = useMemo(() => {
-        if (!locationType?.code) return allRoles;
-        const code = locationType.code.toUpperCase();
 
-        if (code === "WH") {
+    const baseRoles = useMemo(() => {
+        if (!allRoles || allRoles.length === 0) return [];
+
+        const level = locationType?.level;
+
+        if (level === 1) {
             return allRoles.filter((r) => ["WHM", "STF"].includes(r.code));
         }
-        if (code === "BR") {
+
+        if (level === 2) {
             return allRoles.filter((r) =>
                 ["BRM", "CSH", "STF"].includes(r.code),
             );
         }
+
         return allRoles;
     }, [locationType, allRoles]);
 
     const getRolesForUser = (userId) => {
         if (!userId) return baseRoles;
+        if (!allUsers) return baseRoles;
 
         const user = allUsers.find(
             (u) => u.id.toString() === userId.toString(),
@@ -45,9 +50,9 @@ export default function AssignmentManager({
         const isGlobalManager = user.global_level <= 10;
 
         let isHomeTurf = false;
-        if (user.global_role_code === "WHM" && locationType?.code === "WH")
+        if (user.global_role_code === "WHM" && locationType?.level === 1)
             isHomeTurf = true;
-        if (user.global_role_code === "BRM" && locationType?.code === "BR")
+        if (user.global_role_code === "BRM" && locationType?.level === 2)
             isHomeTurf = true;
 
         if (isGlobalManager && !isHomeTurf) {
@@ -127,8 +132,7 @@ export default function AssignmentManager({
                                                     key={user.id}
                                                     value={user.id.toString()}
                                                 >
-                                                    {user.name} (
-                                                    {user.global_role_code})
+                                                    {user.name} ({user.global_role_code})
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -155,14 +159,23 @@ export default function AssignmentManager({
                                             <SelectValue placeholder="Pilih jabatan..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {validRoles.map((role) => (
+                                            {validRoles.length > 0 ? (
+                                                validRoles.map((role) => (
+                                                    <SelectItem
+                                                        key={role.id}
+                                                        value={role.id.toString()}
+                                                    >
+                                                        {role.name}
+                                                    </SelectItem>
+                                                ))
+                                            ) : (
                                                 <SelectItem
-                                                    key={role.id}
-                                                    value={role.id.toString()}
+                                                    value="none"
+                                                    disabled
                                                 >
-                                                    {role.name}
+                                                    Tidak ada jabatan tersedia
                                                 </SelectItem>
-                                            ))}
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </FormField>

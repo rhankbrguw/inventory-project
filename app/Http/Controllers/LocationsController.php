@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
 use App\Http\Resources\LocationResource;
-use App\Http\Resources\RoleResource;
-use App\Http\Resources\UserResource;
 use App\Models\Location;
 use App\Models\Type;
 use App\Models\User;
@@ -60,7 +58,7 @@ class LocationsController extends Controller
         return Inertia::render('Locations/Create', [
             'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
                 ->orderBy('name')
-                ->get(['id', 'name', 'code']),
+                ->get(['id', 'name', 'code', 'level']),
         ]);
     }
 
@@ -78,23 +76,32 @@ class LocationsController extends Controller
             $query->with('roles');
         }]);
 
-        $users = User::with('roles')->orderBy('name')->get();
+        $users = User::with('roles')->orderBy('name')->get()->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'global_role_code' => $u->roles->first()?->code,
+                'global_level' => $u->level,
+            ];
+        });
 
         $roles = Role::where('name', '!=', 'Super Admin')
             ->orderBy('level', 'asc')
-            ->get();
+            ->get()
+            ->map(fn ($r) => [
+                'id' => $r->id,
+                'name' => $r->name,
+                'code' => $r->code,
+                'level' => $r->level,
+            ]);
 
         return Inertia::render('Locations/Edit', [
             'location' => LocationResource::make($location),
             'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
                 ->orderBy('name')
-                ->get(['id', 'name', 'code']),
-            'allUsers' => $users->map(fn($u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-                'global_role_code' => $u->roles->first()?->code,
-                'global_level' => $u->level,
-            ]),
+                ->get(['id', 'name', 'code', 'level']),
+            'allUsers' => $users,
             'allRoles' => $roles,
         ]);
     }
@@ -125,16 +132,12 @@ class LocationsController extends Controller
     public function destroy(Location $location): RedirectResponse
     {
         $location->delete();
-
-        return Redirect::route('locations.index')
-            ->with('success', 'Lokasi berhasil dinonaktifkan.');
+        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil dinonaktifkan.');
     }
 
     public function restore(Location $location): RedirectResponse
     {
         $location->restore();
-
-        return Redirect::route('locations.index')
-            ->with('success', 'Lokasi berhasil diaktifkan kembali.');
+        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diaktifkan kembali.');
     }
 }

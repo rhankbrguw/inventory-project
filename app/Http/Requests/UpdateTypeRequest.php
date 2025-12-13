@@ -36,7 +36,7 @@ class UpdateTypeRequest extends FormRequest
                 'integer',
                 'min:1',
                 'max:100',
-                Rule::requiredIf($this->group === Type::GROUP_USER_ROLE)
+                Rule::requiredIf(fn() => in_array($this->group, [Type::GROUP_USER_ROLE, Type::GROUP_LOCATION]))
             ],
         ];
     }

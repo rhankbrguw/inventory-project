@@ -18,8 +18,10 @@ class TypeSeeder extends Seeder
             ['group' => Type::GROUP_USER_ROLE, 'name' => 'Branch Manager', 'code' => 'BRM', 'level' => 10],
             ['group' => Type::GROUP_USER_ROLE, 'name' => 'Cashier', 'code' => 'CSH', 'level' => 20],
             ['group' => Type::GROUP_USER_ROLE, 'name' => 'Staff', 'code' => 'STF', 'level' => 20],
-            ['group' => Type::GROUP_LOCATION, 'name' => 'Warehouse', 'code' => 'WH', 'level' => null],
-            ['group' => Type::GROUP_LOCATION, 'name' => 'Branch', 'code' => 'BR', 'level' => null],
+
+            ['group' => Type::GROUP_LOCATION, 'name' => 'Warehouse', 'code' => 'WH', 'level' => 1],
+            ['group' => Type::GROUP_LOCATION, 'name' => 'Branch', 'code' => 'BR', 'level' => 2],
+
             ['group' => Type::GROUP_CUSTOMER, 'name' => 'Individu', 'code' => 'IND', 'level' => null],
             ['group' => Type::GROUP_CUSTOMER, 'name' => 'Cabang', 'code' => 'CBG', 'level' => null],
             ['group' => Type::GROUP_CUSTOMER, 'name' => 'Mitra', 'code' => 'MTR', 'level' => null],

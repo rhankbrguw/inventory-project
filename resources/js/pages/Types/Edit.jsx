@@ -107,28 +107,33 @@ export default function Edit({
                             </FormField>
                         </div>
 
-                        {data.group === "user_role" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormField
-                                    label="Level Akses (Hierarki)"
-                                    htmlFor="level"
-                                    error={errors.level}
-                                    description="1=Admin, 10=Manager, 20=Staff/Lainnya."
-                                >
-                                    <Input
-                                        id="level"
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        value={data.level}
-                                        onChange={(e) =>
-                                            setData("level", e.target.value)
+                        {(data.group === "user_role" ||
+                            data.group === "location_type") && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                        label="Level Akses / Kategori"
+                                        htmlFor="level"
+                                        error={errors.level}
+                                        description={
+                                            data.group === "user_role"
+                                                ? "1=Admin, 10=Manager, 20=Staff/Lainnya."
+                                                : "1=Penyimpanan (Gudang/Pusat), 2=Penjualan (Cabang/Outlet/Kiosk)."
                                         }
-                                        placeholder="Contoh: 20"
-                                    />
-                                </FormField>
-                            </div>
-                        )}
+                                    >
+                                        <Input
+                                            id="level"
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            value={data.level}
+                                            onChange={(e) =>
+                                                setData("level", e.target.value)
+                                            }
+                                            placeholder="Contoh: 20"
+                                        />
+                                    </FormField>
+                                </div>
+                            )}
 
                         {data.group && allTypes[data.group] && (
                             <Alert>

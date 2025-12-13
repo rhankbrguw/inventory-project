@@ -18,9 +18,9 @@ import AssignmentManager from "./Partials/AssignmentManager";
 export default function Edit({
     auth,
     location: locationResource,
-    locationTypes,
-    allUsers,
-    allRoles,
+    locationTypes = [],
+    allUsers = [],
+    allRoles = [],
 }) {
     const { data: location } = locationResource;
 

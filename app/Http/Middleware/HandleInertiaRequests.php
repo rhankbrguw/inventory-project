@@ -62,6 +62,7 @@ class HandleInertiaRequests extends Middleware
                             'type' => $location->type ? [
                                 'code' => $location->type->code,
                                 'name' => $location->type->name,
+                                'level' => $location->type->level,
                             ] : null,
                         ];
                     }),
@@ -69,8 +70,8 @@ class HandleInertiaRequests extends Middleware
             ],
 
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error'),
             ],
         ];
     }
