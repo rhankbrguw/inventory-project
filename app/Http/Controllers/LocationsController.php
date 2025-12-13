@@ -80,26 +80,22 @@ class LocationsController extends Controller
 
         $users = User::with('roles')->orderBy('name')->get();
 
-        $roleOrder = [
-            'Warehouse Manager',
-            'Branch Manager',
-            'Staff',
-            'Cashier',
-        ];
-
         $roles = Role::where('name', '!=', 'Super Admin')
-            ->get()
-            ->sortBy(function ($role) use ($roleOrder) {
-                return array_search($role->name, $roleOrder);
-            });
+            ->orderBy('level', 'asc')
+            ->get();
 
         return Inertia::render('Locations/Edit', [
             'location' => LocationResource::make($location),
             'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
                 ->orderBy('name')
                 ->get(['id', 'name', 'code']),
-            'allUsers' => UserResource::collection($users),
-            'allRoles' => RoleResource::collection($roles),
+            'allUsers' => $users->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'global_role_code' => $u->roles->first()?->code,
+                'global_level' => $u->level,
+            ]),
+            'allRoles' => $roles,
         ]);
     }
 
@@ -115,11 +111,8 @@ class LocationsController extends Controller
 
         $assignments = collect($validated['assignments'] ?? [])
             ->mapWithKeys(function ($assignment) {
-                $user = User::with('roles')->find($assignment['user_id']);
-                $currentGlobalRole = $user->roles->first();
-
                 return [$assignment['user_id'] => [
-                    'role_id' => $currentGlobalRole->id
+                    'role_id' => $assignment['role_id']
                 ]];
             });
 

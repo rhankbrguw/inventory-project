@@ -32,7 +32,6 @@ export default function Index({
 }) {
     const { auth: authData } = usePage().props;
     const user = authData.user;
-    const roleCode = user.role?.code;
     const isSuperAdmin = user.level === 1;
 
     const { params, setFilter } = useIndexPageFilters(
@@ -41,27 +40,23 @@ export default function Index({
     );
 
     const userLocations = user.locations || [];
+
     const hasWarehouseLocation = userLocations.some(
         (loc) => loc.type?.code === "WH",
     );
+
     const hasBranchLocation = userLocations.some(
         (loc) => loc.type?.code === "BR",
     );
 
     const canCreatePurchase =
-        isSuperAdmin ||
-        (user.level <= 20 &&
-            roleCode !== "CSH" &&
-            (roleCode !== "STF" || hasWarehouseLocation));
+        isSuperAdmin || (user.level <= 20 && hasWarehouseLocation);
 
     const canCreateSell =
-        isSuperAdmin ||
-        (user.level <= 20 &&
-            roleCode !== "WHM" &&
-            (roleCode !== "STF" || hasBranchLocation));
+        isSuperAdmin || (user.level <= 20 && hasBranchLocation);
 
     const canCreateTransfer =
-        isSuperAdmin || (user.level <= 10 && roleCode === "WHM");
+        isSuperAdmin || (user.level <= 10 && hasWarehouseLocation);
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>

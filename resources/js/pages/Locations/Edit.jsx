@@ -19,12 +19,10 @@ export default function Edit({
     auth,
     location: locationResource,
     locationTypes,
-    allUsers: allUsersResource,
-    allRoles: allRolesResource,
+    allUsers,
+    allRoles,
 }) {
     const { data: location } = locationResource;
-    const { data: allUsers } = allUsersResource;
-    const { data: allRoles } = allRolesResource;
 
     const initialAssignments = useMemo(
         () =>
@@ -56,24 +54,6 @@ export default function Edit({
             (type) => type.id.toString() === data.type_id,
         );
     }, [data.type_id, locationTypes]);
-
-    const filteredRoles = useMemo(() => {
-        if (!selectedLocationType?.code) return allRoles;
-
-        const typeCode = selectedLocationType.code.toUpperCase();
-
-        if (typeCode === "WH") {
-            return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "branch manager",
-            );
-        }
-        if (typeCode === "BR") {
-            return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "warehouse manager",
-            );
-        }
-        return allRoles;
-    }, [selectedLocationType, allRoles]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -154,7 +134,8 @@ export default function Edit({
                 <AssignmentManager
                     assignments={data.assignments}
                     allUsers={allUsers}
-                    allRoles={filteredRoles}
+                    allRoles={allRoles}
+                    locationType={selectedLocationType}
                     errors={errors}
                     setData={setData}
                 />
