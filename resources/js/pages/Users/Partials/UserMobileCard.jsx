@@ -12,11 +12,16 @@ export default function UserMobileCard({ user, renderActionDropdown }) {
             </CardHeader>
             <CardContent>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
-                <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                        {user.role ? user.role.code : "-"}
-                    </span>
-                    <UnifiedBadge text={user.role?.name} />
+                <div className="mt-3 flex items-center gap-2">
+                    <UnifiedBadge
+                        text={user.role?.name}
+                        level={user.role?.level}
+                    />
+                    {user.role?.code && (
+                        <span className="text-[10px] font-mono text-muted-foreground border px-1.5 py-0.5 rounded">
+                            {user.role.code}
+                        </span>
+                    )}
                 </div>
             </CardContent>
         </Card>

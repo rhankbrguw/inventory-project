@@ -26,9 +26,11 @@ export default function SellCart({
     onCheckout,
     locationId,
     getItemQuantity,
+    canCheckout = true,
 }) {
     const hasItems = cart.length > 0;
-    const isCartDisabled = !locationId || processingItem !== null;
+    const isCartDisabled =
+        !locationId || processingItem !== null || !canCheckout;
 
     const handleNewCustomer = (newCustomer) => {
         onCustomerChange(newCustomer.id.toString());

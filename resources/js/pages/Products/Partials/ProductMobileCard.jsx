@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, formatDate, cn, formatNumber } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Package, PackageCheck } from "lucide-react";
+import { Package } from "lucide-react";
 
 export default function ProductMobileCard({ product, renderActionDropdown }) {
     const isInactive = !!product.deleted_at;
@@ -40,9 +40,6 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
                     {formatCurrency(product.price)} / {product.unit}
                 </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-                    <PackageCheck className="w-3 h-3" />
-                    <span>Stok: {formatNumber(product.total_stock)}</span>
-                    <span className="mx-1">·</span>
                     <span>Ditambahkan: {formatDate(product.created_at)}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">

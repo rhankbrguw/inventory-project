@@ -91,11 +91,15 @@ export default function Create({
         totalCartItems,
         totalCartPrice,
         onCheckout: () => {
+            if (!selectedLocationId) {
+                return;
+            }
             setIsCheckoutOpen(true);
             setCartOpen(false);
         },
         locationId: selectedLocationId,
         getItemQuantity,
+        canCheckout: !!selectedLocationId,
     };
 
     return (

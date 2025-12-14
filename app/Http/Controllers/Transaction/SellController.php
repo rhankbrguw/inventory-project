@@ -70,13 +70,27 @@ class SellController extends Controller
             $productsQuery->whereRaw("1 = 0");
         }
 
-        $locationsQuery = Location::orderBy("name");
+        $branchTypeId = Type::where('code', 'BR')->value('id');
+
+        $locationsQuery = Location::orderBy("name")
+            ->where('type_id', $branchTypeId);
+
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $locations = $locationsQuery->get(["id", "name"]);
+
+        $locationsWithPermissions = $locations->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         return Inertia::render("Transactions/Sells/Create", [
-            "locations" => $locationsQuery->get(["id", "name"]),
+            "locations" => $locationsWithPermissions,
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
             "allProducts" => $productsQuery
                 ->paginate(12)
@@ -102,6 +116,15 @@ class SellController extends Controller
     public function store(StoreSellRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
+
+        $location = Location::findOrFail($validated['location_id']);
+        $branchTypeId = Type::where('code', 'BR')->value('id');
+
+        if ($location->type_id !== $branchTypeId) {
+            abort(403, 'Transaksi Penjualan hanya boleh dilakukan di Cabang/Branch.');
+        }
 
         $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();

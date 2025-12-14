@@ -32,7 +32,6 @@ export default function Index({
 }) {
     const { auth: authData } = usePage().props;
     const user = authData.user;
-    const roleCode = user.role?.code;
     const isSuperAdmin = user.level === 1;
 
     const { params, setFilter } = useIndexPageFilters(
@@ -40,9 +39,26 @@ export default function Index({
         filters,
     );
 
-    const canCreatePurchase = isSuperAdmin || ["WHM", "BRM"].includes(roleCode);
-    const canCreateSell = isSuperAdmin || ["BRM", "CSH"].includes(roleCode);
-    const canCreateTransfer = isSuperAdmin || ["WHM"].includes(roleCode);
+    const userLocations = user.locations || [];
+
+    const hasStorageAccess = userLocations.some(
+        (loc) => loc.type?.level === 1
+    );
+
+    const hasSalesAccess = userLocations.some(
+        (loc) => loc.type?.level === 2
+    );
+
+    const canCreatePurchase =
+        isSuperAdmin ||
+        (user.level <= 20 && hasStorageAccess);
+
+    const canCreateSell =
+        isSuperAdmin ||
+        (user.level <= 20 && hasSalesAccess);
+
+    const canCreateTransfer =
+        isSuperAdmin || (user.level <= 10 && hasStorageAccess);
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
@@ -113,7 +129,6 @@ export default function Index({
                             </Button>
                         )}
                     </div>
-
                     <div className="sm:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -183,7 +198,6 @@ export default function Index({
                     locations={locations}
                     transactionTypes={transactionTypes}
                 />
-
                 <MobileCardList
                     data={transactions.data}
                     renderItem={(transaction) => (
@@ -198,7 +212,6 @@ export default function Index({
                         </Link>
                     )}
                 />
-
                 <div className="hidden md:block">
                     <DataTable
                         columns={transactionColumns(authData)}
@@ -208,7 +221,6 @@ export default function Index({
                         keyExtractor={(row) => row.unique_key}
                     />
                 </div>
-
                 {transactions.data.length > 0 && (
                     <Pagination links={transactions.meta.links} />
                 )}

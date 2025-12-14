@@ -13,11 +13,11 @@ class StoreTypeRequest extends FormRequest
     {
         $user = $this->user();
 
-        if ($user->hasRole('Super Admin')) {
+        if ($user->level === 1) {
             return true;
         }
 
-        if ($user->hasRole('Branch Manager')) {
+        if ($user->level <= 10) {
             return $this->input('group') === Type::GROUP_PRODUCT;
         }
 
@@ -35,7 +35,7 @@ class StoreTypeRequest extends FormRequest
                 'integer',
                 'min:1',
                 'max:100',
-                Rule::requiredIf($this->group === Type::GROUP_USER_ROLE)
+                Rule::requiredIf(fn() => in_array($this->group, [Type::GROUP_USER_ROLE, Type::GROUP_LOCATION]))
             ],
         ];
     }

@@ -48,7 +48,9 @@ export default function SellProductGrid({
                                     key={loc.id}
                                     value={loc.id.toString()}
                                 >
-                                    {loc.name}
+                                    <div className="flex items-center gap-2">
+                                        <span>{loc.name}</span>
+                                    </div>
                                 </SelectItem>
                             ))}
                         </SelectContent>

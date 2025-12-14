@@ -12,7 +12,7 @@ class SellPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['BRM', 'CSH']);
+        return $user->level <= 20 && $user->roles->first()?->code !== 'WHM';
     }
 
     public function view(User $user, Sell $sell): bool
@@ -21,13 +21,30 @@ class SellPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['BRM', 'CSH']) &&
+        if ($user->roles->first()?->code === 'WHM') {
+            return false;
+        }
+
+        return $user->level <= 20 &&
             in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['BRM', 'CSH']);
+        if ($user->level === 1) {
+            return true;
+        }
+
+        return $user->level <= 20 && $user->roles->first()?->code !== 'WHM';
+    }
+
+    public function createAtLocation(User $user, $locationId): bool
+    {
+        if ($user->level === 1) {
+            return true;
+        }
+
+        return $user->canActAsRoleAtLocation($locationId, ['BRM', 'CSH']);
     }
 
     public function update(User $user, Sell $sell): bool
@@ -40,8 +57,7 @@ class SellPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['BRM', 'CSH']) &&
-            in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
+        return $user->canActAsRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
     }
 
     public function delete(User $user, Sell $sell): bool
@@ -54,7 +70,6 @@ class SellPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['BRM', 'CSH']) &&
-            in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
+        return $user->canActAsRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
     }
 }

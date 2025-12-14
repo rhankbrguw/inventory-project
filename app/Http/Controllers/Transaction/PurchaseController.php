@@ -63,13 +63,27 @@ class PurchaseController extends Controller
 
         $products = $productsQuery->paginate(12)->withQueryString();
 
-        $locationsQuery = Location::orderBy("name");
+        $warehouseTypeId = Type::where('code', 'WH')->value('id');
+
+        $locationsQuery = Location::orderBy("name")
+            ->where('type_id', $warehouseTypeId);
+
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $locations = $locationsQuery->get(["id", "name"]);
+
+        $locationsWithPermissions = $locations->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         return Inertia::render("Transactions/Purchases/Create", [
-            "locations" => $locationsQuery->get(["id", "name"]),
+            "locations" => $locationsWithPermissions,
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
             "products" => $products,
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
@@ -86,6 +100,15 @@ class PurchaseController extends Controller
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
+
+        $location = Location::findOrFail($validated['location_id']);
+        $warehouseTypeId = Type::where('code', 'WH')->value('id');
+
+        if ($location->type_id !== $warehouseTypeId) {
+            abort(403, 'Transaksi Pembelian (Restock) hanya boleh dilakukan di Gudang/Warehouse.');
+        }
 
         $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();

@@ -11,7 +11,18 @@ class UpdateTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        $type = $this->route('type');
+
+        if ($user->level === 1) {
+            return true;
+        }
+
+        if ($user->level <= 10) {
+            return $type->group === Type::GROUP_PRODUCT && $this->input('group') === Type::GROUP_PRODUCT;
+        }
+
+        return false;
     }
 
     public function rules(): array
@@ -25,7 +36,7 @@ class UpdateTypeRequest extends FormRequest
                 'integer',
                 'min:1',
                 'max:100',
-                Rule::requiredIf($this->group === Type::GROUP_USER_ROLE)
+                Rule::requiredIf(fn() => in_array($this->group, [Type::GROUP_USER_ROLE, Type::GROUP_LOCATION]))
             ],
         ];
     }
