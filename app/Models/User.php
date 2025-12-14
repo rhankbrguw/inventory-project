@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Mail\OtpMail;
+use App\Models\Role;
+use App\Models\Location;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -78,6 +80,100 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $ids;
+    }
+
+    public function getRoleCodeAtLocation($locationId): ?string
+    {
+        if ($this->level === 1) {
+            return 'SUPERADMIN';
+        }
+
+        $pivot = $this->locations()
+            ->where('locations.id', $locationId)
+            ->first();
+
+        if (!$pivot) {
+            return null;
+        }
+
+        $role = Role::find($pivot->pivot->role_id);
+        return $role?->code;
+    }
+
+    public function getEffectiveRoleAtLocation($locationId): ?string
+    {
+        if ($this->level === 1) {
+            return 'SUPERADMIN';
+        }
+
+        $roleCode = $this->getRoleCodeAtLocation($locationId);
+
+        if ($roleCode === 'STF') {
+            $location = Location::find($locationId);
+            if ($location) {
+                $locationType = $location->type->code;
+                if ($locationType === 'WH') {
+                    return 'WHM';
+                } elseif ($locationType === 'BR') {
+                    return 'BRM';
+                }
+            }
+        }
+
+        return $roleCode;
+    }
+
+    public function canActAsRoleAtLocation($locationId, $requiredRoles): bool
+    {
+        if ($this->level === 1) {
+            return true;
+        }
+
+        $effectiveRole = $this->getEffectiveRoleAtLocation($locationId);
+
+        if (is_array($requiredRoles)) {
+            return in_array($effectiveRole, $requiredRoles);
+        }
+
+        return $effectiveRole === $requiredRoles;
+    }
+
+    public function hasRoleAtLocation($locationId, $roleCodes): bool
+    {
+        if ($this->level === 1) {
+            return true;
+        }
+
+        $roleCode = $this->getRoleCodeAtLocation($locationId);
+
+        if (is_array($roleCodes)) {
+            return in_array($roleCode, $roleCodes);
+        }
+
+        return $roleCode === $roleCodes;
+    }
+
+    public function canTransactAtLocation($locationId, $transactionType): bool
+    {
+        if ($this->level === 1) {
+            return true;
+        }
+
+        $roleCode = $this->getEffectiveRoleAtLocation($locationId);
+
+        if ($transactionType === 'purchase') {
+            return in_array($roleCode, ['WHM', 'BRM']);
+        }
+
+        if ($transactionType === 'sell') {
+            return in_array($roleCode, ['BRM', 'CSH']);
+        }
+
+        if ($transactionType === 'transfer') {
+            return $roleCode === 'WHM';
+        }
+
+        return false;
     }
 
     public function sendOtpNotification(): void

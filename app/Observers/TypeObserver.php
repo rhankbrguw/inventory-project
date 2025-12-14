@@ -16,19 +16,29 @@ class TypeObserver
     public function created(Type $type): void
     {
         if ($type->group === Type::GROUP_USER_ROLE) {
-            Role::create(['name' => $type->name, 'code' => $type->code, 'guard_name' => 'web']);
+            Role::create([
+                'name' => $type->name,
+                'code' => $type->code,
+                'level' => $type->level ?? 100,
+                'guard_name' => 'web'
+            ]);
             $this->clearRoleCache();
         }
     }
 
     public function updated(Type $type): void
     {
-        if (($type->isDirty('name') || $type->isDirty('code')) && $type->getOriginal('group') === Type::GROUP_USER_ROLE) {
+        if (($type->isDirty('name') || $type->isDirty('code') || $type->isDirty('level')) &&
+            $type->getOriginal('group') === Type::GROUP_USER_ROLE
+        ) {
+
             $oldRole = Role::findByName($type->getOriginal('name'), 'web');
+
             if ($oldRole) {
                 $oldRole->update([
                     'name' => $type->name,
                     'code' => $type->code,
+                    'level' => $type->level,
                 ]);
                 $this->clearRoleCache();
             }

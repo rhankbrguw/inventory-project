@@ -37,6 +37,7 @@ export default function Index({
         "products.index",
         filters,
     );
+
     const {
         confirmingDeletion,
         setConfirmingDeletion,
@@ -47,8 +48,7 @@ export default function Index({
     } = useSoftDeletes({ resourceName: "products", data: products.data });
 
     const roleCode = auth.user.role?.code;
-    const canCrudProducts =
-        auth.user.level === 1 || ["WHM", "BRM"].includes(roleCode);
+    const canCrudProducts = auth.user.level === 1 || roleCode === "BRM";
 
     const renderActionDropdown = (product) => (
         <DropdownMenu>
@@ -124,16 +124,20 @@ export default function Index({
                     allProducts={allProducts}
                     productTypes={productTypes}
                 />
-
                 <MobileCardList
                     data={products.data}
                     renderItem={(product) => (
                         <Link
-                            href={route("products.edit", product.id)}
+                            href={
+                                canCrudProducts
+                                    ? route("products.edit", product.id)
+                                    : "#"
+                            }
                             key={product.id}
                             className={cn(
                                 "block",
-                                product.deleted_at ? "opacity-50" : "",
+                                !canCrudProducts && "pointer-events-none",
+                                product.deleted_at && "opacity-50",
                             )}
                         >
                             <ProductMobileCard
@@ -147,7 +151,6 @@ export default function Index({
                         </Link>
                     )}
                 />
-
                 <div className="hidden md:block">
                     <DataTable
                         columns={productColumns}
@@ -159,12 +162,10 @@ export default function Index({
                         }
                     />
                 </div>
-
                 {products.data.length > 0 && (
                     <Pagination links={products.meta.links} />
                 )}
             </div>
-
             {canCrudProducts && (
                 <DeleteConfirmationDialog
                     open={confirmingDeletion !== null}

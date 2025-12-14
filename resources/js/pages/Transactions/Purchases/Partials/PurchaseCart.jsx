@@ -31,6 +31,7 @@ export default function PurchaseCart({
     setSupplierFilter,
     supplierOptions,
     filteredCartGroups,
+    canCheckout = true,
 }) {
     const hasCartItems = Object.keys(cartGroups).length > 0;
 
@@ -109,6 +110,7 @@ export default function PurchaseCart({
                             processingGroup={processingGroup}
                             toggleSupplierSelection={toggleSupplierSelection}
                             isSupplierSelected={isSupplierSelected}
+                            canCheckout={canCheckout}
                         />
                     </div>
                 )}

@@ -28,6 +28,7 @@ export default function PurchaseItemManager({
     processingGroup,
     toggleSupplierSelection,
     isSupplierSelected,
+    canCheckout = true,
 }) {
     const { errors } = usePage().props;
 
@@ -243,7 +244,9 @@ export default function PurchaseItemManager({
                                     onCheckout(groupData.supplier_id)
                                 }
                                 disabled={
-                                    isGroupProcessing || processingItem !== null
+                                    isGroupProcessing ||
+                                    processingItem !== null ||
+                                    !canCheckout
                                 }
                                 className="w-full h-8 text-xs font-semibold"
                             >

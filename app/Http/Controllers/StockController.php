@@ -28,6 +28,8 @@ class StockController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Inventory::class);
+
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
@@ -82,17 +84,23 @@ class StockController extends Controller
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $roleCode = $user->roles->first()?->code;
+        $canAdjustStock = $user->level === 1 || in_array($roleCode, ['WHM', 'BRM', 'STF']);
+
         return Inertia::render('Stock/Index', [
             'inventories' => InventoryResource::collection($inventories),
             'locations' => $locationsQuery->get(['id', 'name']),
             'products' => Product::orderBy('name')->get(['id', 'name', 'sku']),
             'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->get(['id', 'name']),
             'filters' => (object) $request->only(['search', 'location_id', 'type_id', 'sort', 'product_id']),
+            'canAdjustStock' => $canAdjustStock,
         ]);
     }
 
     public function show(Inventory $inventory): Response
     {
+        $this->authorize('view', $inventory);
+
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
         if ($accessibleLocationIds && !in_array($inventory->location_id, $accessibleLocationIds)) {
@@ -158,6 +166,8 @@ class StockController extends Controller
     public function adjust(AdjustStockRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $this->authorize('adjust', [Inventory::class, $validated['location_id']]);
 
         $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();

@@ -12,7 +12,7 @@ class LocationPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level === 1 || in_array($user->roles->first()?->code, ['WHM', 'BRM']);
+        return $user->level <= 10;
     }
 
     public function view(User $user, Location $location): bool
@@ -21,7 +21,7 @@ class LocationPolicy
             return true;
         }
 
-        return in_array($user->roles->first()?->code, ['WHM', 'BRM']) &&
+        return $user->level <= 10 &&
             in_array($location->id, $user->getAccessibleLocationIds() ?? []);
     }
 

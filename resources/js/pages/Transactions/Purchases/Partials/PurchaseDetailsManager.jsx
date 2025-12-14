@@ -47,6 +47,8 @@ export default function PurchaseDetailsManager({
         );
     };
 
+    const availableLocations = locations;
+
     const submit = (e) => {
         e.preventDefault();
         post(route("transactions.purchases.store"), {
@@ -82,7 +84,7 @@ export default function PurchaseDetailsManager({
                 </FormField>
 
                 <FormField
-                    label="Lokasi Penerimaan"
+                    label="Lokasi Penerimaan (Gudang)"
                     htmlFor="location_id"
                     labelClassName="text-xs font-semibold text-foreground"
                 >
@@ -91,19 +93,30 @@ export default function PurchaseDetailsManager({
                         onValueChange={(value) => setData("location_id", value)}
                     >
                         <SelectTrigger id="location_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pilih Lokasi Penerimaan" />
+                            <SelectValue placeholder="Pilih Gudang Penerimaan" />
                         </SelectTrigger>
                         <SelectContent>
-                            {locations.map((loc) => (
-                                <SelectItem
-                                    key={loc.id}
-                                    value={loc.id.toString()}
-                                >
-                                    {loc.name}
+                            {availableLocations.length > 0 ? (
+                                availableLocations.map((loc) => (
+                                    <SelectItem
+                                        key={loc.id}
+                                        value={loc.id.toString()}
+                                    >
+                                        {loc.name}
+                                    </SelectItem>
+                                ))
+                            ) : (
+                                <SelectItem value="none" disabled>
+                                    Tidak ada gudang tersedia
                                 </SelectItem>
-                            ))}
+                            )}
                         </SelectContent>
                     </Select>
+                    {availableLocations.length === 0 && (
+                        <p className="text-xs text-destructive mt-1">
+                            Anda tidak memiliki akses ke gudang manapun.
+                        </p>
+                    )}
                     <InputError message={errors.location_id} />
                 </FormField>
 
@@ -229,7 +242,11 @@ export default function PurchaseDetailsManager({
                 </Button>
                 <Button
                     type="submit"
-                    disabled={processing || !isDirty}
+                    disabled={
+                        processing ||
+                        !isDirty ||
+                        availableLocations.length === 0
+                    }
                     className="h-9 text-xs font-semibold"
                 >
                     {processing ? "Memproses..." : "Buat Pesanan"}

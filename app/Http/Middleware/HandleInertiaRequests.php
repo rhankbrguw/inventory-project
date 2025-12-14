@@ -38,7 +38,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         if ($user) {
-            $user->loadMissing('roles');
+            $user->loadMissing(['roles', 'locations.type']);
         }
 
         return [
@@ -55,6 +55,17 @@ class HandleInertiaRequests extends Middleware
                         'code' => $user->roles->first()->code,
                     ] : null,
                     'has_locations' => $user->level === 1 || $user->locations()->exists(),
+                    'locations' => $user->locations->map(function ($location) {
+                        return [
+                            'id' => $location->id,
+                            'name' => $location->name,
+                            'type' => $location->type ? [
+                                'code' => $location->type->code,
+                                'name' => $location->type->name,
+                                'level' => $location->type->level,
+                            ] : null,
+                        ];
+                    }),
                 ] : null,
             ],
 

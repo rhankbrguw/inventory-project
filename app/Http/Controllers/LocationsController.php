@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
 use App\Http\Resources\LocationResource;
-use App\Http\Resources\RoleResource;
-use App\Http\Resources\UserResource;
 use App\Models\Location;
 use App\Models\Type;
 use App\Models\User;
@@ -60,7 +58,7 @@ class LocationsController extends Controller
         return Inertia::render('Locations/Create', [
             'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
                 ->orderBy('name')
-                ->get(['id', 'name', 'code']),
+                ->get(['id', 'name', 'code', 'level']),
         ]);
     }
 
@@ -74,30 +72,37 @@ class LocationsController extends Controller
 
     public function edit(Location $location): Response
     {
-        $location->load(['type', 'users.roles']);
+        $location->load(['type', 'users' => function ($query) {
+            $query->with('roles');
+        }]);
 
-        $users = User::with('roles')->orderBy('name')->get();
-
-        $roleOrder = [
-            'Warehouse Manager',
-            'Branch Manager',
-            'Staff',
-            'Cashier',
-        ];
+        $users = User::with('roles')->orderBy('name')->get()->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'global_role_code' => $u->roles->first()?->code,
+                'global_level' => $u->level,
+            ];
+        });
 
         $roles = Role::where('name', '!=', 'Super Admin')
+            ->orderBy('level', 'asc')
             ->get()
-            ->sortBy(function ($role) use ($roleOrder) {
-                return array_search($role->name, $roleOrder);
-            });
+            ->map(fn ($r) => [
+                'id' => $r->id,
+                'name' => $r->name,
+                'code' => $r->code,
+                'level' => $r->level,
+            ]);
 
         return Inertia::render('Locations/Edit', [
             'location' => LocationResource::make($location),
             'locationTypes' => Type::where('group', Type::GROUP_LOCATION)
                 ->orderBy('name')
-                ->get(['id', 'name', 'code']),
-            'allUsers' => UserResource::collection($users),
-            'allRoles' => RoleResource::collection($roles),
+                ->get(['id', 'name', 'code', 'level']),
+            'allUsers' => $users,
+            'allRoles' => $roles,
         ]);
     }
 
@@ -113,7 +118,9 @@ class LocationsController extends Controller
 
         $assignments = collect($validated['assignments'] ?? [])
             ->mapWithKeys(function ($assignment) {
-                return [$assignment['user_id'] => ['role_id' => $assignment['role_id']]];
+                return [$assignment['user_id'] => [
+                    'role_id' => $assignment['role_id']
+                ]];
             });
 
         $location->users()->sync($assignments);
@@ -125,16 +132,12 @@ class LocationsController extends Controller
     public function destroy(Location $location): RedirectResponse
     {
         $location->delete();
-
-        return Redirect::route('locations.index')
-            ->with('success', 'Lokasi berhasil dinonaktifkan.');
+        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil dinonaktifkan.');
     }
 
     public function restore(Location $location): RedirectResponse
     {
         $location->restore();
-
-        return Redirect::route('locations.index')
-            ->with('success', 'Lokasi berhasil diaktifkan kembali.');
+        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diaktifkan kembali.');
     }
 }

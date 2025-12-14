@@ -30,16 +30,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const userLevel = user.level;
-    const userRoleCode = user.role?.code;
+    const userCode = user.role?.code;
 
     const hasAccess = (link) => {
-        if (userLevel === 1) return true;
-
         if (link.requiredLevel && userLevel > link.requiredLevel) return false;
 
-        if (link.allowedCodes && !link.allowedCodes.includes(userRoleCode)) {
+        if (link.excludedCodes && link.excludedCodes.includes(userCode))
             return false;
-        }
+
+        if (link.allowedCodes && !link.allowedCodes.includes(userCode))
+            return false;
 
         return true;
     };
@@ -50,62 +50,70 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             href: route("dashboard"),
             icon: LayoutDashboard,
             current: route().current("dashboard"),
+            requiredLevel: 100,
         },
         {
             name: "Product",
             href: route("products.index"),
             icon: Package,
             current: route().current("products.*"),
-            allowedCodes: ['WHM', 'BRM'],
+            requiredLevel: 20,
         },
         {
             name: "Locations",
             href: route("locations.index"),
             icon: MapPin,
             current: route().current("locations.*"),
-            allowedCodes: ['WHM', 'BRM'],
+            requiredLevel: 10,
+            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Stock",
             href: route("stock.index"),
             icon: Warehouse,
-            current: route().current("stock.*") && !route().current("stock-movements.*"),
-            allowedCodes: ['WHM'],
+            current:
+                route().current("stock.*") &&
+                !route().current("stock-movements.*"),
+            requiredLevel: 20,
+            excludedCodes: ["CSH"],
         },
         {
             name: "Stock Movements",
             href: route("stock-movements.index"),
             icon: ArrowRightLeft,
             current: route().current("stock-movements.*"),
-            allowedCodes: ['WHM'],
+            requiredLevel: 10,
         },
         {
             name: "Transactions",
             href: route("transactions.index"),
             icon: ClipboardList,
             current: route().current("transactions.*"),
-            allowedCodes: ['WHM', 'BRM', 'CSH'],
+            requiredLevel: 20,
         },
         {
             name: "Supplier",
             href: route("suppliers.index"),
             icon: Truck,
             current: route().current("suppliers.*"),
-            allowedCodes: ['WHM'],
+            requiredLevel: 10,
+            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Customers",
             href: route("customers.index"),
             icon: Contact,
             current: route().current("customers.*"),
-            allowedCodes: ['BRM', 'CSH'],
+            requiredLevel: 20,
+            excludedCodes: ["WHM"],
         },
         {
             name: "Report",
             href: "#",
             icon: BarChart2,
             current: false,
-            allowedCodes: ['WHM', 'BRM'],
+            requiredLevel: 10,
+            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Users",

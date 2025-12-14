@@ -133,12 +133,29 @@ class UserController extends Controller
             }
         }
 
+        $oldRole = $user->roles->first();
+
         $user->update([
             "name" => $validated["name"],
             "email" => $validated["email"],
         ]);
 
         $user->syncRoles($validated["role"]);
+
+        $newRole = $user->roles->first();
+        $locationCount = $user->locations()->count();
+
+        if ($oldRole && $newRole && $oldRole->id !== $newRole->id && $locationCount > 0) {
+            $user->locations()->updateExistingPivot(
+                $user->locations->pluck('id')->toArray(),
+                ['role_id' => $newRole->id]
+            );
+
+            return Redirect::route('users.index')->with(
+                'success',
+                "Pengguna berhasil diperbarui. Role di {$locationCount} lokasi telah disinkronkan otomatis ke {$newRole->name}."
+            );
+        }
 
         return Redirect::route("users.index")->with(
             "success",

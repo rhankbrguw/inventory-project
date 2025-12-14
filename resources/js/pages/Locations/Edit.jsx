@@ -1,5 +1,5 @@
 import { Link, useForm } from "@inertiajs/react";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import FormField from "@/components/FormField";
 import { Button } from "@/components/ui/button";
@@ -18,48 +18,42 @@ import AssignmentManager from "./Partials/AssignmentManager";
 export default function Edit({
     auth,
     location: locationResource,
-    locationTypes,
-    allUsers: allUsersResource,
-    allRoles: allRolesResource,
+    locationTypes = [],
+    allUsers = [],
+    allRoles = [],
 }) {
     const { data: location } = locationResource;
-    const { data: allUsers } = allUsersResource;
-    const { data: allRoles } = allRolesResource;
+
+    const initialAssignments = useMemo(
+        () =>
+            location.users?.map((user) => ({
+                user_id: user.id.toString(),
+                role_id: user.pivot.role_id.toString(),
+            })) || [],
+        [location.users],
+    );
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
         name: location.name || "",
         type_id: location.type?.id?.toString() || "",
         address: location.address || "",
-        assignments:
-            location.users?.map((user) => ({
-                user_id: user.id.toString(),
-                role_id: user.pivot.role_id.toString(),
-            })) || [],
+        assignments: initialAssignments,
     });
+
+    const [isFormDirty, setIsFormDirty] = useState(false);
+
+    useEffect(() => {
+        const assignmentsChanged =
+            JSON.stringify(data.assignments) !==
+            JSON.stringify(initialAssignments);
+        setIsFormDirty(isDirty || assignmentsChanged);
+    }, [data, isDirty, initialAssignments]);
 
     const selectedLocationType = useMemo(() => {
         return locationTypes.find(
             (type) => type.id.toString() === data.type_id,
         );
     }, [data.type_id, locationTypes]);
-
-    const filteredRoles = useMemo(() => {
-        if (!selectedLocationType?.code) return allRoles;
-
-        const typeCode = selectedLocationType.code.toUpperCase();
-
-        if (typeCode === "WH") {
-            return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "branch manager",
-            );
-        }
-        if (typeCode === "BR") {
-            return allRoles.filter(
-                (role) => role.name.toLowerCase() !== "warehouse manager",
-            );
-        }
-        return allRoles;
-    }, [selectedLocationType, allRoles]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -140,7 +134,8 @@ export default function Edit({
                 <AssignmentManager
                     assignments={data.assignments}
                     allUsers={allUsers}
-                    allRoles={filteredRoles}
+                    allRoles={allRoles}
+                    locationType={selectedLocationType}
                     errors={errors}
                     setData={setData}
                 />
@@ -151,7 +146,9 @@ export default function Edit({
                             Batal
                         </Button>
                     </Link>
-                    <Button disabled={processing || !isDirty}>Simpan</Button>
+                    <Button disabled={processing || !isFormDirty}>
+                        Simpan
+                    </Button>
                 </div>
             </form>
         </ContentPageLayout>

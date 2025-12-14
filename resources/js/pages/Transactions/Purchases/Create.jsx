@@ -32,6 +32,8 @@ export default function Create({
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
 
+    const canPurchaseAnywhere = locations.length > 0;
+
     const {
         cartGroups,
         selectedProductIds,
@@ -84,6 +86,9 @@ export default function Create({
     };
 
     const handleOpenCheckout = (supplierId) => {
+        if (!canPurchaseAnywhere) {
+            return;
+        }
         setCheckoutSupplierId(supplierId);
         setIsCheckoutModalOpen(true);
         setCartOpen(false);
@@ -125,6 +130,7 @@ export default function Create({
         setSupplierFilter: handleSupplierFilterChange,
         supplierOptions,
         filteredCartGroups,
+        canCheckout: canPurchaseAnywhere,
     };
 
     return (
@@ -159,6 +165,7 @@ export default function Create({
                         selectedProductIds={selectedProductIds}
                         processingItem={processingItem}
                         paginationLinks={products.links}
+                        canPurchase={canPurchaseAnywhere}
                     />
                 </div>
 

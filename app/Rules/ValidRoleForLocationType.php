@@ -15,7 +15,6 @@ class ValidRoleForLocationType implements ValidationRule, DataAwareRule
     public function setData(array $data): static
     {
         $this->data = $data;
-
         return $this;
     }
 
@@ -28,15 +27,15 @@ class ValidRoleForLocationType implements ValidationRule, DataAwareRule
             return;
         }
 
-        $isWarehouse = $locationType->code === 'WH';
-        $isBranch = $locationType->code === 'BR';
+        $isStorageNode = $locationType->level === 1;
+        $isSalesNode   = $locationType->level === 2;
 
-        if ($isWarehouse && $role->name === 'Branch Manager') {
-            $fail('Peran Branch Manager tidak valid untuk tipe Gudang.');
+        if ($isStorageNode && $role->name === 'Branch Manager') {
+            $fail('Peran Branch Manager tidak valid untuk tipe lokasi Penyimpanan.');
         }
 
-        if ($isBranch && $role->name === 'Warehouse Manager') {
-            $fail('Peran Warehouse Manager tidak valid untuk tipe Cabang.');
+        if ($isSalesNode && $role->name === 'Warehouse Manager') {
+            $fail('Peran Warehouse Manager tidak valid untuk tipe lokasi Penjualan.');
         }
     }
 }
