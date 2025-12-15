@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
@@ -23,14 +24,19 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+Route::middleware('guest')->group(function () {
+    Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
+    Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
+});
+
 Route::get("/", function () {
     return Inertia::render("Welcome", [
         "canLogin" => Route::has("login"),
         "canRegister" => Route::has("register"),
     ]);
-});
+})->middleware('ensure.setup');
 
-Route::middleware(["auth", "verified"])->group(function () {
+Route::middleware(["auth", "verified", "ensure.setup"])->group(function () {
     Route::get("/dashboard", DashboardController::class)->name("dashboard");
 
     Route::get("/profile", [ProfileController::class, "edit"])->name("profile.edit");
