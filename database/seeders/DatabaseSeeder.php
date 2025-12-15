@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,14 +14,7 @@ class DatabaseSeeder extends Seeder
             LocationSeeder::class,
         ]);
 
-        $superAdmin = User::firstOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@example.com')],
-            [
-                'name' => env('ADMIN_NAME', 'Super Admin'),
-                'password' => Hash::make(env('ADMIN_PASSWORD', 'password')),
-            ]
-        );
-
-        $superAdmin->syncRoles(['Super Admin']);
+        $this->command->info('✅ Base data seeded successfully!');
+        $this->command->info('🚀 Access /setup to create your Super Admin account');
     }
 }
