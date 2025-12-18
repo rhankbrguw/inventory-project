@@ -4,6 +4,7 @@ namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use App\Rules\ValidPhoneNumber;
 
 class UniqueRule implements Rule
 {
@@ -22,8 +23,11 @@ class UniqueRule implements Rule
 
     public function passes($attribute, $value)
     {
+        $formattedValue = ValidPhoneNumber::format($value);
+
         $column = $this->column ?? $attribute;
-        $query = DB::table($this->table)->where($column, $value);
+
+        $query = DB::table($this->table)->where($column, $formattedValue);
 
         if ($this->ignoreId !== null) {
             $query->where($this->ignoreColumn, '!=', $this->ignoreId);

@@ -5,14 +5,15 @@ import { Input } from "@/components/ui/input";
 const InputWithPrefix = React.forwardRef(
     ({ className, prefix, ...props }, ref) => {
         return (
-            <div className={cn("relative flex items-center", className)}>
-                <span className="absolute left-3 text-sm text-muted-foreground pointer-events-none">
+            <div className="relative w-full">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-medium z-10 select-none">
                     {prefix}
-                </span>
+                </div>
+
                 <Input
-                    {...props}
+                    className={cn("pl-12", className)}
                     ref={ref}
-                    className={cn("pl-10", props.className)}
+                    {...props}
                 />
             </div>
         );

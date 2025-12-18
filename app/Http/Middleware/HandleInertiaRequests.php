@@ -8,7 +8,7 @@ use Inertia\Middleware;
 class HandleInertiaRequests extends Middleware
 {
     /**
-     * The root template that is loaded on the initial Inertia page load.
+     * The root template that is loaded on the first page visit.
      *
      * @var string
      */
@@ -18,6 +18,7 @@ class HandleInertiaRequests extends Middleware
      * Determine the current asset version.
      *
      * @see https://inertiajs.com/asset-versioning
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return string|null
      */
@@ -27,9 +28,10 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Define the props that are shared with every Inertia response.
+     * Define the props that are shared by default.
      *
      * @see https://inertiajs.com/shared-data
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return array<string, mixed>
      */
@@ -37,6 +39,10 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        /*
+         * Eager load user relations if authenticated
+         * to avoid N+1 query problems.
+         */
         if ($user) {
             $user->loadMissing(['roles', 'locations.type']);
         }
@@ -44,11 +50,15 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
 
+            /*
+             * Authentication data shared with frontend.
+             */
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'phone' => $user->phone,
                     'level' => $user->level,
                     'role' => $user->roles->first() ? [
                         'name' => $user->roles->first()->name,
@@ -69,6 +79,9 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
 
+            /*
+             * Flash messages for notifications.
+             */
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error' => fn() => $request->session()->get('error'),

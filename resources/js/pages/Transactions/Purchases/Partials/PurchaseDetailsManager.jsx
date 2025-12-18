@@ -16,6 +16,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import InputError from "@/components/InputError";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getNormalizedDate } from "@/lib/utils";
 
 export default function PurchaseDetailsManager({
     supplierId,
@@ -25,19 +26,20 @@ export default function PurchaseDetailsManager({
     cartItems,
     onClose,
 }) {
-    const { data, setData, post, processing, errors, isDirty } = useForm({
-        location_id: "",
-        supplier_id: supplierId,
-        transaction_date: new Date(),
-        notes: "",
-        payment_method_type_id: "",
-        installment_terms: "1",
-        items: cartItems.map((item) => ({
-            product_id: item.product.id,
-            quantity: item.quantity,
-            cost_per_unit: item.cost_per_unit,
-        })),
-    });
+    const { data, setData, post, processing, errors, isDirty, transform } =
+        useForm({
+            location_id: "",
+            supplier_id: supplierId,
+            transaction_date: getNormalizedDate(),
+            notes: "",
+            payment_method_type_id: "",
+            installment_terms: "1",
+            items: cartItems.map((item) => ({
+                product_id: item.product.id,
+                quantity: item.quantity,
+                cost_per_unit: item.cost_per_unit,
+            })),
+        });
 
     const getSupplierName = () => {
         if (data.supplier_id === null) return "Supplier Umum";
@@ -51,15 +53,14 @@ export default function PurchaseDetailsManager({
 
     const submit = (e) => {
         e.preventDefault();
+
+        transform((data) => ({
+            ...data,
+            transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
+            installment_terms: parseInt(data.installment_terms),
+        }));
+
         post(route("transactions.purchases.store"), {
-            transform: (formData) => ({
-                ...formData,
-                transaction_date: format(
-                    formData.transaction_date,
-                    "yyyy-MM-dd",
-                ),
-                installment_terms: parseInt(formData.installment_terms),
-            }),
             onSuccess: () => onClose(),
         });
     };

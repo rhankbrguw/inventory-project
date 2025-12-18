@@ -28,17 +28,15 @@ class UserController extends Controller
             })
             ->when($request->input("search"), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where("name", "like", "%{$search}%")->orWhere(
-                        "email",
-                        "like",
-                        "%{$search}%",
-                    );
+                    $q->where("name", "like", "%{$search}%")
+                        ->orWhere("email", "like", "%{$search}%")
+                        ->orWhere("phone", "like", "%{$search}%");
                 });
             })
             ->when($request->input("role"), function ($query, $role) {
                 $query->whereHas(
                     "roles",
-                    fn($q) => $q->where("name", "like", "%{$role}%"),
+                    fn ($q) => $q->where("name", "like", "%{$role}%"),
                 );
             })
             ->when(
@@ -92,6 +90,7 @@ class UserController extends Controller
         $user = User::create([
             "name" => $validated["name"],
             "email" => $validated["email"],
+            "phone" => $validated["phone"] ?? null,
             "password" => Hash::make($validated["password"]),
         ]);
 
@@ -138,6 +137,7 @@ class UserController extends Controller
         $user->update([
             "name" => $validated["name"],
             "email" => $validated["email"],
+            "phone" => $validated["phone"] ?? null,
         ]);
 
         $user->syncRoles($validated["role"]);

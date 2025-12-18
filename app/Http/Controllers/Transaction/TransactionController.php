@@ -17,7 +17,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -187,11 +186,39 @@ class TransactionController extends Controller
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $productsQuery = Product::with(['inventories' => function ($query) {
+            $query->where('quantity', '>', 0);
+        }, 'inventories.location'])
+            ->orderBy('name');
+
+        if ($accessibleLocationIds) {
+            $productsQuery->whereHas('inventories', function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('location_id', $accessibleLocationIds)
+                    ->where('quantity', '>', 0);
+            });
+        }
+
+        $products = $productsQuery->get();
+
+        $products = $products->map(function ($product) {
+            $locations = $product->inventories
+                ->pluck('location')
+                ->unique('id')
+                ->values()
+                ->map(function ($location) {
+                    return [
+                        'id' => $location->id,
+                        'name' => $location->name
+                    ];
+                });
+
+            $product->locations = $locations;
+            return $product;
+        });
+
         return Inertia::render('Transactions/Transfers/Create', [
             'locations' => $locationsQuery->get(['id', 'name']),
-            'products' => ProductResource::collection(
-                Product::with('locations:id')->orderBy('name')->get()
-            ),
+            'products' => ProductResource::collection($products),
         ]);
     }
 
@@ -211,7 +238,7 @@ class TransactionController extends Controller
                 'from_location_id' => $validated['from_location_id'],
                 'to_location_id' => $validated['to_location_id'],
                 'user_id' => $request->user()->id,
-                'transfer_date' => Carbon::parse($validated['transfer_date'])->format('Y-m-d'),
+                'transfer_date' => now(),
                 'notes' => $validated['notes'],
                 'status' => 'completed',
             ]);

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Rules\UniqueRule;
+use App\Rules\ValidPhoneNumber;
 
 class RegisteredUserController extends Controller
 {
@@ -21,20 +23,25 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'min:3', 'max:255'],
-            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:' . User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:3', 'max:50'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:50', 'unique:' . User::class],
+            'phone' => ['nullable', 'string', new ValidPhoneNumber(), new UniqueRule('users', null, 'phone')],
+            'password' => [
+                'required',
+                'confirmed',
+                Rules\Password::min(8)->letters()->numbers()
+            ],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => ValidPhoneNumber::format($validated['phone'] ?? null),
+            'password' => Hash::make($validated['password']),
         ]);
 
         $user->assignRole('Staff');
-
         $user->sendOtpNotification();
 
         Auth::login($user);

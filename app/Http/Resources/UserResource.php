@@ -13,6 +13,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'phone' => $this->phone,
             'role' => $this->whenLoaded('roles', function () {
                 $firstRole = $this->roles->first();
                 return $firstRole ? [
@@ -34,7 +35,7 @@ class UserResource extends JsonResource
                     ];
                 });
             }),
-            'pivot' => $this->whenPivotLoaded('location_user', fn () => [
+            'pivot' => $this->whenPivotLoaded('location_user', fn() => [
                 'role_id' => $this->pivot->role_id,
             ]),
             'created_at' => $this->created_at?->toISOString(),

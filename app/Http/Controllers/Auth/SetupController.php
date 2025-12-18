@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Rules\ValidPhoneNumber;
 
 class SetupController extends Controller
 {
@@ -35,6 +36,7 @@ class SetupController extends Controller
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
+                'phone' => ValidPhoneNumber::format($request->phone),
                 'password' => Hash::make($request->password),
                 'email_verified_at' => now(),
             ]);
@@ -50,7 +52,6 @@ class SetupController extends Controller
             return redirect()->route('dashboard')->with('success', 'Setup berhasil! Selamat datang, ' . $user->name);
         } catch (\Exception $e) {
             DB::rollBack();
-
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }

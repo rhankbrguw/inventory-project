@@ -19,47 +19,31 @@ export default function AssignmentManager({
     errors,
     setData,
 }) {
-
     const baseRoles = useMemo(() => {
         if (!allRoles || allRoles.length === 0) return [];
-
         const level = locationType?.level;
 
         if (level === 1) {
             return allRoles.filter((r) => ["WHM", "STF"].includes(r.code));
         }
-
         if (level === 2) {
             return allRoles.filter((r) =>
                 ["BRM", "CSH", "STF"].includes(r.code),
             );
         }
-
         return allRoles;
     }, [locationType, allRoles]);
 
     const getRolesForUser = (userId) => {
         if (!userId) return baseRoles;
-        if (!allUsers) return baseRoles;
 
         const user = allUsers.find(
             (u) => u.id.toString() === userId.toString(),
         );
+
         if (!user) return baseRoles;
 
-        const isGlobalManager = user.global_level <= 10;
-
-        let isHomeTurf = false;
-        if (user.global_role_code === "WHM" && locationType?.level === 1)
-            isHomeTurf = true;
-        if (user.global_role_code === "BRM" && locationType?.level === 2)
-            isHomeTurf = true;
-
-        if (isGlobalManager && !isHomeTurf) {
-            return baseRoles.filter((role) => role.level > 10);
-        }
-
-        return baseRoles;
+        return baseRoles.filter((role) => role.level >= user.global_level);
     };
 
     const addAssignment = () => {
@@ -132,7 +116,8 @@ export default function AssignmentManager({
                                                     key={user.id}
                                                     value={user.id.toString()}
                                                 >
-                                                    {user.name} ({user.global_role_code})
+                                                    {user.name} (
+                                                    {user.global_role_code})
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -174,6 +159,7 @@ export default function AssignmentManager({
                                                     disabled
                                                 >
                                                     Tidak ada jabatan tersedia
+                                                    untuk level ini
                                                 </SelectItem>
                                             )}
                                         </SelectContent>

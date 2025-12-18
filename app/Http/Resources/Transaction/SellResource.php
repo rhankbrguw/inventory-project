@@ -16,7 +16,7 @@ class SellResource extends JsonResource
             'total_price' => $this->total_price,
             'status' => $this->status,
             'notes' => $this->notes,
-            'transaction_date' => $this->transaction_date?->toISOString(),
+            'transaction_date' => $this->transaction_date?->format('Y-m-d'),
 
             'installment_terms' => $this->installment_terms,
             'payment_status' => $this->payment_status,

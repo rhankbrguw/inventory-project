@@ -21,7 +21,6 @@ class StoreStockTransferRequest extends FormRequest
                 "exists:locations,id",
                 "different:from_location_id",
             ],
-            "transfer_date" => ["required", "date"],
             "notes" => ["nullable", "string", "max:1000"],
             "items" => ["required", "array", "min:1"],
             "items.*.product_id" => [

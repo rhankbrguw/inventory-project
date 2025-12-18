@@ -8,7 +8,7 @@ import {
 } from "date-fns";
 import { id } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getNormalizedDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -90,12 +90,15 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
 
     const applyCustomFilter = () => {
         if (date?.from) {
+            const normalizedFrom = getNormalizedDate(date.from);
+            const normalizedTo = date.to
+                ? getNormalizedDate(date.to)
+                : normalizedFrom;
+
             onFilterChange({
                 date_range: "custom",
-                start_date: format(date.from, "yyyy-MM-dd"),
-                end_date: date.to
-                    ? format(date.to, "yyyy-MM-dd")
-                    : format(date.from, "yyyy-MM-dd"),
+                start_date: format(normalizedFrom, "yyyy-MM-dd"),
+                end_date: format(normalizedTo, "yyyy-MM-dd"),
             });
             setIsOpen(false);
             setIsDirty(false);
