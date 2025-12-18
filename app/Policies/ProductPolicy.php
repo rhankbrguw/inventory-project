@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -15,7 +14,7 @@ class ProductPolicy
         return $user->level <= 20;
     }
 
-    public function view(User $user, Product $product): bool
+    public function view(User $user): bool
     {
         return $user->level <= 20;
     }
@@ -25,17 +24,17 @@ class ProductPolicy
         return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 
-    public function update(User $user, Product $product): bool
+    public function update(User $user): bool
     {
         return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 
-    public function delete(User $user, Product $product): bool
+    public function delete(User $user): bool
     {
         return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
 
-    public function restore(User $user, Product $product): bool
+    public function restore(User $user): bool
     {
         return $user->level === 1 || $user->roles->first()?->code === 'BRM';
     }
