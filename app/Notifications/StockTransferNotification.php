@@ -73,8 +73,7 @@ class StockTransferNotification extends Notification
         $labelOleh = str_pad("Oleh", 9);
         $labelRef  = str_pad("Ref", 9);
 
-        return "*INCOMING STOCK ALERT* 📦\n"
-            . "──────────────────\n"
+        return "*INCOMING STOCK ALERT* 📦\n\n"
             . "Halo {$notifiable->name},\n\n"
             . "Stok masuk baru telah tercatat:\n"
             . "```"

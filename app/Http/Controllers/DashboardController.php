@@ -123,7 +123,7 @@ class DashboardController extends Controller
             ->sum(DB::raw('quantity * average_cost'));
 
         $lowStockCount = Inventory::accessibleBy($locationIds)
-            ->where('quantity', '<=', 5)
+            ->where('quantity', '<=', 20)
             ->where('quantity', '>', 0)
             ->count();
 
