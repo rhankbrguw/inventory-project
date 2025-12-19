@@ -28,7 +28,7 @@ class StockTransferNotification extends Notification
         return $channels;
     }
 
-    public function toArray(object $notifiable): array
+    public function toArray(): array
     {
         return [
             'title' => '📦 Stok Masuk Baru',
@@ -41,7 +41,7 @@ class StockTransferNotification extends Notification
         ];
     }
 
-    public function toBroadcast(object $notifiable): BroadcastMessage
+    public function toBroadcast(): BroadcastMessage
     {
         return new BroadcastMessage([
             'id' => $this->id,

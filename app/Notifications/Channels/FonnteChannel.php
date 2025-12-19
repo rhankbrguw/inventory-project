@@ -24,7 +24,6 @@ class FonnteChannel
         $message = $notification->toFonnte($notifiable);
         $formattedPhone = $this->formatPhoneNumber($phone);
 
-        Log::info("=== FONNTE DEBUG START ===");
         Log::info("User: {$notifiable->name} (ID: {$notifiable->id})");
         Log::info("Original phone: {$phone}");
         Log::info("Formatted phone: {$formattedPhone}");
@@ -49,7 +48,6 @@ class FonnteChannel
             $responseBody = $response->body();
             $responseJson = $response->json();
 
-            Log::info("=== FONNTE API RESPONSE ===");
             Log::info("Status Code: {$statusCode}");
             Log::info("Response Body: {$responseBody}");
             Log::info("Response JSON:", $responseJson ?? []);
@@ -58,7 +56,6 @@ class FonnteChannel
             if ($response->successful()) {
                 Log::info("✅ WhatsApp API call successful for {$phone}");
 
-                // Check if response contains error status
                 if (isset($responseJson['status']) && $responseJson['status'] === false) {
                     Log::warning("⚠️ Fonnte returned false status:", [
                         'reason' => $responseJson['reason'] ?? 'unknown',
@@ -72,10 +69,7 @@ class FonnteChannel
                 Log::error("Status: {$statusCode}");
                 Log::error("Body: {$responseBody}");
             }
-
-            Log::info("=== FONNTE DEBUG END ===");
         } catch (\Exception $e) {
-            Log::error("=== FONNTE EXCEPTION ===");
             Log::error("Phone: {$phone}");
             Log::error("Error: {$e->getMessage()}");
             Log::error("Trace: {$e->getTraceAsString()}");
