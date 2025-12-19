@@ -63,18 +63,28 @@ class PurchaseController extends Controller
 
         $products = $productsQuery->paginate(12)->withQueryString();
 
-        $warehouseTypeId = Type::where('code', 'WH')->value('id');
-
-        $locationsQuery = Location::orderBy("name")
-            ->where('type_id', $warehouseTypeId);
+        $locationsQuery = Location::orderBy("name")->with('type');
 
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
-        $locations = $locationsQuery->get(["id", "name"]);
+        $allLocations = $locationsQuery->get();
 
-        $locationsWithPermissions = $locations->map(function ($location) use ($user) {
+        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
+            $roleCode = $user->getRoleCodeAtLocation($location->id);
+            $locationTypeCode = $location->type->code;
+
+            if (in_array($locationTypeCode, ['BR', 'STR', 'OUT'])) {
+                if ($roleCode === 'STF') {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
             return [
                 'id' => $location->id,
                 'name' => $location->name,
@@ -103,14 +113,16 @@ class PurchaseController extends Controller
 
         $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
 
-        $location = Location::findOrFail($validated['location_id']);
-        $warehouseTypeId = Type::where('code', 'WH')->value('id');
+        $location = Location::with('type')->findOrFail($validated['location_id']);
+        $user = $request->user();
 
-        if ($location->type_id !== $warehouseTypeId) {
-            abort(403, 'Transaksi Pembelian (Restock) hanya boleh dilakukan di Gudang/Warehouse.');
+        $roleCode = $user->getRoleCodeAtLocation($location->id);
+        $locationTypeCode = $location->type->code;
+
+        if (in_array($locationTypeCode, ['BR', 'STR', 'OUT']) && $roleCode === 'STF') {
+            abort(403, 'Staff Cabang tidak memiliki akses untuk melakukan pembelian ke Supplier. Hubungi Branch Manager.');
         }
 
-        $user = $request->user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
         if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
             abort(403, 'Anda tidak memiliki akses ke lokasi ini.');

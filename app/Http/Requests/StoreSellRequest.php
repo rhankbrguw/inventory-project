@@ -35,8 +35,8 @@ class StoreSellRequest extends FormRequest
             'items.*.sell_price' => ['required', 'numeric', 'min:0'],
         ];
 
-        foreach ($this->input('items', []) as $index => $item) {
-            $rules["items.{$index}.quantity"] = [
+        foreach (array_keys($this->input('items', [])) as $index) {
+            $rules["items.$index.quantity"] = [
                 'required',
                 'numeric',
                 'min:0.0001',

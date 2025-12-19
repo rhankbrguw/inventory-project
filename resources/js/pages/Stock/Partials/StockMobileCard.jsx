@@ -3,7 +3,7 @@ import { formatRelativeTime, formatNumber } from "@/lib/utils";
 import { Package, Warehouse } from "lucide-react";
 
 export default function StockMobileCard({ item, renderActionDropdown }) {
-    const renderLocationIcon = (locType) => {
+    const renderLocationIcon = () => {
         if (item.location?.type?.name === "Warehouse") {
             return <Warehouse className="w-4 h-4 text-muted-foreground" />;
         }

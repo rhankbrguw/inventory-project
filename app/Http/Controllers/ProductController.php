@@ -22,6 +22,8 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    private const VALID_UNITS = ['kg', 'ons', 'pcs', 'ekor', 'pack', 'box'];
+
     public function index(Request $request): Response
     {
         $user = Auth::user();
@@ -75,11 +77,29 @@ class ProductController extends Controller
         ]);
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        $products = Product::query()
+            ->select('id', 'name', 'sku', 'unit', 'price', 'image_path')
+            ->whereNull('deleted_at')
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('sku', 'like', "%{$query}%");
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json($products);
+    }
+
     public function create(): Response
     {
         return Inertia::render('Products/Create', [
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'validUnits' => self::VALID_UNITS,
         ]);
     }
 
@@ -130,6 +150,7 @@ class ProductController extends Controller
             'product' => ProductResource::make($product->load(['type', 'defaultSupplier', 'suppliers'])),
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'validUnits' => self::VALID_UNITS,
         ]);
     }
 

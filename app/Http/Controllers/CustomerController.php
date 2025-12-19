@@ -22,6 +22,7 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $customers = Customer::query()
+            ->withTrashed()
             ->with(['type'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -75,8 +76,6 @@ class CustomerController extends Controller
         return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
-
-
     public function edit(Customer $customer)
     {
         $customer->load('type');
@@ -97,6 +96,16 @@ class CustomerController extends Controller
     {
         $customer->delete();
 
-        return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil dihapus.');
+        return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil dinonaktifkan.');
+    }
+
+    public function restore($id)
+    {
+        $customer = Customer::withTrashed()->findOrFail($id);
+
+        $customer->restore();
+
+        return Redirect::route('customers.index')
+            ->with('success', 'Pelanggan berhasil diaktifkan kembali.');
     }
 }

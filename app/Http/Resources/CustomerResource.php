@@ -13,7 +13,7 @@ class CustomerResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'phone' => $this->formatPhone($this->phone),
+            'phone' => $this->phone,
             'address' => $this->address,
             'type_id' => $this->type_id,
             'type' => $this->whenLoaded('type', fn() => [
@@ -22,20 +22,7 @@ class CustomerResource extends JsonResource
             ]),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
+            'deleted_at' => $this->deleted_at?->toISOString(),
         ];
-    }
-
-    private function formatPhone(?string $phone): ?string
-    {
-        if (!$phone) {
-            return null;
-        }
-
-        if (str_starts_with($phone, '+62')) {
-            $local = substr($phone, 3);
-            return '+62 ' . preg_replace('/(\d{3})(\d{3,4})(\d{3,4})/', '$1-$2-$3', $local);
-        }
-
-        return $phone;
     }
 }

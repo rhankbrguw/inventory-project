@@ -34,3 +34,5 @@ yarn-error.log
 # OS Generated Files
 .DS_Store
 Thumbs.db
+backup_before_squash.sql
+*_backup/

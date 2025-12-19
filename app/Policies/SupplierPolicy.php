@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -15,7 +14,7 @@ class SupplierPolicy
         return $user->level <= 10;
     }
 
-    public function view(User $user, Supplier $supplier): bool
+    public function view(User $user): bool
     {
         return $user->level <= 10;
     }
@@ -25,17 +24,17 @@ class SupplierPolicy
         return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 
-    public function update(User $user, Supplier $supplier): bool
+    public function update(User $user): bool
     {
         return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 
-    public function delete(User $user, Supplier $supplier): bool
+    public function delete(User $user): bool
     {
         return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }
 
-    public function restore(User $user, Supplier $supplier): bool
+    public function restore(User $user): bool
     {
         return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
     }

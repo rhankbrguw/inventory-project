@@ -39,26 +39,24 @@ export default function Index({
         filters,
     );
 
-    const userLocations = user.locations || [];
-
-    const hasStorageAccess = userLocations.some(
-        (loc) => loc.type?.level === 1
+    const hasWarehouseAccess = (user.locations || []).some(
+        (loc) => loc.type?.code === "WH",
     );
 
-    const hasSalesAccess = userLocations.some(
-        (loc) => loc.type?.level === 2
+    const hasBranchAccess = (user.locations || []).some(
+        (loc) => loc.type?.code === "BR",
     );
+
+    const isManager = user.level <= 10;
 
     const canCreatePurchase =
-        isSuperAdmin ||
-        (user.level <= 20 && hasStorageAccess);
+        isSuperAdmin || hasWarehouseAccess || (hasBranchAccess && isManager);
 
-    const canCreateSell =
-        isSuperAdmin ||
-        (user.level <= 20 && hasSalesAccess);
+    const canCreateSell = isSuperAdmin || hasBranchAccess;
 
     const canCreateTransfer =
-        isSuperAdmin || (user.level <= 10 && hasStorageAccess);
+        isSuperAdmin ||
+        (hasWarehouseAccess && isManager);
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>

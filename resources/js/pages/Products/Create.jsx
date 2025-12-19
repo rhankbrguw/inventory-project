@@ -1,5 +1,4 @@
 import { useForm, Link } from "@inertiajs/react";
-import { useState } from "react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import FormField from "@/components/FormField";
 import CurrencyInput from "@/components/CurrencyInput";
@@ -21,9 +20,9 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Check, Upload } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
-export default function Create({ auth, types, suppliers }) {
-    const [imagePreview, setImagePreview] = useState(null);
+export default function Create({ auth, types, suppliers, validUnits }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         image: null,
@@ -36,15 +35,8 @@ export default function Create({ auth, types, suppliers }) {
         description: "",
     });
 
-    const productUnits = ["kg", "pcs", "ekor", "pack", "box"];
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setData("image", file);
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
+    const { preview, fileInputRef, handleChange, triggerInput } =
+        useImageUpload();
 
     const handleSupplierToggle = (supplierId) => {
         const id = parseInt(supplierId);
@@ -117,24 +109,38 @@ export default function Create({ auth, types, suppliers }) {
                                 htmlFor="image"
                                 error={errors.image}
                             >
-                                <div className="relative">
-                                    <Input
+                                <div className="flex gap-2 items-center">
+                                    <input
                                         id="image"
                                         type="file"
-                                        onChange={handleImageChange}
-                                        className="file:text-foreground cursor-pointer pr-10"
+                                        ref={fileInputRef}
+                                        className="hidden"
                                         accept="image/*"
+                                        onChange={(e) =>
+                                            handleChange(e, setData)
+                                        }
                                     />
-                                    <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full justify-start text-muted-foreground font-normal"
+                                        onClick={triggerInput}
+                                    >
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        {data.image
+                                            ? data.image.name
+                                            : "Pilih gambar..."}
+                                    </Button>
                                 </div>
                             </FormField>
                         </div>
 
-                        {imagePreview && (
+                        {preview && (
                             <div className="flex justify-center w-full">
                                 <div className="bg-muted/30 p-2 rounded-lg border border-dashed">
                                     <img
-                                        src={imagePreview}
+                                        src={preview}
                                         alt="Preview"
                                         className="h-40 w-auto object-contain rounded-md"
                                     />
@@ -301,7 +307,7 @@ export default function Create({ auth, types, suppliers }) {
                                         <SelectValue placeholder="Pilih Satuan Unit" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {productUnits.map((unit) => (
+                                        {validUnits.map((unit) => (
                                             <SelectItem key={unit} value={unit}>
                                                 {unit.charAt(0).toUpperCase() +
                                                     unit.slice(1)}

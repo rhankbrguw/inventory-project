@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class() extends Migration {
     public function up(): void
     {
         Schema::create('sells', function (Blueprint $table) {
@@ -14,9 +14,9 @@ return new class extends Migration {
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
             $table->string('reference_code')->unique();
-            $table->date('transaction_date');
+            $table->date('transaction_date')->index();
             $table->decimal('total_price', 15, 2)->default(0);
-            $table->string('status');
+            $table->string('status')->index();
             $table->foreignId('payment_method_type_id')->nullable()->constrained('types')->nullOnDelete();
             $table->text('notes')->nullable();
             $table->timestamps();

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
 import UnifiedBadge from "./UnifiedBadge";
+import NotificationDropdown from "./NotificationDropdown";
 
 const UserAvatar = ({ user }) => (
     <div className="relative">
@@ -80,7 +81,7 @@ const UserDropdownMenu = () => {
 
 export default function Header({ setSidebarOpen }) {
     return (
-        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-lg border-b">
+        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-lg border-b border-border">
             <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16 -mb-px">
                     <div className="flex items-center gap-4">
@@ -94,7 +95,8 @@ export default function Header({ setSidebarOpen }) {
                             <span className="sr-only">Buka Sidebar</span>
                         </Button>
                     </div>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                        <NotificationDropdown />
                         <UserDropdownMenu />
                     </div>
                 </div>
