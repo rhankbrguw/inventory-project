@@ -3,12 +3,11 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Support\Arr;
 use Closure;
 
 class IsValidProductUnit implements ValidationRule
 {
-    private array $validUnits = ['kg', 'pcs', 'ekor', 'pack', 'box'];
+    private array $validUnits = ['kg', 'ons', 'pcs', 'ekor', 'pack', 'box'];
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

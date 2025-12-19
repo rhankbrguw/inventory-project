@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import InputError from "@/components/InputError";
 import { User, Mail, Lock, Settings } from "lucide-react";
 import { PasswordInput } from "@/components/PasswordInput";
+import { InputWithPrefix } from "@/components/InputWithPrefix";
 
 export default function Setup() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         email: "",
+        phone: "",
         password: "",
         password_confirmation: "",
     });
@@ -54,6 +56,7 @@ export default function Setup() {
                                 value={data.name}
                                 className="w-full pl-10 pr-4 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="name"
+                                placeholder="Nama lengkap/Perusahaan"
                                 onChange={(e) =>
                                     setData("name", e.target.value)
                                 }
@@ -79,6 +82,7 @@ export default function Setup() {
                                 value={data.email}
                                 className="w-full pl-10 pr-4 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="username"
+                                placeholder="nama@perusahaan.com"
                                 onChange={(e) =>
                                     setData("email", e.target.value)
                                 }
@@ -86,6 +90,31 @@ export default function Setup() {
                             />
                         </div>
                         <InputError message={errors.email} className="mt-2" />
+                    </div>
+
+                    <div>
+                        <Label
+                            htmlFor="phone"
+                            className="font-semibold block mb-2"
+                        >
+                            No. Telp
+                        </Label>
+                        <InputWithPrefix
+                            prefix="+62"
+                            id="phone"
+                            value={data.phone}
+                            className="w-full py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
+                            autoComplete="tel"
+                            placeholder="81234567890"
+                            onChange={(e) =>
+                                setData(
+                                    "phone",
+                                    e.target.value
+                                        .replace(/\D/g, "")
+                                )
+                            }
+                        />
+                        <InputError message={errors.phone} className="mt-2" />
                     </div>
 
                     <div>
@@ -102,6 +131,7 @@ export default function Setup() {
                                 value={data.password}
                                 className="w-full pl-10 pr-12 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="new-password"
+                                placeholder="Masukkan password yang kuat"
                                 onChange={(e) =>
                                     setData("password", e.target.value)
                                 }
@@ -131,6 +161,7 @@ export default function Setup() {
                                 value={data.password_confirmation}
                                 className="w-full pl-10 pr-12 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="new-password"
+                                placeholder="Ulangi password yang sama"
                                 onChange={(e) =>
                                     setData(
                                         "password_confirmation",

@@ -507,6 +507,11 @@ export const supplierColumns = [
     {
         accessorKey: "phone",
         header: "Telepon",
+        cell: ({ row }) => {
+            const phone = row.phone;
+            if (!phone) return "-";
+            return phone.replace(/(\+62|62)(\d{3})(\d{4})(\d+)/, "+62 $2-$3-$4");
+        },
         className: "text-center whitespace-nowrap",
     },
     {
@@ -525,14 +530,12 @@ export const customerColumns = [
     {
         accessorKey: "id",
         header: "ID",
-        cell: ({ row }) => row.id,
         className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "name",
         header: "Nama",
-        cell: ({ row }) => row.name,
-        className: "text-center whitespace-nowrap",
+        className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "type",
@@ -543,13 +546,16 @@ export const customerColumns = [
     {
         accessorKey: "email",
         header: "Email",
-        cell: ({ row }) => row.email,
-        className: "text-center whitespace-nowrap",
+        className: "text-center text-muted-foreground whitespace-nowrap",
     },
     {
         accessorKey: "phone",
         header: "Telepon",
-        cell: ({ row }) => row.phone || "-",
+        cell: ({ row }) => {
+            const phone = row.phone;
+            if (!phone) return "-";
+            return phone.replace(/(\+62|62)(\d{3})(\d{4})(\d+)/, "+62 $2-$3-$4");
+        },
         className: "text-center whitespace-nowrap",
     },
     {
@@ -564,14 +570,23 @@ export const userColumns = [
     {
         accessorKey: "name",
         header: "Nama",
-        cell: ({ row }) => row.name,
         className: "text-center font-medium whitespace-nowrap",
     },
     {
         accessorKey: "email",
         header: "Email",
-        cell: ({ row }) => row.email,
         className: "text-center text-muted-foreground whitespace-nowrap",
+    },
+    {
+        accessorKey: "phone",
+        header: "Telepon",
+        cell: ({ row }) => {
+            const phone = row.phone;
+            if (!phone) return "-";
+
+            return phone.replace(/(\+62|62)(\d{3})(\d{4})(\d+)/, "+62 $2-$3-$4");
+        },
+        className: "text-center whitespace-nowrap",
     },
     {
         accessorKey: "role.code",

@@ -1,32 +1,104 @@
-/**
- * We'll load the axios HTTP library which allows us to easily issue requests
- * to our Laravel back-end. This library automatically handles sending the
- * CSRF token as a header based on the value of the "XSRF" token cookie.
- */
+import axios from "axios";
+import { toast } from "sonner";
 
-import axios from 'axios';
 window.axios = axios;
+window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.withCredentials = true;
 
-/**
- * Echo exposes an expressive API for subscribing to channels and listening
- * for events that are broadcast by Laravel. Echo and event broadcasting
- * allows your team to easily build robust real-time web applications.
- */
+const token = document.head.querySelector('meta[name="csrf-token"]');
+if (token) {
+    window.axios.defaults.headers.common["X-CSRF-TOKEN"] = token.content;
+    console.log("✅ CSRF Token set");
+} else {
+    console.error("❌ CSRF token not found");
+}
 
-// import Echo from 'laravel-echo';
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
 
-// import Pusher from 'pusher-js';
-// window.Pusher = Pusher;
+window.Pusher = Pusher;
 
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: import.meta.env.VITE_PUSHER_APP_KEY,
-//     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
-//     wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
-//     wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
-//     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-//     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
-//     enabledTransports: ['ws', 'wss'],
-// });
+window.Echo = new Echo({
+    broadcaster: "pusher",
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? "ap1",
+    forceTLS: true,
+    encrypted: true,
+    authEndpoint: "/broadcasting/auth",
+
+    authorizer: (channel) => {
+        return {
+            authorize: (socketId, callback) => {
+                console.log("🔐 Auth attempt:", {
+                    channel: channel.name,
+                    socketId: socketId,
+                    hasCSRF: !!token,
+                });
+
+                window.axios
+                    .post(
+                        "/broadcasting/auth",
+                        {
+                            socket_id: socketId,
+                            channel_name: channel.name,
+                        },
+                        {
+                            headers: {
+                                "X-CSRF-TOKEN": token ? token.content : "",
+                                "X-Requested-With": "XMLHttpRequest",
+                            },
+                            withCredentials: true,
+                        },
+                    )
+                    .then((response) => {
+                        console.log("✅ Auth success:", response.status);
+                        callback(null, response.data);
+                    })
+                    .catch((error) => {
+                        console.error("❌ Auth failed:", {
+                            status: error.response?.status,
+                            data: error.response?.data,
+                            message: error.message,
+                        });
+                        callback(error);
+                    });
+            },
+        };
+    },
+});
+
+window.Echo.connector.pusher.connection.bind("connected", () => {
+    console.log("✅ Pusher Connected! Socket:", window.Echo.socketId());
+});
+
+window.Echo.connector.pusher.connection.bind("error", (err) => {
+    console.error("❌ Pusher Error:", err);
+});
+
+window.Echo.connector.pusher.connection.bind("state_change", (states) => {
+    console.log("🔄 State:", states.current);
+});
+
+window.axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const { response } = error;
+
+        if (response && response.status !== 422) {
+            let title = `Error ${response.status}`;
+            let description =
+                response.data?.message || "Terjadi kesalahan sistem.";
+
+            if (response.status === 419) {
+                title = "Sesi Berakhir";
+                description = "Halaman akan dimuat ulang...";
+                setTimeout(() => window.location.reload(), 2000);
+            }
+
+            toast.error(title, { description });
+        }
+
+        return Promise.reject(error);
+    },
+);

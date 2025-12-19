@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import InputError from "@/components/InputError";
 import { User, Mail, Lock } from "lucide-react";
 import { PasswordInput } from "@/components/PasswordInput";
+import { InputWithPrefix } from "@/components/InputWithPrefix";
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         email: "",
+        phone: "",
         password: "",
         password_confirmation: "",
     });
@@ -86,6 +88,30 @@ export default function Register() {
 
                     <div>
                         <Label
+                            htmlFor="phone"
+                            className="font-semibold block mb-2"
+                        >
+                            No. Telp
+                        </Label>
+                        <InputWithPrefix
+                            prefix="+62"
+                            id="phone"
+                            value={data.phone}
+                            className="w-full py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
+                            autoComplete="tel"
+                            placeholder="081234567890"
+                            onChange={(e) =>
+                                setData(
+                                    "phone",
+                                    e.target.value.replace(/\D/g, ""),
+                                )
+                            }
+                        />
+                        <InputError message={errors.phone} className="mt-2" />
+                    </div>
+
+                    <div>
+                        <Label
                             htmlFor="password"
                             className="font-semibold block mb-2"
                         >
@@ -127,7 +153,7 @@ export default function Register() {
                                 onChange={(e) =>
                                     setData(
                                         "password_confirmation",
-                                        e.target.value
+                                        e.target.value,
                                     )
                                 }
                                 required

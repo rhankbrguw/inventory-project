@@ -4,14 +4,12 @@ import TransferItemManager from "./Partials/TransferItemManager";
 import TransferDetailsManager from "./Partials/TransferDetailsManager";
 import { Button } from "@/components/ui/button";
 import { formatNumber } from "@/lib/utils";
-import { format } from "date-fns";
 import { useMemo } from "react";
 
 export default function Create({ auth, locations, products }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         from_location_id: "",
         to_location_id: "",
-        transfer_date: new Date(),
         notes: "",
         items: [{ product_id: "", quantity: 1, unit: "" }],
     });
@@ -28,9 +26,10 @@ export default function Create({ auth, locations, products }) {
         if (!data.from_location_id) {
             return [];
         }
+
         return (products?.data || []).filter((product) =>
             product.locations?.some(
-                (loc) => loc.id.toString() === data.from_location_id,
+                (loc) => loc.id?.toString() === data.from_location_id,
             ),
         );
     }, [data.from_location_id, products?.data]);
@@ -48,12 +47,7 @@ export default function Create({ auth, locations, products }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("transactions.transfers.store"), {
-            transform: (data) => ({
-                ...data,
-                transfer_date: format(data.transfer_date, "yyyy-MM-dd"),
-            }),
-        });
+        post(route("transactions.transfers.store"), {});
     };
 
     return (
@@ -70,7 +64,6 @@ export default function Create({ auth, locations, products }) {
                     locations={locations}
                     isDetailsLocked={isDetailsLocked}
                 />
-
                 <TransferItemManager
                     items={data.items}
                     setData={setData}
@@ -80,7 +73,6 @@ export default function Create({ auth, locations, products }) {
                     fromLocationId={data.from_location_id}
                     isLocked={isItemManagerLocked}
                 />
-
                 <div className="flex items-center justify-between gap-3">
                     <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                         Total Item: {totalItems} | Qty:{" "}

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
     Command,
     CommandEmpty,
@@ -13,19 +14,48 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import InputError from "@/components/InputError";
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { useDebounce } from "use-debounce";
+import axios from "axios";
 import { cn } from "@/lib/utils";
 
 export default function ProductCombobox({
-    products,
     value,
     onChange,
     error,
     disabledIds = [],
+    products: initialProducts = [],
 }) {
     const [open, setOpen] = useState(false);
-    const selectedProduct = products.find((p) => p.id === value);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedQuery] = useDebounce(searchQuery, 300);
+    const [options, setOptions] = useState(initialProducts);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setOptions(initialProducts);
+    }, [initialProducts]);
+
+    const selectedProduct =
+        options.find((p) => p.id === value) ||
+        initialProducts.find((p) => p.id === value);
+
+    const label = selectedProduct
+        ? `${selectedProduct.name} (${selectedProduct.sku})`
+        : "Pilih produk...";
+
+    useEffect(() => {
+        if (!open) return;
+        if (debouncedQuery.length < 2) return;
+
+        setLoading(true);
+        axios.get(`/api/products/search?query=${debouncedQuery}`)
+            .then((res) => {
+                setOptions(res.data);
+            })
+            .catch((err) => console.error(err))
+            .finally(() => setLoading(false));
+    }, [debouncedQuery, open]);
 
     return (
         <div className="space-y-1">
@@ -38,9 +68,7 @@ export default function ProductCombobox({
                         className="w-full justify-between font-normal overflow-hidden"
                     >
                         <span className="truncate block flex-1 text-left min-w-0">
-                            {selectedProduct
-                                ? `${selectedProduct.name} (${selectedProduct.sku})`
-                                : "Pilih produk..."}
+                            {label}
                         </span>
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
                     </Button>
@@ -50,15 +78,28 @@ export default function ProductCombobox({
                     side="bottom"
                     align="start"
                 >
-                    <Command>
-                        <CommandInput placeholder="Cari produk atau SKU..." />
+                    <Command shouldFilter={false}>
+                        <CommandInput
+                            placeholder="Cari nama atau SKU..."
+                            value={searchQuery}
+                            onValueChange={setSearchQuery}
+                        />
                         <CommandList>
-                            <CommandEmpty>Produk tidak ditemukan.</CommandEmpty>
+                            {loading && (
+                                <div className="py-6 flex justify-center items-center text-sm text-muted-foreground">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mencari...
+                                </div>
+                            )}
+
+                            {!loading && options.length === 0 && (
+                                <CommandEmpty>Produk tidak ditemukan.</CommandEmpty>
+                            )}
+
                             <CommandGroup>
-                                {products.map((product) => (
+                                {!loading && options.map((product) => (
                                     <CommandItem
                                         key={product.id}
-                                        value={`${product.name} ${product.sku}`}
+                                        value={product.id.toString()}
                                         onSelect={() => {
                                             onChange(product);
                                             setOpen(false);
@@ -67,7 +108,7 @@ export default function ProductCombobox({
                                             disabledIds.includes(product.id) &&
                                             product.id !== value
                                         }
-                                        className="flex items-start"
+                                        className="flex items-start cursor-pointer"
                                     >
                                         <Check
                                             className={cn(
@@ -78,7 +119,7 @@ export default function ProductCombobox({
                                             )}
                                         />
                                         <div className="min-w-0 flex-1 overflow-hidden">
-                                            <p className="truncate">
+                                            <p className="truncate font-medium">
                                                 {product.name}
                                             </p>
                                             <p className="text-xs text-muted-foreground truncate">

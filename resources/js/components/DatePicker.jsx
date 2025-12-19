@@ -1,6 +1,6 @@
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, getNormalizedDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -21,16 +21,7 @@ export default function DatePicker({
 
     const handleSelect = (selectedDate) => {
         if (onSelect && selectedDate) {
-            const normalizedDate = new Date(
-                selectedDate.getFullYear(),
-                selectedDate.getMonth(),
-                selectedDate.getDate(),
-                12,
-                0,
-                0,
-                0,
-            );
-            onSelect(normalizedDate);
+            onSelect(getNormalizedDate(selectedDate));
         }
         setIsOpen(false);
     };
@@ -39,7 +30,7 @@ export default function DatePicker({
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
                 <Button
-                    variant={"outline"}
+                    variant="outline"
                     className={cn(
                         "w-full justify-start text-left font-normal",
                         !value && "text-muted-foreground",
@@ -47,15 +38,10 @@ export default function DatePicker({
                     )}
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {value ? format(value, "PPP") : <span>Pilih tanggal</span>}
+                    {value ? format(value, "PPP") : "Pilih tanggal"}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent
-                className={cn("w-auto p-0", popoverContentProps.className)}
-                align="start"
-                sideOffset={4}
-                {...popoverContentProps}
-            >
+            <PopoverContent className="w-auto p-0" {...popoverContentProps}>
                 <Calendar
                     mode="single"
                     selected={value}

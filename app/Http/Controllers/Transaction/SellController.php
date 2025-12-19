@@ -70,18 +70,20 @@ class SellController extends Controller
             $productsQuery->whereRaw("1 = 0");
         }
 
-        $branchTypeId = Type::where('code', 'BR')->value('id');
 
-        $locationsQuery = Location::orderBy("name")
-            ->where('type_id', $branchTypeId);
+        $locationsQuery = Location::orderBy("name")->with('type');
 
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
-        $locations = $locationsQuery->get(["id", "name"]);
+        $allLocations = $locationsQuery->get();
 
-        $locationsWithPermissions = $locations->map(function ($location) use ($user) {
+        $filteredLocations = $allLocations->filter(function ($location) {
+            return $location->type->code === 'BR';
+        });
+
+        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
             return [
                 'id' => $location->id,
                 'name' => $location->name,
@@ -119,11 +121,10 @@ class SellController extends Controller
 
         $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
 
-        $location = Location::findOrFail($validated['location_id']);
-        $branchTypeId = Type::where('code', 'BR')->value('id');
+        $location = Location::with('type')->findOrFail($validated['location_id']);
 
-        if ($location->type_id !== $branchTypeId) {
-            abort(403, 'Transaksi Penjualan hanya boleh dilakukan di Cabang/Branch.');
+        if ($location->type->code !== 'BR') {
+            abort(403, 'Gudang (Warehouse) tidak melayani penjualan retail. Transaksi hanya boleh dilakukan di Cabang.');
         }
 
         $user = $request->user();

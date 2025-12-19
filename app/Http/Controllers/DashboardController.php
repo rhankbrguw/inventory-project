@@ -100,13 +100,11 @@ class DashboardController extends Controller
         $start = $dateConfig['start'];
         $end = $dateConfig['end'];
 
-        // Sales Revenue
         $revenue = Sell::accessibleBy($locationIds)
             ->where('status', 'Completed')
             ->whereBetween('transaction_date', [$start, $end])
             ->sum('total_price');
 
-        // COGS from Sales
         $cogs = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $start, $end) {
             $q->accessibleBy($locationIds)
                 ->where('status', 'Completed')
@@ -114,26 +112,21 @@ class DashboardController extends Controller
         })
             ->sum(DB::raw('ABS(quantity) * average_cost_per_unit'));
 
-        // Purchase Total
         $totalPurchases = Purchase::accessibleBy($locationIds)
             ->where('status', 'Completed')
             ->whereBetween('transaction_date', [$start, $end])
             ->sum('total_cost');
 
-        // Net Profit
         $netProfit = $revenue - $cogs;
 
-        // Inventory Value
         $inventoryValue = Inventory::accessibleBy($locationIds)
             ->sum(DB::raw('quantity * average_cost'));
 
-        // Low Stock Count
         $lowStockCount = Inventory::accessibleBy($locationIds)
-            ->where('quantity', '<=', 5)
+            ->where('quantity', '<=', 20)
             ->where('quantity', '>', 0)
             ->count();
 
-        // Transaction Counts
         $salesCount = Sell::accessibleBy($locationIds)
             ->where('status', 'Completed')
             ->whereBetween('transaction_date', [$start, $end])

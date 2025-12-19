@@ -30,22 +30,22 @@ class LocationPolicy
         return $user->level === 1;
     }
 
-    public function update(User $user, Location $location): bool
+    public function update(User $user): bool
     {
         return $user->level === 1;
     }
 
-    public function delete(User $user, Location $location): bool
+    public function delete(User $user): bool
     {
         return $user->level === 1;
     }
 
-    public function restore(User $user, Location $location): bool
+    public function restore(User $user): bool
     {
         return $user->level === 1;
     }
 
-    public function forceDelete(User $user, Location $location): bool
+    public function forceDelete(User $user): bool
     {
         return $user->level === 1;
     }

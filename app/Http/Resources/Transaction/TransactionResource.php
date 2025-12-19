@@ -12,7 +12,7 @@ class TransactionResource extends JsonResource
     {
         $isPurchase = $this->resource instanceof Purchase;
 
-        $defaultSupplierName = $this->whenLoaded('stockMovements', function () {
+        $this->whenLoaded('stockMovements', function () {
             return $this->stockMovements->first()?->product?->defaultSupplier?->name;
         });
 
@@ -22,15 +22,15 @@ class TransactionResource extends JsonResource
             'id' => $this->id,
             'unique_key' => $uniqueKey,
             'reference_code' => $this->reference_code,
-            'transaction_date' => $this->transaction_date?->toISOString(),
+            'transaction_date' => $this->transaction_date?->format('Y-m-d'),
             'type' => $this->whenLoaded('type', fn () => $this->type?->name),
             'status' => $this->status,
             'total_amount' => $isPurchase ? $this->total_cost : $this->total_price,
             'notes' => $this->notes,
             'location' => $this->whenLoaded('location', fn () => $this->location?->name),
             'party_name' => $isPurchase
-                ? $this->whenLoaded('supplier', fn() => $this->supplier?->name)
-                : $this->whenLoaded('customer', fn() => $this->customer?->name ?? 'Pelanggan Umum'),
+                ? $this->whenLoaded('supplier', fn () => $this->supplier?->name)
+                : $this->whenLoaded('customer', fn () => $this->customer?->name ?? 'Pelanggan Umum'),
             'party_type' => $isPurchase ? 'Supplier' : 'Customer',
             'user' => $this->whenLoaded('user', fn () => $this->user?->name),
             'items_preview' => $this->whenLoaded('stockMovements', function () {

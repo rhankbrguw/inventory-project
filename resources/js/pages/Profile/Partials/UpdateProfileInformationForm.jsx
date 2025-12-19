@@ -4,6 +4,7 @@ import { Transition } from "@headlessui/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { InputWithPrefix } from "@/components/InputWithPrefix";
 import {
     CardContent,
     CardDescription,
@@ -17,7 +18,6 @@ export default function UpdateProfileInformationForm({
     className = "",
 }) {
     const user = usePage().props.auth.user;
-
     const {
         data,
         setData,
@@ -29,13 +29,14 @@ export default function UpdateProfileInformationForm({
     } = useForm({
         name: user.name,
         email: user.email,
+        phone: user.phone
+            ? user.phone.replace(/^\+62/, "").replace(/\D/g, "")
+            : "",
     });
-
     const submit = (e) => {
         e.preventDefault();
         patch(route("profile.update"));
     };
-
     return (
         <section className={className}>
             <CardHeader>
@@ -44,7 +45,6 @@ export default function UpdateProfileInformationForm({
                     Perbarui informasi profil dan alamat email akun Anda.
                 </CardDescription>
             </CardHeader>
-
             <CardContent>
                 <form onSubmit={submit} className="mt-6 space-y-6">
                     <div>
@@ -60,7 +60,6 @@ export default function UpdateProfileInformationForm({
                         />
                         <InputError className="mt-2" message={errors.name} />
                     </div>
-
                     <div>
                         <Label htmlFor="email">Email</Label>
                         <Input
@@ -74,7 +73,25 @@ export default function UpdateProfileInformationForm({
                         />
                         <InputError className="mt-2" message={errors.email} />
                     </div>
-
+                    <div>
+                        <Label htmlFor="phone">No. Telp</Label>
+                        <div className="mt-1">
+                            <InputWithPrefix
+                                prefix="+62"
+                                id="phone"
+                                value={data.phone}
+                                onChange={(e) =>
+                                    setData(
+                                        "phone",
+                                        e.target.value.replace(/\D/g, ""),
+                                    )
+                                }
+                                placeholder="812xxxxxxxx"
+                                autoComplete="tel"
+                            />
+                        </div>
+                        <InputError className="mt-2" message={errors.phone} />
+                    </div>
                     {mustVerifyEmail && user.email_verified_at === null && (
                         <div>
                             <p className="text-sm mt-2 text-foreground">
@@ -97,7 +114,6 @@ export default function UpdateProfileInformationForm({
                             )}
                         </div>
                     )}
-
                     <div className="flex items-center gap-4">
                         <Button disabled={processing || !isDirty}>
                             Simpan

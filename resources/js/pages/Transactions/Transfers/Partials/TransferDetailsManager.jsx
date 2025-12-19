@@ -13,16 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { cn, formatDate } from "@/lib/utils";
 
 export default function TransferDetailsManager({
     data,
@@ -67,7 +58,6 @@ export default function TransferDetailsManager({
                             </SelectContent>
                         </Select>
                     </FormField>
-
                     <FormField
                         label="Ke Lokasi (Tujuan)"
                         error={errors.to_location_id}
@@ -98,43 +88,6 @@ export default function TransferDetailsManager({
                         </Select>
                     </FormField>
                 </div>
-
-                <FormField
-                    label="Tanggal Transfer"
-                    error={errors.transfer_date}
-                >
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !data.transfer_date &&
-                                    "text-muted-foreground",
-                                )}
-                                disabled={isDetailsLocked}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {data.transfer_date ? (
-                                    formatDate(data.transfer_date)
-                                ) : (
-                                    <span>Pilih tanggal</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={data.transfer_date}
-                                onSelect={(date) =>
-                                    setData("transfer_date", date)
-                                }
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </FormField>
-
                 <FormField label="Catatan (Opsional)" error={errors.notes}>
                     <Textarea
                         value={data.notes}

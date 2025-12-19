@@ -76,20 +76,23 @@ class LocationsController extends Controller
             $query->with('roles');
         }]);
 
-        $users = User::with('roles')->orderBy('name')->get()->map(function ($u) {
-            return [
-                'id' => $u->id,
-                'name' => $u->name,
-                'email' => $u->email,
-                'global_role_code' => $u->roles->first()?->code,
-                'global_level' => $u->level,
-            ];
-        });
+        $users = User::with('roles')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'global_role_code' => $u->roles->first()?->code,
+                    'global_level' => $u->level,
+                ];
+            });
 
-        $roles = Role::where('name', '!=', 'Super Admin')
+        $roles = Role::whereIn('code', ['WHM', 'BRM', 'STF', 'CSH'])
             ->orderBy('level', 'asc')
             ->get()
-            ->map(fn ($r) => [
+            ->map(fn($r) => [
                 'id' => $r->id,
                 'name' => $r->name,
                 'code' => $r->code,
@@ -116,7 +119,23 @@ class LocationsController extends Controller
             'address' => $validated['address'],
         ]);
 
-        $assignments = collect($validated['assignments'] ?? [])
+        $assignmentsInput = $validated['assignments'] ?? [];
+
+
+        foreach ($assignmentsInput as $item) {
+            $user = User::find($item['user_id']);
+            $targetRole = Role::find($item['role_id']);
+
+            if ($user && $targetRole) {
+                if ($user->level > $targetRole->level) {
+                    return Redirect::back()->withErrors([
+                        'assignments' => "Error: User {$user->name} (Level {$user->level}) tidak memenuhi syarat untuk jabatan {$targetRole->name} (Level {$targetRole->level}). Naikkan role global user terlebih dahulu."
+                    ]);
+                }
+            }
+        }
+
+        $assignments = collect($assignmentsInput)
             ->mapWithKeys(function ($assignment) {
                 return [$assignment['user_id'] => [
                     'role_id' => $assignment['role_id']
