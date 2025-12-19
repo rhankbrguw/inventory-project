@@ -32,25 +32,54 @@ export default function NotificationDropdown() {
         fetchNotifications();
 
         const userId = auth?.user?.id;
+
         if (userId && window.Echo) {
-            window.Echo.private(`App.Models.User.${userId}`).notification(
-                (notification) => {
-                    console.log("Received notification:", notification);
-
-                    setNotifications((prev) => [
-                        {
-                            id: notification.id,
-                            type: notification.type,
-                            data: notification.data,
-                            read_at: null,
-                            created_at: notification.created_at,
-                        },
-                        ...prev,
-                    ]);
-
-                    setUnreadCount((prev) => prev + 1);
-                },
+            console.log(
+                "🔔 Setting up notification listener for user:",
+                userId,
             );
+
+            const channel = window.Echo.private(`App.Models.User.${userId}`);
+
+            channel.notification((notification) => {
+                console.log(
+                    "📬 Real-time notification received:",
+                    notification,
+                );
+
+                setNotifications((prev) => [
+                    {
+                        id: notification.id,
+                        type: notification.type,
+                        data: notification.data || notification,
+                        read_at: null,
+                        created_at:
+                            notification.created_at || new Date().toISOString(),
+                    },
+                    ...prev,
+                ]);
+
+                setUnreadCount((prev) => prev + 1);
+            });
+
+            channel.error((error) => {
+                console.error("❌ Channel subscription error:", error);
+            });
+
+            channel.subscribed(() => {
+                console.log(
+                    "✅ Successfully subscribed to notification channel",
+                );
+            });
+        } else {
+            if (!userId) {
+                console.warn(
+                    "⚠️ User ID not found, cannot setup notifications",
+                );
+            }
+            if (!window.Echo) {
+                console.error("❌ Echo not initialized, check bootstrap.js");
+            }
         }
 
         const interval = setInterval(fetchNotifications, 30000);
@@ -58,6 +87,7 @@ export default function NotificationDropdown() {
         return () => {
             clearInterval(interval);
             if (userId && window.Echo) {
+                console.log("🔕 Leaving notification channel");
                 window.Echo.leave(`App.Models.User.${userId}`);
             }
         };

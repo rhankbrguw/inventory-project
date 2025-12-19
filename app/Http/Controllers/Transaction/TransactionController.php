@@ -3,23 +3,16 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreStockTransferRequest;
-use App\Http\Resources\ProductResource;
 use App\Http\Resources\Transaction\TransactionResource;
-use App\Models\Inventory;
 use App\Models\Location;
-use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sell;
-use App\Models\StockTransfer;
 use App\Models\Type;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -154,7 +147,6 @@ class TransactionController extends Controller
             return $model;
         })->filter();
 
-
         $paginatedTransactions = new LengthAwarePaginator(
             $items,
             $paginatedResults->total(),
@@ -174,123 +166,5 @@ class TransactionController extends Controller
             'transactionTypes' => Type::where('group', Type::GROUP_TRANSACTION)->orderBy('name')->get(['id', 'name']),
             'filters' => (object) $request->only(['search', 'sort', 'location_id', 'type', 'per_page']),
         ]);
-    }
-
-    public function createTransfer(): Response
-    {
-        $user = Auth::user();
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-
-        $locationsQuery = Location::orderBy('name');
-        if ($accessibleLocationIds) {
-            $locationsQuery->whereIn('id', $accessibleLocationIds);
-        }
-
-        $productsQuery = Product::with(['inventories' => function ($query) {
-            $query->where('quantity', '>', 0);
-        }, 'inventories.location'])
-            ->orderBy('name');
-
-        if ($accessibleLocationIds) {
-            $productsQuery->whereHas('inventories', function ($query) use ($accessibleLocationIds) {
-                $query->whereIn('location_id', $accessibleLocationIds)
-                    ->where('quantity', '>', 0);
-            });
-        }
-
-        $products = $productsQuery->get();
-
-        $products = $products->map(function ($product) {
-            $locations = $product->inventories
-                ->pluck('location')
-                ->unique('id')
-                ->values()
-                ->map(function ($location) {
-                    return [
-                        'id' => $location->id,
-                        'name' => $location->name
-                    ];
-                });
-
-            $product->locations = $locations;
-            return $product;
-        });
-
-        return Inertia::render('Transactions/Transfers/Create', [
-            'locations' => $locationsQuery->get(['id', 'name']),
-            'products' => ProductResource::collection($products),
-        ]);
-    }
-
-    public function storeTransfer(StoreStockTransferRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $user = $request->user();
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($validated['from_location_id'], $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke lokasi asal ini.');
-        }
-
-        DB::transaction(function () use ($validated, $request) {
-            $transfer = StockTransfer::create([
-                'reference_code' => 'TRF-' . now()->format('Ymd-His'),
-                'from_location_id' => $validated['from_location_id'],
-                'to_location_id' => $validated['to_location_id'],
-                'user_id' => $request->user()->id,
-                'transfer_date' => now(),
-                'notes' => $validated['notes'],
-                'status' => 'completed',
-            ]);
-
-            foreach ($validated['items'] as $item) {
-                $sourceInventory = Inventory::where('product_id', $item['product_id'])
-                    ->where('location_id', $validated['from_location_id'])
-                    ->firstOrFail();
-
-                $costPerUnit = $sourceInventory->average_cost;
-
-                $transfer->stockMovements()->create([
-                    'product_id' => $item['product_id'],
-                    'location_id' => $validated['from_location_id'],
-                    'type' => 'transfer_out',
-                    'quantity' => -abs($item['quantity']),
-                    'cost_per_unit' => $costPerUnit,
-                    'average_cost_per_unit' => $costPerUnit,
-                    'notes' => $validated['notes'],
-                ]);
-
-                $transfer->stockMovements()->create([
-                    'product_id' => $item['product_id'],
-                    'location_id' => $validated['to_location_id'],
-                    'type' => 'transfer_in',
-                    'quantity' => abs($item['quantity']),
-                    'cost_per_unit' => $costPerUnit,
-                    'average_cost_per_unit' => $costPerUnit,
-                    'notes' => $validated['notes'],
-                ]);
-
-                $sourceInventory->decrement('quantity', $item['quantity']);
-
-                $destinationInventory = Inventory::firstOrNew([
-                    'product_id' => $item['product_id'],
-                    'location_id' => $validated['to_location_id'],
-                ]);
-
-                $oldQty = $destinationInventory->quantity ?? 0;
-                $oldAvgCost = $destinationInventory->average_cost ?? 0;
-                $newQty = abs($item['quantity']);
-
-                $totalQty = $oldQty + $newQty;
-                $newAvgCost = $totalQty > 0 ? (($oldQty * $oldAvgCost) + ($newQty * $costPerUnit)) / $totalQty : 0;
-
-                $destinationInventory->quantity = $totalQty;
-                $destinationInventory->average_cost = $newAvgCost;
-                $destinationInventory->save();
-            }
-        });
-
-        return Redirect::route('stock-movements.index')
-            ->with('success', 'Transfer stok berhasil dicatat.');
     }
 }

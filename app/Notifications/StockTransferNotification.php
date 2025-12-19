@@ -15,7 +15,8 @@ class StockTransferNotification extends Notification
     public function __construct(
         public StockTransfer $transfer,
         public string $senderName
-    ) {}
+    ) {
+    }
 
     public function via(object $notifiable): array
     {
@@ -46,14 +47,7 @@ class StockTransferNotification extends Notification
         return new BroadcastMessage([
             'id' => $this->id,
             'type' => get_class($this),
-            'data' => [
-                'title' => '📦 Stok Masuk Baru',
-                'message' => "Kiriman dari {$this->transfer->fromLocation->name} (Ref: {$this->transfer->reference_code})",
-                'action_url' => route('stock-movements.index'),
-                'sender' => $this->senderName,
-                'icon' => 'Truck',
-                'type' => 'info',
-            ],
+            'data' => $this->toArray(),
             'read_at' => null,
             'created_at' => now()->toISOString(),
         ]);
@@ -62,8 +56,8 @@ class StockTransferNotification extends Notification
     public function toFonnte(object $notifiable): string
     {
         $fromLocation = $this->transfer->fromLocation->name;
-        $toLocation = $this->transfer->toLocation->name;
         $referenceCode = $this->transfer->reference_code;
+        $date = now()->format('d/m/Y H:i');
 
         $items = $this->transfer->stockMovements()
             ->where('type', 'transfer_in')
@@ -74,13 +68,24 @@ class StockTransferNotification extends Notification
             return "• {$item->product->name}: " . abs($item->quantity) . " {$item->product->unit}";
         })->join("\n");
 
-        return "📦 *STOK MASUK BARU*\n\n"
+        $labelTgl  = str_pad("Tanggal", 9);
+        $labelAsal = str_pad("Asal", 9);
+        $labelOleh = str_pad("Oleh", 9);
+        $labelRef  = str_pad("Ref", 9);
+
+        return "*INCOMING STOCK ALERT* 📦\n"
+            . "──────────────────\n"
             . "Halo {$notifiable->name},\n\n"
-            . "Ada transfer stok masuk ke {$toLocation}:\n\n"
-            . "*Dari:* {$fromLocation}\n"
-            . "*Referensi:* {$referenceCode}\n"
-            . "*Pengirim:* {$this->senderName}\n\n"
-            . "*Item:*\n{$itemsList}\n\n"
-            . "Silakan cek sistem untuk detail lengkap.";
+            . "Stok masuk baru telah tercatat:\n"
+            . "```"
+            . "{$labelTgl}: {$date}\n"
+            . "{$labelAsal}: {$fromLocation}\n"
+            . "{$labelOleh}: {$this->senderName}\n"
+            . "{$labelRef}: {$referenceCode}"
+            . "```\n\n"
+            . "*Detail Barang:*\n"
+            . "{$itemsList}\n\n"
+            . "*Akses Sistem:*\n"
+            . route('stock-movements.index');
     }
 }

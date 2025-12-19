@@ -1,15 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStockTransferRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Inventory;
 use App\Models\Location;
+use App\Models\Product;
 use App\Models\StockTransfer;
 use App\Models\User;
 use App\Notifications\StockTransferNotification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
@@ -20,17 +23,49 @@ class StockTransferController extends Controller
 {
     public function create(): Response
     {
-        return Inertia::render('StockMovements/Create', [
-            'locations' => Location::orderBy('name')->get(['id', 'name']),
+        $user = Auth::user();
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
 
-            'products' => [],
+        $locationsQuery = Location::orderBy('name');
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
+        $productsQuery = Product::with(['inventories' => function ($query) {
+            $query->where('quantity', '>', 0);
+        }, 'inventories.location'])->orderBy('name');
+
+        if ($accessibleLocationIds) {
+            $productsQuery->whereHas('inventories', function ($query) use ($accessibleLocationIds) {
+                $query->whereIn('location_id', $accessibleLocationIds)
+                    ->where('quantity', '>', 0);
+            });
+        }
+
+        $products = $productsQuery->get()->map(function ($product) {
+            $locations = $product->inventories->pluck('location')->unique('id')->values()
+                ->map(fn ($loc) => ['id' => $loc->id, 'name' => $loc->name]);
+            $product->locations = $locations;
+            return $product;
+        });
+
+        return Inertia::render('Transactions/Transfers/Create', [
+            'locations' => $locationsQuery->get(['id', 'name']),
+            'products' => ProductResource::collection($products),
         ]);
     }
 
     public function store(StoreStockTransferRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $user = $request->user();
 
+        $accessibleLocationIds = $user->getAccessibleLocationIds();
+        if ($accessibleLocationIds && !in_array($validated['from_location_id'], $accessibleLocationIds)) {
+            abort(403, 'Anda tidak memiliki akses ke lokasi asal ini.');
+        }
+
+        // 1. Transaction Logic
         $transfer = DB::transaction(function () use ($validated, $request) {
             $transfer = StockTransfer::create([
                 'reference_code' => 'TRF-' . now()->format('Ymd-His'),
@@ -55,8 +90,8 @@ class StockTransferController extends Controller
                     'type' => 'transfer_out',
                     'quantity' => -abs($item['quantity']),
                     'cost_per_unit' => $costPerUnit,
+                    'average_cost_per_unit' => $costPerUnit,
                     'notes' => $validated['notes'],
-                    'user_id' => $request->user()->id,
                 ]);
 
                 $transfer->stockMovements()->create([
@@ -65,8 +100,8 @@ class StockTransferController extends Controller
                     'type' => 'transfer_in',
                     'quantity' => abs($item['quantity']),
                     'cost_per_unit' => $costPerUnit,
+                    'average_cost_per_unit' => $costPerUnit,
                     'notes' => $validated['notes'],
-                    'user_id' => $request->user()->id,
                 ]);
 
                 $sourceInventory->decrement('quantity', $item['quantity']);
@@ -79,66 +114,40 @@ class StockTransferController extends Controller
                 $oldQty = $destinationInventory->quantity ?? 0;
                 $oldAvgCost = $destinationInventory->average_cost ?? 0;
                 $newQty = abs($item['quantity']);
-
                 $totalQty = $oldQty + $newQty;
-                $newAvgCost = $totalQty > 0
-                    ? (($oldQty * $oldAvgCost) + ($newQty * $costPerUnit)) / $totalQty
-                    : 0;
+                $newAvgCost = $totalQty > 0 ? (($oldQty * $oldAvgCost) + ($newQty * $costPerUnit)) / $totalQty : 0;
 
                 $destinationInventory->quantity = $totalQty;
                 $destinationInventory->average_cost = $newAvgCost;
                 $destinationInventory->save();
             }
-
             return $transfer;
         });
 
         try {
-            $locationManagers = User::whereHas('locations', function ($q) use ($transfer) {
+            $targetManagers = User::whereHas('locations', function ($q) use ($transfer) {
                 $q->where('locations.id', $transfer->to_location_id)
-                    ->whereIn('location_user.role_id', function ($subQuery) {
-                        $subQuery->select('id')
+                    ->whereIn('location_user.role_id', function ($sub) {
+                        $sub->select('id')
                             ->from('roles')
                             ->whereIn('code', ['WHM', 'BRM']);
                     });
             })->get();
 
-            $superAdmins = User::whereHas('roles', function ($q) {
-                $q->where('level', 1);
-            })->get();
-
-            $targetManagers = $locationManagers->merge($superAdmins)->unique('id');
-
-            Log::info('Target managers found:', [
-                'location_managers' => $locationManagers->pluck('name', 'id')->toArray(),
-                'super_admins' => $superAdmins->pluck('name', 'id')->toArray(),
-                'total' => $targetManagers->count()
-            ]);
-
             if ($targetManagers->count() > 0) {
                 foreach ($targetManagers as $manager) {
-                    Log::info('Attempting to send notification to:', [
-                        'manager_id' => $manager->id,
-                        'manager_name' => $manager->name,
-                        'manager_phone' => $manager->phone,
-                        'manager_phone_length' => strlen($manager->phone ?? ''),
-                        'has_phone' => !empty($manager->phone),
-                    ]);
-
                     try {
                         $manager->notify(new StockTransferNotification($transfer, $request->user()->name));
-                        Log::info("Notification sent successfully to {$manager->name}");
-                    } catch (\Exception $innerException) {
-                        Log::error("Failed to notify {$manager->name}: " . $innerException->getMessage());
-                        Log::error($innerException->getTraceAsString());
+                        Log::info("Notif queued for {$manager->name}");
+                    } catch (\Exception $e) {
+                        Log::error("Notif failed for {$manager->name}: " . $e->getMessage());
                     }
                 }
             } else {
-                Log::warning('No target managers found for transfer notification. Location ID: ' . $transfer->to_location_id);
+                Log::warning("Tidak ada manager di lokasi tujuan ID: " . $transfer->to_location_id);
             }
         } catch (\Exception $e) {
-            Log::error('Gagal kirim notifikasi transfer: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
+            Log::error('Global Notif Error: ' . $e->getMessage());
         }
 
         return Redirect::route('stock-movements.index')

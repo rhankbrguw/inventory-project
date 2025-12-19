@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Transaction\PurchaseController;
 use App\Http\Controllers\Transaction\SellController;
 use App\Http\Controllers\Transaction\TransactionController;
+use App\Http\Controllers\Transaction\StockTransferController;
 use App\Http\Controllers\Transaction\PurchaseCartController;
 use App\Http\Controllers\Transaction\SellCartController;
 use App\Models\Customer;
@@ -23,7 +24,10 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use Inertia\Inertia;
+
+Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Route::middleware('guest')->group(function () {
     Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
@@ -106,8 +110,8 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
     Route::post('/transactions/purchases', [PurchaseController::class, 'store'])->name('transactions.purchases.store');
     Route::get('/transactions/purchases/{purchase}', [PurchaseController::class, 'show'])->name('transactions.purchases.show');
 
-    Route::get('/transactions/transfers/create', [TransactionController::class, 'createTransfer'])->name('transactions.transfers.create');
-    Route::post('/transactions/transfers', [TransactionController::class, 'storeTransfer'])->name('transactions.transfers.store');
+    Route::get('/transactions/transfers/create', [StockTransferController::class, 'create'])->name('transactions.transfers.create');
+    Route::post('/transactions/transfers', [StockTransferController::class, 'store'])->name('transactions.transfers.store');
 
     Route::get('/transactions/sells/create', [SellController::class, 'create'])->name('transactions.sells.create');
     Route::post('/transactions/sells', [SellController::class, 'store'])->name('transactions.sells.store');
