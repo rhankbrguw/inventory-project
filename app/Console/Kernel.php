@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('inventory:check-low-stock')
             ->dailyAt('00:00')
-            ->timezone('Asia/Jakarta');
+            > timezone(config('app.timezone'));
     }
 
     /**
