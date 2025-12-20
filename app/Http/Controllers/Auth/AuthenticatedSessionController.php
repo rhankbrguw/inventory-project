@@ -14,43 +14,41 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
-   public function create(): Response
-   {
-      return Inertia::render('Auth/Login', [
-         'canResetPassword' => Route::has('password.request'),
-         'status' => session('status'),
-      ]);
-   }
+    public function create(): Response
+    {
+        return Inertia::render('Auth/Login', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
+        ]);
+    }
 
-   public function store(LoginRequest $request): RedirectResponse
-   {
-      $request->authenticate();
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
 
-      $user = $request->user();
+        $user = $request->user();
 
-      if (is_null($user->email_verified_at)) {
-         Auth::guard('web')->logout();
-         $request->session()->invalidate();
-         $request->session()->regenerateToken();
+        if (is_null($user->email_verified_at)) {
+            Auth::guard('web')->logout();
 
-         $user->sendOtpNotification();
+            $user->sendOtpNotification();
 
-         return redirect()->route('verification.notice')->with('email', $user->email);
-      }
+            return redirect()->route('verification.notice')->with('email', $user->email);
+        }
 
-      $request->session()->regenerate();
+        $request->session()->regenerate();
 
-      return redirect()->intended(RouteServiceProvider::HOME);
-   }
+        return redirect()->intended(RouteServiceProvider::HOME);
+    }
 
-   public function destroy(Request $request): RedirectResponse
-   {
-      Auth::guard('web')->logout();
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
 
-      $request->session()->invalidate();
+        $request->session()->invalidate();
 
-      $request->session()->regenerateToken();
+        $request->session()->regenerateToken();
 
-      return redirect('/');
-   }
+        return redirect('/');
+    }
 }

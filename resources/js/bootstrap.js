@@ -1,21 +1,30 @@
 import axios from "axios";
 import { toast } from "sonner";
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
 
 window.axios = axios;
 window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
-
 window.axios.defaults.withCredentials = true;
 
-const token = document.head.querySelector('meta[name="csrf-token"]');
-if (token) {
-    window.axios.defaults.headers.common["X-CSRF-TOKEN"] = token.content;
-    console.log("✅ CSRF Token set");
-} else {
-    console.error("❌ CSRF token not found");
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
-import Echo from "laravel-echo";
-import Pusher from "pusher-js";
+window.axios.interceptors.request.use(
+    (config) => {
+        const token = getCookie("XSRF-TOKEN");
+        if (token) {
+            config.headers["X-XSRF-TOKEN"] = decodeURIComponent(token);
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    },
+);
 
 window.Pusher = Pusher;
 
@@ -26,77 +35,46 @@ window.Echo = new Echo({
     forceTLS: true,
     encrypted: true,
     authEndpoint: "/broadcasting/auth",
-
     authorizer: (channel) => {
         return {
             authorize: (socketId, callback) => {
-                console.log("🔐 Auth attempt:", {
-                    channel: channel.name,
-                    socketId: socketId,
-                    hasCSRF: !!token,
-                });
-
                 window.axios
-                    .post(
-                        "/broadcasting/auth",
-                        {
-                            socket_id: socketId,
-                            channel_name: channel.name,
-                        },
-                        {
-                            headers: {
-                                "X-CSRF-TOKEN": token ? token.content : "",
-                                "X-Requested-With": "XMLHttpRequest",
-                            },
-                            withCredentials: true,
-                        },
-                    )
-                    .then((response) => {
-                        console.log("✅ Auth success:", response.status);
-                        callback(null, response.data);
+                    .post("/broadcasting/auth", {
+                        socket_id: socketId,
+                        channel_name: channel.name,
                     })
-                    .catch((error) => {
-                        console.error("❌ Auth failed:", {
-                            status: error.response?.status,
-                            data: error.response?.data,
-                            message: error.message,
-                        });
-                        callback(error);
-                    });
+                    .then((response) => callback(null, response.data))
+                    .catch((error) => callback(error));
             },
         };
     },
 });
 
-window.Echo.connector.pusher.connection.bind("connected", () => {
-    console.log("✅ Pusher Connected! Socket:", window.Echo.socketId());
-});
-
-window.Echo.connector.pusher.connection.bind("error", (err) => {
-    console.error("❌ Pusher Error:", err);
-});
-
-window.Echo.connector.pusher.connection.bind("state_change", (states) => {
-    console.log("🔄 State:", states.current);
-});
-
 window.axios.interceptors.response.use(
     (response) => response,
     (error) => {
-        const { response } = error;
+        const response = error.response;
 
-        if (response && response.status !== 422) {
-            let title = `Error ${response.status}`;
-            let description =
-                response.data?.message || "Terjadi kesalahan sistem.";
+        if (!response) {
+            toast.error("Network Error", {
+                description:
+                    "Gagal terhubung ke server. Cek koneksi internet Anda.",
+            });
+            return Promise.reject(error);
+        }
 
-            if (response.status === 419) {
-                title = "Sesi Berakhir";
-                description = "Halaman akan dimuat ulang...";
-                setTimeout(() => window.location.reload(), 2000);
-            }
+        const status = response.status;
 
-            toast.error(title, { description });
+        if (status === 419 || status === 422) {
+            return Promise.reject(error);
+        }
+
+        if (status === 401) {
+        } else if (status >= 500) {
+            toast.error("Server Error", {
+                description:
+                    response.data?.message || "Terjadi kesalahan di server.",
+            });
         }
 
         return Promise.reject(error);

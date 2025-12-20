@@ -15,8 +15,7 @@ class LowStockAlertNotification extends Notification
     public function __construct(
         public Collection $lowStockItems,
         public string $locationName
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -53,7 +52,8 @@ class LowStockAlertNotification extends Notification
 
     public function toFonnte(object $notifiable): string
     {
-        $date = now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i');
+        $timezone = config('app.timezone');
+        $date = now()->setTimezone($timezone)->format('d/m/Y H:i');
 
         $limit = 10;
         $shownItems = $this->lowStockItems->take($limit);
