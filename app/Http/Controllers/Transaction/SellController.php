@@ -29,6 +29,40 @@ class SellController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
+        $locationsQuery = Location::orderBy("name")->with('type');
+
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
+        $allLocations = $locationsQuery->get();
+
+        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
+            if ($user->level === 1) {
+                return true;
+            }
+
+            $locationType = $location->type->code;
+
+            if ($locationType === 'WH') {
+                return false;
+            }
+
+            if (in_array($locationType, ['BR', 'STR', 'OUT'])) {
+                return true;
+            }
+
+            return false;
+        });
+
+        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         $locationId = $request->input("location_id");
         $search = $request->input("search");
         $typeId = $request->input("type_id");
@@ -37,8 +71,8 @@ class SellController extends Controller
             $locationId = null;
         }
 
-        if (!$locationId && $accessibleLocationIds && count($accessibleLocationIds) === 1) {
-            $locationId = $accessibleLocationIds[0];
+        if (!$locationId && $locationsWithPermissions->count() === 1) {
+            $locationId = $locationsWithPermissions->first()['id'];
         }
 
         $cartItems = $user
@@ -59,9 +93,7 @@ class SellController extends Controller
             ->orderBy("name");
 
         if ($locationId) {
-            $productsQuery->whereHas("inventories", function ($query) use (
-                $locationId,
-            ) {
+            $productsQuery->whereHas("inventories", function ($query) use ($locationId) {
                 $query
                     ->where("location_id", $locationId)
                     ->where("quantity", ">", 0);
@@ -70,33 +102,10 @@ class SellController extends Controller
             $productsQuery->whereRaw("1 = 0");
         }
 
-
-        $locationsQuery = Location::orderBy("name")->with('type');
-
-        if ($accessibleLocationIds) {
-            $locationsQuery->whereIn('id', $accessibleLocationIds);
-        }
-
-        $allLocations = $locationsQuery->get();
-
-        $filteredLocations = $allLocations->filter(function ($location) {
-            return $location->type->code === 'BR';
-        });
-
-        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
-            return [
-                'id' => $location->id,
-                'name' => $location->name,
-                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
-            ];
-        });
-
         return Inertia::render("Transactions/Sells/Create", [
             "locations" => $locationsWithPermissions,
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
-            "allProducts" => $productsQuery
-                ->paginate(12)
-                ->withQueryString(),
+            "allProducts" => $productsQuery->paginate(12)->withQueryString(),
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
                 ->orderBy("name")
                 ->get(["id", "name"]),
@@ -119,18 +128,19 @@ class SellController extends Controller
     {
         $validated = $request->validated();
 
-        $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
-
         $location = Location::with('type')->findOrFail($validated['location_id']);
+        $user = $request->user();
+        $locationType = $location->type->code;
 
-        if ($location->type->code !== 'BR') {
-            abort(403, 'Gudang (Warehouse) tidak melayani penjualan retail. Transaksi hanya boleh dilakukan di Cabang.');
+        $allowed = false;
+        if ($user->level === 1) {
+            $allowed = true;
+        } elseif ($locationType !== 'WH') {
+            $allowed = true;
         }
 
-        $user = $request->user();
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
+        if (!$allowed) {
+            abort(403, 'Gudang tidak diizinkan melakukan transaksi penjualan retail.');
         }
 
         $itemsData = $validated["items"];

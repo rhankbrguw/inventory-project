@@ -28,6 +28,41 @@ class PurchaseController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
+        $locationsQuery = Location::orderBy("name")->with('type');
+
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
+        $allLocations = $locationsQuery->get();
+
+        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
+            if ($user->level === 1) {
+                return true;
+            }
+
+            $roleCode = $user->getRoleCodeAtLocation($location->id);
+            $locationType = $location->type->code;
+
+            if ($locationType === 'WH') {
+                return $roleCode === 'WHM';
+            }
+
+            if (in_array($locationType, ['BR', 'STR', 'OUT'])) {
+                return $roleCode === 'BRM';
+            }
+
+            return false;
+        });
+
+        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         $cartItems = $user
             ->purchaseCartItems()
             ->with(["product", "supplier"])
@@ -63,35 +98,6 @@ class PurchaseController extends Controller
 
         $products = $productsQuery->paginate(12)->withQueryString();
 
-        $locationsQuery = Location::orderBy("name")->with('type');
-
-        if ($accessibleLocationIds) {
-            $locationsQuery->whereIn('id', $accessibleLocationIds);
-        }
-
-        $allLocations = $locationsQuery->get();
-
-        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
-            $roleCode = $user->getRoleCodeAtLocation($location->id);
-            $locationTypeCode = $location->type->code;
-
-            if (in_array($locationTypeCode, ['BR', 'STR', 'OUT'])) {
-                if ($roleCode === 'STF') {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
-            return [
-                'id' => $location->id,
-                'name' => $location->name,
-                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
-            ];
-        });
-
         return Inertia::render("Transactions/Purchases/Create", [
             "locations" => $locationsWithPermissions,
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
@@ -110,22 +116,24 @@ class PurchaseController extends Controller
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-
-        $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
-
-        $location = Location::with('type')->findOrFail($validated['location_id']);
         $user = $request->user();
 
+        $location = Location::with('type')->findOrFail($validated['location_id']);
         $roleCode = $user->getRoleCodeAtLocation($location->id);
-        $locationTypeCode = $location->type->code;
+        $locationType = $location->type->code;
 
-        if (in_array($locationTypeCode, ['BR', 'STR', 'OUT']) && $roleCode === 'STF') {
-            abort(403, 'Staff Cabang tidak memiliki akses untuk melakukan pembelian ke Supplier. Hubungi Branch Manager.');
+        $allowed = false;
+
+        if ($user->level === 1) {
+            $allowed = true;
+        } elseif ($locationType === 'WH') {
+            $allowed = ($roleCode === 'WHM');
+        } elseif (in_array($locationType, ['BR', 'STR', 'OUT'])) {
+            $allowed = ($roleCode === 'BRM');
         }
 
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
+        if (!$allowed) {
+            abort(403, 'Anda tidak memiliki wewenang Manager untuk melakukan pembelian di lokasi ini.');
         }
 
         $totalCost = collect($validated["items"])->sum(function ($item) {

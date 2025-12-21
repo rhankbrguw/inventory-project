@@ -14,7 +14,6 @@ use App\Notifications\StockTransferNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,10 +25,13 @@ class StockTransferController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
-        $locationsQuery = Location::orderBy('name');
+        $sourceLocationsQuery = Location::orderBy('name');
         if ($accessibleLocationIds) {
-            $locationsQuery->whereIn('id', $accessibleLocationIds);
+            $sourceLocationsQuery->whereIn('id', $accessibleLocationIds);
         }
+        $sourceLocations = $sourceLocationsQuery->get(['id', 'name']);
+
+        $destinationLocations = Location::orderBy('name')->get(['id', 'name']);
 
         $productsQuery = Product::with(['inventories' => function ($query) {
             $query->where('quantity', '>', 0);
@@ -43,14 +45,21 @@ class StockTransferController extends Controller
         }
 
         $products = $productsQuery->get()->map(function ($product) {
-            $locations = $product->inventories->pluck('location')->unique('id')->values()
-                ->map(fn ($loc) => ['id' => $loc->id, 'name' => $loc->name]);
+            $locations = $product->inventories->map(function ($inv) {
+                return [
+                    'id' => $inv->location->id,
+                    'name' => $inv->location->name,
+                    'quantity' => $inv->quantity
+                ];
+            })->values();
+
             $product->locations = $locations;
             return $product;
         });
 
         return Inertia::render('Transactions/Transfers/Create', [
-            'locations' => $locationsQuery->get(['id', 'name']),
+            'source_locations' => $sourceLocations,
+            'destination_locations' => $destinationLocations,
             'products' => ProductResource::collection($products),
         ]);
     }
@@ -62,10 +71,9 @@ class StockTransferController extends Controller
 
         $accessibleLocationIds = $user->getAccessibleLocationIds();
         if ($accessibleLocationIds && !in_array($validated['from_location_id'], $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke lokasi asal ini.');
+            abort(403, 'Anda tidak berhak mengambil stok dari lokasi asal ini.');
         }
 
-        // 1. Transaction Logic
         $transfer = DB::transaction(function () use ($validated, $request) {
             $transfer = StockTransfer::create([
                 'reference_code' => 'TRF-' . now()->format('Ymd-His'),
@@ -128,9 +136,7 @@ class StockTransferController extends Controller
             $targetManagers = User::whereHas('locations', function ($q) use ($transfer) {
                 $q->where('locations.id', $transfer->to_location_id)
                     ->whereIn('location_user.role_id', function ($sub) {
-                        $sub->select('id')
-                            ->from('roles')
-                            ->whereIn('code', ['WHM', 'BRM']);
+                        $sub->select('id')->from('roles')->whereIn('code', ['WHM', 'BRM']);
                     });
             })->get();
 
@@ -138,16 +144,11 @@ class StockTransferController extends Controller
                 foreach ($targetManagers as $manager) {
                     try {
                         $manager->notify(new StockTransferNotification($transfer, $request->user()->name));
-                        Log::info("Notif queued for {$manager->name}");
-                    } catch (\Exception $e) {
-                        Log::error("Notif failed for {$manager->name}: " . $e->getMessage());
+                    } catch (\Exception) {
                     }
                 }
-            } else {
-                Log::warning("Tidak ada manager di lokasi tujuan ID: " . $transfer->to_location_id);
             }
-        } catch (\Exception $e) {
-            Log::error('Global Notif Error: ' . $e->getMessage());
+        } catch (\Exception) {
         }
 
         return Redirect::route('stock-movements.index')

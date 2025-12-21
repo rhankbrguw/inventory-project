@@ -36,7 +36,7 @@
                             </div>
 
                             <p style="margin: 0 0 25px 0; font-size: 14px; line-height: 1.6; color: #52525B;">
-                                Link reset password ini akan kadaluwarsa dalam 60 menit. Jika Anda tidak meminta reset password, tidak ada tindakan lebih lanjut yang diperlukan.
+Link reset password ini akan kadaluwarsa dalam <strong>{{ config('auth.passwords.users.expire') }}</strong> menit. Jika Anda tidak meminta reset password, tidak ada tindakan lebih lanjut yang diperlukan.
                             </p>
 
                             <p style="margin: 0; font-size: 13px; color: #94A3B8; font-style: italic;">
