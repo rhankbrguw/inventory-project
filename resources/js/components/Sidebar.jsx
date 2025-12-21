@@ -109,9 +109,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         },
         {
             name: "Report",
-            href: "#",
+            href: route("reports.index"),
             icon: BarChart2,
-            current: false,
+            current: route().current("reports.*"),
             requiredLevel: 10,
             excludedCodes: ["CSH", "STF"],
         },
