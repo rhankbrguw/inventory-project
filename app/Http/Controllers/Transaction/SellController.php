@@ -30,29 +30,13 @@ class SellController extends Controller
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
         $locationsQuery = Location::orderBy("name")->with('type');
-
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
-
         $allLocations = $locationsQuery->get();
 
         $filteredLocations = $allLocations->filter(function ($location) use ($user) {
-            if ($user->level === 1) {
-                return true;
-            }
-
-            $locationType = $location->type->code;
-
-            if ($locationType === 'WH') {
-                return false;
-            }
-
-            if (in_array($locationType, ['BR', 'STR', 'OUT'])) {
-                return true;
-            }
-
-            return false;
+            return $user->canTransactAtLocation($location->id, 'sell');
         });
 
         $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
@@ -70,34 +54,20 @@ class SellController extends Controller
         if ($accessibleLocationIds && $locationId && !in_array($locationId, $accessibleLocationIds)) {
             $locationId = null;
         }
-
         if (!$locationId && $locationsWithPermissions->count() === 1) {
             $locationId = $locationsWithPermissions->first()['id'];
         }
 
-        $cartItems = $user
-            ->sellCartItems()
-            ->with(["product", "location"])
-            ->get();
+        $cartItems = $user->sellCartItems()->with(["product", "location"])->get();
 
         $productsQuery = Product::query()
             ->with("defaultSupplier:id,name")
-            ->when($search, function ($query, $search) {
-                $query
-                    ->where("name", "like", "%{$search}%")
-                    ->orWhere("sku", "like", "%{$search}%");
-            })
-            ->when($typeId && $typeId !== "all", function ($query) use ($typeId) {
-                $query->where("type_id", $typeId);
-            })
+            ->when($search, fn($q, $s) => $q->where("name", "like", "%{$s}%")->orWhere("sku", "like", "%{$s}%"))
+            ->when($typeId && $typeId !== "all", fn($q) => $q->where("type_id", $typeId))
             ->orderBy("name");
 
         if ($locationId) {
-            $productsQuery->whereHas("inventories", function ($query) use ($locationId) {
-                $query
-                    ->where("location_id", $locationId)
-                    ->where("quantity", ">", 0);
-            });
+            $productsQuery->whereHas("inventories", fn($q) => $q->where("location_id", $locationId)->where("quantity", ">", 0));
         } else {
             $productsQuery->whereRaw("1 = 0");
         }
@@ -106,54 +76,32 @@ class SellController extends Controller
             "locations" => $locationsWithPermissions,
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
             "allProducts" => $productsQuery->paginate(12)->withQueryString(),
-            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
-                ->orderBy("name")
-                ->get(["id", "name"]),
-            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)
-                ->orderBy("name")
-                ->get(["id", "name"]),
-            "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)
-                ->orderBy("name")
-                ->get(["id", "name"]),
+            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)->orderBy("name")->get(["id", "name"]),
+            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)->orderBy("name")->get(["id", "name"]),
+            "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)->orderBy("name")->get(["id", "name"]),
             "cart" => SellCartItemResource::collection($cartItems),
-            "filters" => (object) $request->only([
-                "location_id",
-                "search",
-                "type_id",
-            ]),
+            "filters" => (object) $request->only(["location_id", "search", "type_id"]),
         ]);
     }
 
     public function store(StoreSellRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-
-        $location = Location::with('type')->findOrFail($validated['location_id']);
         $user = $request->user();
-        $locationType = $location->type->code;
 
-        $allowed = false;
-        if ($user->level === 1) {
-            $allowed = true;
-        } elseif ($locationType !== 'WH') {
-            $allowed = true;
-        }
-
-        if (!$allowed) {
-            abort(403, 'Gudang tidak diizinkan melakukan transaksi penjualan retail.');
+        if (!$user->canTransactAtLocation($validated['location_id'], 'sell')) {
+            abort(403, 'Lokasi ini tidak memiliki izin untuk Penjualan (POS). Cek Tipe/Level Lokasi.');
         }
 
         $itemsData = $validated["items"];
 
         try {
             DB::transaction(function () use ($validated, $itemsData, $request) {
-                $totalPrice = collect($itemsData)->sum(function ($item) {
-                    return (float) $item["quantity"] * (float) $item["sell_price"];
-                });
+                $totalPrice = collect($itemsData)->sum(fn($item) => $item["quantity"] * $item["sell_price"]);
 
-                $referenceCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
-                while (Sell::where("reference_code", $referenceCode)->exists()) {
-                    $referenceCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
+                $refCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
+                while (Sell::where("reference_code", $refCode)->exists()) {
+                    $refCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
                 }
 
                 $sell = Sell::create([
@@ -161,7 +109,7 @@ class SellController extends Controller
                     "location_id" => $validated["location_id"],
                     "customer_id" => $validated["customer_id"],
                     "user_id" => $request->user()->id,
-                    "reference_code" => $referenceCode,
+                    "reference_code" => $refCode,
                     "transaction_date" => $validated["transaction_date"],
                     "total_price" => $totalPrice,
                     "status" => $validated["status"],
@@ -194,14 +142,10 @@ class SellController extends Controller
                     $inventory->decrement("quantity", (float) $item["quantity"]);
                 }
 
-                $request
-                    ->user()
-                    ->sellCartItems()
-                    ->where("location_id", $validated["location_id"])
-                    ->delete();
+                $request->user()->sellCartItems()->where("location_id", $validated["location_id"])->delete();
             });
         } catch (\Exception $e) {
-            return Redirect::back()->with("error", "Gagal menyimpan penjualan: " . $e->getMessage());
+            return Redirect::back()->with("error", "Gagal: " . $e->getMessage());
         }
 
         return Redirect::route("transactions.index")->with("success", "Penjualan berhasil disimpan.");
@@ -209,14 +153,13 @@ class SellController extends Controller
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)
     {
-        $amountPerInstallment = $totalAmount / $terms;
-        $startDate = Carbon::parse($startDate);
-
+        $amountPer = $totalAmount / $terms;
+        $date = Carbon::parse($startDate);
         for ($i = 1; $i <= $terms; $i++) {
             $transaction->installments()->create([
                 'installment_number' => $i,
-                'amount' => $amountPerInstallment,
-                'due_date' => $startDate->copy()->addMonths($i - 1),
+                'amount' => $amountPer,
+                'due_date' => $date->copy()->addMonths($i - 1),
                 'status' => 'pending',
             ]);
         }
@@ -225,23 +168,12 @@ class SellController extends Controller
     public function show(Sell $sell): Response
     {
         $user = Auth::user();
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($sell->location_id, $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
+        $accessible = $user->getAccessibleLocationIds();
+        if ($accessible && !in_array($sell->location_id, $accessible)) {
+            abort(403);
         }
 
-        $sell->load([
-            "location",
-            "customer",
-            "user",
-            "paymentMethod",
-            "stockMovements.product",
-            "type",
-            "installments",
-        ]);
-
-        return Inertia::render("Transactions/Sells/Show", [
-            "sell" => SellResource::make($sell),
-        ]);
+        $sell->load(["location", "customer", "user", "paymentMethod", "stockMovements.product", "type", "installments"]);
+        return Inertia::render("Transactions/Sells/Show", ["sell" => SellResource::make($sell)]);
     }
 }

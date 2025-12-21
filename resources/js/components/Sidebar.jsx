@@ -30,17 +30,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const userLevel = user.level;
-    const userCode = user.role?.code;
 
     const hasAccess = (link) => {
         if (link.requiredLevel && userLevel > link.requiredLevel) return false;
-
-        if (link.excludedCodes && link.excludedCodes.includes(userCode))
-            return false;
-
-        if (link.allowedCodes && !link.allowedCodes.includes(userCode))
-            return false;
-
         return true;
     };
 
@@ -65,7 +57,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: MapPin,
             current: route().current("locations.*"),
             requiredLevel: 10,
-            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Stock",
@@ -75,7 +66,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 route().current("stock.*") &&
                 !route().current("stock-movements.*"),
             requiredLevel: 20,
-            excludedCodes: ["CSH"],
         },
         {
             name: "Stock Movements",
@@ -97,7 +87,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: Truck,
             current: route().current("suppliers.*"),
             requiredLevel: 10,
-            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Customers",
@@ -105,7 +94,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: Contact,
             current: route().current("customers.*"),
             requiredLevel: 20,
-            excludedCodes: ["WHM"],
         },
         {
             name: "Report",
@@ -113,7 +101,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             icon: BarChart2,
             current: route().current("reports.*"),
             requiredLevel: 10,
-            excludedCodes: ["CSH", "STF"],
         },
         {
             name: "Users",
@@ -137,7 +124,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 } lg:translate-x-0`}
         >
             <div className="h-16 flex items-center justify-center px-4 border-b">
-                <h1 className="text-xl font-bold text-foreground">Welcome!</h1>
+                <h1 className="text-xl font-bold text-foreground">
+                    Welcome!
+                </h1>
             </div>
             <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
                 {navLinks.filter(hasAccess).map((link) => (

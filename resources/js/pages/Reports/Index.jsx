@@ -15,7 +15,7 @@ export default function ReportsIndex({
     return (
         <IndexPageLayout
             auth={auth}
-            title="Laporan Penjualan"
+            title="Laporan"
             description={`Analisis penjualan ${filters.resolved_label}`}
             icon={BarChart3}
             headerActions={

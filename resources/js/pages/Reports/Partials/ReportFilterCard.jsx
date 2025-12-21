@@ -19,24 +19,31 @@ export default function ReportFilterCard({ auth, locations, products, filters })
         );
     };
 
+    const getLocationValue = () => {
+        if (auth.user.level === 1) {
+            return filters.location_id || "all";
+        }
+        return filters.location_id || (locations[0]?.id?.toString() || "all");
+    };
+
     return (
-        <div className="flex flex-col md:flex-row gap-3 w-full">
-            <div className="w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+            <div className="w-full sm:w-[200px]">
                 <SmartDateFilter
                     filters={filters}
                     onFilterChange={handleFilterChange}
                 />
             </div>
 
-            <div className="w-full md:w-[200px]">
+            <div className="w-full sm:w-[200px]">
                 <Select
-                    value={filters.location_id || "all"}
+                    value={getLocationValue()}
                     onValueChange={(val) => handleFilterChange({ location_id: val })}
                 >
-                    <SelectTrigger className="h-9 px-3 text-xs">
-                        <div className="flex items-center min-w-0">
-                            <MapPin className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <SelectValue placeholder="Semua Lokasi" />
+                    <SelectTrigger className="h-9 px-3 text-xs w-full">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <SelectValue placeholder="Pilih Lokasi" />
                         </div>
                     </SelectTrigger>
                     <SelectContent>
@@ -53,14 +60,14 @@ export default function ReportFilterCard({ auth, locations, products, filters })
             </div>
 
             {products && products.length > 0 && (
-                <div className="w-full md:w-[200px]">
+                <div className="w-full sm:w-[200px]">
                     <Select
                         value={filters.product_id || "all"}
                         onValueChange={(val) => handleFilterChange({ product_id: val })}
                     >
-                        <SelectTrigger className="h-9 px-3 text-xs">
-                            <div className="flex items-center min-w-0">
-                                <Package className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <SelectTrigger className="h-9 px-3 text-xs w-full">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 <SelectValue placeholder="Semua Produk" />
                             </div>
                         </SelectTrigger>

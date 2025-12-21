@@ -21,17 +21,10 @@ export default function AssignmentManager({
 }) {
     const baseRoles = useMemo(() => {
         if (!allRoles || allRoles.length === 0) return [];
-        const level = locationType?.level;
+        locationType?.level;
 
-        if (level === 1) {
-            return allRoles.filter((r) => ["WHM", "STF"].includes(r.code));
-        }
-        if (level === 2) {
-            return allRoles.filter((r) =>
-                ["BRM", "CSH", "STF"].includes(r.code),
-            );
-        }
-        return allRoles;
+        return allRoles.filter(r => r.level > 1);
+
     }, [locationType, allRoles]);
 
     const getRolesForUser = (userId) => {
