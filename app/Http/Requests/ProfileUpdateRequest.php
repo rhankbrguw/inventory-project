@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Traits\FormatsPhoneNumber;
 use App\Models\User;
-use App\Rules\UniqueRule;
 use App\Rules\ValidName;
 use App\Rules\ValidPhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
@@ -35,7 +34,7 @@ class ProfileUpdateRequest extends FormRequest
                 'nullable',
                 'string',
                 new ValidPhoneNumber(),
-                new UniqueRule('users', $this->user()->id, 'phone')
+                Rule::unique(User::class)->ignore($this->user()->id),
             ],
         ];
     }

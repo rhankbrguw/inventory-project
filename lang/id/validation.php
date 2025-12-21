@@ -108,6 +108,7 @@ return [
         'mixed' => ':attribute harus mengandung setidaknya satu huruf besar dan satu huruf kecil.',
         'numbers' => ':attribute harus mengandung setidaknya satu angka.',
         'symbols' => ':attribute harus mengandung setidaknya satu simbol.',
+        'different' => ':attribute dan :other harus berbeda.',
         'uncompromised' => ':attribute yang diberikan telah muncul dalam kebocoran data. Silakan pilih :attribute yang berbeda.',
     ],
 
@@ -156,7 +157,8 @@ return [
     'attributes' => [
         'name' => 'Nama',
         'email' => 'Email',
-        'password' => 'Password',
+        'password' => 'Password Baru',
+        'current_password' => 'Password Saat Ini',
         'phone' => 'Nomor Telepon',
         'role' => 'Jabatan',
         'contact_person' => 'Koordinator',
