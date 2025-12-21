@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -11,54 +12,64 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
-   public function authorize(): bool
-   {
-      return true;
-   }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
-   public function rules(): array
-   {
-      return [
-         'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50'],
-         'password' => ['required', 'string'],
-      ];
-   }
+    public function rules(): array
+    {
+        return [
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+        ];
+    }
 
-   public function authenticate(): void
-   {
-      $this->ensureIsNotRateLimited();
+    public function authenticate(): void
+    {
+        $this->ensureIsNotRateLimited();
 
-      if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-         RateLimiter::hit($this->throttleKey());
+        $user = User::where('email', $this->input('email'))->first();
 
-         throw ValidationException::withMessages([
-            'email' => trans('auth.failed'),
-         ]);
-      }
+        if (! $user) {
+            RateLimiter::hit($this->throttleKey());
 
-      RateLimiter::clear($this->throttleKey());
-   }
+            throw ValidationException::withMessages([
+                'email' => 'Kami tidak dapat menemukan akun dengan alamat email tersebut.',
+            ]);
+        }
 
-   public function ensureIsNotRateLimited(): void
-   {
-      if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
-         return;
-      }
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
 
-      event(new Lockout($this));
+            throw ValidationException::withMessages([
+                'password' => 'Password yang Anda masukkan salah.',
+            ]);
+        }
 
-      $seconds = RateLimiter::availableIn($this->throttleKey());
+        RateLimiter::clear($this->throttleKey());
+    }
 
-      throw ValidationException::withMessages([
-         'email' => trans('auth.throttle', [
-            'seconds' => $seconds,
-            'minutes' => ceil($seconds / 60),
-         ]),
-      ]);
-   }
+    public function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
 
-   public function throttleKey(): string
-   {
-      return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
-   }
+        event(new Lockout($this));
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    public function throttleKey(): string
+    {
+        return Str::transliterate(Str::lower($this->input('email')) . '|' . $this->ip());
+    }
 }

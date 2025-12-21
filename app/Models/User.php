@@ -177,6 +177,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return false;
     }
 
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
     public function sendOtpNotification(): void
     {
         $otp = random_int(100000, 999999);
