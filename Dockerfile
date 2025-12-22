@@ -6,7 +6,7 @@ ARG WWWGROUP=1000
 WORKDIR /var/www
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Jakarta
+ENV TZ=UTC
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

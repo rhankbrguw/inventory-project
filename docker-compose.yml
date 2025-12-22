@@ -3,12 +3,18 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+            args:
+                WWWUSER: "${WWWUSER:-1000}"
+                WWWGROUP: "${WWWGROUP:-1000}"
+        image: inventory-app
         container_name: inventory_app
         restart: unless-stopped
         working_dir: /var/www
         volumes:
             - ./:/var/www
             - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        environment:
+            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
         env_file:
             - .env
         networks:
@@ -16,6 +22,25 @@ services:
         depends_on:
             mysql:
                 condition: service_healthy
+
+    scheduler:
+        image: inventory-app
+        container_name: inventory_scheduler
+        restart: unless-stopped
+        working_dir: /var/www
+        command: php artisan schedule:work
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        environment:
+            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+        env_file:
+            - .env
+        networks:
+            - inventory_network
+        depends_on:
+            - app
+            - mysql
 
     nginx:
         image: nginx:alpine
@@ -42,6 +67,7 @@ services:
             MYSQL_USER: ${DB_USERNAME}
             MYSQL_PASSWORD: ${DB_PASSWORD}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
         volumes:
             - mysql_data:/var/lib/mysql
             - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
@@ -90,6 +116,7 @@ services:
         environment:
             MP_SMTP_AUTH_ACCEPT_ANY: 1
             MP_SMTP_AUTH_ALLOW_INSECURE: 1
+            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
 
 networks:
     inventory_network:

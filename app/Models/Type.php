@@ -51,6 +51,21 @@ class Type extends Model
         ];
     }
 
+    public static function getAvailableLevels(): array
+    {
+        return [
+            self::GROUP_USER_ROLE => [
+                ['value' => 1, 'label' => 'Level 1 - Super Admin / Owner (Full Access)'],
+                ['value' => 10, 'label' => 'Level 10 - Managerial (Purchase & Transfer)'],
+                ['value' => 20, 'label' => 'Level 20 - Operational (Sales & Inventory)'],
+            ],
+            self::GROUP_LOCATION => [
+                ['value' => 1, 'label' => 'Penyimpanan (Gudang/Pusat) - Bisa Purchase'],
+                ['value' => 2, 'label' => 'Penjualan (Cabang/Outlet) - Bisa Sell/POS'],
+            ],
+        ];
+    }
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);

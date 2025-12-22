@@ -1,5 +1,5 @@
-import { Link, usePage } from "@inertiajs/react";
-import { LogOut, Menu, User as ProfileIcon } from "lucide-react";
+import { Link, usePage, router } from "@inertiajs/react";
+import { LogOut, Menu, User as ProfileIcon, Globe } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from "./ui/button";
 import UnifiedBadge from "./UnifiedBadge";
 import NotificationDropdown from "./NotificationDropdown";
+import useTranslation from "@/hooks/useTranslation";
 
 const UserAvatar = ({ user }) => (
     <div className="relative">
@@ -35,6 +36,7 @@ const UserDropdownMenu = () => {
                     <UserAvatar user={user} />
                 </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent
                 className="w-64 p-2"
                 align="end"
@@ -53,7 +55,9 @@ const UserDropdownMenu = () => {
                         </div>
                     </div>
                 </DropdownMenuLabel>
+
                 <DropdownMenuSeparator />
+
                 <Link href={route("profile.edit")}>
                     <DropdownMenuItem className="group cursor-pointer rounded-lg px-3 py-2 text-sm">
                         <ProfileIcon className="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground" />
@@ -62,7 +66,9 @@ const UserDropdownMenu = () => {
                         </span>
                     </DropdownMenuItem>
                 </Link>
+
                 <DropdownMenuSeparator />
+
                 <Link
                     href={route("logout")}
                     method="post"
@@ -80,6 +86,19 @@ const UserDropdownMenu = () => {
 };
 
 export default function Header({ setSidebarOpen }) {
+    const { locale } = useTranslation();
+
+    const switchLanguage = (lang) => {
+        router.post(
+            route("locale.update"),
+            { locale: lang },
+            {
+                preserveScroll: true,
+                onSuccess: () => {},
+            },
+        );
+    };
+
     return (
         <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-lg border-b border-border">
             <div className="px-4 sm:px-6 lg:px-8">
@@ -92,10 +111,36 @@ export default function Header({ setSidebarOpen }) {
                             onClick={() => setSidebarOpen(true)}
                         >
                             <Menu className="w-6 h-6" />
-                            <span className="sr-only">Buka Sidebar</span>
                         </Button>
                     </div>
+
                     <div className="flex items-center space-x-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="gap-2 font-mono"
+                                >
+                                    <Globe className="h-4 w-4" />
+                                    <span className="uppercase">{locale}</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={() => switchLanguage("id")}
+                                >
+                                    🇮🇩 Indonesia
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => switchLanguage("en")}
+                                >
+                                    🇺🇸 English
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
                         <NotificationDropdown />
                         <UserDropdownMenu />
                     </div>

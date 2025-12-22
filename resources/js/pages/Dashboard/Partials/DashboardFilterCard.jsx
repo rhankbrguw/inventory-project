@@ -30,23 +30,25 @@ export default function DashboardFilterCard({ auth, locations, filters }) {
                     {filters.location_id ? "lokasi terpilih" : "global"}.
                 </p>
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-                <SmartDateFilter
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                />
-
-                <div className="relative">
+            <div className="flex flex-col sm:flex-row gap-2">
+                <div className="w-full sm:w-[240px] md:w-[280px]">
+                    <SmartDateFilter
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                    />
+                </div>
+                <div className="w-full sm:w-[240px] md:w-[280px]">
                     <Select
                         value={filters.location_id || "all"}
                         onValueChange={(val) =>
                             handleFilterChange({ location_id: val })
                         }
                     >
-                        <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs px-3">
-                            <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <SelectValue placeholder="Semua Lokasi" />
+                        <SelectTrigger className="h-10 px-3 text-sm w-full">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <SelectValue placeholder="Semua Lokasi" />
+                            </div>
                         </SelectTrigger>
                         <SelectContent>
                             {auth.user.level === 1 && (

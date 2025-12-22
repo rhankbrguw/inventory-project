@@ -19,8 +19,8 @@ export default function TransferDetailsManager({
     data,
     setData,
     errors,
-    locations,
-    isDetailsLocked,
+    sourceLocations,
+    destinationLocations,
 }) {
     return (
         <Card>
@@ -47,7 +47,7 @@ export default function TransferDetailsManager({
                                 <SelectValue placeholder="Pilih Lokasi Asal" />
                             </SelectTrigger>
                             <SelectContent>
-                                {locations.map((loc) => (
+                                {sourceLocations.map((loc) => (
                                     <SelectItem
                                         key={loc.id}
                                         value={loc.id.toString()}
@@ -58,6 +58,7 @@ export default function TransferDetailsManager({
                             </SelectContent>
                         </Select>
                     </FormField>
+
                     <FormField
                         label="Ke Lokasi (Tujuan)"
                         error={errors.to_location_id}
@@ -72,7 +73,7 @@ export default function TransferDetailsManager({
                                 <SelectValue placeholder="Pilih Lokasi Tujuan" />
                             </SelectTrigger>
                             <SelectContent>
-                                {locations.map((loc) => (
+                                {destinationLocations.map((loc) => (
                                     <SelectItem
                                         key={loc.id}
                                         value={loc.id.toString()}
@@ -92,7 +93,6 @@ export default function TransferDetailsManager({
                     <Textarea
                         value={data.notes}
                         onChange={(e) => setData("notes", e.target.value)}
-                        disabled={isDetailsLocked}
                         placeholder="Keterangan transfer..."
                     />
                 </FormField>

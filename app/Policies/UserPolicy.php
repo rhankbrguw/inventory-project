@@ -29,7 +29,6 @@ class UserPolicy
         if ($user->id === $model->id) {
             return true;
         }
-
         return $user->level === 1 && $user->level < $model->level;
     }
 
@@ -38,17 +37,16 @@ class UserPolicy
         if ($user->id === $model->id) {
             return false;
         }
-
         return $user->level === 1 && $user->level < $model->level;
     }
 
-    public function restore(User $user, User $model): bool
+    public function restore(User $user): bool
     {
-        return $user->level === 1 && $user->level < $model->level;
+        return $user->level === 1;
     }
 
-    public function forceDelete(User $user, User $model): bool
+    public function forceDelete(User $user): bool
     {
-        return $user->level === 1 && $user->level < $model->level;
+        return $user->level === 1;
     }
 }

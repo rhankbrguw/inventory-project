@@ -23,10 +23,14 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'phone' => ValidPhoneNumber::format($request->phone),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:3', 'max:50'],
             'email' => ['required', 'string', 'email:rfc,dns', 'max:50', 'unique:' . User::class],
-            'phone' => ['nullable', 'string', new ValidPhoneNumber(), new UniqueRule('users', null, 'phone')],
+            'phone' => ['nullable', 'string', new UniqueRule('users', null, 'phone')],
             'password' => [
                 'required',
                 'confirmed',

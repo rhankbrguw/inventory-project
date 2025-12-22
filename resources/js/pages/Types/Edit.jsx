@@ -25,6 +25,7 @@ export default function Edit({
     auth,
     type: typeResource,
     availableGroups,
+    availableLevels,
     allTypes,
 }) {
     const { data: type } = typeResource;
@@ -40,6 +41,8 @@ export default function Edit({
         e.preventDefault();
         patch(route("types.update", type.id));
     };
+
+    const currentGroupHasLevels = data.group && availableLevels[data.group];
 
     return (
         <ContentPageLayout
@@ -87,6 +90,7 @@ export default function Edit({
                                     onValueChange={(value) =>
                                         setData("group", value)
                                     }
+                                    disabled={true}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih grup tipe" />
@@ -107,33 +111,39 @@ export default function Edit({
                             </FormField>
                         </div>
 
-                        {(data.group === "user_role" ||
-                            data.group === "location_type") && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField
-                                        label="Level Akses / Kategori"
-                                        htmlFor="level"
-                                        error={errors.level}
-                                        description={
-                                            data.group === "user_role"
-                                                ? "1=Admin, 10=Manager, 20=Staff/Lainnya."
-                                                : "1=Penyimpanan (Gudang/Pusat), 2=Penjualan (Cabang/Outlet/Kiosk)."
+                        {currentGroupHasLevels && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    label="Level Akses / Kategori"
+                                    htmlFor="level"
+                                    error={errors.level}
+                                    description="Sesuaikan level untuk mengubah hak akses."
+                                >
+                                    <Select
+                                        value={data.level ? data.level.toString() : ""}
+                                        onValueChange={(value) =>
+                                            setData("level", value)
                                         }
                                     >
-                                        <Input
-                                            id="level"
-                                            type="number"
-                                            min="1"
-                                            max="100"
-                                            value={data.level}
-                                            onChange={(e) =>
-                                                setData("level", e.target.value)
-                                            }
-                                            placeholder="Contoh: 20"
-                                        />
-                                    </FormField>
-                                </div>
-                            )}
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih Level" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableLevels[data.group].map(
+                                                (lvl) => (
+                                                    <SelectItem
+                                                        key={lvl.value}
+                                                        value={lvl.value.toString()}
+                                                    >
+                                                        {lvl.label}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
+                            </div>
+                        )}
 
                         {data.group && allTypes[data.group] && (
                             <Alert>

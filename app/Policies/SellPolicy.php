@@ -12,7 +12,7 @@ class SellPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 20 && $user->roles->first()?->code !== 'WHM';
+        return $user->level <= 20;
     }
 
     public function view(User $user, Sell $sell): bool
@@ -20,31 +20,17 @@ class SellPolicy
         if ($user->level === 1) {
             return true;
         }
-
-        if ($user->roles->first()?->code === 'WHM') {
-            return false;
-        }
-
-        return $user->level <= 20 &&
-            in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
+        return in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->level <= 20 && $user->roles->first()?->code !== 'WHM';
+        return $user->level <= 20;
     }
 
     public function createAtLocation(User $user, $locationId): bool
     {
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->canActAsRoleAtLocation($locationId, ['BRM', 'CSH']);
+        return $user->canTransactAtLocation($locationId, 'sell');
     }
 
     public function update(User $user, Sell $sell): bool
@@ -52,12 +38,7 @@ class SellPolicy
         if ($sell->status !== 'Pending') {
             return false;
         }
-
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->canActAsRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
+        return $user->canTransactAtLocation($sell->location_id, 'sell');
     }
 
     public function delete(User $user, Sell $sell): bool
@@ -65,11 +46,6 @@ class SellPolicy
         if ($sell->status !== 'Pending') {
             return false;
         }
-
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->canActAsRoleAtLocation($sell->location_id, ['BRM', 'CSH']);
+        return $user->canTransactAtLocation($sell->location_id, 'sell');
     }
 }
