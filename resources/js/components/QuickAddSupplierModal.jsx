@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import InputError from "@/components/InputError";
-import FormField from "@/components/FormField";
 import { InputWithPrefix } from "@/components/InputWithPrefix";
 
 export default function QuickAddSupplierModal({ children, onSuccess }) {
@@ -58,29 +58,41 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
 
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Tambah Supplier Baru</DialogTitle>
-                    <DialogDescription>
+            <DialogContent className="w-[92vw] sm:max-w-md px-5 py-4 sm:p-4">
+                <DialogHeader className="pb-2">
+                    <DialogTitle className="text-base">
+                        Tambah Supplier Baru
+                    </DialogTitle>
+                    <DialogDescription className="text-xs">
                         Masukkan detail untuk supplier baru.
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4 py-4">
-                    <FormField label="Nama Supplier" htmlFor="supplierName">
+                <form onSubmit={submit} className="space-y-3 py-2">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="supplierName"
+                            className="text-xs font-medium"
+                        >
+                            Nama Supplier
+                        </Label>
                         <Input
                             id="supplierName"
                             placeholder="Nama Perusahaan Supplier"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.name} />
-                    </FormField>
+                    </div>
 
-                    <FormField
-                        label="Koordinator"
-                        htmlFor="supplierContactPerson"
-                    >
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="supplierContactPerson"
+                            className="text-xs font-medium"
+                        >
+                            Koordinator
+                        </Label>
                         <Input
                             id="supplierContactPerson"
                             placeholder="Nama PIC / Sales"
@@ -88,25 +100,36 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             onChange={(e) =>
                                 setData("contact_person", e.target.value)
                             }
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.contact_person} />
-                    </FormField>
+                    </div>
 
-                    <FormField label="Email Supplier" htmlFor="supplierEmail">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="supplierEmail"
+                            className="text-xs font-medium"
+                        >
+                            Email Supplier
+                        </Label>
                         <Input
                             id="supplierEmail"
                             type="email"
                             placeholder="email@supplier.com"
                             value={data.email}
                             onChange={(e) => setData("email", e.target.value)}
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.email} />
-                    </FormField>
+                    </div>
 
-                    <FormField
-                        label="Nomor Telepon (Opsional)"
-                        htmlFor="supplierPhone"
-                    >
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="supplierPhone"
+                            className="text-xs font-medium"
+                        >
+                            Nomor Telepon (Opsional)
+                        </Label>
                         <InputWithPrefix
                             prefix="+62"
                             id="supplierPhone"
@@ -118,27 +141,42 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                                     e.target.value.replace(/\D/g, ""),
                                 )
                             }
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.phone} />
-                    </FormField>
+                    </div>
 
-                    <FormField label="Alamat" htmlFor="supplierAddress">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="supplierAddress"
+                            className="text-xs font-medium"
+                        >
+                            Alamat
+                        </Label>
                         <Input
                             id="supplierAddress"
                             placeholder="Alamat kantor/gudang supplier..."
                             value={data.address}
                             onChange={(e) => setData("address", e.target.value)}
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.address} />
-                    </FormField>
+                    </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="gap-2 sm:gap-0 pt-2">
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 text-xs"
+                            >
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing || !isDirty}>
+                        <Button
+                            disabled={processing || !isDirty}
+                            className="h-8 text-xs"
+                        >
                             {processing ? "Menyimpan..." : "Simpan"}
                         </Button>
                     </DialogFooter>

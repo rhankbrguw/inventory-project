@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import InputError from "@/components/InputError";
-import FormField from "@/components/FormField";
 import {
     Select,
     SelectContent,
@@ -68,42 +68,67 @@ export default function QuickAddCustomerModal({
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
 
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
-                    <DialogDescription>
+            <DialogContent className="w-[92vw] sm:max-w-md px-5 py-4 sm:p-4">
+                <DialogHeader className="pb-2">
+                    <DialogTitle className="text-base">
+                        Tambah Pelanggan Baru
+                    </DialogTitle>
+                    <DialogDescription className="text-xs">
                         Masukkan detail untuk pelanggan baru.
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4 py-4">
-                    <FormField label="Nama Pelanggan" htmlFor="customerName">
+                <form onSubmit={submit} className="space-y-3 py-2">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="customerName"
+                            className="text-xs font-medium"
+                        >
+                            Nama Pelanggan
+                        </Label>
                         <Input
                             id="customerName"
                             placeholder="Nama Lengkap Pelanggan"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.name} />
-                    </FormField>
+                    </div>
 
-                    <FormField label="Email Pelanggan" htmlFor="customerEmail">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="customerEmail"
+                            className="text-xs font-medium"
+                        >
+                            Email Pelanggan
+                        </Label>
                         <Input
                             id="customerEmail"
                             type="email"
                             placeholder="email@contoh.com"
                             value={data.email}
                             onChange={(e) => setData("email", e.target.value)}
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.email} />
-                    </FormField>
+                    </div>
 
-                    <FormField label="Tipe Pelanggan" htmlFor="customerType">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="customerType"
+                            className="text-xs font-medium"
+                        >
+                            Tipe Pelanggan
+                        </Label>
                         <Select
                             value={data.type_id}
                             onValueChange={(value) => setData("type_id", value)}
                         >
-                            <SelectTrigger id="customerType">
+                            <SelectTrigger
+                                id="customerType"
+                                className="h-8 text-sm"
+                            >
                                 <SelectValue placeholder="Pilih Tipe Pelanggan" />
                             </SelectTrigger>
                             <SelectContent>
@@ -112,6 +137,7 @@ export default function QuickAddCustomerModal({
                                         <SelectItem
                                             key={type.id}
                                             value={type.id.toString()}
+                                            className="text-sm"
                                         >
                                             {type.name}
                                         </SelectItem>
@@ -120,12 +146,15 @@ export default function QuickAddCustomerModal({
                             </SelectContent>
                         </Select>
                         <InputError message={errors.type_id} />
-                    </FormField>
+                    </div>
 
-                    <FormField
-                        label="Nomor Telepon (Opsional)"
-                        htmlFor="customerPhone"
-                    >
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="customerPhone"
+                            className="text-xs font-medium"
+                        >
+                            Nomor Telepon (Opsional)
+                        </Label>
                         <InputWithPrefix
                             prefix="+62"
                             id="customerPhone"
@@ -137,17 +166,25 @@ export default function QuickAddCustomerModal({
                                     e.target.value.replace(/\D/g, ""),
                                 )
                             }
+                            className="h-8 text-sm"
                         />
                         <InputError message={errors.phone} />
-                    </FormField>
+                    </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="gap-2 sm:gap-0 pt-2">
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 text-xs"
+                            >
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing || !isDirty}>
+                        <Button
+                            disabled={processing || !isDirty}
+                            className="h-8 text-xs"
+                        >
                             {processing ? "Menyimpan..." : "Simpan"}
                         </Button>
                     </DialogFooter>

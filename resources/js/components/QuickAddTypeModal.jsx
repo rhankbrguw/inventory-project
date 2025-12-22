@@ -50,44 +50,63 @@ export default function QuickAddTypeModal({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
+
+            <DialogContent className="w-[92vw] sm:max-w-md px-5 py-4 sm:p-4">
+                <DialogHeader className="pb-2">
+                    <DialogTitle className="text-base">{title}</DialogTitle>
+                    <DialogDescription className="text-xs">
+                        {description}
+                    </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4 py-4">
-                    <div>
-                        <Label htmlFor="typeName">Nama Tipe</Label>
+                <form onSubmit={submit} className="space-y-3 py-2">
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="typeName"
+                            className="text-xs font-medium"
+                        >
+                            Nama Tipe
+                        </Label>
                         <Input
                             id="typeName"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                             placeholder="Masukkan nama tipe"
-                            className="mt-1"
+                            className="h-8 text-sm"
                         />
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.name} />
                     </div>
 
-                    <div>
-                        <Label htmlFor="typeCode">Kode (Opsional)</Label>
+                    <div className="space-y-1.5">
+                        <Label
+                            htmlFor="typeCode"
+                            className="text-xs font-medium"
+                        >
+                            Kode (Opsional)
+                        </Label>
                         <Input
                             id="typeCode"
                             value={data.code}
                             onChange={(e) => setData("code", e.target.value)}
                             placeholder="Masukkan kode tipe"
-                            className="mt-1"
+                            className="h-8 text-sm"
                         />
-                        <InputError message={errors.code} className="mt-2" />
+                        <InputError message={errors.code} />
                     </div>
 
                     {existingTypes.length > 0 && (
-                        <Alert>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle>Tipe yang sudah ada</AlertTitle>
-                            <AlertDescription className="flex flex-wrap gap-2 pt-2">
+                        <Alert className="py-2 px-3">
+                            <Info className="h-3.5 w-3.5" />
+                            <AlertTitle className="text-xs font-semibold">
+                                Tipe yang sudah ada
+                            </AlertTitle>
+                            <AlertDescription className="flex flex-wrap gap-1.5 pt-1.5">
                                 {existingTypes.map((type) => (
-                                    <Badge key={type.id} variant="secondary">
+                                    <Badge
+                                        key={type.id}
+                                        variant="secondary"
+                                        className="text-[10px] px-1.5 py-0.5"
+                                    >
                                         {type.name}
                                     </Badge>
                                 ))}
@@ -95,13 +114,20 @@ export default function QuickAddTypeModal({
                         </Alert>
                     )}
 
-                    <DialogFooter>
+                    <DialogFooter className="gap-2 sm:gap-0 pt-2">
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 text-xs"
+                            >
                                 Batal
                             </Button>
                         </DialogClose>
-                        <Button disabled={processing || !isDirty}>
+                        <Button
+                            disabled={processing || !isDirty}
+                            className="h-8 text-xs"
+                        >
                             Simpan
                         </Button>
                     </DialogFooter>
