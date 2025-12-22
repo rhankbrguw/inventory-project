@@ -21,7 +21,7 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 
-export default function Create({ auth, availableGroups, allTypes }) {
+export default function Create({ auth, availableGroups, availableLevels, allTypes }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         group: "",
@@ -33,6 +33,8 @@ export default function Create({ auth, availableGroups, allTypes }) {
         e.preventDefault();
         post(route("types.store"));
     };
+
+    const currentGroupHasLevels = data.group && availableLevels[data.group];
 
     return (
         <ContentPageLayout
@@ -77,9 +79,13 @@ export default function Create({ auth, availableGroups, allTypes }) {
                             >
                                 <Select
                                     value={data.group}
-                                    onValueChange={(value) =>
-                                        setData("group", value)
-                                    }
+                                    onValueChange={(value) => {
+                                        setData((prev) => ({
+                                            ...prev,
+                                            group: value,
+                                            level: "",
+                                        }));
+                                    }}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih grup tipe" />
@@ -100,37 +106,39 @@ export default function Create({ auth, availableGroups, allTypes }) {
                             </FormField>
                         </div>
 
-                        {(data.group === "user_role" ||
-                            data.group === "location_type") && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField
-                                        label="Level Akses / Kategori"
-                                        htmlFor="level"
-                                        error={errors.level}
-                                        description={
-                                            data.group === "user_role"
-                                                ? "1=Admin, 10=Manager, 20=Staff/Lainnya."
-                                                : "1=Penyimpanan (Gudang/Pusat), 2=Penjualan (Cabang/Outlet/Kiosk)."
+                        {currentGroupHasLevels && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    label="Level Akses / Kategori"
+                                    htmlFor="level"
+                                    error={errors.level}
+                                    description="Pilih level yang sesuai untuk menentukan hak akses sistem."
+                                >
+                                    <Select
+                                        value={data.level ? data.level.toString() : ""}
+                                        onValueChange={(value) =>
+                                            setData("level", value)
                                         }
                                     >
-                                        <Input
-                                            id="level"
-                                            type="number"
-                                            min="1"
-                                            max="100"
-                                            value={data.level}
-                                            onChange={(e) =>
-                                                setData("level", e.target.value)
-                                            }
-                                            placeholder={
-                                                data.group === "user_role"
-                                                    ? "20"
-                                                    : "2"
-                                            }
-                                        />
-                                    </FormField>
-                                </div>
-                            )}
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih Level Akses" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableLevels[data.group].map(
+                                                (lvl) => (
+                                                    <SelectItem
+                                                        key={lvl.value}
+                                                        value={lvl.value.toString()}
+                                                    >
+                                                        {lvl.label}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </FormField>
+                            </div>
+                        )}
 
                         {data.group && allTypes[data.group] && (
                             <Alert>

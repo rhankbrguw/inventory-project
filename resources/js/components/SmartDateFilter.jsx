@@ -145,22 +145,21 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
                 <Button
                     variant="outline"
                     className={cn(
-                        "w-full md:w-[240px] h-9 px-3 font-normal justify-between",
+                        "w-full h-9 px-3 font-normal justify-start",
                         !date && "text-muted-foreground",
                     )}
                 >
-                    <div className="flex items-center min-w-0 flex-1 overflow-hidden">
-                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="truncate text-xs sm:text-sm text-center w-full capitalize">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate text-xs capitalize">
                             {getDisplayLabel()}
                         </span>
                     </div>
-                    <ChevronDown className="ml-2 h-4 w-4 opacity-50 flex-shrink-0" />
+                    <ChevronDown className="ml-auto h-4 w-4 opacity-50 flex-shrink-0" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0" align="start">
                 <div className="flex flex-col sm:flex-row">
-                    {/* Sidebar Presets */}
                     <div className="border-b sm:border-b-0 sm:border-r py-2 w-full sm:w-[140px] bg-muted/10">
                         <div className="px-3 pb-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground text-left">
                             Periode Cepat

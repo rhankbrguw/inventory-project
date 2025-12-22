@@ -21,21 +21,21 @@ class ProductPolicy
 
     public function create(User $user): bool
     {
-        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
+        return $user->level <= 10;
     }
 
     public function update(User $user): bool
     {
-        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
+        return $user->level <= 10;
     }
 
     public function delete(User $user): bool
     {
-        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
+        return $user->level <= 10;
     }
 
     public function restore(User $user): bool
     {
-        return $user->level === 1 || $user->roles->first()?->code === 'BRM';
+        return $user->level <= 10;
     }
 }

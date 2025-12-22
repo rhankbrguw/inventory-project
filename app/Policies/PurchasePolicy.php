@@ -12,7 +12,7 @@ class PurchasePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 20 && $user->roles->first()?->code !== 'CSH';
+        return $user->level <= 20;
     }
 
     public function view(User $user, Purchase $purchase): bool
@@ -20,24 +20,17 @@ class PurchasePolicy
         if ($user->level === 1) {
             return true;
         }
-
-        return $user->level <= 20 &&
-            $user->roles->first()?->code !== 'CSH' &&
-            in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
+        return in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function create(User $user): bool
     {
-        return $user->level <= 20 && $user->roles->first()?->code !== 'CSH';
+        return $user->level <= 10;
     }
 
     public function createAtLocation(User $user, $locationId): bool
     {
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->canActAsRoleAtLocation($locationId, ['WHM', 'BRM']);
+        return $user->canTransactAtLocation($locationId, 'purchase');
     }
 
     public function update(User $user, Purchase $purchase): bool
@@ -45,12 +38,7 @@ class PurchasePolicy
         if ($purchase->status !== 'Pending') {
             return false;
         }
-
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->canActAsRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
+        return $user->canTransactAtLocation($purchase->location_id, 'purchase');
     }
 
     public function delete(User $user, Purchase $purchase): bool
@@ -58,11 +46,6 @@ class PurchasePolicy
         if ($purchase->status !== 'Pending') {
             return false;
         }
-
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->canActAsRoleAtLocation($purchase->location_id, ['WHM', 'BRM']);
+        return $user->canTransactAtLocation($purchase->location_id, 'purchase');
     }
 }

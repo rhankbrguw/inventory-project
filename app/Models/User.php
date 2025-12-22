@@ -63,9 +63,33 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+
     public function getLevelAttribute(): int
     {
         return $this->roles->min('level') ?? 999;
+    }
+
+    public function getRoleAtLocation(int $locationId): ?Role
+    {
+        if ($this->level === 1) {
+            return new Role(['name' => 'Super Admin', 'code' => 'ADM', 'level' => 1]);
+        }
+
+        $pivot = $this->locations()
+            ->where('locations.id', $locationId)
+            ->first();
+
+        if (!$pivot) {
+            return null;
+        }
+
+        return Role::find($pivot->pivot->role_id);
+    }
+
+    public function getRoleCodeAtLocation($locationId): ?string
+    {
+        $role = $this->getRoleAtLocation($locationId);
+        return $role ? $role->code : null;
     }
 
     public function getAccessibleLocationIds(): ?array
@@ -83,76 +107,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $ids;
     }
 
-    public function getRoleCodeAtLocation($locationId): ?string
-    {
-        if ($this->level === 1) {
-            return 'SUPERADMIN';
-        }
-
-        $pivot = $this->locations()
-            ->where('locations.id', $locationId)
-            ->first();
-
-        if (!$pivot) {
-            return null;
-        }
-
-        $role = Role::find($pivot->pivot->role_id);
-        return $role?->code;
-    }
-
-    public function getEffectiveRoleAtLocation($locationId): ?string
-    {
-        if ($this->level === 1) {
-            return 'SUPERADMIN';
-        }
-
-        $roleCode = $this->getRoleCodeAtLocation($locationId);
-
-        if ($roleCode === 'STF') {
-            $location = Location::find($locationId);
-            if ($location) {
-                $locationType = $location->type->code;
-                if ($locationType === 'WH') {
-                    return 'WHM';
-                } elseif ($locationType === 'BR') {
-                    return 'BRM';
-                }
-            }
-        }
-
-        return $roleCode;
-    }
-
-    public function canActAsRoleAtLocation($locationId, $requiredRoles): bool
-    {
-        if ($this->level === 1) {
-            return true;
-        }
-
-        $effectiveRole = $this->getEffectiveRoleAtLocation($locationId);
-
-        if (is_array($requiredRoles)) {
-            return in_array($effectiveRole, $requiredRoles);
-        }
-
-        return $effectiveRole === $requiredRoles;
-    }
-
-    public function hasRoleAtLocation($locationId, $roleCodes): bool
-    {
-        if ($this->level === 1) {
-            return true;
-        }
-
-        $roleCode = $this->getRoleCodeAtLocation($locationId);
-
-        if (is_array($roleCodes)) {
-            return in_array($roleCode, $roleCodes);
-        }
-
-        return $roleCode === $roleCodes;
-    }
 
     public function canTransactAtLocation($locationId, $transactionType): bool
     {
@@ -160,21 +114,57 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        $roleCode = $this->getEffectiveRoleAtLocation($locationId);
+        $role = $this->getRoleAtLocation($locationId);
+        if (!$role) {
+            return false;
+        }
+
+        $location = Location::with('type')->find($locationId);
+        if (!$location) {
+            return false;
+        }
+
+        $roleLevel = $role->level;
+        $roleCode = $role->code;
+        $locationLevel = $location->type->level;
 
         if ($transactionType === 'purchase') {
-            return in_array($roleCode, ['WHM', 'BRM']);
+            if ($roleLevel > 10) {
+                return false;
+            }
+
+
+            if ($locationLevel === 1 && $roleCode === 'BRM') {
+                return false;
+            }
+
+            if ($locationLevel === 2 && $roleCode === 'WHM') {
+                return false;
+            }
+
+            return true;
         }
 
         if ($transactionType === 'sell') {
-            return in_array($roleCode, ['BRM', 'CSH']);
+            if ($locationLevel === 1) {
+                return false;
+            }
+
+            if ($locationLevel === 2) {
+                return true;
+            }
         }
 
         if ($transactionType === 'transfer') {
-            return $roleCode === 'WHM';
+            return $roleLevel <= 10;
         }
 
         return false;
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
 
     public function sendOtpNotification(): void

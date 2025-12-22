@@ -35,7 +35,7 @@ class CheckLowStock extends Command
             $managers = User::whereHas('locations', function ($q) use ($location) {
                 $q->where('locations.id', $location->id)
                     ->whereIn('location_user.role_id', function ($sub) {
-                        $sub->select('id')->from('roles')->whereIn('code', ['WHM', 'BRM']);
+                        $sub->select('id')->from('roles')->where('level', '<=', 10);
                     });
             })->get();
 

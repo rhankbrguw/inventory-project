@@ -11,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { useEffect } from "react";
 
 export default function UpdateProfileInformationForm({
     mustVerifyEmail,
@@ -18,6 +19,12 @@ export default function UpdateProfileInformationForm({
     className = "",
 }) {
     const user = usePage().props.auth.user;
+
+    const formatPhoneForInput = (phone) => {
+        if (!phone) return "";
+        return phone.startsWith("+62") ? phone.slice(3) : phone.startsWith("62") ? phone.slice(2) : phone;
+    };
+
     const {
         data,
         setData,
@@ -26,17 +33,36 @@ export default function UpdateProfileInformationForm({
         processing,
         recentlySuccessful,
         isDirty,
+        defaults,
     } = useForm({
         name: user.name,
         email: user.email,
-        phone: user.phone
-            ? user.phone.replace(/^\+62/, "").replace(/\D/g, "")
-            : "",
+        phone: formatPhoneForInput(user.phone),
     });
+
+    useEffect(() => {
+        const newData = {
+            name: user.name,
+            email: user.email,
+            phone: formatPhoneForInput(user.phone),
+        };
+
+        setData(newData);
+
+        if (typeof defaults === 'function') {
+            defaults(newData);
+        }
+    }, [user]);
+
     const submit = (e) => {
         e.preventDefault();
-        patch(route("profile.update"));
+        patch(route("profile.update"), {
+            preserveScroll: true,
+            onSuccess: () => {
+            },
+        });
     };
+
     return (
         <section className={className}>
             <CardHeader>
@@ -60,6 +86,7 @@ export default function UpdateProfileInformationForm({
                         />
                         <InputError className="mt-2" message={errors.name} />
                     </div>
+
                     <div>
                         <Label htmlFor="email">Email</Label>
                         <Input
@@ -73,6 +100,7 @@ export default function UpdateProfileInformationForm({
                         />
                         <InputError className="mt-2" message={errors.email} />
                     </div>
+
                     <div>
                         <Label htmlFor="phone">No. Telp</Label>
                         <div className="mt-1">
@@ -80,18 +108,17 @@ export default function UpdateProfileInformationForm({
                                 prefix="+62"
                                 id="phone"
                                 value={data.phone}
-                                onChange={(e) =>
-                                    setData(
-                                        "phone",
-                                        e.target.value.replace(/\D/g, ""),
-                                    )
-                                }
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, "");
+                                    setData("phone", val);
+                                }}
                                 placeholder="812xxxxxxxx"
                                 autoComplete="tel"
                             />
                         </div>
                         <InputError className="mt-2" message={errors.phone} />
                     </div>
+
                     {mustVerifyEmail && user.email_verified_at === null && (
                         <div>
                             <p className="text-sm mt-2 text-foreground">
@@ -102,21 +129,20 @@ export default function UpdateProfileInformationForm({
                                     as="button"
                                     className="underline text-sm text-muted-foreground hover:text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
                                 >
-                                    Klik di sini untuk mengirim ulang email
-                                    verifikasi.
+                                    Klik di sini untuk mengirim ulang email verifikasi.
                                 </Link>
                             </p>
                             {status === "verification-link-sent" && (
                                 <div className="mt-2 font-medium text-sm text-success-foreground bg-success/10 p-3 rounded-lg">
-                                    Tautan verifikasi baru telah dikirim ke
-                                    alamat email Anda.
+                                    Tautan verifikasi baru telah dikirim ke alamat email Anda.
                                 </div>
                             )}
                         </div>
                     )}
+
                     <div className="flex items-center gap-4">
                         <Button disabled={processing || !isDirty}>
-                            Simpan
+                            {processing ? "Menyimpan..." : "Simpan"}
                         </Button>
                         <Transition
                             show={recentlySuccessful}
@@ -125,9 +151,7 @@ export default function UpdateProfileInformationForm({
                             leave="transition ease-in-out"
                             leaveTo="opacity-0"
                         >
-                            <p className="text-sm text-muted-foreground">
-                                Tersimpan.
-                            </p>
+                            <p className="text-sm text-muted-foreground">Tersimpan.</p>
                         </Transition>
                     </div>
                 </form>
