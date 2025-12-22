@@ -20,13 +20,16 @@ class SellCartController extends Controller
         $user = $request->user();
 
         $product = Product::findOrFail($validated["product_id"]);
+
         $validated["quantity"] = $validated["quantity"] ?? 1.0;
+        $sellPrice = $validated['sell_price'] ?? $product->price;
 
         SellCartItem::create([
             "user_id" => $user->id,
             "location_id" => $validated["location_id"],
             "product_id" => $product->id,
             "quantity" => $validated["quantity"],
+            "sell_price" => $sellPrice,
         ]);
 
         return Redirect::back();
@@ -38,6 +41,27 @@ class SellCartController extends Controller
     ): RedirectResponse {
         $validated = $request->validated();
         $cartItem->update($validated);
+
+        return Redirect::back();
+    }
+
+    public function updatePricesByChannel(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'location_id' => ['required', 'integer', 'exists:locations,id'],
+            'sales_channel_id' => ['required', 'integer', 'exists:sales_channels,id'],
+        ]);
+
+        $user = $request->user();
+        $cartItems = $user->sellCartItems()
+            ->where('location_id', $validated['location_id'])
+            ->with('product.prices')
+            ->get();
+
+        foreach ($cartItems as $item) {
+            $newPrice = $item->product->getPriceForChannel($validated['sales_channel_id']);
+            $item->update(['sell_price' => $newPrice]);
+        }
 
         return Redirect::back();
     }

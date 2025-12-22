@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use App\Rules\UniqueRule;
@@ -26,6 +27,7 @@ class StoreSellCartItemRequest extends FormRequest
             ],
             "location_id" => ["required", "integer", "exists:locations,id"],
             "quantity" => ["nullable", "numeric", "min:0.0001"],
+            "sell_price" => ["nullable", "numeric", "min:0"],
         ];
     }
 }

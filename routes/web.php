@@ -79,6 +79,7 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
 
     Route::prefix('sell-cart')->name('sell.cart.')->controller(SellCartController::class)->group(function () {
         Route::post('/', 'store')->name('store');
+        Route::patch('/prices/update', 'updatePricesByChannel')->name('update-prices');
         Route::patch('/{cartItem}', 'update')->name('update');
         Route::delete('/', 'destroyLocation')->name('destroy.location');
         Route::delete('/{cartItem}', 'destroyItem')->name('destroy.item');

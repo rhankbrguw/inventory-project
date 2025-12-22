@@ -44,7 +44,7 @@ export function useSellCart(cart = [], locationId) {
                 (sum, item) =>
                     sum +
                     (parseFloat(item.quantity) || 0) *
-                        (Number(item.product.price) || 0),
+                    (Number(item.sell_price) || 0),
                 0,
             ),
         [effectiveCart],
@@ -106,7 +106,7 @@ export function useSellCart(cart = [], locationId) {
     );
 
     const addItem = useCallback(
-        (product) => {
+        (product, sellPrice = null) => {
             if (!locationId || processingItem === product.id) return;
 
             const existingItem = effectiveCart.find(
@@ -136,6 +136,7 @@ export function useSellCart(cart = [], locationId) {
                         product_id: product.id,
                         location_id: locationId,
                         quantity: 1,
+                        sell_price: sellPrice ?? product.price,
                     },
                     {
                         preserveScroll: true,

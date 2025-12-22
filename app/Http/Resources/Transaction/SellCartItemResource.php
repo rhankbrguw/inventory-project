@@ -13,6 +13,7 @@ class SellCartItemResource extends JsonResource
         return [
             "id" => $this->id,
             "quantity" => $this->quantity,
+            "sell_price" => $this->sell_price,
             "product" => $this->whenLoaded(
                 "product",
                 fn() => [
@@ -24,6 +25,10 @@ class SellCartItemResource extends JsonResource
                     "image_url" => $this->product->image_path
                         ? Storage::url($this->product->image_path)
                         : null,
+                    "prices" => $this->product->prices ?? [],
+                    "channel_prices" => $this->product->prices
+                        ? $this->product->prices->pluck('price', 'sales_channel_id')
+                        : [],
                 ],
             ),
             "location" => $this->whenLoaded(

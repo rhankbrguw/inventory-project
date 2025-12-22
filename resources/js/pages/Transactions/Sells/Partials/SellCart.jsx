@@ -22,11 +22,11 @@ export default function SellCart({
     removeItem,
     updateItem,
     processingItem,
-    totalCartPrice,
     onCheckout,
     locationId,
     getItemQuantity,
     canCheckout = true,
+    getProductPrice,
 }) {
     const hasItems = cart.length > 0;
     const isCartDisabled =
@@ -35,6 +35,12 @@ export default function SellCart({
     const handleNewCustomer = (newCustomer) => {
         onCustomerChange(newCustomer.id.toString());
     };
+
+    const dynamicTotalCartPrice = cart.reduce((total, item) => {
+        const price = item.sell_price || item.product.price;
+        const qty = parseFloat(item.quantity) || 0;
+        return total + qty * parseFloat(price);
+    }, 0);
 
     return (
         <div className="flex flex-col h-full">
@@ -115,6 +121,7 @@ export default function SellCart({
                             processingItem={processingItem}
                             getItemQuantity={getItemQuantity}
                             locationId={locationId}
+                            getProductPrice={getProductPrice}
                         />
                     </div>
                 )}
@@ -128,7 +135,7 @@ export default function SellCart({
                                 Total Penjualan
                             </p>
                             <p className="text-base font-bold text-foreground">
-                                {formatCurrency(totalCartPrice)}
+                                {formatCurrency(dynamicTotalCartPrice)}
                             </p>
                         </div>
                     </div>
