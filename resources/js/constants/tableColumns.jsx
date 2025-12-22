@@ -432,8 +432,9 @@ export const sellDetailColumns = [
         header: "Qty",
         cell: ({ row }) => {
             const item = row;
-            return `${formatNumber(Math.abs(item.quantity))} ${item.product?.unit || ""
-                }`;
+            return `${formatNumber(Math.abs(item.quantity))} ${
+                item.product?.unit || ""
+            }`;
         },
         className: "text-center whitespace-nowrap px-4",
     },
@@ -510,7 +511,10 @@ export const supplierColumns = [
         cell: ({ row }) => {
             const phone = row.phone;
             if (!phone) return "-";
-            return phone.replace(/(\+62|62)(\d{3})(\d{4})(\d+)/, "+62 $2-$3-$4");
+            return phone.replace(
+                /(\+62|62)(\d{3})(\d{4})(\d+)/,
+                "+62 $2-$3-$4",
+            );
         },
         className: "text-center whitespace-nowrap",
     },
@@ -554,7 +558,10 @@ export const customerColumns = [
         cell: ({ row }) => {
             const phone = row.phone;
             if (!phone) return "-";
-            return phone.replace(/(\+62|62)(\d{3})(\d{4})(\d+)/, "+62 $2-$3-$4");
+            return phone.replace(
+                /(\+62|62)(\d{3})(\d{4})(\d+)/,
+                "+62 $2-$3-$4",
+            );
         },
         className: "text-center whitespace-nowrap",
     },
@@ -563,6 +570,48 @@ export const customerColumns = [
         header: "Tgl. Dibuat",
         cell: ({ row }) => formatDate(row.created_at),
         className: "text-center whitespace-nowrap",
+    },
+];
+
+export const topProductsColumns = [
+    {
+        accessorKey: "rank",
+        header: "#",
+        cell: ({ index }) => index + 1,
+        className:
+            "text-center py-2 px-3 text-muted-foreground font-mono text-xs",
+        headerClassName: "text-center py-2 px-3 font-medium rounded-tl-lg",
+    },
+    {
+        accessorKey: "name",
+        header: "Produk",
+        className: "text-center py-2 px-2 font-medium",
+        headerClassName: "text-center py-2 px-2 font-medium",
+    },
+    {
+        accessorKey: "sku",
+        header: "SKU",
+        className:
+            "text-center py-2 px-2 text-xs text-muted-foreground font-mono",
+        headerClassName: "text-center py-2 px-2 font-medium",
+    },
+    {
+        accessorKey: "quantity",
+        header: "Qty",
+        cell: ({ row }) => (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-info/15 text-info">
+                {formatNumber(row.quantity)}
+            </span>
+        ),
+        className: "text-center py-2 px-2",
+        headerClassName: "text-center py-2 px-2 font-medium",
+    },
+    {
+        accessorKey: "revenue",
+        header: "Nilai Penjualan",
+        cell: ({ row }) => formatCurrency(row.revenue),
+        className: "text-center py-2 px-3 font-medium text-success",
+        headerClassName: "text-center py-2 px-3 font-medium rounded-tr-lg",
     },
 ];
 
@@ -584,7 +633,10 @@ export const userColumns = [
             const phone = row.phone;
             if (!phone) return "-";
 
-            return phone.replace(/(\+62|62)(\d{3})(\d{4})(\d+)/, "+62 $2-$3-$4");
+            return phone.replace(
+                /(\+62|62)(\d{3})(\d{4})(\d+)/,
+                "+62 $2-$3-$4",
+            );
         },
         className: "text-center whitespace-nowrap",
     },

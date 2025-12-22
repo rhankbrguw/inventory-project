@@ -9,13 +9,19 @@ import {
 } from "@/components/ui/select";
 import { MapPin, Package } from "lucide-react";
 import SmartDateFilter from "@/components/SmartDateFilter";
+import PrintButton from "@/components/PrintButton";
 
-export default function ReportFilterCard({ auth, locations, products, filters }) {
+export default function ReportFilterCard({
+    auth,
+    locations,
+    products,
+    filters,
+}) {
     const handleFilterChange = (newFilters) => {
         router.get(
             route("reports.index"),
             { ...filters, ...newFilters },
-            { preserveState: true, preserveScroll: true, replace: true }
+            { preserveState: true, preserveScroll: true, replace: true },
         );
     };
 
@@ -23,22 +29,24 @@ export default function ReportFilterCard({ auth, locations, products, filters })
         if (auth.user.level === 1) {
             return filters.location_id || "all";
         }
-        return filters.location_id || (locations[0]?.id?.toString() || "all");
+        return filters.location_id || locations[0]?.id?.toString() || "all";
     };
 
     return (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
-            <div className="w-full sm:w-[200px]">
+            <div className="w-full sm:w-[180px]">
                 <SmartDateFilter
                     filters={filters}
                     onFilterChange={handleFilterChange}
                 />
             </div>
 
-            <div className="w-full sm:w-[200px]">
+            <div className="w-full sm:w-[180px]">
                 <Select
                     value={getLocationValue()}
-                    onValueChange={(val) => handleFilterChange({ location_id: val })}
+                    onValueChange={(val) =>
+                        handleFilterChange({ location_id: val })
+                    }
                 >
                     <SelectTrigger className="h-9 px-3 text-xs w-full">
                         <div className="flex items-center gap-2 min-w-0">
@@ -60,10 +68,12 @@ export default function ReportFilterCard({ auth, locations, products, filters })
             </div>
 
             {products && products.length > 0 && (
-                <div className="w-full sm:w-[200px]">
+                <div className="w-full sm:w-[180px]">
                     <Select
                         value={filters.product_id || "all"}
-                        onValueChange={(val) => handleFilterChange({ product_id: val })}
+                        onValueChange={(val) =>
+                            handleFilterChange({ product_id: val })
+                        }
                     >
                         <SelectTrigger className="h-9 px-3 text-xs w-full">
                             <div className="flex items-center gap-2 min-w-0">
@@ -74,7 +84,10 @@ export default function ReportFilterCard({ auth, locations, products, filters })
                         <SelectContent>
                             <SelectItem value="all">Semua Produk</SelectItem>
                             {products.map((prod) => (
-                                <SelectItem key={prod.id} value={prod.id.toString()}>
+                                <SelectItem
+                                    key={prod.id}
+                                    value={prod.id.toString()}
+                                >
                                     {prod.name}
                                 </SelectItem>
                             ))}
@@ -82,6 +95,10 @@ export default function ReportFilterCard({ auth, locations, products, filters })
                     </Select>
                 </div>
             )}
+
+            <PrintButton className="h-9 px-3 text-xs sm:w-auto w-full">
+                Cetak
+            </PrintButton>
         </div>
     );
 }

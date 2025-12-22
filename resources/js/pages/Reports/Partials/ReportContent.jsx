@@ -25,8 +25,17 @@ import {
 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import ReportMobileCard from "./ReportMobileCard";
+import { topProductsColumns } from "@/constants/tableColumns";
 
-const StatCard = ({ title, value, subtext, icon: Icon, iconBg, iconColor, valueColor }) => (
+const StatCard = ({
+    title,
+    value,
+    subtext,
+    icon: Icon,
+    iconBg,
+    iconColor,
+    valueColor,
+}) => (
     <Card className="border-l-4 border-l-transparent hover:border-l-primary/50 transition-all">
         <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
@@ -37,7 +46,9 @@ const StatCard = ({ title, value, subtext, icon: Icon, iconBg, iconColor, valueC
             </div>
         </CardHeader>
         <CardContent className="pt-0 space-y-1">
-            <div className={`text-xl sm:text-2xl font-bold ${valueColor || ""}`}>
+            <div
+                className={`text-xl sm:text-2xl font-bold ${valueColor || ""}`}
+            >
                 {value}
             </div>
             <p className="text-xs text-muted-foreground">{subtext}</p>
@@ -96,15 +107,31 @@ export default function ReportContent({ stats, charts }) {
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base font-semibold">Tren Penjualan</CardTitle>
-                    <CardDescription className="text-xs">Grafik penjualan harian dalam periode terpilih</CardDescription>
+                    <CardTitle className="text-base font-semibold">
+                        Tren Penjualan
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                        Grafik penjualan harian dalam periode terpilih
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="px-2 sm:px-6">
                     {charts.daily_trend && charts.daily_trend.length > 0 ? (
                         <div className="h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={charts.daily_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                <LineChart
+                                    data={charts.daily_trend}
+                                    margin={{
+                                        top: 10,
+                                        right: 10,
+                                        left: -20,
+                                        bottom: 0,
+                                    }}
+                                >
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        vertical={false}
+                                        stroke="hsl(var(--border))"
+                                    />
                                     <XAxis
                                         dataKey="date"
                                         tickLine={false}
@@ -113,19 +140,34 @@ export default function ReportContent({ stats, charts }) {
                                         fontSize={11}
                                     />
                                     <YAxis
-                                        tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                                        tickFormatter={(value) =>
+                                            `${(value / 1000000).toFixed(0)}M`
+                                        }
                                         tickLine={false}
                                         axisLine={false}
                                         fontSize={11}
                                     />
                                     <Tooltip
                                         content={({ active, payload }) => {
-                                            if (active && payload && payload.length) {
+                                            if (
+                                                active &&
+                                                payload &&
+                                                payload.length
+                                            ) {
                                                 return (
                                                     <div className="bg-popover border border-border px-3 py-2 rounded shadow-lg text-xs">
-                                                        <p className="font-medium mb-1">{payload[0].payload.date}</p>
+                                                        <p className="font-medium mb-1">
+                                                            {
+                                                                payload[0]
+                                                                    .payload
+                                                                    .date
+                                                            }
+                                                        </p>
                                                         <p className="font-semibold text-info">
-                                                            {formatCurrency(payload[0].value)}
+                                                            {formatCurrency(
+                                                                payload[0]
+                                                                    .value,
+                                                            )}
                                                         </p>
                                                     </div>
                                                 );
@@ -161,56 +203,87 @@ export default function ReportContent({ stats, charts }) {
                             <Package className="h-5 w-5 text-primary" />
                             Produk Terlaris
                         </CardTitle>
-                        <CardDescription className="text-xs">Top 10 produk berdasarkan kuantitas dan nilai penjualan</CardDescription>
+                        <CardDescription className="text-xs">
+                            Top 10 produk berdasarkan kuantitas dan nilai
+                            penjualan
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {charts.top_products && charts.top_products.length > 0 ? (
+                        {charts.top_products &&
+                        charts.top_products.length > 0 ? (
                             <>
                                 <div className="hidden md:block overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b text-xs text-muted-foreground bg-muted/30">
-                                                <th className="text-left py-3 px-4 font-medium rounded-tl-lg">#</th>
-                                                <th className="text-left py-3 px-2 font-medium">Produk</th>
-                                                <th className="text-left py-3 px-2 font-medium">SKU</th>
-                                                <th className="text-center py-3 px-2 font-medium">Qty</th>
-                                                <th className="text-right py-3 px-4 font-medium rounded-tr-lg">Nilai Penjualan</th>
+                                                {topProductsColumns.map(
+                                                    (column, idx) => (
+                                                        <th
+                                                            key={idx}
+                                                            className={
+                                                                column.headerClassName
+                                                            }
+                                                        >
+                                                            {column.header}
+                                                        </th>
+                                                    ),
+                                                )}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {charts.top_products.map((product, index) => (
-                                                <tr key={index} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
-                                                    <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{index + 1}</td>
-                                                    <td className="py-3 px-2 font-medium">{product.name}</td>
-                                                    <td className="py-3 px-2 text-xs text-muted-foreground font-mono">{product.sku}</td>
-                                                    <td className="py-3 px-2 text-center">
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-info/15 text-info">
-                                                            {formatNumber(product.quantity)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right font-medium text-success">
-                                                        {formatCurrency(product.revenue)}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {charts.top_products.map(
+                                                (product, index) => (
+                                                    <tr
+                                                        key={index}
+                                                        className="border-b last:border-0 hover:bg-muted/10 transition-colors"
+                                                    >
+                                                        {topProductsColumns.map(
+                                                            (column, idx) => (
+                                                                <td
+                                                                    key={idx}
+                                                                    className={
+                                                                        column.className
+                                                                    }
+                                                                >
+                                                                    {column.cell
+                                                                        ? column.cell(
+                                                                              {
+                                                                                  row: product,
+                                                                                  index,
+                                                                              },
+                                                                          )
+                                                                        : product[
+                                                                              column
+                                                                                  .accessorKey
+                                                                          ]}
+                                                                </td>
+                                                            ),
+                                                        )}
+                                                    </tr>
+                                                ),
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
 
                                 <div className="md:hidden space-y-3">
-                                    {charts.top_products.map((product, index) => (
-                                        <ReportMobileCard
-                                            key={product.id || index}
-                                            product={product}
-                                            rank={index + 1}
-                                        />
-                                    ))}
+                                    {charts.top_products.map(
+                                        (product, index) => (
+                                            <ReportMobileCard
+                                                key={product.id || index}
+                                                product={product}
+                                                rank={index + 1}
+                                            />
+                                        ),
+                                    )}
                                 </div>
                             </>
                         ) : (
                             <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground">
                                 <PackageX className="h-12 w-12 mb-2 opacity-20" />
-                                <p className="text-sm">Belum ada data penjualan produk</p>
+                                <p className="text-sm">
+                                    Belum ada data penjualan produk
+                                </p>
                             </div>
                         )}
                     </CardContent>
