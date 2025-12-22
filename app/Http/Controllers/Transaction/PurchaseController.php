@@ -28,6 +28,26 @@ class PurchaseController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
+        $locationsQuery = Location::orderBy("name")->with('type');
+
+        if ($accessibleLocationIds) {
+            $locationsQuery->whereIn('id', $accessibleLocationIds);
+        }
+
+        $allLocations = $locationsQuery->get();
+
+        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
+            return $user->canTransactAtLocation($location->id, 'purchase');
+        });
+
+        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
+            return [
+                'id' => $location->id,
+                'name' => $location->name,
+                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+            ];
+        });
+
         $cartItems = $user
             ->purchaseCartItems()
             ->with(["product", "supplier"])
@@ -45,12 +65,9 @@ class PurchaseController extends Controller
                     ->where("name", "like", "%{$search}%")
                     ->orWhere("sku", "like", "%{$search}%");
             })
-            ->when(
-                $request->filled("type_id") && $request->input("type_id") !== "all",
-                function ($query) use ($request) {
-                    $query->where("type_id", $request->input("type_id"));
-                },
-            )
+            ->when($request->filled("type_id") && $request->input("type_id") !== "all", function ($query) use ($request) {
+                $query->where("type_id", $request->input("type_id"));
+            })
             ->when($request->filled("supplier_id") && $request->input("supplier_id") !== "all", function ($query) use ($request) {
                 $supplierId = $request->input("supplier_id");
                 if ($supplierId === 'null') {
@@ -61,47 +78,12 @@ class PurchaseController extends Controller
             })
             ->orderBy("name");
 
-        $products = $productsQuery->paginate(12)->withQueryString();
-
-        $locationsQuery = Location::orderBy("name")->with('type');
-
-        if ($accessibleLocationIds) {
-            $locationsQuery->whereIn('id', $accessibleLocationIds);
-        }
-
-        $allLocations = $locationsQuery->get();
-
-        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
-            $roleCode = $user->getRoleCodeAtLocation($location->id);
-            $locationTypeCode = $location->type->code;
-
-            if (in_array($locationTypeCode, ['BR', 'STR', 'OUT'])) {
-                if ($roleCode === 'STF') {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
-            return [
-                'id' => $location->id,
-                'name' => $location->name,
-                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
-            ];
-        });
-
         return Inertia::render("Transactions/Purchases/Create", [
             "locations" => $locationsWithPermissions,
             "suppliers" => Supplier::orderBy("name")->get(["id", "name"]),
-            "products" => $products,
-            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)
-                ->orderBy("name")
-                ->get(["id", "name"]),
-            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)
-                ->orderBy("name")
-                ->get(["id", "name"]),
+            "products" => $productsQuery->paginate(12)->withQueryString(),
+            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)->orderBy("name")->get(["id", "name"]),
+            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)->orderBy("name")->get(["id", "name"]),
             "cart" => PurchaseCartItemResource::collection($cartItems),
             "filters" => (object) $request->only(["search", "type_id", "supplier_id"]),
         ]);
@@ -110,31 +92,14 @@ class PurchaseController extends Controller
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-
-        $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
-
-        $location = Location::with('type')->findOrFail($validated['location_id']);
         $user = $request->user();
 
-        $roleCode = $user->getRoleCodeAtLocation($location->id);
-        $locationTypeCode = $location->type->code;
-
-        if (in_array($locationTypeCode, ['BR', 'STR', 'OUT']) && $roleCode === 'STF') {
-            abort(403, 'Staff Cabang tidak memiliki akses untuk melakukan pembelian ke Supplier. Hubungi Branch Manager.');
+        if (!$user->canTransactAtLocation($validated['location_id'], 'purchase')) {
+            abort(403, 'Anda tidak memiliki hak akses Managerial untuk pembelian di lokasi ini.');
         }
 
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($validated['location_id'], $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke lokasi ini.');
-        }
-
-        $totalCost = collect($validated["items"])->sum(function ($item) {
-            return $item["quantity"] * $item["cost_per_unit"];
-        });
-
-        $purchaseType = Type::where("group", Type::GROUP_TRANSACTION)
-            ->where("name", "Pembelian")
-            ->firstOrFail();
+        $totalCost = collect($validated["items"])->sum(fn($item) => $item["quantity"] * $item["cost_per_unit"]);
+        $purchaseType = Type::where("group", Type::GROUP_TRANSACTION)->where("name", "Pembelian")->firstOrFail();
 
         DB::transaction(function () use ($validated, $totalCost, $purchaseType, $request) {
             $purchase = Purchase::create([
@@ -169,57 +134,35 @@ class PurchaseController extends Controller
                 ]);
 
                 $inventory = Inventory::firstOrCreate(
-                    [
-                        "product_id" => $item["product_id"],
-                        "location_id" => $validated["location_id"],
-                    ],
-                    ["quantity" => 0, "average_cost" => 0],
+                    ["product_id" => $item["product_id"], "location_id" => $validated["location_id"]],
+                    ["quantity" => 0, "average_cost" => 0]
                 );
 
-                $oldQty = $inventory->quantity;
-                $oldAvgCost = $inventory->average_cost;
-                $newQty = $item["quantity"];
-                $newCost = $item["cost_per_unit"];
+                $newTotalQty = $inventory->quantity + $item["quantity"];
+                $newAvgCost = ($inventory->quantity * $inventory->average_cost + $item["quantity"] * $item["cost_per_unit"]) / ($newTotalQty > 0 ? $newTotalQty : 1);
 
-                $newTotalQty = $oldQty + $newQty;
-                $newAvgCost = ($oldQty * $oldAvgCost + $newQty * $newCost) / ($newTotalQty > 0 ? $newTotalQty : 1);
-
-                $inventory->update([
-                    "quantity" => $newTotalQty,
-                    "average_cost" => $newAvgCost,
-                ]);
+                $inventory->update(["quantity" => $newTotalQty, "average_cost" => $newAvgCost]);
             }
 
             $supplierId = $validated["supplier_id"];
-            Auth::user()
-                ->purchaseCartItems()
-                ->where(function ($query) use ($supplierId) {
-                    if (is_null($supplierId)) {
-                        $query->whereNull('supplier_id');
-                    } else {
-                        $query->where('supplier_id', $supplierId);
-                    }
-                })
+            Auth::user()->purchaseCartItems()
+                ->where(fn($q) => is_null($supplierId) ? $q->whereNull('supplier_id') : $q->where('supplier_id', $supplierId))
                 ->whereIn('product_id', array_column($validated["items"], 'product_id'))
                 ->delete();
         });
 
-        return Redirect::route("transactions.index")->with(
-            "success",
-            "Transaksi pembelian berhasil disimpan.",
-        );
+        return Redirect::route("transactions.index")->with("success", "Transaksi pembelian berhasil disimpan.");
     }
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)
     {
-        $amountPerInstallment = $totalAmount / $terms;
-        $startDate = Carbon::parse($startDate);
-
+        $amountPer = $totalAmount / $terms;
+        $date = Carbon::parse($startDate);
         for ($i = 1; $i <= $terms; $i++) {
             $transaction->installments()->create([
                 'installment_number' => $i,
-                'amount' => $amountPerInstallment,
-                'due_date' => $startDate->copy()->addMonths($i - 1),
+                'amount' => $amountPer,
+                'due_date' => $date->copy()->addMonths($i - 1),
                 'status' => 'pending',
             ]);
         }
@@ -228,23 +171,12 @@ class PurchaseController extends Controller
     public function show(Purchase $purchase): Response
     {
         $user = Auth::user();
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if ($accessibleLocationIds && !in_array($purchase->location_id, $accessibleLocationIds)) {
-            abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
+        $accessible = $user->getAccessibleLocationIds();
+        if ($accessible && !in_array($purchase->location_id, $accessible)) {
+            abort(403);
         }
 
-        $purchase->load([
-            "location",
-            "supplier",
-            "user",
-            "paymentMethodType",
-            "stockMovements.product",
-            "type",
-            "installments",
-        ]);
-
-        return Inertia::render("Transactions/Purchases/Show", [
-            "purchase" => PurchaseResource::make($purchase),
-        ]);
+        $purchase->load(["location", "supplier", "user", "paymentMethodType", "stockMovements.product", "type", "installments"]);
+        return Inertia::render("Transactions/Purchases/Show", ["purchase" => PurchaseResource::make($purchase)]);
     }
 }

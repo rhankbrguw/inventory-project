@@ -65,29 +65,17 @@ export default function DashboardContent({
                     value={formatCurrency(stats.net_profit)}
                     subtext={`Margin ${stats.gross_margin.toFixed(1)}%`}
                     icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
-                    iconBg={
-                        stats.net_profit >= 0
-                            ? "bg-emerald-500/10"
-                            : "bg-red-500/10"
-                    }
-                    iconColor={
-                        stats.net_profit >= 0
-                            ? "text-emerald-600 dark:text-emerald-500"
-                            : "text-red-600 dark:text-red-500"
-                    }
-                    valueColor={
-                        stats.net_profit >= 0
-                            ? "text-emerald-600 dark:text-emerald-500"
-                            : "text-red-600 dark:text-red-500"
-                    }
+                    iconBg={stats.net_profit >= 0 ? "bg-success/10" : "bg-destructive/10"}
+                    iconColor={stats.net_profit >= 0 ? "text-success" : "text-destructive"}
+                    valueColor={stats.net_profit >= 0 ? "text-success" : "text-destructive"}
                 />
                 <StatCard
                     title="Pembelian"
                     value={formatCurrency(stats.total_purchases)}
                     subtext={`${formatNumber(stats.purchase_count)} transaksi`}
                     icon={ShoppingCart}
-                    iconBg="bg-orange-500/10"
-                    iconColor="text-orange-600 dark:text-orange-500"
+                    iconBg="bg-warning/10"
+                    iconColor="text-warning"
                 />
                 <StatCard
                     title="Nilai Stok"
@@ -98,16 +86,8 @@ export default function DashboardContent({
                             : "Stok normal"
                     }
                     icon={stats.low_stock_count > 0 ? AlertTriangle : Package}
-                    iconBg={
-                        stats.low_stock_count > 0
-                            ? "bg-amber-500/10"
-                            : "bg-blue-500/10"
-                    }
-                    iconColor={
-                        stats.low_stock_count > 0
-                            ? "text-amber-600 dark:text-amber-500"
-                            : "text-blue-600 dark:text-blue-500"
-                    }
+                    iconBg={stats.low_stock_count > 0 ? "bg-warning/10" : "bg-info/10"}
+                    iconColor={stats.low_stock_count > 0 ? "text-warning" : "text-info"}
                 />
             </div>
 
@@ -190,7 +170,7 @@ export default function DashboardContent({
                                                                 >
                                                                     <span className="text-muted-foreground">
                                                                         {entry.name ===
-                                                                        "sales"
+                                                                            "sales"
                                                                             ? "Penjualan"
                                                                             : "Pembelian"}
                                                                         :
@@ -200,7 +180,7 @@ export default function DashboardContent({
                                                                         style={{
                                                                             color:
                                                                                 entry.name ===
-                                                                                "sales"
+                                                                                    "sales"
                                                                                     ? "hsl(var(--success))"
                                                                                     : "hsl(var(--destructive))",
                                                                         }}
@@ -423,9 +403,9 @@ const PaymentMethodsChart = ({ data }) => {
     const pieData =
         data?.length > 0
             ? data.map((item, index) => ({
-                  ...item,
-                  fill: CHART_COLORS[index % CHART_COLORS.length],
-              }))
+                ...item,
+                fill: CHART_COLORS[index % CHART_COLORS.length],
+            }))
             : [];
 
     const totalTransactions = pieData.reduce(
@@ -591,22 +571,16 @@ const QuickStatsCard = ({ stats, dateRangeLabel }) => (
                 label="Total Transaksi"
                 value={formatNumber(stats.sales_count + stats.purchase_count)}
                 subvalue={`${formatNumber(stats.sales_count)} jual, ${formatNumber(stats.purchase_count)} beli`}
-                iconBg="bg-purple-500/10"
-                iconColor="text-purple-600 dark:text-purple-500"
+                iconBg="bg-highlight/10"
+                iconColor="text-highlight"
             />
             <QuickStatItem
                 icon={Percent}
                 label="Gross Margin"
                 value={`${stats.gross_margin.toFixed(1)}%`}
                 subvalue="Dari penjualan"
-                iconBg={
-                    stats.gross_margin > 20 ? "bg-emerald-500/10" : "bg-muted"
-                }
-                iconColor={
-                    stats.gross_margin > 20
-                        ? "text-emerald-600 dark:text-emerald-500"
-                        : "text-muted-foreground"
-                }
+                iconBg={stats.gross_margin > 20 ? "bg-success/10" : "bg-muted"}
+                iconColor={stats.gross_margin > 20 ? "text-success" : "text-muted-foreground"}
             />
             <QuickStatItem
                 icon={Package}
@@ -617,32 +591,16 @@ const QuickStatsCard = ({ stats, dateRangeLabel }) => (
                         ? `${formatNumber(stats.low_stock_count)} item perlu restock`
                         : "Semua stok normal"
                 }
-                iconBg={
-                    stats.low_stock_count > 0
-                        ? "bg-amber-500/10"
-                        : "bg-blue-500/10"
-                }
-                iconColor={
-                    stats.low_stock_count > 0
-                        ? "text-amber-600 dark:text-amber-500"
-                        : "text-blue-600 dark:text-blue-500"
-                }
+                iconBg={stats.low_stock_count > 0 ? "bg-warning/10" : "bg-info/10"}
+                iconColor={stats.low_stock_count > 0 ? "text-warning" : "text-info"}
             />
             <QuickStatItem
                 icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
                 label="Net Profit"
                 value={formatCurrency(stats.net_profit)}
                 subvalue="Setelah HPP"
-                iconBg={
-                    stats.net_profit >= 0
-                        ? "bg-emerald-500/10"
-                        : "bg-red-500/10"
-                }
-                iconColor={
-                    stats.net_profit >= 0
-                        ? "text-emerald-600 dark:text-emerald-500"
-                        : "text-red-600 dark:text-red-500"
-                }
+                iconBg={stats.net_profit >= 0 ? "bg-success/10" : "bg-destructive/10"}
+                iconColor={stats.net_profit >= 0 ? "text-success" : "text-destructive"}
             />
         </CardContent>
     </Card>

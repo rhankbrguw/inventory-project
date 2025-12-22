@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { formatNumber } from "@/lib/utils";
 import { useMemo } from "react";
 
-export default function Create({ auth, locations, products }) {
+export default function Create({
+    auth,
+    source_locations,
+    destination_locations,
+    products,
+}) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         from_location_id: "",
         to_location_id: "",
@@ -61,7 +66,8 @@ export default function Create({ auth, locations, products }) {
                     data={data}
                     setData={setData}
                     errors={errors}
-                    locations={locations}
+                    sourceLocations={source_locations}
+                    destinationLocations={destination_locations}
                     isDetailsLocked={isDetailsLocked}
                 />
                 <TransferItemManager
@@ -92,7 +98,7 @@ export default function Create({ auth, locations, products }) {
                         <Button
                             size="sm"
                             className="px-3 py-1"
-                            disabled={processing || !isDirty || isDetailsLocked}
+                            disabled={processing || !isDirty}
                         >
                             {processing ? "Menyimpan..." : "Simpan"}
                         </Button>

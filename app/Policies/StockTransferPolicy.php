@@ -21,10 +21,6 @@ class StockTransferPolicy
             return true;
         }
 
-        if ($user->level > 10) {
-            return false;
-        }
-
         $accessibleIds = $user->getAccessibleLocationIds() ?? [];
         return in_array($transfer->from_location_id, $accessibleIds) ||
             in_array($transfer->to_location_id, $accessibleIds);
@@ -32,20 +28,11 @@ class StockTransferPolicy
 
     public function create(User $user): bool
     {
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->level <= 10 && $user->roles->first()?->code === 'WHM';
+        return $user->level <= 10;
     }
 
-    public function createAtLocation(User $user, $fromLocationId, $toLocationId): bool
+    public function createAtLocation(User $user, $fromLocationId): bool
     {
-        if ($user->level === 1) {
-            return true;
-        }
-
-        return $user->hasRoleAtLocation($fromLocationId, 'WHM') &&
-            in_array($toLocationId, $user->getAccessibleLocationIds() ?? []);
+        return $user->canTransactAtLocation($fromLocationId, 'transfer');
     }
 }

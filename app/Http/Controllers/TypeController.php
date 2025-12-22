@@ -46,6 +46,7 @@ class TypeController extends Controller
     {
         return Inertia::render('Types/Create', [
             'availableGroups' => Type::getAvailableGroups(),
+            'availableLevels' => Type::getAvailableLevels(),
             'allTypes' => Type::all()->groupBy('group'),
         ]);
     }
@@ -67,6 +68,7 @@ class TypeController extends Controller
         return Inertia::render('Types/Edit', [
             'type' => TypeResource::make($type),
             'availableGroups' => Type::getAvailableGroups(),
+            'availableLevels' => Type::getAvailableLevels(),
             'allTypes' => Type::all()->groupBy('group'),
         ]);
     }

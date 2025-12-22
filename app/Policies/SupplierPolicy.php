@@ -11,31 +11,31 @@ class SupplierPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 20;
     }
 
     public function view(User $user): bool
     {
-        return $user->level <= 10;
+        return $user->level <= 20;
     }
 
     public function create(User $user): bool
     {
-        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
+        return $user->level <= 10;
     }
 
     public function update(User $user): bool
     {
-        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
+        return $user->level <= 10;
     }
 
     public function delete(User $user): bool
     {
-        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
+        return $user->level <= 10;
     }
 
     public function restore(User $user): bool
     {
-        return $user->level <= 10 && $user->roles->first()?->code !== 'STF';
+        return $user->level <= 10;
     }
 }

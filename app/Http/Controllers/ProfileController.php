@@ -27,7 +27,6 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $user->only(['name', 'email', 'phone']);
 
         $user->fill($request->validated());
 
@@ -40,18 +39,16 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
         }
         if ($user->isDirty('phone')) {
-            $changes[] = 'nomor Telpon';
+            $changes[] = 'nomor telepon';
         }
 
         $user->save();
 
-        $message = 'Profil berhasil diperbarui.';
-        if (!empty($changes)) {
-            $message = ucfirst(implode(', ', $changes)) . ' berhasil diperbarui.';
-        }
+        $message = empty($changes)
+            ? 'Tidak ada perubahan data.'
+            : ucfirst(implode(', ', $changes)) . ' berhasil diperbarui.';
 
-        return Redirect::route('profile.edit')
-            ->with('success', $message);
+        return Redirect::route('profile.edit')->with('success', $message);
     }
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
