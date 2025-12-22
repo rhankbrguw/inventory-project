@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\App;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -48,7 +49,28 @@ class HandleInertiaRequests extends Middleware
              * CSRF Token - CRITICAL for form submissions
              * This ensures the token is always fresh and available
              */
-            'csrf_token' => fn() => $request->session()->token(),
+            'csrf_token' => fn () => $request->session()->token(),
+
+            /*
+             * Current application locale.
+             */
+            'locale' => App::getLocale(),
+
+            /*
+             * All translations for the active locale.
+             */
+            'translations' => function () {
+                $locale = App::getLocale();
+                $files = glob(base_path("lang/{$locale}/*.php"));
+                $strings = [];
+
+                foreach ($files as $file) {
+                    $name = basename($file, '.php');
+                    $strings[$name] = require $file;
+                }
+
+                return $strings;
+            },
 
             /*
              * Authentication data shared with frontend.
@@ -83,8 +105,8 @@ class HandleInertiaRequests extends Middleware
              * Flash messages for notifications.
              */
             'flash' => [
-                'success' => fn() => $request->session()->get('success'),
-                'error' => fn() => $request->session()->get('error'),
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ];
     }

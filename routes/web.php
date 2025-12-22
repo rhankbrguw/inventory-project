@@ -26,9 +26,20 @@ use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 Broadcast::routes(['middleware' => ['web', 'auth']]);
+
+Route::post('/locale', function (Request $request) {
+    $request->validate([
+        'locale' => ['required', 'in:id,en'],
+    ]);
+
+    session()->put('locale', $request->locale);
+
+    return redirect()->back();
+})->name('locale.update');
 
 Route::middleware('guest')->group(function () {
     Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
@@ -75,7 +86,6 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
 
     Route::middleware(['can:viewAny,' . User::class])->group(function () {
         Route::post('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
-
         Route::resource('users', UserController::class)->except(['destroy']);
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::resource('types', TypeController::class)->except(['store']);
@@ -85,25 +95,21 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
 
     Route::middleware(['can:viewAny,' . Location::class])->group(function () {
         Route::post('locations/{location}/restore', [LocationsController::class, 'restore'])->name('locations.restore')->withTrashed();
-
         Route::resource('locations', LocationsController::class)->withTrashed();
     });
 
     Route::middleware(['can:viewAny,' . Customer::class])->group(function () {
         Route::post('customers/{customer}/restore', [CustomerController::class, 'restore'])->name('customers.restore')->withTrashed();
-
         Route::resource('customers', CustomerController::class)->withTrashed();
     });
 
     Route::middleware(['can:viewAny,' . Supplier::class])->group(function () {
         Route::post('suppliers/{supplier}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore')->withTrashed();
-
         Route::resource('suppliers', SupplierController::class);
     });
 
     Route::middleware(['can:viewAny,' . Product::class])->group(function () {
         Route::post('products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore')->withTrashed();
-
         Route::resource('products', ProductController::class)->withTrashed();
     });
 

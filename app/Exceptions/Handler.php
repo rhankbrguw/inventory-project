@@ -13,14 +13,44 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
+/**
+ * Exception Handler
+ *
+ * Handles exception reporting and rendering for the application.
+ * Provides custom error responses for different exception types,
+ * with enhanced logging and JSON response formatting for API requests.
+ *
+ * @package App\Exceptions
+ */
 class Handler extends ExceptionHandler
 {
+    /**
+     * A list of exception types with their corresponding custom log levels.
+     *
+     * @var array<class-string<\Throwable>, \Psr\Log\LogLevel::*>
+     */
+    protected $levels = [];
+
+    /**
+     * A list of the inputs that are never flashed to the session on validation exceptions.
+     *
+     * @var array<int, string>
+     */
     protected $dontFlash = [
         'current_password',
         'password',
         'password_confirmation',
     ];
 
+    /**
+     * Register the exception handling callbacks for the application.
+     *
+     * Configures custom reporting and rendering logic for exceptions.
+     * Logs detailed error information and provides structured JSON
+     * responses for API requests.
+     *
+     * @return void
+     */
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
@@ -49,6 +79,16 @@ class Handler extends ExceptionHandler
         });
     }
 
+    /**
+     * Handle JSON response for API exceptions.
+     *
+     * Formats exception data into a structured JSON response
+     * with appropriate status codes and error messages.
+     * Includes debug information when application is in debug mode.
+     *
+     * @param \Throwable $e The exception to handle
+     * @return \Illuminate\Http\JsonResponse
+     */
     protected function handleJsonResponse(Throwable $e): JsonResponse
     {
         $statusCode = $this->getStatusCode($e);
@@ -70,6 +110,15 @@ class Handler extends ExceptionHandler
         return response()->json($response, $statusCode);
     }
 
+    /**
+     * Get the HTTP status code for an exception.
+     *
+     * Determines the appropriate HTTP status code based on
+     * the exception type. Defaults to 500 for unknown exceptions.
+     *
+     * @param \Throwable $e The exception to evaluate
+     * @return int HTTP status code
+     */
     protected function getStatusCode(Throwable $e): int
     {
         if ($e instanceof NotFoundHttpException || $e instanceof ModelNotFoundException) {
@@ -95,6 +144,17 @@ class Handler extends ExceptionHandler
         return 500;
     }
 
+    /**
+     * Get user-friendly error message for an exception.
+     *
+     * Returns the exception message if available and appropriate,
+     * otherwise provides a default message based on the status code.
+     * Server errors (5xx) always return generic messages for security.
+     *
+     * @param \Throwable $e The exception to get message from
+     * @param int $statusCode The HTTP status code
+     * @return string User-friendly error message
+     */
     protected function getErrorMessage(Throwable $e, int $statusCode): string
     {
         $message = $e->getMessage();
