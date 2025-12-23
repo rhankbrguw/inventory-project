@@ -49,4 +49,15 @@ class Product extends Model
     {
         return $this->hasMany(CartItem::class);
     }
+
+    public function prices()
+    {
+        return $this->hasMany(ProductPrice::class);
+    }
+
+    public function getPriceForChannel($channelId)
+    {
+        $specialPrice = $this->prices->where('sales_channel_id', $channelId)->first();
+        return $specialPrice ? $specialPrice->price : $this->price;
+    }
 }

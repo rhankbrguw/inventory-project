@@ -25,6 +25,7 @@ class StoreSellRequest extends FormRequest
             'type_id' => ['required', 'integer', Rule::in([$sellTypeId])],
             'location_id' => ['required', 'integer', 'exists:locations,id'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
+            'sales_channel_id' => ['nullable', 'integer', 'exists:sales_channels,id'],
             'transaction_date' => ['required', 'date'],
             'payment_method_type_id' => ['nullable', 'integer', new ExistsInGroup('types', Type::GROUP_PAYMENT)],
             'installment_terms' => ['required', 'integer', 'in:1,2,3'],

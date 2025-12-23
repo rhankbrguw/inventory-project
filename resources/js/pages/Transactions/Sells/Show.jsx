@@ -172,6 +172,24 @@ export default function Show({ auth, sell }) {
                             {formatDate(data.transaction_date)}
                         </p>
                     </div>
+                    {data.sales_channel && (
+                        <div>
+                            <p className="text-muted-foreground">
+                                Channel Penjualan
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <p className="font-semibold">
+                                    {data.sales_channel.name}
+                                </p>
+                                <Badge
+                                    variant="outline"
+                                    className="text-[10px] font-mono"
+                                >
+                                    {data.sales_channel.code}
+                                </Badge>
+                            </div>
+                        </div>
+                    )}
                     <div>
                         <p className="text-muted-foreground">Status</p>
                         <Badge variant="outline" className="capitalize">

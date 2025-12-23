@@ -11,6 +11,7 @@ use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Sell;
+use App\Models\SalesChannel;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,16 +59,18 @@ class SellController extends Controller
             $locationId = $locationsWithPermissions->first()['id'];
         }
 
-        $cartItems = $user->sellCartItems()->with(["product", "location"])->get();
+        $cartItems = $user->sellCartItems()
+            ->with(["product.prices", "location"])
+            ->get();
 
         $productsQuery = Product::query()
-            ->with("defaultSupplier:id,name")
-            ->when($search, fn($q, $s) => $q->where("name", "like", "%{$s}%")->orWhere("sku", "like", "%{$s}%"))
-            ->when($typeId && $typeId !== "all", fn($q) => $q->where("type_id", $typeId))
+            ->with(["defaultSupplier:id,name", "prices"])
+            ->when($search, fn ($q, $s) => $q->where("name", "like", "%{$s}%")->orWhere("sku", "like", "%{$s}%"))
+            ->when($typeId && $typeId !== "all", fn ($q) => $q->where("type_id", $typeId))
             ->orderBy("name");
 
         if ($locationId) {
-            $productsQuery->whereHas("inventories", fn($q) => $q->where("location_id", $locationId)->where("quantity", ">", 0));
+            $productsQuery->whereHas("inventories", fn ($q) => $q->where("location_id", $locationId)->where("quantity", ">", 0));
         } else {
             $productsQuery->whereRaw("1 = 0");
         }
@@ -75,10 +78,15 @@ class SellController extends Controller
         return Inertia::render("Transactions/Sells/Create", [
             "locations" => $locationsWithPermissions,
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
-            "allProducts" => $productsQuery->paginate(12)->withQueryString(),
+            "allProducts" => $productsQuery->paginate(12)->withQueryString()->through(function ($product) {
+                return array_merge($product->toArray(), [
+                    'channel_prices' => $product->prices->pluck('price', 'sales_channel_id'),
+                ]);
+            }),
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)->orderBy("name")->get(["id", "name"]),
             "productTypes" => Type::where("group", Type::GROUP_PRODUCT)->orderBy("name")->get(["id", "name"]),
             "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)->orderBy("name")->get(["id", "name"]),
+            "salesChannels" => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
             "cart" => SellCartItemResource::collection($cartItems),
             "filters" => (object) $request->only(["location_id", "search", "type_id"]),
         ]);
@@ -97,7 +105,7 @@ class SellController extends Controller
 
         try {
             DB::transaction(function () use ($validated, $itemsData, $request) {
-                $totalPrice = collect($itemsData)->sum(fn($item) => $item["quantity"] * $item["sell_price"]);
+                $totalPrice = collect($itemsData)->sum(fn ($item) => $item["quantity"] * $item["sell_price"]);
 
                 $refCode = "SL-" . now()->format("Ymd") . "-" . strtoupper(Str::random(4));
                 while (Sell::where("reference_code", $refCode)->exists()) {
@@ -108,6 +116,7 @@ class SellController extends Controller
                     "type_id" => $validated["type_id"],
                     "location_id" => $validated["location_id"],
                     "customer_id" => $validated["customer_id"],
+                    "sales_channel_id" => $validated["sales_channel_id"] ?? null,
                     "user_id" => $request->user()->id,
                     "reference_code" => $refCode,
                     "transaction_date" => $validated["transaction_date"],
@@ -173,7 +182,7 @@ class SellController extends Controller
             abort(403);
         }
 
-        $sell->load(["location", "customer", "user", "paymentMethod", "stockMovements.product", "type", "installments"]);
+        $sell->load(["location", "customer", "salesChannel", "user", "paymentMethod", "stockMovements.product", "type", "installments"]);
         return Inertia::render("Transactions/Sells/Show", ["sell" => SellResource::make($sell)]);
     }
 }

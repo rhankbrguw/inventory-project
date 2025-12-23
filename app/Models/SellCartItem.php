@@ -12,10 +12,11 @@ class SellCartItem extends Model
 
     protected $table = "sell_cart_items";
 
-    protected $fillable = ["user_id", "location_id", "product_id", "quantity"];
+    protected $fillable = ["user_id", "location_id", "product_id", "quantity", "sell_price"];
 
     protected $casts = [
         "quantity" => "decimal:4",
+        "sell_price" => "decimal:2",
     ];
 
     public function user(): BelongsTo

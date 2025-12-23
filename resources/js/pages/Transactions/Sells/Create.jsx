@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Head, Link } from "@inertiajs/react";
+import { useState, useMemo, useEffect } from "react";
+import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 import { useSellCart } from "@/hooks/useSellCart";
 import SellProductGrid from "./Partials/SellProductGrid";
@@ -19,6 +19,7 @@ export default function Create({
     allProducts,
     paymentMethods,
     productTypes = [],
+    salesChannels,
     customerTypes = [],
     cart: { data: initialCart = [] },
     filters,
@@ -27,14 +28,22 @@ export default function Create({
         "transactions.sells.create",
         filters,
     );
+
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
     const [cartOpen, setCartOpen] = useState(false);
+
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+
     const [pendingLocationId, setPendingLocationId] = useState(null);
 
     const selectedLocationId = useMemo(
         () => params.location_id || "",
         [params.location_id],
+    );
+
+    const [selectedChannelId, setSelectedChannelId] = useState(
+        salesChannels.length > 0 ? salesChannels[0].id.toString() : "",
     );
 
     const {
@@ -59,6 +68,28 @@ export default function Create({
             setFilter("location_id", locations[0].id.toString());
         }
     }, [selectedLocationId, locations, filters.location_id]);
+
+    const getProductPrice = (product) => {
+        if (!selectedChannelId) return product.price;
+        return product.channel_prices?.[selectedChannelId] || product.price;
+    };
+
+    const handleChannelChange = (channelId) => {
+        setSelectedChannelId(channelId);
+
+        if (cart.length > 0 && selectedLocationId) {
+            router.patch(
+                route("sell.cart.update-prices"),
+                {
+                    location_id: selectedLocationId,
+                    sales_channel_id: channelId,
+                },
+                {
+                    preserveScroll: true,
+                },
+            );
+        }
+    };
 
     const handleLocationChange = (locationId) => {
         if (locationId === selectedLocationId) return;
@@ -100,6 +131,7 @@ export default function Create({
         locationId: selectedLocationId,
         getItemQuantity,
         canCheckout: !!selectedLocationId,
+        getProductPrice: getProductPrice,
     };
 
     return (
@@ -130,9 +162,16 @@ export default function Create({
                         onLocationChange={handleLocationChange}
                         products={allProducts.data}
                         productTypes={productTypes}
+                        salesChannels={salesChannels}
+                        selectedChannelId={selectedChannelId}
+                        onChannelChange={handleChannelChange}
+                        getProductPrice={getProductPrice}
                         params={params}
                         setFilter={setFilter}
-                        onProductClick={addItem}
+                        onProductClick={(product) => {
+                            const price = getProductPrice(product);
+                            addItem(product, price);
+                        }}
                         selectedProductIds={selectedProductIds}
                         processingItem={processingItem}
                         paginationLinks={allProducts.links}
@@ -173,6 +212,7 @@ export default function Create({
                 totalPrice={totalCartPrice}
                 locationId={selectedLocationId}
                 customerId={selectedCustomerId}
+                salesChannelId={selectedChannelId}
                 paymentMethods={paymentMethods}
             />
 

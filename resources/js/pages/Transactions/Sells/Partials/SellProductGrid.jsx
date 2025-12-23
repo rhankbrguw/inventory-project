@@ -18,6 +18,10 @@ export default function SellProductGrid({
     onLocationChange,
     products,
     productTypes,
+    salesChannels,
+    selectedChannelId,
+    onChannelChange,
+    getProductPrice,
     params,
     setFilter,
     onProductClick,
@@ -31,30 +35,63 @@ export default function SellProductGrid({
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="p-3 border-b flex-shrink-0">
+            <div className="p-3 border-b flex-shrink-0 bg-muted/10 space-y-3">
                 <h3 className="text-base font-semibold">Katalog Produk</h3>
-                <div className="mt-2 space-y-2">
-                    <Label htmlFor="location_id">Lokasi Penjualan</Label>
-                    <Select
-                        value={selectedLocationId}
-                        onValueChange={onLocationChange}
-                    >
-                        <SelectTrigger id="location_id" className="h-9 text-xs">
-                            <SelectValue placeholder="Pilih Lokasi Penjualan untuk Memulai" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {locations.map((loc) => (
-                                <SelectItem
-                                    key={loc.id}
-                                    value={loc.id.toString()}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <span>{loc.name}</span>
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="location_id" className="text-xs">
+                            Lokasi
+                        </Label>
+                        <Select
+                            value={selectedLocationId}
+                            onValueChange={onLocationChange}
+                        >
+                            <SelectTrigger
+                                id="location_id"
+                                className="h-9 text-xs"
+                            >
+                                <SelectValue placeholder="Pilih Lokasi" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {locations.map((loc) => (
+                                    <SelectItem
+                                        key={loc.id}
+                                        value={loc.id.toString()}
+                                    >
+                                        {loc.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                        <Label htmlFor="channel_id" className="text-xs">
+                            Channel Penjualan
+                        </Label>
+                        <Select
+                            value={selectedChannelId}
+                            onValueChange={onChannelChange}
+                        >
+                            <SelectTrigger
+                                id="channel_id"
+                                className="h-9 text-xs"
+                            >
+                                <SelectValue placeholder="Pilih Channel" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {salesChannels.map((channel) => (
+                                    <SelectItem
+                                        key={channel.id}
+                                        value={channel.id.toString()}
+                                    >
+                                        {channel.name} ({channel.code})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
 
@@ -84,6 +121,7 @@ export default function SellProductGrid({
                                 className="pl-9 h-9 text-sm"
                             />
                         </div>
+
                         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth -mx-1 px-1">
                             <button
                                 type="button"
@@ -124,7 +162,10 @@ export default function SellProductGrid({
                                     products.map((product) => (
                                         <ProductCard
                                             key={product.id}
-                                            product={product}
+                                            product={{
+                                                ...product,
+                                                price: getProductPrice(product),
+                                            }}
                                             onClick={() =>
                                                 onProductClick(product)
                                             }

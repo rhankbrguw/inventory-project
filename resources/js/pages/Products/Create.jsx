@@ -19,10 +19,16 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, Upload } from "lucide-react";
+import { Check, Upload, Tag } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
-export default function Create({ auth, types, suppliers, validUnits }) {
+export default function Create({
+    auth,
+    types,
+    suppliers,
+    validUnits,
+    salesChannels,
+}) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
         name: "",
         image: null,
@@ -33,6 +39,7 @@ export default function Create({ auth, types, suppliers, validUnits }) {
         price: "",
         unit: "",
         description: "",
+        channel_prices: {},
     });
 
     const { preview, fileInputRef, handleChange, triggerInput } =
@@ -41,7 +48,6 @@ export default function Create({ auth, types, suppliers, validUnits }) {
     const handleSupplierToggle = (supplierId) => {
         const id = parseInt(supplierId);
         const currentSuppliers = [...data.suppliers];
-
         if (currentSuppliers.includes(id)) {
             const newSuppliers = currentSuppliers.filter((s) => s !== id);
             setData({
@@ -55,6 +61,13 @@ export default function Create({ auth, types, suppliers, validUnits }) {
         } else {
             setData("suppliers", [...currentSuppliers, id]);
         }
+    };
+
+    const handleChannelPriceChange = (channelId, value) => {
+        setData("channel_prices", {
+            ...data.channel_prices,
+            [channelId]: value,
+        });
     };
 
     const submit = (e) => {
@@ -82,12 +95,12 @@ export default function Create({ auth, types, suppliers, validUnits }) {
             title="Tambah Produk Baru"
             backRoute="products.index"
         >
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informasi Produk</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={submit} className="space-y-6">
+            <form onSubmit={submit} className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Informasi Produk</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <FormField
                                 label="Nama Produk"
@@ -97,13 +110,12 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                 <Input
                                     id="name"
                                     value={data.name}
-                                    placeholder="Masukkan nama produk lengkap"
+                                    placeholder="Nama produk lengkap"
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
                                 />
                             </FormField>
-
                             <FormField
                                 label="Gambar Produk"
                                 htmlFor="image"
@@ -120,7 +132,6 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                             handleChange(e, setData)
                                         }
                                     />
-
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -135,7 +146,6 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                 </div>
                             </FormField>
                         </div>
-
                         {preview && (
                             <div className="flex justify-center w-full">
                                 <div className="bg-muted/30 p-2 rounded-lg border border-dashed">
@@ -174,7 +184,6 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                     </SelectContent>
                                 </Select>
                             </FormField>
-
                             <FormField
                                 label="Supplier (Pilih Satu atau Lebih)"
                                 htmlFor="suppliers"
@@ -194,38 +203,36 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                         className="w-[var(--radix-popover-trigger-width)] p-0"
                                         align="start"
                                     >
-                                        <div className="max-h-[300px] overflow-y-auto p-4">
-                                            <div className="space-y-3">
-                                                {suppliers.map((supplier) => (
-                                                    <div
-                                                        key={supplier.id}
-                                                        className="flex items-center space-x-2"
-                                                    >
-                                                        <Checkbox
-                                                            id={`supp-${supplier.id}`}
-                                                            checked={data.suppliers.includes(
-                                                                supplier.id,
-                                                            )}
-                                                            onChange={() =>
-                                                                handleSupplierToggle(
-                                                                    supplier.id,
-                                                                )
-                                                            }
-                                                        />
-                                                        <label
-                                                            htmlFor={`supp-${supplier.id}`}
-                                                            className="text-sm leading-none cursor-pointer flex-1 select-none"
-                                                        >
-                                                            {supplier.name}
-                                                        </label>
-                                                        {data.suppliers.includes(
+                                        <div className="max-h-[300px] overflow-y-auto p-4 space-y-3">
+                                            {suppliers.map((supplier) => (
+                                                <div
+                                                    key={supplier.id}
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <Checkbox
+                                                        id={`supp-${supplier.id}`}
+                                                        checked={data.suppliers.includes(
                                                             supplier.id,
-                                                        ) && (
-                                                                <Check className="h-4 w-4 text-primary" />
-                                                            )}
-                                                    </div>
-                                                ))}
-                                            </div>
+                                                        )}
+                                                        onChange={() =>
+                                                            handleSupplierToggle(
+                                                                supplier.id,
+                                                            )
+                                                        }
+                                                    />
+                                                    <label
+                                                        htmlFor={`supp-${supplier.id}`}
+                                                        className="text-sm cursor-pointer flex-1"
+                                                    >
+                                                        {supplier.name}
+                                                    </label>
+                                                    {data.suppliers.includes(
+                                                        supplier.id,
+                                                    ) && (
+                                                            <Check className="h-4 w-4 text-primary" />
+                                                        )}
+                                                </div>
+                                            ))}
                                         </div>
                                     </PopoverContent>
                                 </Popover>
@@ -236,7 +243,7 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                             label="Supplier Utama (Default)"
                             htmlFor="default_supplier_id"
                             error={errors.default_supplier_id}
-                            description="Supplier ini akan otomatis terpilih saat membuat PO."
+                            description="Otomatis terpilih saat buat PO."
                         >
                             <Select
                                 value={data.default_supplier_id?.toString()}
@@ -261,7 +268,7 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                             </Select>
                         </FormField>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
                                 label="SKU"
                                 htmlFor="sku"
@@ -270,28 +277,12 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                 <Input
                                     id="sku"
                                     value={data.sku}
-                                    placeholder="Masukkan kode SKU unik"
+                                    placeholder="Kode SKU unik"
                                     onChange={(e) =>
                                         setData("sku", e.target.value)
                                     }
                                 />
                             </FormField>
-
-                            <FormField
-                                label="Harga Jual"
-                                htmlFor="price"
-                                error={errors.price}
-                            >
-                                <CurrencyInput
-                                    id="price"
-                                    placeholder="Contoh: 50000"
-                                    value={data.price}
-                                    onValueChange={(value) =>
-                                        setData("price", value)
-                                    }
-                                />
-                            </FormField>
-
                             <FormField
                                 label="Satuan"
                                 htmlFor="unit"
@@ -304,7 +295,7 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                                     }
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Pilih Satuan Unit" />
+                                        <SelectValue placeholder="Pilih Satuan" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {validUnits.map((unit) => (
@@ -326,27 +317,96 @@ export default function Create({ auth, types, suppliers, validUnits }) {
                             <Textarea
                                 id="description"
                                 value={data.description}
-                                placeholder="Tulis deskripsi detail produk..."
+                                placeholder="Deskripsi detail..."
                                 onChange={(e) =>
                                     setData("description", e.target.value)
                                 }
                                 className="h-24"
                             />
                         </FormField>
+                    </CardContent>
+                </Card>
 
-                        <div className="flex items-center justify-end gap-4 pt-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Tag className="w-5 h-5 text-primary" />
+                            Pengaturan Harga
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="p-4 bg-muted/30 rounded-lg border">
+                            <FormField
+                                label="Harga Jual Dasar (Cash/Counter)"
+                                htmlFor="price"
+                                error={errors.price}
+                                description="Harga default jika tidak ada harga khusus channel."
+                            >
+                                <CurrencyInput
+                                    id="price"
+                                    placeholder="Contoh: 50000"
+                                    value={data.price}
+                                    onValueChange={(value) =>
+                                        setData("price", value)
+                                    }
+                                    className="text-lg font-bold"
+                                />
+                            </FormField>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                                Harga Khusus Aplikasi (Opsional)
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {salesChannels
+                                    .filter(
+                                        (channel) => channel.code !== "CASH",
+                                    )
+                                    .map((channel) => (
+                                        <FormField
+                                            key={channel.id}
+                                            label={`Harga ${channel.name}`}
+                                            htmlFor={`price-${channel.id}`}
+                                            error={
+                                                errors[
+                                                `channel_prices.${channel.id}`
+                                                ]
+                                            }
+                                        >
+                                            <CurrencyInput
+                                                id={`price-${channel.id}`}
+                                                placeholder={`Ikut harga dasar (${data.price || 0})`}
+                                                value={
+                                                    data.channel_prices[
+                                                    channel.id
+                                                    ]
+                                                }
+                                                onValueChange={(val) =>
+                                                    handleChannelPriceChange(
+                                                        channel.id,
+                                                        val,
+                                                    )
+                                                }
+                                            />
+                                        </FormField>
+                                    ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-4 pt-4 border-t">
                             <Link href={route("products.index")}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                Simpan
+                                Simpan Produk
                             </Button>
                         </div>
-                    </form>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </form>
         </ContentPageLayout>
     );
 }
