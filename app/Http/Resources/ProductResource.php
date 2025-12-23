@@ -18,11 +18,14 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'unit' => $this->unit,
             'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
-            'type' => $this->whenLoaded('type', fn() => [
+            'channel_prices' => $this->whenLoaded('prices', function () {
+                return $this->prices->pluck('price', 'sales_channel_id');
+            }),
+            'type' => $this->whenLoaded('type', fn () => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,
             ]),
-            'default_supplier' => $this->whenLoaded('defaultSupplier', fn() => [
+            'default_supplier' => $this->whenLoaded('defaultSupplier', fn () => [
                 'id' => $this->defaultSupplier->id,
                 'name' => $this->defaultSupplier->name,
             ]),

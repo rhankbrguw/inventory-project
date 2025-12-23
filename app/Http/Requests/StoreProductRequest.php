@@ -22,16 +22,15 @@ class StoreProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:50', new ValidName(), new UniqueRule('products')],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'type_id' => ['required', 'integer', new ExistsInGroup('types', Type::GROUP_PRODUCT)],
-
             'suppliers' => ['nullable', 'array'],
             'suppliers.*' => ['exists:suppliers,id'],
-
             'default_supplier_id' => ['nullable', 'exists:suppliers,id'],
-
             'sku' => ['required', 'string', 'max:50', new UniqueRule('products')],
             'price' => ['required', 'numeric', 'min:0'],
             'unit' => ['required', new IsValidProductUnit()],
             'description' => ['nullable', 'string', 'max:1000'],
+            'channel_prices' => ['nullable', 'array'],
+            'channel_prices.*' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

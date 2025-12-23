@@ -17,12 +17,10 @@ class SellResource extends JsonResource
             'status' => $this->status,
             'notes' => $this->notes,
             'transaction_date' => $this->transaction_date?->format('Y-m-d'),
-
             'installment_terms' => $this->installment_terms,
             'payment_status' => $this->payment_status,
             'has_installments' => $this->hasInstallments(),
             'is_fully_paid' => $this->isFullyPaid(),
-
             'type' => $this->whenLoaded('type', fn () => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,
@@ -35,6 +33,11 @@ class SellResource extends JsonResource
                 'id' => $this->customer->id,
                 'name' => $this->customer->name,
             ]),
+            'sales_channel' => $this->whenLoaded('salesChannel', fn () => [
+                'id' => $this->salesChannel->id,
+                'name' => $this->salesChannel->name,
+                'code' => $this->salesChannel->code,
+            ]),
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
@@ -43,7 +46,6 @@ class SellResource extends JsonResource
                 'id' => $this->paymentMethod->id,
                 'name' => $this->paymentMethod->name,
             ]),
-
             'installments' => $this->whenLoaded('installments', function () {
                 return $this->installments->map(fn ($inst) => [
                     'id' => $inst->id,
@@ -57,7 +59,6 @@ class SellResource extends JsonResource
                     'is_overdue' => $inst->isOverdue(),
                 ]);
             }),
-
             'items' => StockMovementResource::collection($this->whenLoaded('stockMovements')),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

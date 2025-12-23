@@ -17,6 +17,7 @@ class Sell extends Model
         'type_id',
         'location_id',
         'customer_id',
+        'sales_channel_id',
         'user_id',
         'reference_code',
         'transaction_date',
@@ -46,6 +47,11 @@ class Sell extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function salesChannel(): BelongsTo
+    {
+        return $this->belongsTo(SalesChannel::class);
     }
 
     public function user(): BelongsTo

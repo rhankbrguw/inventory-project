@@ -32,12 +32,14 @@ export default function SellCheckoutDialog({
     totalPrice,
     locationId,
     customerId,
+    salesChannelId,
     paymentMethods,
 }) {
     const { data, setData, post, processing, errors, isDirty, transform } =
         useForm({
             location_id: locationId || "",
             customer_id: customerId || null,
+            sales_channel_id: salesChannelId || null,
             transaction_date: getNormalizedDate(),
             notes: "",
             payment_method_type_id: "",
@@ -52,17 +54,18 @@ export default function SellCheckoutDialog({
                 ...data,
                 location_id: locationId,
                 customer_id: customerId,
+                sales_channel_id: salesChannelId,
                 transaction_date: data.transaction_date || getNormalizedDate(),
                 payment_method_type_id: paymentMethods[0]?.id.toString() || "",
                 installment_terms: "1",
                 items: cartItems.map((item) => ({
                     product_id: item.product.id,
                     quantity: item.quantity,
-                    sell_price: item.product.price,
+                    sell_price: item.sell_price || item.product.price,
                 })),
             });
         }
-    }, [isOpen, cartItems, locationId, customerId]);
+    }, [isOpen, cartItems, locationId, customerId, salesChannelId]);
 
     const submit = (e) => {
         e.preventDefault();

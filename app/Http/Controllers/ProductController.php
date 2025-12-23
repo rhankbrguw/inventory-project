@@ -9,6 +9,7 @@ use App\Http\Resources\SupplierResource;
 use App\Http\Resources\TypeResource;
 use App\Models\Inventory;
 use App\Models\Product;
+use App\Models\SalesChannel;
 use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
@@ -100,12 +101,17 @@ class ProductController extends Controller
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'validUnits' => self::VALID_UNITS,
+            'salesChannels' => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $channelPrices = $validated['channel_prices'] ?? [];
+        unset($validated['channel_prices']);
+
         $supplierIds = $validated['suppliers'] ?? [];
         unset($validated['suppliers']);
 
@@ -115,28 +121,32 @@ class ProductController extends Controller
             $validated['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        DB::transaction(function () use ($validated, $supplierIds, $user) {
+        DB::transaction(function () use ($validated, $supplierIds, $channelPrices, $user) {
             $product = Product::create($validated);
 
             if (!empty($supplierIds)) {
                 $product->suppliers()->sync($supplierIds);
             }
-
             if ($product->default_supplier_id && !in_array($product->default_supplier_id, $supplierIds)) {
                 $product->suppliers()->attach($product->default_supplier_id);
             }
 
-            $accessibleLocationIds = $user->getAccessibleLocationIds();
+            foreach ($channelPrices as $channelId => $price) {
+                if ($price !== null && $price !== '') {
+                    $product->prices()->create([
+                        'sales_channel_id' => $channelId,
+                        'price' => $price
+                    ]);
+                }
+            }
 
+            $accessibleLocationIds = $user->getAccessibleLocationIds();
             if ($accessibleLocationIds) {
                 foreach ($accessibleLocationIds as $locationId) {
                     Inventory::firstOrCreate([
                         'product_id' => $product->id,
                         'location_id' => $locationId,
-                    ], [
-                        'quantity' => 0,
-                        'average_cost' => 0,
-                    ]);
+                    ], ['quantity' => 0, 'average_cost' => 0]);
                 }
             }
         });
@@ -146,17 +156,24 @@ class ProductController extends Controller
 
     public function edit(Product $product): Response
     {
+        $product->load(['type', 'defaultSupplier', 'suppliers', 'prices']);
+
         return Inertia::render('Products/Edit', [
-            'product' => ProductResource::make($product->load(['type', 'defaultSupplier', 'suppliers'])),
+            'product' => ProductResource::make($product),
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'validUnits' => self::VALID_UNITS,
+            'salesChannels' => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $validated = $request->validated();
+
+        $channelPrices = $validated['channel_prices'] ?? [];
+        unset($validated['channel_prices']);
+
         $supplierIds = $validated['suppliers'] ?? [];
         unset($validated['suppliers']);
 
@@ -164,22 +181,30 @@ class ProductController extends Controller
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-
             $validated['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        DB::transaction(function () use ($product, $validated, $supplierIds) {
+        DB::transaction(function () use ($product, $validated, $supplierIds, $channelPrices) {
             $product->update($validated);
-
             $product->suppliers()->sync($supplierIds);
 
             if ($product->default_supplier_id && !in_array($product->default_supplier_id, $supplierIds)) {
                 $product->suppliers()->attach($product->default_supplier_id);
             }
+
+            foreach ($channelPrices as $channelId => $price) {
+                if ($price !== null && $price !== '') {
+                    $product->prices()->updateOrCreate(
+                        ['sales_channel_id' => $channelId],
+                        ['price' => $price]
+                    );
+                } else {
+                    $product->prices()->where('sales_channel_id', $channelId)->delete();
+                }
+            }
         });
 
-        return Redirect::route('products.index')
-            ->with('success', 'Produk berhasil diperbarui.');
+        return Redirect::route('products.index')->with('success', 'Produk berhasil diperbarui.');
     }
 
     public function destroy(Product $product): RedirectResponse

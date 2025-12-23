@@ -19,13 +19,8 @@ export default function SellItemManager({
 
     const getDisplayValue = (item) => {
         const val = getItemQuantity(item);
-
         if (val === "" || val === null || val === undefined) return "";
-
-        if (typeof val === "string" && val.endsWith(",")) {
-            return val;
-        }
-
+        if (typeof val === "string" && val.endsWith(",")) return val;
         return formatNumber(val);
     };
 
@@ -37,8 +32,9 @@ export default function SellItemManager({
         <div className="space-y-3">
             {cart.map((item) => {
                 const isItemProcessing = processingItem === item.id;
+                const priceToUse = item.sell_price || item.product.price;
                 const subtotal =
-                    Number(item.quantity) * (Number(item.product.price) || 0);
+                    Number(item.quantity) * Number(priceToUse || 0);
 
                 return (
                     <div
@@ -52,7 +48,7 @@ export default function SellItemManager({
                                 </p>
                                 <div className="flex items-center gap-2 mt-1">
                                     <p className="text-xs text-muted-foreground">
-                                        {formatCurrency(item.product.price)}
+                                        {formatCurrency(priceToUse)}
                                     </p>
                                     {item.product.unit && (
                                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
@@ -93,10 +89,11 @@ export default function SellItemManager({
                                         inputMode="numeric"
                                         value={getDisplayValue(item)}
                                         onChange={(e) => {
-                                            const rawValue = e.target.value.replace(
-                                                /\./g,
-                                                "",
-                                            );
+                                            const rawValue =
+                                                e.target.value.replace(
+                                                    /\./g,
+                                                    "",
+                                                );
                                             updateItem(item, rawValue);
                                         }}
                                         onFocus={(e) => e.target.select()}
