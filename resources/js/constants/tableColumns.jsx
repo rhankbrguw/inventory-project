@@ -354,6 +354,79 @@ export const stockMovementColumns = [
     },
 ];
 
+export const transferDetailColumns = [
+    {
+        accessorKey: "product.sku",
+        header: "SKU",
+        cell: ({ row }) => (
+            <p
+                className={cn(
+                    "text-center font-mono text-xs whitespace-nowrap px-4",
+                    row.product?.deleted_at && "text-muted-foreground",
+                )}
+            >
+                {row.product?.sku || "-"}
+            </p>
+        ),
+    },
+    {
+        accessorKey: "product.name",
+        header: "Nama Produk",
+        cell: ({ row }) => (
+            <div className="flex flex-col">
+                <p
+                    className={cn(
+                        "font-medium",
+                        row.product?.deleted_at && "text-muted-foreground",
+                    )}
+                >
+                    {row.product?.name || "Produk Telah Dihapus"}
+                </p>
+                {row.product?.deleted_at && (
+                    <span className="text-center font-medium whitespace-nowrap">
+                        Produk telah dihapus
+                    </span>
+                )}
+            </div>
+        ),
+    },
+    {
+        accessorKey: "quantity",
+        header: "Kuantitas",
+        cell: ({ row }) => (
+            <div className="text-right">
+                <p className="font-medium">
+                    {formatNumber(row.quantity)}{" "}
+                    <span className="text-center font-medium whitespace-nowrap">
+                        {row.product?.unit}
+                    </span>
+                </p>
+            </div>
+        ),
+    },
+    {
+        accessorKey: "cost_per_unit",
+        header: "HPP per Unit",
+        cell: ({ row }) => (
+            <p className="text-center font-medium text-whitespace-nowrap">
+                {formatCurrency(row.cost_per_unit)}
+            </p>
+        ),
+    },
+    {
+        id: "total_cost",
+        header: "Total HPP",
+        cell: ({ row }) => {
+            const total = row.quantity * row.cost_per_unit;
+            return (
+                <p className="text-center font-medium whitespace-nowrap">
+                    {formatCurrency(total)}
+                </p>
+            );
+        },
+    },
+];
+
 export const purchaseDetailColumns = [
     {
         accessorKey: "product.name",
@@ -432,9 +505,8 @@ export const sellDetailColumns = [
         header: "Qty",
         cell: ({ row }) => {
             const item = row;
-            return `${formatNumber(Math.abs(item.quantity))} ${
-                item.product?.unit || ""
-            }`;
+            return `${formatNumber(Math.abs(item.quantity))} ${item.product?.unit || ""
+                }`;
         },
         className: "text-center whitespace-nowrap px-4",
     },

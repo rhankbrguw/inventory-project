@@ -15,17 +15,14 @@ class StockTransferNotification extends Notification
     public function __construct(
         public StockTransfer $transfer,
         public string $senderName
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
         $channels = ['database', 'broadcast'];
-
         if ($notifiable->phone) {
             $channels[] = FonnteChannel::class;
         }
-
         return $channels;
     }
 
@@ -34,7 +31,7 @@ class StockTransferNotification extends Notification
         return [
             'title' => '📦 Stok Masuk Baru',
             'message' => "Kiriman dari {$this->transfer->fromLocation->name} (Ref: {$this->transfer->reference_code})",
-            'action_url' => route('stock-movements.index'),
+            'action_url' => route('transactions.transfers.show', $this->transfer->id),
             'sender' => $this->senderName,
             'icon' => 'Truck',
             'type' => 'info',
@@ -58,21 +55,17 @@ class StockTransferNotification extends Notification
         $fromLocation = $this->transfer->fromLocation->name;
         $referenceCode = $this->transfer->reference_code;
         $date = now()->format('d/m/Y H:i');
-
         $items = $this->transfer->stockMovements()
             ->where('type', 'transfer_in')
             ->with('product')
             ->get();
-
         $itemsList = $items->map(function ($item) {
             return "• {$item->product->name}: " . abs($item->quantity) . " {$item->product->unit}";
         })->join("\n");
-
         $labelTgl  = str_pad("Tanggal", 9);
         $labelAsal = str_pad("Asal", 9);
         $labelOleh = str_pad("Oleh", 9);
         $labelRef  = str_pad("Ref", 9);
-
         return "*INCOMING STOCK ALERT* 📦\n\n"
             . "Halo {$notifiable->name},\n\n"
             . "Stok masuk baru telah tercatat:\n"
@@ -85,6 +78,6 @@ class StockTransferNotification extends Notification
             . "*Detail Barang:*\n"
             . "{$itemsList}\n\n"
             . "*Akses Sistem:*\n"
-            . route('stock-movements.index');
+            . route('transactions.transfers.show', $this->transfer->id);
     }
 }
