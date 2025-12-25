@@ -7,7 +7,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { TableFooter, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { formatDate, formatNumber, cn } from "@/lib/utils";
 import DataTable from "@/components/DataTable";
 import { transferDetailColumns } from "@/constants/tableColumns";
 import { router } from "@inertiajs/react";
@@ -30,44 +39,27 @@ import { CheckCircle, XCircle } from "lucide-react";
 export default function Show({ auth, transfer, can_accept }) {
     const { data } = transfer;
 
-    console.log("DEBUG:", {
-        status: data.status,
-        can_accept,
-        userId: auth.user.id,
-        toLocationId: data.to_location.id,
-    });
     const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
+    const [isAcceptDialogOpen, setIsAcceptDialogOpen] = React.useState(false);
     const [rejectionReason, setRejectionReason] = React.useState("");
     const [isProcessing, setIsProcessing] = React.useState(false);
 
-    const totals = React.useMemo(() => {
-        let totalCost = 0;
-
-        data.items.forEach((item) => {
-            const quantity = Math.abs(item.quantity || 0);
-            const cost = item.cost_per_unit || 0;
-            totalCost += quantity * cost;
-        });
-
-        return { totalCost };
-    }, [data.items]);
-
-    const handleAccept = () => {
-        if (confirm("Terima transfer ini? Stok akan masuk ke lokasi Anda.")) {
-            setIsProcessing(true);
-            router.post(
-                route("transactions.transfers.accept", data.id),
-                {},
-                {
-                    onFinish: () => setIsProcessing(false),
+    const handleAcceptConfirm = () => {
+        setIsProcessing(true);
+        router.post(
+            route("transactions.transfers.accept", data.id),
+            {},
+            {
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setIsAcceptDialogOpen(false);
                 },
-            );
-        }
+            },
+        );
     };
 
     const handleReject = () => {
         if (!rejectionReason.trim()) {
-            alert("Alasan penolakan wajib diisi");
             return;
         }
         setIsProcessing(true);
@@ -86,8 +78,6 @@ export default function Show({ auth, transfer, can_accept }) {
 
     const renderMobileItem = (item) => {
         const quantity = Math.abs(item.quantity || 0);
-        const cost = item.cost_per_unit || 0;
-        const total = quantity * cost;
 
         return (
             <Card
@@ -97,52 +87,26 @@ export default function Show({ auth, transfer, can_accept }) {
                     item.product?.deleted_at && "opacity-60 bg-muted/50",
                 )}
             >
-                <div className="space-y-2">
+                <div className="space-y-2 text-sm">
                     <div>
-                        <p className="font-medium text-sm">
+                        <p className="font-medium">
                             {item.product?.name || "Produk Telah Dihapus"}
                         </p>
                         <p className="text-xs text-muted-foreground font-mono">
                             {item.product?.sku || "-"}
                         </p>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                        <span>
-                            {formatNumber(quantity)} {item.product?.unit} ×{" "}
-                            {formatCurrency(cost)}
-                        </span>
+
+                    <div className="flex justify-between items-center border-t pt-2">
+                        <span className="text-muted-foreground">Qty</span>
                         <span className="font-semibold">
-                            {formatCurrency(total)}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs border-t pt-2 mt-2">
-                        <span className="text-muted-foreground">
-                            HPP per Unit
-                        </span>
-                        <span className="text-muted-foreground">
-                            {formatCurrency(cost)}
+                            {formatNumber(quantity)} {item.product?.unit}
                         </span>
                     </div>
                 </div>
             </Card>
         );
     };
-
-    const renderDesktopFooter = () => (
-        <TableFooter>
-            <TableRow>
-                <TableCell
-                    colSpan={4}
-                    className="text-right font-bold text-base"
-                >
-                    Total HPP
-                </TableCell>
-                <TableCell className="text-right font-bold text-base">
-                    {formatCurrency(totals.totalCost)}
-                </TableCell>
-            </TableRow>
-        </TableFooter>
-    );
 
     return (
         <ContentPageLayout
@@ -175,7 +139,7 @@ export default function Show({ auth, transfer, can_accept }) {
                                     Tolak
                                 </Button>
                                 <Button
-                                    onClick={handleAccept}
+                                    onClick={() => setIsAcceptDialogOpen(true)}
                                     size="sm"
                                     disabled={isProcessing}
                                     className="gap-2 bg-success hover:bg-success/90"
@@ -234,6 +198,7 @@ export default function Show({ auth, transfer, can_accept }) {
                         <p className="text-muted-foreground">Dibuat Oleh</p>
                         <p className="font-semibold">{data.user?.name}</p>
                     </div>
+
                     {data.received_by && (
                         <div>
                             <p className="text-muted-foreground">
@@ -249,6 +214,7 @@ export default function Show({ auth, transfer, can_accept }) {
                             )}
                         </div>
                     )}
+
                     {data.rejected_by && (
                         <>
                             <div>
@@ -274,6 +240,7 @@ export default function Show({ auth, transfer, can_accept }) {
                             </div>
                         </>
                     )}
+
                     {data.notes && (
                         <div className="sm:col-span-3">
                             <p className="text-muted-foreground">Catatan</p>
@@ -290,30 +257,48 @@ export default function Show({ auth, transfer, can_accept }) {
                         <span className="hidden sm:inline">Cetak</span>
                     </PrintButton>
                 </CardHeader>
+
                 <CardContent>
                     <div className="md:hidden space-y-3">
                         {data.items.map(renderMobileItem)}
                         <Separator className="my-4" />
-                        <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-base">
-                                    Total HPP
-                                </span>
-                                <span className="font-bold text-base">
-                                    {formatCurrency(totals.totalCost)}
-                                </span>
-                            </div>
-                        </div>
                     </div>
+
                     <div className="hidden md:block">
                         <DataTable
                             columns={transferDetailColumns}
                             data={data.items}
-                            footer={renderDesktopFooter()}
                         />
                     </div>
                 </CardContent>
             </Card>
+
+            <AlertDialog
+                open={isAcceptDialogOpen}
+                onOpenChange={setIsAcceptDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Terima Transfer?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Stok akan masuk ke lokasi Anda. Tindakan ini tidak
+                            dapat dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isProcessing}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleAcceptConfirm}
+                            disabled={isProcessing}
+                            className="bg-success hover:bg-success/90"
+                        >
+                            {isProcessing ? "Memproses..." : "Terima Transfer"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <Dialog
                 open={isRejectDialogOpen}

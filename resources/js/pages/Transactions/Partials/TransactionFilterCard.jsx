@@ -70,6 +70,20 @@ export default function TransactionFilterCard({
                     </SelectContent>
                 </Select>
                 <Select
+                    value={params.status || "all"}
+                    onValueChange={(value) => setFilter("status", value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Semua Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select
                     value={params.sort || "newest"}
                     onValueChange={(value) => setFilter("sort", value)}
                 >

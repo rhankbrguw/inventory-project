@@ -14,10 +14,6 @@ class TransactionResource extends JsonResource
         $isPurchase = $this->resource instanceof Purchase;
         $isTransfer = $this->resource instanceof StockTransfer;
 
-        $this->whenLoaded('stockMovements', function () {
-            return $this->stockMovements->first()?->product?->defaultSupplier?->name;
-        });
-
         $uniqueKey = $isPurchase
             ? 'purchase-' . $this->id
             : ($isTransfer ? 'transfer-' . $this->id : 'sell-' . $this->id);
@@ -36,13 +32,17 @@ class TransactionResource extends JsonResource
 
         $partyType = $isPurchase ? 'Supplier' : ($isTransfer ? 'Lokasi Tujuan' : 'Customer');
 
+        $type = $isTransfer
+            ? 'Transfer'
+            : ($this->whenLoaded('type', fn() => $this->type?->name) ?? null);
+
         return [
             'id' => $this->id,
             'unique_key' => $uniqueKey,
             'reference_code' => $this->reference_code,
             'transaction_date' => $this->transaction_date?->format('Y-m-d') ?? $this->transfer_date?->format('Y-m-d'),
-            'type' => $this->whenLoaded('type', fn() => $this->type?->name) ?? ($isTransfer ? 'Transfer' : null),
-            'status' => $this->status,
+            'type' => $type,
+            'status' => $isTransfer ? $this->status : 'completed',
             'total_amount' => $isPurchase ? $this->total_cost : ($isTransfer ? 0 : $this->total_price),
             'notes' => $this->notes,
             'location' => $this->whenLoaded('location', fn() => $this->location?->name) ?? $this->whenLoaded('fromLocation', fn() => $this->fromLocation?->name),

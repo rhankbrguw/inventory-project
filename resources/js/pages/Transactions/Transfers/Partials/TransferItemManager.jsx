@@ -44,6 +44,7 @@ export default function TransferItemManager({
     };
 
     const removeItem = (index) => {
+        if (items.length <= 1) return;
         setData(
             "items",
             items.filter((_, i) => i !== index),
@@ -113,11 +114,13 @@ export default function TransferItemManager({
                                         }
                                         disabledIds={selectedProductIds}
                                     />
-                                    <StockAvailability
-                                        productId={item.product_id}
-                                        locationId={fromLocationId}
-                                        unit={selectedProduct?.unit}
-                                    />
+                                    {item.product_id && (
+                                        <StockAvailability
+                                            productId={item.product_id}
+                                            locationId={fromLocationId}
+                                            unit={selectedProduct?.unit}
+                                        />
+                                    )}
                                     <InputError
                                         message={
                                             errors[`items.${index}.product_id`]
@@ -136,7 +139,8 @@ export default function TransferItemManager({
                                                     e.target.value,
                                                 )
                                             }
-                                            min="1"
+                                            min="0.01"
+                                            step="0.01"
                                             placeholder="Jumlah"
                                             disabled={!selectedProduct}
                                             className={
