@@ -11,7 +11,6 @@ import {
 import { Button } from "./ui/button";
 import UnifiedBadge from "./UnifiedBadge";
 import NotificationDropdown from "./NotificationDropdown";
-import useTranslation from "@/hooks/useTranslation";
 
 const UserAvatar = ({ user }) => (
     <div className="relative">
@@ -86,7 +85,8 @@ const UserDropdownMenu = () => {
 };
 
 export default function Header({ setSidebarOpen }) {
-    const { locale } = useTranslation();
+    const { props } = usePage();
+    const currentLocale = props.locale || "id";
 
     const switchLanguage = (lang) => {
         router.post(
@@ -94,7 +94,6 @@ export default function Header({ setSidebarOpen }) {
             { locale: lang },
             {
                 preserveScroll: true,
-                onSuccess: () => {},
             },
         );
     };
@@ -123,18 +122,30 @@ export default function Header({ setSidebarOpen }) {
                                     className="gap-2 font-mono"
                                 >
                                     <Globe className="h-4 w-4" />
-                                    <span className="uppercase">{locale}</span>
+                                    <span className="uppercase">
+                                        {currentLocale}
+                                    </span>
                                 </Button>
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem
                                     onClick={() => switchLanguage("id")}
+                                    className={
+                                        currentLocale === "id"
+                                            ? "bg-accent"
+                                            : ""
+                                    }
                                 >
                                     🇮🇩 Indonesia
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => switchLanguage("en")}
+                                    className={
+                                        currentLocale === "en"
+                                            ? "bg-accent"
+                                            : ""
+                                    }
                                 >
                                     🇺🇸 English
                                 </DropdownMenuItem>

@@ -37,26 +37,26 @@ class StockTransferController extends Controller
         $allSourceLocations = $sourceLocationsQuery->get();
 
         $sourceLocations = $allSourceLocations
-            ->filter(fn($location) => $user->canTransactAtLocation($location->id, 'transfer'))
+            ->filter(fn ($location) => $user->canTransactAtLocation($location->id, 'transfer'))
             ->values()
-            ->map(fn($loc) => ['id' => $loc->id, 'name' => $loc->name]);
+            ->map(fn ($loc) => ['id' => $loc->id, 'name' => $loc->name]);
 
         $destinationLocations = Location::orderBy('name')->get(['id', 'name']);
 
         $productsQuery = Product::with([
-            'inventories' => fn($q) => $q->where('quantity', '>', 0)->select('id', 'product_id', 'location_id', 'quantity'),
+            'inventories' => fn ($q) => $q->where('quantity', '>', 0)->select('id', 'product_id', 'location_id', 'quantity'),
             'inventories.location:id,name'
         ])->select('id', 'name', 'sku', 'unit')->orderBy('name');
 
         if ($accessibleLocationIds) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) => $q->whereIn('location_id', $accessibleLocationIds)->where('quantity', '>', 0)
+                fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)->where('quantity', '>', 0)
             );
         }
 
         $products = $productsQuery->get()->map(function ($product) {
-            $product->locations = $product->inventories->map(fn($inv) => [
+            $product->locations = $product->inventories->map(fn ($inv) => [
                 'id' => $inv->location->id,
                 'name' => $inv->location->name,
                 'quantity' => $inv->quantity
@@ -133,17 +133,21 @@ class StockTransferController extends Controller
             return $transfer;
         });
 
+        $targetManagerIds = DB::table('location_user')
+            ->join('roles', 'location_user.role_id', '=', 'roles.id')
+            ->where('location_user.location_id', $transfer->to_location_id)
+            ->where('roles.level', '>', 1)
+            ->where('roles.level', '<=', 10)
+            ->where('location_user.user_id', '!=', $user->id)
+            ->pluck('location_user.user_id');
+
+        if ($targetManagerIds->isEmpty()) {
+            return Redirect::route('transactions.transfers.show', $transfer)
+                ->with('success', 'Transfer stok menunggu konfirmasi.');
+        }
+
         $targetManagers = User::select('id', 'name', 'email', 'phone')
-            ->whereHas('locations', function ($q) use ($transfer) {
-                $q->where('locations.id', $transfer->to_location_id)
-                    ->whereExists(function ($sub) {
-                        $sub->select(DB::raw(1))
-                            ->from('roles')
-                            ->whereColumn('roles.id', 'location_user.role_id')
-                            ->where('roles.level', '<=', 10);
-                    });
-            })
-            ->whereHas('roles', fn($q) => $q->where('level', '>', 1))
+            ->whereIn('id', $targetManagerIds)
             ->get();
 
         foreach ($targetManagers as $manager) {
@@ -172,7 +176,7 @@ class StockTransferController extends Controller
             'stockMovements' => function ($q) {
                 $q->where('type', 'transfer_out')
                     ->select('id', 'reference_type', 'reference_id', 'product_id', 'quantity', 'cost_per_unit')
-                    ->with(['product' => fn($q) => $q->withTrashed()->select('id', 'name', 'sku', 'unit', 'deleted_at')]);
+                    ->with(['product' => fn ($q) => $q->withTrashed()->select('id', 'name', 'sku', 'unit', 'deleted_at')]);
             }
         ]);
 

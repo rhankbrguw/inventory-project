@@ -15,22 +15,25 @@ class TransferAcceptedNotification extends Notification
     public function __construct(
         public StockTransfer $transfer,
         public string $acceptedByName
-    ) {}
+    ) {
+    }
 
     public function via(object $notifiable): array
     {
         $channels = ['database', 'broadcast'];
+
         if ($notifiable->phone) {
             $channels[] = FonnteChannel::class;
         }
+
         return $channels;
     }
 
     public function toArray(): array
     {
         return [
-            'title' => '✅ Transfer Diterima',
-            'message' => "Transfer {$this->transfer->reference_code} ke {$this->transfer->toLocation->name} telah diterima oleh {$this->acceptedByName}",
+            'title' => 'Transfer Accepted',
+            'message' => "Transfer {$this->transfer->reference_code} to {$this->transfer->toLocation->name} has been accepted by {$this->acceptedByName}",
             'action_url' => route('transactions.transfers.show', $this->transfer->id),
             'icon' => 'CheckCircle',
             'type' => 'success',
@@ -51,16 +54,34 @@ class TransferAcceptedNotification extends Notification
 
     public function toFonnte(object $notifiable): string
     {
-        return "*TRANSFER DITERIMA* ✅\n\n"
-            . "Halo {$notifiable->name},\n\n"
-            . "Transfer stok Anda telah diterima:\n"
-            . "```"
-            . "Ref     : {$this->transfer->reference_code}\n"
-            . "Tujuan  : {$this->transfer->toLocation->name}\n"
-            . "Diterima: {$this->acceptedByName}\n"
-            . "Waktu   : " . now()->format('d/m/Y H:i')
-            . "```\n\n"
-            . "*Akses Sistem:*\n"
-            . route('transactions.transfers.show', $this->transfer->id);
+        $items = $this->transfer->stockMovements()
+            ->where('type', 'transfer_in')
+            ->with('product')
+            ->get();
+
+        $totalItems = $items->count();
+        $totalQty = $items->sum(fn ($item) => abs($item->quantity));
+
+        return "✅ *TRANSFER CONFIRMATION*\n"
+            . "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            . "Dear *{$notifiable->name}*,\n\n"
+            . "Your stock transfer has been successfully accepted.\n\n"
+            . "*CONFIRMATION DETAILS*\n"
+            . "┌─────────────────────────\n"
+            . "│ Reference    : {$this->transfer->reference_code}\n"
+            . "│ From         : {$this->transfer->fromLocation->name}\n"
+            . "│ To           : {$this->transfer->toLocation->name}\n"
+            . "│ Accepted By  : {$this->acceptedByName}\n"
+            . "│ Date & Time  : " . now()->format('d M Y H:i') . "\n"
+            . "│ Total Items  : {$totalItems} ({$totalQty} units)\n"
+            . "│ Status       : COMPLETED\n"
+            . "└─────────────────────────\n\n"
+            . "✓ Stock levels have been updated\n"
+            . "✓ Transfer record has been finalized\n"
+            . "✓ All inventory movements recorded\n\n"
+            . "*View Details*\n"
+            . route('transactions.transfers.show', $this->transfer->id) . "\n\n"
+            . "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            . "_This is an automated notification from ERP System_";
     }
 }
