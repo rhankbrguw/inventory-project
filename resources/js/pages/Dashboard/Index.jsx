@@ -11,6 +11,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { MapPin } from "lucide-react";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({
     auth,
@@ -20,6 +21,8 @@ export default function Index({
     locations,
     filters,
 }) {
+    const { isSuperAdmin } = usePermission();
+
     const handleFilterChange = (newFilters) => {
         router.get(
             route("dashboard"),
@@ -53,7 +56,7 @@ export default function Index({
                         </div>
                     </SelectTrigger>
                     <SelectContent>
-                        {auth.user.level === 1 && (
+                        {isSuperAdmin && (
                             <SelectItem value="all">Semua Lokasi</SelectItem>
                         )}
                         {locations.map((loc) => (

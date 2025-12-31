@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SetupController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationsController;
@@ -54,6 +55,8 @@ Route::get('/', function () {
 })->middleware('ensure.setup');
 
 Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
+
+    Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 

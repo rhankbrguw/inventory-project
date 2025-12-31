@@ -16,10 +16,12 @@ class TypeObserver
     public function created(Type $type): void
     {
         if ($type->group === Type::GROUP_USER_ROLE) {
+            $level = $type->level ?? Role::THRESHOLD_STAFF;
+
             Role::create([
                 'name' => $type->name,
                 'code' => $type->code,
-                'level' => $type->level ?? 100,
+                'level' => $level,
                 'guard_name' => 'web'
             ]);
             $this->clearRoleCache();
@@ -28,17 +30,20 @@ class TypeObserver
 
     public function updated(Type $type): void
     {
-        if (($type->isDirty('name') || $type->isDirty('code') || $type->isDirty('level')) &&
-            $type->getOriginal('group') === Type::GROUP_USER_ROLE
+        if (
+            $type->group === Type::GROUP_USER_ROLE &&
+            ($type->isDirty('name') || $type->isDirty('code') || $type->isDirty('level'))
         ) {
 
-            $oldRole = Role::findByName($type->getOriginal('name'), 'web');
+            $searchName = $type->isDirty('name') ? $type->getOriginal('name') : $type->name;
 
-            if ($oldRole) {
-                $oldRole->update([
+            $role = Role::where('name', $searchName)->where('guard_name', 'web')->first();
+
+            if ($role) {
+                $role->update([
                     'name' => $type->name,
                     'code' => $type->code,
-                    'level' => $type->level,
+                    'level' => $type->level ?? Role::THRESHOLD_STAFF,
                 ]);
                 $this->clearRoleCache();
             }
@@ -48,7 +53,8 @@ class TypeObserver
     public function deleted(Type $type): void
     {
         if ($type->group === Type::GROUP_USER_ROLE) {
-            $role = Role::findByName($type->name, 'web');
+            $role = Role::where('name', $type->name)->where('guard_name', 'web')->first();
+
             if ($role) {
                 $role->delete();
                 $this->clearRoleCache();
@@ -59,8 +65,12 @@ class TypeObserver
     public function restored(Type $type): void
     {
         if ($type->group === Type::GROUP_USER_ROLE) {
-            Role::withTrashed()->where('name', $type->name)->first()?->restore();
-            $this->clearRoleCache();
+            $role = Role::withTrashed()->where('name', $type->name)->where('guard_name', 'web')->first();
+
+            if ($role) {
+                $role->restore();
+                $this->clearRoleCache();
+            }
         }
     }
 }

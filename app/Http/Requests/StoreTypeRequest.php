@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Type;
+use App\Models\Role;
 use App\Rules\UniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -13,11 +14,11 @@ class StoreTypeRequest extends FormRequest
     {
         $user = $this->user();
 
-        if ($user->level === 1) {
+        if (Role::isSuperAdmin($user->level)) {
             return true;
         }
 
-        if ($user->level <= 10) {
+        if (Role::isManagerial($user->level)) {
             return $this->input('group') === Type::GROUP_PRODUCT;
         }
 
@@ -35,6 +36,11 @@ class StoreTypeRequest extends FormRequest
                 'integer',
                 'min:1',
                 'max:100',
+                function ($value, $fail) {
+                    if (!Role::isSuperAdmin($this->user()->level) && $value < $this->user()->level) {
+                        $fail("Anda tidak dapat membuat level akses yang lebih tinggi dari level Anda sendiri.");
+                    }
+                },
                 Rule::requiredIf(fn() => in_array($this->group, [Type::GROUP_USER_ROLE, Type::GROUP_LOCATION]))
             ],
         ];

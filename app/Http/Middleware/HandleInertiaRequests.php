@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Illuminate\Support\Facades\App;
+use App\Models\Role;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -40,14 +41,14 @@ class HandleInertiaRequests extends Middleware
             $user->loadMissing(['roles', 'locations.type']);
         }
 
-        $locale = session('locale', config('app.locale'));
+        $user = $request->user();
+        $locale = $user && $user->locale ? $user->locale : session('locale', config('app.locale'));
         App::setLocale($locale);
 
         return [
             ...parent::share($request),
 
             'csrf_token' => fn() => $request->session()->token(),
-
             'locale' => $locale,
 
             'translations' => function () use ($locale) {
@@ -66,7 +67,8 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'phone' => $user->phone,
-                    'level' => $user->level,
+
+                    'level' => (int) $user->level,
 
                     'role' => $user->roles->first() ? [
                         'name' => $user->roles->first()->name,
@@ -87,6 +89,12 @@ class HandleInertiaRequests extends Middleware
                         ];
                     }),
                 ] : null,
+
+                'role_definitions' => [
+                    'SUPER_ADMIN'          => Role::LEVEL_SUPER_ADMIN,
+                    'THRESHOLD_MANAGERIAL' => Role::THRESHOLD_MANAGERIAL,
+                    'THRESHOLD_STAFF'      => Role::THRESHOLD_STAFF,
+                ],
             ],
 
             'flash' => [

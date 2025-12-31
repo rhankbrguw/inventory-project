@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Type;
+use App\Models\Role;
 use App\Rules\UniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,11 +15,11 @@ class UpdateTypeRequest extends FormRequest
         $user = $this->user();
         $type = $this->route('type');
 
-        if ($user->level === 1) {
+        if (Role::isSuperAdmin($user->level)) {
             return true;
         }
 
-        if ($user->level <= 10) {
+        if (Role::isManagerial($user->level)) {
             return $type->group === Type::GROUP_PRODUCT && $this->input('group') === Type::GROUP_PRODUCT;
         }
 
@@ -36,6 +37,11 @@ class UpdateTypeRequest extends FormRequest
                 'integer',
                 'min:1',
                 'max:100',
+                function ($value, $fail) {
+                    if (!Role::isSuperAdmin($this->user()->level) && $value < $this->user()->level) {
+                        $fail("Anda tidak dapat mengubah level akses menjadi lebih tinggi dari level Anda sendiri.");
+                    }
+                },
                 Rule::requiredIf(fn() => in_array($this->group, [Type::GROUP_USER_ROLE, Type::GROUP_LOCATION]))
             ],
         ];

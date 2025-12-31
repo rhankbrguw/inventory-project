@@ -11,9 +11,11 @@ use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sell;
+use App\Models\User;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Type;
+use App\Traits\ManagesStock;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +28,8 @@ use Inertia\Response;
 
 class StockController extends Controller
 {
+    use ManagesStock;
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Inventory::class);
@@ -33,7 +37,7 @@ class StockController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
-        $inventories = Inventory::with(['product.type', 'location'])
+        $inventories = Inventory::with(['product.type', 'location.type'])
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->select('inventories.*')
             ->whereHas('location', function ($query) {
@@ -47,8 +51,7 @@ class StockController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q
-                        ->where('products.name', 'like', "%{$search}%")
+                    $q->where('products.name', 'like', "%{$search}%")
                         ->orWhere('products.sku', 'like', "%{$search}%");
                 });
             })
@@ -71,6 +74,8 @@ class StockController extends Controller
                     'quantity_desc' => $query->orderBy('inventories.quantity', 'desc'),
                     'last_moved_desc' => $query->orderBy('inventories.updated_at', 'desc'),
                     'last_moved_asc' => $query->orderBy('inventories.updated_at', 'asc'),
+                    'price_desc' => $query->orderBy('products.price', 'desc'),
+                    'price_asc' => $query->orderBy('products.price', 'asc'),
                     default => $query->orderBy('products.name', 'asc'),
                 };
             }, function ($query) {
@@ -107,7 +112,7 @@ class StockController extends Controller
             abort(403, 'Anda tidak memiliki akses ke stok lokasi ini.');
         }
 
-        $inventory->load(['product.type', 'location']);
+        $inventory->load(['product.type', 'location.type']);
 
         $stockMovements = StockMovement::where('product_id', $inventory->product_id)
             ->where('location_id', $inventory->location_id)
@@ -119,6 +124,7 @@ class StockController extends Controller
                         Purchase::class => ['supplier'],
                         Sell::class => ['customer'],
                         StockTransfer::class => ['fromLocation', 'toLocation'],
+                        User::class => [],
                     ]);
                 }
             ])
@@ -176,12 +182,11 @@ class StockController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($validated) {
-                $inventory = Inventory::firstOrCreate(
-                    [
-                        'product_id' => $validated['product_id'],
-                        'location_id' => $validated['location_id']
-                    ],
+            DB::transaction(function () use ($validated, $user) {
+                Product::findOrFail($validated['product_id']);
+
+                $inventory = Inventory::lockForUpdate()->firstOrCreate(
+                    ['product_id' => $validated['product_id'], 'location_id' => $validated['location_id']],
                     ['quantity' => 0, 'average_cost' => 0]
                 );
 
@@ -193,6 +198,8 @@ class StockController extends Controller
                     return;
                 }
 
+                $inventory->update(['quantity' => $newQuantity]);
+
                 StockMovement::create([
                     'product_id' => $validated['product_id'],
                     'location_id' => $validated['location_id'],
@@ -200,10 +207,11 @@ class StockController extends Controller
                     'quantity' => $quantityDifference,
                     'cost_per_unit' => $inventory->average_cost,
                     'average_cost_per_unit' => $inventory->average_cost,
-                    'notes' => $validated['notes'] . " (Stok terakhir: {$currentQuantity} -> Input: {$newQuantity})",
+                    'reference_type' => User::class,
+                    'reference_id' => $user->id,
+                    'notes' => $validated['notes'] . " (Opname: {$currentQuantity} -> {$newQuantity})",
+                    'user_id' => $user->id,
                 ]);
-
-                $inventory->update(['quantity' => $newQuantity]);
             });
         } catch (\Exception $e) {
             return Redirect::back()->with('error', 'Gagal menyesuaikan stok: ' . $e->getMessage())->withInput();

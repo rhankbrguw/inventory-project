@@ -9,8 +9,11 @@ import {
 } from "@/components/ui/select";
 import { MapPin } from "lucide-react";
 import SmartDateFilter from "@/components/SmartDateFilter";
+import { usePermission } from "@/hooks/usePermission";
 
-export default function DashboardFilterCard({ auth, locations, filters }) {
+export default function DashboardFilterCard({ locations, filters }) {
+    const { isSuperAdmin } = usePermission();
+
     const handleFilterChange = (newFilters) => {
         router.get(
             route("dashboard"),
@@ -51,7 +54,7 @@ export default function DashboardFilterCard({ auth, locations, filters }) {
                             </div>
                         </SelectTrigger>
                         <SelectContent>
-                            {auth.user.level === 1 && (
+                            {isSuperAdmin && (
                                 <SelectItem value="all">
                                     Semua Lokasi
                                 </SelectItem>

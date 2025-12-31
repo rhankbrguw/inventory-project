@@ -29,18 +29,19 @@ export default function Create({
     validUnits,
     salesChannels,
 }) {
-    const { data, setData, post, processing, errors, isDirty } = useForm({
-        name: "",
-        image: null,
-        type_id: "",
-        suppliers: [],
-        default_supplier_id: "",
-        sku: "",
-        price: "",
-        unit: "",
-        description: "",
-        channel_prices: {},
-    });
+    const { data, setData, post, processing, errors, isDirty, transform } =
+        useForm({
+            name: "",
+            image: null,
+            type_id: "",
+            suppliers: [],
+            default_supplier_id: "",
+            sku: "",
+            price: "",
+            unit: "",
+            description: "",
+            channel_prices: {},
+        });
 
     const { preview, fileInputRef, handleChange, triggerInput } =
         useImageUpload();
@@ -69,6 +70,15 @@ export default function Create({
             [channelId]: value,
         });
     };
+
+    transform((data) => ({
+        ...data,
+        channel_prices: Object.fromEntries(
+            Object.entries(data.channel_prices).filter(
+                ([_, value]) => value && Number(value) > 0,
+            ),
+        ),
+    }));
 
     const submit = (e) => {
         e.preventDefault();
@@ -114,6 +124,7 @@ export default function Create({
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
+                                    required
                                 />
                             </FormField>
                             <FormField
@@ -168,6 +179,7 @@ export default function Create({
                                     onValueChange={(value) =>
                                         setData("type_id", value)
                                     }
+                                    required
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Tipe Produk" />
@@ -281,6 +293,7 @@ export default function Create({
                                     onChange={(e) =>
                                         setData("sku", e.target.value)
                                     }
+                                    required
                                 />
                             </FormField>
                             <FormField
@@ -293,6 +306,7 @@ export default function Create({
                                     onValueChange={(value) =>
                                         setData("unit", value)
                                     }
+                                    required
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Satuan" />
@@ -350,6 +364,7 @@ export default function Create({
                                         setData("price", value)
                                     }
                                     className="text-lg font-bold"
+                                    required
                                 />
                             </FormField>
                         </div>

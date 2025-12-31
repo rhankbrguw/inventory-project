@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Sell;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SellPolicy
@@ -12,12 +13,12 @@ class SellPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 20;
+        return Role::isOperational($user->level);
     }
 
     public function view(User $user, Sell $sell): bool
     {
-        if ($user->level === 1) {
+        if (Role::isSuperAdmin($user->level)) {
             return true;
         }
         return in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
@@ -25,7 +26,7 @@ class SellPolicy
 
     public function create(User $user): bool
     {
-        return $user->level <= 20;
+        return Role::isOperational($user->level);
     }
 
     public function createAtLocation(User $user, $locationId): bool

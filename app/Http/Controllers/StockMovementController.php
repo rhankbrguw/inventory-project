@@ -9,6 +9,7 @@ use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sell;
+use App\Models\User;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -38,6 +39,7 @@ class StockMovementController extends Controller
                     Purchase::class => ['supplier'],
                     Sell::class => ['customer'],
                     StockTransfer::class => ['fromLocation', 'toLocation'],
+                    User::class => [],
                 ]);
             }
         ])

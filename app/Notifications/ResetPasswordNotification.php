@@ -2,14 +2,11 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class ResetPasswordNotification extends Notification
 {
-    use Queueable;
-
     public $token;
 
     public function __construct($token)
@@ -30,7 +27,7 @@ class ResetPasswordNotification extends Notification
         ], false));
 
         return (new MailMessage())
-            ->subject('Permintaan Reset Password')
+            ->subject('Password Reset Request')
             ->view('emails.reset_password', [
                 'url' => $url,
                 'user' => $notifiable,

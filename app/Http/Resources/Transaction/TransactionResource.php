@@ -36,11 +36,17 @@ class TransactionResource extends JsonResource
             ? 'Transfer'
             : ($this->whenLoaded('type', fn() => $this->type?->name) ?? null);
 
+        $date = $isTransfer
+            ? $this->transfer_date
+            : $this->transaction_date;
+
         return [
             'id' => $this->id,
             'unique_key' => $uniqueKey,
             'reference_code' => $this->reference_code,
-            'transaction_date' => $this->transaction_date?->format('Y-m-d') ?? $this->transfer_date?->format('Y-m-d'),
+
+            'transaction_date' => $date?->format('Y-m-d'),
+
             'type' => $type,
             'status' => $isTransfer ? $this->status : 'completed',
             'total_amount' => $isPurchase ? $this->total_cost : ($isTransfer ? 0 : $this->total_price),
