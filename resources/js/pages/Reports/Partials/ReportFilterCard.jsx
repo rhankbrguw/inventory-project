@@ -10,13 +10,11 @@ import {
 import { MapPin, Package } from "lucide-react";
 import SmartDateFilter from "@/components/SmartDateFilter";
 import PrintButton from "@/components/PrintButton";
+import { usePermission } from "@/hooks/usePermission";
 
-export default function ReportFilterCard({
-    auth,
-    locations,
-    products,
-    filters,
-}) {
+export default function ReportFilterCard({ locations, products, filters }) {
+    const { isSuperAdmin } = usePermission();
+
     const handleFilterChange = (newFilters) => {
         router.get(
             route("reports.index"),
@@ -26,7 +24,7 @@ export default function ReportFilterCard({
     };
 
     const getLocationValue = () => {
-        if (auth.user.level === 1) {
+        if (isSuperAdmin) {
             return filters.location_id || "all";
         }
         return filters.location_id || locations[0]?.id?.toString() || "all";
@@ -55,7 +53,7 @@ export default function ReportFilterCard({
                         </div>
                     </SelectTrigger>
                     <SelectContent>
-                        {auth.user.level === 1 && (
+                        {isSuperAdmin && (
                             <SelectItem value="all">Semua Lokasi</SelectItem>
                         )}
                         {locations.map((loc) => (

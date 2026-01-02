@@ -8,13 +8,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class StockTransferNotification extends Notification implements ShouldQueue
+class TransferAcceptedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
         public $transfer,
-        public $senderName
+        public $acceptedByName
     ) {}
 
     public function via(object $notifiable): array
@@ -31,14 +31,13 @@ class StockTransferNotification extends Notification implements ShouldQueue
         $isIndonesian = $this->getUserLocale($notifiable) === 'id';
 
         return [
-            'title' => $isIndonesian ? '📦 Stok Masuk Baru' : '📦 Incoming Transfer',
+            'title' => $isIndonesian ? '✅ Transfer Selesai' : '✅ Transfer Completed',
             'message' => $isIndonesian
-                ? "Kiriman dari {$this->transfer->fromLocation->name} (Ref: {$this->transfer->reference_code})"
-                : "Transfer from {$this->transfer->fromLocation->name} (Ref: {$this->transfer->reference_code})",
+                ? "Transfer {$this->transfer->reference_code} diterima di {$this->transfer->toLocation->name}"
+                : "Transfer {$this->transfer->reference_code} received at {$this->transfer->toLocation->name}",
             'action_url' => route('transactions.transfers.show', $this->transfer->id),
-            'sender' => $this->senderName,
-            'icon' => 'Truck',
-            'type' => 'info',
+            'icon' => 'CheckCircle',
+            'type' => 'success',
             'created_at' => now(),
         ];
     }
@@ -60,66 +59,52 @@ class StockTransferNotification extends Notification implements ShouldQueue
         $date = now()->format('d/m/Y H:i');
 
         $items = $this->transfer->stockMovements()
-            ->where('type', 'transfer_out')
+            ->where('type', 'transfer_in')
             ->with('product')
             ->get();
 
-        $totalItems = $items->count();
         $totalQty = $items->sum(fn($i) => abs($i->quantity));
 
-        $itemsList = $items->take(5)->map(function ($item) {
-            return "• {$item->product->name}: " . abs($item->quantity) . " {$item->product->unit}";
-        })->join("\n");
-
-        if ($items->count() > 5) {
-            $moreText = $isIndonesian ? "dan " . ($items->count() - 5) . " item lainnya" : "and " . ($items->count() - 5) . " more";
-            $itemsList .= "\n_{$moreText}_";
-        }
-
         if ($isIndonesian) {
-            $labelTanggal = str_pad("Tanggal", 9);
-            $labelAsal = str_pad("Asal", 9);
-            $labelTujuan = str_pad("Tujuan", 9);
-            $labelOleh = str_pad("Oleh", 9);
             $labelRef = str_pad("Ref", 9);
+            $labelStatus = str_pad("Status", 9);
+            $labelDiterima = str_pad("Diterima", 9);
+            $labelLokasi = str_pad("Lokasi", 9);
             $labelTotal = str_pad("Total", 9);
+            $labelTanggal = str_pad("Tanggal", 9);
 
-            return "*STOK MASUK BARU* 📦\n\n"
+            return "*TRANSFER SELESAI* ✅\n\n"
                 . "Halo {$notifiable->name},\n\n"
-                . "Transfer stok baru telah tercatat:\n"
+                . "Transfer stok telah berhasil diselesaikan:\n"
                 . "```"
-                . "{$labelTanggal}: {$date}\n"
-                . "{$labelAsal}: {$this->transfer->fromLocation->name}\n"
-                . "{$labelTujuan}: {$this->transfer->toLocation->name}\n"
-                . "{$labelOleh}: {$this->senderName}\n"
                 . "{$labelRef}: {$this->transfer->reference_code}\n"
-                . "{$labelTotal}: {$totalItems} SKU / {$totalQty} Unit"
+                . "{$labelStatus}: SELESAI\n"
+                . "{$labelDiterima}: {$this->acceptedByName}\n"
+                . "{$labelLokasi}: {$this->transfer->toLocation->name}\n"
+                . "{$labelTotal}: {$totalQty} Unit\n"
+                . "{$labelTanggal}: {$date}"
                 . "```\n\n"
-                . "*Detail Barang:*\n"
-                . "{$itemsList}\n\n"
                 . "*Akses Sistem:*\n"
                 . route('transactions.transfers.show', $this->transfer->id);
         } else {
-            $labelDate = str_pad("Date", 9);
-            $labelOrigin = str_pad("Origin", 9);
-            $labelDest = str_pad("Dest", 9);
-            $labelBy = str_pad("By", 9);
             $labelRef = str_pad("Ref", 9);
+            $labelStatus = str_pad("Status", 9);
+            $labelReceived = str_pad("Received", 9);
+            $labelLocation = str_pad("Location", 9);
             $labelTotal = str_pad("Total", 9);
+            $labelDate = str_pad("Date", 9);
 
-            return "*INCOMING TRANSFER* 📦\n\n"
+            return "*TRANSFER COMPLETED* ✅\n\n"
                 . "Hello {$notifiable->name},\n\n"
-                . "New stock transfer has been recorded:\n"
+                . "Stock transfer has been successfully completed:\n"
                 . "```"
-                . "{$labelDate}: {$date}\n"
-                . "{$labelOrigin}: {$this->transfer->fromLocation->name}\n"
-                . "{$labelDest}: {$this->transfer->toLocation->name}\n"
-                . "{$labelBy}: {$this->senderName}\n"
                 . "{$labelRef}: {$this->transfer->reference_code}\n"
-                . "{$labelTotal}: {$totalItems} SKU / {$totalQty} Units"
+                . "{$labelStatus}: COMPLETED\n"
+                . "{$labelReceived}: {$this->acceptedByName}\n"
+                . "{$labelLocation}: {$this->transfer->toLocation->name}\n"
+                . "{$labelTotal}: {$totalQty} Units\n"
+                . "{$labelDate}: {$date}"
                 . "```\n\n"
-                . "*Item Details:*\n"
-                . "{$itemsList}\n\n"
                 . "*System Access:*\n"
                 . route('transactions.transfers.show', $this->transfer->id);
         }

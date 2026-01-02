@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({ auth, suppliers, filters }) {
     const { params, setFilter } = useIndexPageFilters(
@@ -25,7 +26,8 @@ export default function Index({ auth, suppliers, filters }) {
         filters,
     );
 
-    const canCrudSuppliers = auth.user.level <= 10;
+    const { isManager } = usePermission();
+    const canCrudSuppliers = isManager;
 
     const {
         confirmingDeletion,

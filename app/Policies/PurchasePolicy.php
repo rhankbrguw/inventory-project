@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Purchase;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PurchasePolicy
@@ -12,12 +13,12 @@ class PurchasePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 20;
+        return Role::isOperational($user->level);
     }
 
     public function view(User $user, Purchase $purchase): bool
     {
-        if ($user->level === 1) {
+        if (Role::isSuperAdmin($user->level)) {
             return true;
         }
         return in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
@@ -25,7 +26,7 @@ class PurchasePolicy
 
     public function create(User $user): bool
     {
-        return $user->level <= 10;
+        return Role::isManagerial($user->level);
     }
 
     public function createAtLocation(User $user, $locationId): bool

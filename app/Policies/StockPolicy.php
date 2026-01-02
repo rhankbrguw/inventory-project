@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class StockPolicy
@@ -11,28 +12,24 @@ class StockPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->level <= 20;
+        return Role::isOperational($user->level);
     }
 
     public function view(User $user, $stock): bool
     {
-        if ($user->level === 1) {
+        if (Role::isSuperAdmin($user->level)) {
             return true;
         }
-        $accessibleLocationIds = $user->getAccessibleLocationIds();
-        if (!$accessibleLocationIds) {
-            return true;
-        }
-        return in_array($stock->location_id, $accessibleLocationIds);
+        return in_array($stock->location_id, $user->getAccessibleLocationIds() ?? []);
     }
 
     public function adjust(User $user, $locationId): bool
     {
-        if ($user->level === 1) {
+        if (Role::isSuperAdmin($user->level)) {
             return true;
         }
 
         $role = $user->getRoleAtLocation($locationId);
-        return $role && $role->level <= 10;
+        return $role && Role::isManagerial($role->level);
     }
 }

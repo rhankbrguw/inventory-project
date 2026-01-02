@@ -50,6 +50,21 @@ export default function Create({
 
     const { totalItems, totalQuantity } = calculateTotals();
 
+    const isFormValid = () => {
+        if (!data.from_location_id || !data.to_location_id) return false;
+        if (data.items.length === 0) return false;
+
+        const hasEmptyProduct = data.items.some((item) => !item.product_id);
+        if (hasEmptyProduct) return false;
+
+        const hasInvalidQuantity = data.items.some(
+            (item) => !item.quantity || Number(item.quantity) <= 0
+        );
+        if (hasInvalidQuantity) return false;
+
+        return true;
+    };
+
     const submit = (e) => {
         e.preventDefault();
         post(route("transactions.transfers.store"), {});
@@ -98,7 +113,7 @@ export default function Create({
                         <Button
                             size="sm"
                             className="px-3 py-1"
-                            disabled={processing || !isDirty}
+                            disabled={processing || !isDirty || !isFormValid()}
                         >
                             {processing ? "Menyimpan..." : "Simpan"}
                         </Button>

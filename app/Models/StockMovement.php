@@ -23,6 +23,7 @@ class StockMovement extends Model
         'notes',
         'reference_id',
         'reference_type',
+        'user_id',
     ];
 
     public static function getMovementTypes(): array

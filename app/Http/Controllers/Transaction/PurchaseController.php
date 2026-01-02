@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Resources\Transaction\PurchaseCartItemResource;
 use App\Http\Resources\Transaction\PurchaseResource;
-use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Type;
+use App\Traits\ManagesStock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,58 +23,38 @@ use Inertia\Response;
 
 class PurchaseController extends Controller
 {
+    use ManagesStock;
+
     public function create(Request $request): Response
     {
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
         $locationsQuery = Location::orderBy("name")->with('type');
-
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
         $allLocations = $locationsQuery->get();
+        $filteredLocations = $allLocations->filter(fn ($location) => $user->canTransactAtLocation($location->id, 'purchase'))->values();
 
-        $filteredLocations = $allLocations->filter(function ($location) use ($user) {
-            return $user->canTransactAtLocation($location->id, 'purchase');
-        });
+        $locationsWithPermissions = $filteredLocations->map(fn ($location) => [
+            'id' => $location->id,
+            'name' => $location->name,
+            'role_at_location' => $user->getRoleCodeAtLocation($location->id),
+        ]);
 
-        $locationsWithPermissions = $filteredLocations->values()->map(function ($location) use ($user) {
-            return [
-                'id' => $location->id,
-                'name' => $location->name,
-                'role_at_location' => $user->getRoleCodeAtLocation($location->id),
-            ];
-        });
+        $cartItems = $user->purchaseCartItems()->with(["product", "supplier"])->get();
 
-        $cartItems = $user
-            ->purchaseCartItems()
-            ->with(["product", "supplier"])
-            ->get();
-
-        $productsQuery = Product::query()
-            ->with("defaultSupplier:id,name")
-            ->when($accessibleLocationIds, function ($query) use ($accessibleLocationIds) {
-                $query->whereHas('inventories', function ($q) use ($accessibleLocationIds) {
-                    $q->whereIn('location_id', $accessibleLocationIds);
-                });
-            })
-            ->when($request->input("search"), function ($query, $search) {
-                $query
-                    ->where("name", "like", "%{$search}%")
-                    ->orWhere("sku", "like", "%{$search}%");
-            })
-            ->when($request->filled("type_id") && $request->input("type_id") !== "all", function ($query) use ($request) {
-                $query->where("type_id", $request->input("type_id"));
-            })
+        $productsQuery = Product::with("defaultSupplier:id,name")
+            ->when($accessibleLocationIds, fn ($query) => $query->whereHas('inventories', fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)))
+            ->when($request->input("search"), fn ($query, $search) => $query->where("name", "like", "%{$search}%")->orWhere("sku", "like", "%{$search}%"))
+            ->when($request->filled("type_id") && $request->input("type_id") !== "all", fn ($query) => $query->where("type_id", $request->input("type_id")))
             ->when($request->filled("supplier_id") && $request->input("supplier_id") !== "all", function ($query) use ($request) {
                 $supplierId = $request->input("supplier_id");
-                if ($supplierId === 'null') {
-                    $query->whereNull("default_supplier_id");
-                } else {
-                    $query->where("default_supplier_id", $supplierId);
-                }
+                return $supplierId === 'null'
+                    ? $query->whereNull("default_supplier_id")
+                    : $query->where("default_supplier_id", $supplierId);
             })
             ->orderBy("name");
 
@@ -95,10 +75,10 @@ class PurchaseController extends Controller
         $user = $request->user();
 
         if (!$user->canTransactAtLocation($validated['location_id'], 'purchase')) {
-            abort(403, 'Anda tidak memiliki hak akses Managerial untuk pembelian di lokasi ini.');
+            abort(403, 'Anda tidak memiliki akses untuk pembelian di lokasi ini.');
         }
 
-        $totalCost = collect($validated["items"])->sum(fn($item) => $item["quantity"] * $item["cost_per_unit"]);
+        $totalCost = collect($validated["items"])->sum(fn ($item) => $item["quantity"] * $item["cost_per_unit"]);
         $purchaseType = Type::where("group", Type::GROUP_TRANSACTION)->where("name", "Pembelian")->firstOrFail();
 
         DB::transaction(function () use ($validated, $totalCost, $purchaseType, $request) {
@@ -122,31 +102,22 @@ class PurchaseController extends Controller
             }
 
             foreach ($validated["items"] as $item) {
-                $purchase->stockMovements()->create([
-                    "product_id" => $item["product_id"],
-                    "supplier_id" => $validated["supplier_id"],
-                    "location_id" => $validated["location_id"],
-                    "type" => "purchase",
-                    "quantity" => $item["quantity"],
-                    "cost_per_unit" => $item["cost_per_unit"],
-                    "average_cost_per_unit" => $item["cost_per_unit"],
-                    "notes" => $validated["notes"],
-                ]);
+                $product = Product::find($item['product_id']);
 
-                $inventory = Inventory::firstOrCreate(
-                    ["product_id" => $item["product_id"], "location_id" => $validated["location_id"]],
-                    ["quantity" => 0, "average_cost" => 0]
+                $this->handleStockIn(
+                    product: $product,
+                    locationId: $validated['location_id'],
+                    qty: $item['quantity'],
+                    cost: $item['cost_per_unit'],
+                    type: 'purchase',
+                    ref: $purchase,
+                    notes: $validated['notes']
                 );
-
-                $newTotalQty = $inventory->quantity + $item["quantity"];
-                $newAvgCost = ($inventory->quantity * $inventory->average_cost + $item["quantity"] * $item["cost_per_unit"]) / ($newTotalQty > 0 ? $newTotalQty : 1);
-
-                $inventory->update(["quantity" => $newTotalQty, "average_cost" => $newAvgCost]);
             }
 
             $supplierId = $validated["supplier_id"];
             Auth::user()->purchaseCartItems()
-                ->where(fn($q) => is_null($supplierId) ? $q->whereNull('supplier_id') : $q->where('supplier_id', $supplierId))
+                ->where(fn ($q) => is_null($supplierId) ? $q->whereNull('supplier_id') : $q->where('supplier_id', $supplierId))
                 ->whereIn('product_id', array_column($validated["items"], 'product_id'))
                 ->delete();
         });
@@ -177,6 +148,9 @@ class PurchaseController extends Controller
         }
 
         $purchase->load(["location", "supplier", "user", "paymentMethodType", "stockMovements.product", "type", "installments"]);
-        return Inertia::render("Transactions/Purchases/Show", ["purchase" => PurchaseResource::make($purchase)]);
+
+        return Inertia::render("Transactions/Purchases/Show", [
+            "purchase" => PurchaseResource::make($purchase)
+        ]);
     }
 }

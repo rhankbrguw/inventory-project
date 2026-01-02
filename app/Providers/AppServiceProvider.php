@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -20,5 +21,11 @@ class AppServiceProvider extends ServiceProvider
                 ->numbers()
                 ->uncompromised();
         });
+
+        Model::preventLazyLoading(! $this->app->isProduction());
+
+        Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
+
+        Model::preventAccessingMissingAttributes(! $this->app->isProduction());
     }
 }

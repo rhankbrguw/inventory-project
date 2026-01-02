@@ -32,21 +32,24 @@ export default function Edit({
 }) {
     const { data: product } = productResource;
 
-    const { data, setData, post, errors, processing, isDirty } = useForm({
-        name: product.name || "",
-        sku: product.sku || "",
-        price: product.price || "",
-        unit: product.unit || "",
-        description: product.description || "",
-        image: null,
-        type_id: product.type?.id?.toString() || "",
-        suppliers: product.suppliers ? product.suppliers.map((s) => s.id) : [],
-        default_supplier_id: product.default_supplier?.id?.toString() || "",
+    const { data, setData, post, errors, processing, isDirty, transform } =
+        useForm({
+            name: product.name || "",
+            sku: product.sku || "",
+            price: product.price || "",
+            unit: product.unit || "",
+            description: product.description || "",
+            image: null,
+            type_id: product.type?.id?.toString() || "",
+            suppliers: product.suppliers
+                ? product.suppliers.map((s) => s.id)
+                : [],
+            default_supplier_id: product.default_supplier?.id?.toString() || "",
 
-        channel_prices: product.channel_prices || {},
+            channel_prices: product.channel_prices || {},
 
-        _method: "patch",
-    });
+            _method: "patch",
+        });
 
     const { preview, fileInputRef, handleChange, triggerInput } =
         useImageUpload(product.image_url);
@@ -75,6 +78,15 @@ export default function Edit({
             [channelId]: value,
         });
     };
+
+    transform((data) => ({
+        ...data,
+        channel_prices: Object.fromEntries(
+            Object.entries(data.channel_prices).filter(
+                ([_, value]) => value && Number(value) > 0,
+            ),
+        ),
+    }));
 
     const submit = (e) => {
         e.preventDefault();
@@ -121,6 +133,7 @@ export default function Edit({
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
+                                    required
                                 />
                             </FormField>
                             <FormField
@@ -176,6 +189,7 @@ export default function Edit({
                                     onValueChange={(value) =>
                                         setData("type_id", value)
                                     }
+                                    required
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Tipe" />
@@ -286,6 +300,7 @@ export default function Edit({
                                     onChange={(e) =>
                                         setData("sku", e.target.value)
                                     }
+                                    required
                                 />
                             </FormField>
                             <FormField
@@ -298,6 +313,7 @@ export default function Edit({
                                     onValueChange={(value) =>
                                         setData("unit", value)
                                     }
+                                    required
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Satuan" />
@@ -353,6 +369,7 @@ export default function Edit({
                                         setData("price", value)
                                     }
                                     className="text-lg font-bold"
+                                    required
                                 />
                             </FormField>
                         </div>

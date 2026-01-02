@@ -42,6 +42,24 @@ services:
             - app
             - mysql
 
+    worker:
+        image: inventory-app
+        container_name: inventory_worker
+        restart: unless-stopped
+        working_dir: /var/www
+        command: php artisan queue:work --tries=3 --timeout=90
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        environment:
+            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+        env_file:
+            - .env
+        networks:
+            - inventory_network
+        depends_on:
+            - app
+
     nginx:
         image: nginx:alpine
         container_name: inventory_nginx

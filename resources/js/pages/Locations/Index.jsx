@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({
     auth,
@@ -30,7 +31,8 @@ export default function Index({
         filters,
     );
 
-    const canCrudLocations = auth.user.level === 1;
+    const { isSuperAdmin } = usePermission();
+    const canCrudLocations = isSuperAdmin;
 
     const {
         confirmingDeletion,

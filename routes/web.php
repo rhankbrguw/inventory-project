@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SetupController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationsController;
@@ -54,6 +55,8 @@ Route::get('/', function () {
 })->middleware('ensure.setup');
 
 Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
+
+    Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
@@ -122,10 +125,15 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
 
     Route::get('/transactions/transfers/create', [StockTransferController::class, 'create'])->name('transactions.transfers.create');
     Route::post('/transactions/transfers', [StockTransferController::class, 'store'])->name('transactions.transfers.store');
+    Route::get('/transactions/transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('transactions.transfers.show');
+    Route::post('/transactions/transfers/{stockTransfer}/accept', [StockTransferController::class, 'accept'])->name('transactions.transfers.accept');
+    Route::post('/transactions/transfers/{stockTransfer}/reject', [StockTransferController::class, 'reject'])->name('transactions.transfers.reject');
 
     Route::get('/transactions/sells/create', [SellController::class, 'create'])->name('transactions.sells.create');
     Route::post('/transactions/sells', [SellController::class, 'store'])->name('transactions.sells.store');
     Route::get('/transactions/sells/{sell}', [SellController::class, 'show'])->name('transactions.sells.show');
+    Route::post('/transactions/sells/{sell}/ship', [SellController::class, 'ship'])->name('transactions.sells.ship');
+    Route::post('/transactions/sells/{sell}/receive', [SellController::class, 'receive'])->name('transactions.sells.receive');
 
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');

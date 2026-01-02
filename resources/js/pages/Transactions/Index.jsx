@@ -22,6 +22,7 @@ import {
     Truck,
     ArrowRightLeft,
 } from "lucide-react";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({
     auth,
@@ -31,32 +32,22 @@ export default function Index({
     filters = {},
 }) {
     const { auth: authData } = usePage().props;
-    const user = authData.user;
-    const isSuperAdmin = user.level === 1;
+
+    const { isSuperAdmin, isManager, isOperational } = usePermission();
 
     const { params, setFilter } = useIndexPageFilters(
         "transactions.index",
         filters,
     );
 
-    const hasWarehouseAccess = (user.locations || []).some(
-        (loc) => loc.type?.code === "WH",
-    );
-
-    const hasBranchAccess = (user.locations || []).some(
-        (loc) => loc.type?.code === "BR",
-    );
-
-    const isManager = user.level <= 10;
+    const hasLocations = locations.length > 0 || isSuperAdmin;
 
     const canCreatePurchase =
-        isSuperAdmin || hasWarehouseAccess || (hasBranchAccess && isManager);
+        hasLocations && (isSuperAdmin || isManager || isOperational);
+    const canCreateSell =
+        hasLocations && (isSuperAdmin || isManager || isOperational);
 
-    const canCreateSell = isSuperAdmin || hasBranchAccess;
-
-    const canCreateTransfer =
-        isSuperAdmin ||
-        (hasWarehouseAccess && isManager);
+    const canCreateTransfer = hasLocations && (isSuperAdmin || isManager);
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
