@@ -119,6 +119,9 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('products', 'public');
+            unset($validated['image']);
+        } else {
+            unset($validated['image']);
         }
 
         DB::transaction(function () use ($validated, $supplierIds, $channelPrices, $user) {
@@ -182,6 +185,9 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($product->image_path);
             }
             $validated['image_path'] = $request->file('image')->store('products', 'public');
+            unset($validated['image']);
+        } else {
+            unset($validated['image']);
         }
 
         DB::transaction(function () use ($product, $validated, $supplierIds, $channelPrices) {

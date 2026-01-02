@@ -24,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         "name",
         "email",
         "phone",
+        'locale',
         "password",
         "otp_code",
         "otp_expires_at",
@@ -63,7 +64,6 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
-
     public function getLevelAttribute(): int
     {
         return $this->roles->min('level') ?? 999;
@@ -71,8 +71,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getRoleAtLocation(int $locationId): ?Role
     {
-        if ($this->level === 1) {
-            return new Role(['name' => 'Super Admin', 'code' => 'ADM', 'level' => 1]);
+        if ($this->level === Role::LEVEL_SUPER_ADMIN) {
+            return new Role(['name' => 'Super Admin', 'code' => Role::CODE_SUPER_ADMIN, 'level' => Role::LEVEL_SUPER_ADMIN]);
         }
 
         $pivot = $this->locations()
@@ -94,7 +94,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getAccessibleLocationIds(): ?array
     {
-        if ($this->level === 1) {
+        if ($this->level === Role::LEVEL_SUPER_ADMIN) {
             return null;
         }
 
@@ -107,10 +107,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $ids;
     }
 
-
     public function canTransactAtLocation($locationId, $transactionType): bool
     {
-        if ($this->level === 1) {
+        if ($this->level === Role::LEVEL_SUPER_ADMIN) {
             return true;
         }
 
@@ -129,16 +128,15 @@ class User extends Authenticatable implements MustVerifyEmail
         $locationLevel = $location->type->level;
 
         if ($transactionType === 'purchase') {
-            if ($roleLevel > 10) {
+            if ($roleLevel > Role::THRESHOLD_STAFF) {
                 return false;
             }
 
-
-            if ($locationLevel === 1 && $roleCode === 'BRM') {
+            if ($locationLevel === 1 && $roleCode === Role::CODE_BRANCH_MGR) {
                 return false;
             }
 
-            if ($locationLevel === 2 && $roleCode === 'WHM') {
+            if ($locationLevel === 2 && $roleCode === Role::CODE_WAREHOUSE_MGR) {
                 return false;
             }
 
@@ -146,17 +144,13 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         if ($transactionType === 'sell') {
-            if ($locationLevel === 1) {
-                return false;
-            }
-
-            if ($locationLevel === 2) {
+            if ($locationLevel <= 2) {
                 return true;
             }
         }
 
         if ($transactionType === 'transfer') {
-            return $roleLevel <= 10;
+            return $roleLevel <= Role::THRESHOLD_MANAGERIAL;
         }
 
         return false;

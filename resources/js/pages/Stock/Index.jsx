@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Wrench, Eye, MoreVertical } from "lucide-react";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({
     auth,
@@ -24,6 +25,9 @@ export default function Index({
     filters = {},
 }) {
     const { params, setFilter } = useIndexPageFilters("stock.index", filters);
+
+    const { isManager } = usePermission();
+    const canAdjustStock = isManager;
 
     const renderActionDropdown = (item) => (
         <DropdownMenu>
@@ -52,7 +56,7 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Stok"
-            createRoute="stock.adjust.form"
+            createRoute={canAdjustStock ? "stock.adjust.form" : null}
             buttonLabel="Penyesuaian Stok"
             icon={Wrench}
         >

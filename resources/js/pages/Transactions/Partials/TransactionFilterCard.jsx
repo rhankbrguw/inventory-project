@@ -7,6 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { usePermission } from "@/hooks/usePermission";
 
 const sortOptions = [
     { value: "newest", label: "Transaksi Terbaru" },
@@ -21,6 +22,8 @@ export default function TransactionFilterCard({
     locations,
     transactionTypes,
 }) {
+    const { isSuperAdmin } = usePermission();
+
     return (
         <Card>
             <CardContent className="flex flex-col sm:flex-row items-center gap-2 pt-6">
@@ -39,7 +42,9 @@ export default function TransactionFilterCard({
                         <SelectValue placeholder="Semua Lokasi" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Semua Lokasi</SelectItem>
+                        {isSuperAdmin && (
+                            <SelectItem value="all">Semua Lokasi</SelectItem>
+                        )}
                         {locations.map((loc) => (
                             <SelectItem key={loc.id} value={loc.id.toString()}>
                                 {loc.name}
@@ -67,6 +72,20 @@ export default function TransactionFilterCard({
                                     </SelectItem>
                                 ) : null,
                             )}
+                    </SelectContent>
+                </Select>
+                <Select
+                    value={params.status || "all"}
+                    onValueChange={(value) => setFilter("status", value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Semua Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select

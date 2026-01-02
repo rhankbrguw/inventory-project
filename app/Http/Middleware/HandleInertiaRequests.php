@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Illuminate\Support\Facades\App;
+use App\Models\Role;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -16,9 +17,10 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
-     * Determine the current asset version.
+     * Determine the current asset version for Inertia.
      *
-     * @see https://inertiajs.com/asset-versioning
+     * @param  \Illuminate\Http\Request  $request
+     * @return string|null
      */
     public function version(Request $request): ?string
     {
@@ -26,67 +28,55 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Define the props that are shared by default.
+     * Define the props that should be shared with all Inertia responses.
      *
-     * @see https://inertiajs.com/shared-data
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
      */
     public function share(Request $request): array
     {
         $user = $request->user();
 
-        /*
-         * Eager load user relations if authenticated
-         * to avoid N+1 query problems.
-         */
         if ($user) {
             $user->loadMissing(['roles', 'locations.type']);
         }
 
+        $user = $request->user();
+        $locale = $user && $user->locale ? $user->locale : session('locale', config('app.locale'));
+        App::setLocale($locale);
+
         return [
             ...parent::share($request),
 
-            /*
-             * CSRF Token - CRITICAL for form submissions
-             * This ensures the token is always fresh and available
-             */
-            'csrf_token' => fn () => $request->session()->token(),
+            'csrf_token' => fn() => $request->session()->token(),
+            'locale' => $locale,
 
-            /*
-             * Current application locale.
-             */
-            'locale' => App::getLocale(),
-
-            /*
-             * All translations for the active locale.
-             */
-            'translations' => function () {
-                $locale = App::getLocale();
+            'translations' => function () use ($locale) {
                 $files = glob(base_path("lang/{$locale}/*.php"));
                 $strings = [];
-
                 foreach ($files as $file) {
                     $name = basename($file, '.php');
                     $strings[$name] = require $file;
                 }
-
                 return $strings;
             },
 
-            /*
-             * Authentication data shared with frontend.
-             */
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'phone' => $user->phone,
-                    'level' => $user->level,
+
+                    'level' => (int) $user->level,
+
                     'role' => $user->roles->first() ? [
                         'name' => $user->roles->first()->name,
                         'code' => $user->roles->first()->code,
                     ] : null,
+
                     'has_locations' => $user->level === 1 || $user->locations()->exists(),
+
                     'locations' => $user->locations->map(function ($location) {
                         return [
                             'id' => $location->id,
@@ -99,14 +89,17 @@ class HandleInertiaRequests extends Middleware
                         ];
                     }),
                 ] : null,
+
+                'role_definitions' => [
+                    'SUPER_ADMIN'          => Role::LEVEL_SUPER_ADMIN,
+                    'THRESHOLD_MANAGERIAL' => Role::THRESHOLD_MANAGERIAL,
+                    'THRESHOLD_STAFF'      => Role::THRESHOLD_STAFF,
+                ],
             ],
 
-            /*
-             * Flash messages for notifications.
-             */
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error'),
             ],
         ];
     }

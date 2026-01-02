@@ -8,9 +8,12 @@ use App\Models\Location;
 use App\Models\Purchase;
 use App\Models\Sell;
 use App\Models\StockMovement;
+use App\Models\StockTransfer;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Carbon;
@@ -97,56 +100,61 @@ class DashboardController extends Controller
 
     private function getStats(?array $locationIds, array $dateConfig): array
     {
-        $start = $dateConfig['start'];
-        $end = $dateConfig['end'];
+        $cacheKey = 'dashboard_stats_' . md5(json_encode($locationIds) . json_encode($dateConfig));
 
-        $revenue = Sell::accessibleBy($locationIds)
-            ->where('status', 'Completed')
-            ->whereBetween('transaction_date', [$start, $end])
-            ->sum('total_price');
+        return Cache::remember($cacheKey, 600, function () use ($locationIds, $dateConfig) {
 
-        $cogs = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $start, $end) {
-            $q->accessibleBy($locationIds)
+            $start = $dateConfig['start'];
+            $end = $dateConfig['end'];
+
+            $revenue = Sell::accessibleBy($locationIds)
                 ->where('status', 'Completed')
-                ->whereBetween('transaction_date', [$start, $end]);
-        })
-            ->sum(DB::raw('ABS(quantity) * average_cost_per_unit'));
+                ->whereBetween('transaction_date', [$start, $end])
+                ->sum('total_price');
 
-        $totalPurchases = Purchase::accessibleBy($locationIds)
-            ->where('status', 'Completed')
-            ->whereBetween('transaction_date', [$start, $end])
-            ->sum('total_cost');
+            $cogs = StockMovement::whereHasMorph('reference', [Sell::class], function ($q) use ($locationIds, $start, $end) {
+                $q->accessibleBy($locationIds)
+                    ->where('status', 'Completed')
+                    ->whereBetween('transaction_date', [$start, $end]);
+            })
+                ->sum(DB::raw('ABS(quantity) * average_cost_per_unit'));
 
-        $netProfit = $revenue - $cogs;
+            $totalPurchases = Purchase::accessibleBy($locationIds)
+                ->where('status', 'Completed')
+                ->whereBetween('transaction_date', [$start, $end])
+                ->sum('total_cost');
 
-        $inventoryValue = Inventory::accessibleBy($locationIds)
-            ->sum(DB::raw('quantity * average_cost'));
+            $netProfit = $revenue - $cogs;
 
-        $lowStockCount = Inventory::accessibleBy($locationIds)
-            ->where('quantity', '<=', 20)
-            ->where('quantity', '>', 0)
-            ->count();
+            $inventoryValue = Inventory::accessibleBy($locationIds)
+                ->sum(DB::raw('quantity * average_cost'));
 
-        $salesCount = Sell::accessibleBy($locationIds)
-            ->where('status', 'Completed')
-            ->whereBetween('transaction_date', [$start, $end])
-            ->count();
+            $lowStockCount = Inventory::accessibleBy($locationIds)
+                ->where('quantity', '<=', 20)
+                ->where('quantity', '>', 0)
+                ->count();
 
-        $purchaseCount = Purchase::accessibleBy($locationIds)
-            ->where('status', 'Completed')
-            ->whereBetween('transaction_date', [$start, $end])
-            ->count();
+            $salesCount = Sell::accessibleBy($locationIds)
+                ->where('status', 'Completed')
+                ->whereBetween('transaction_date', [$start, $end])
+                ->count();
 
-        return [
-            'revenue' => (float) $revenue,
-            'net_profit' => (float) $netProfit,
-            'total_purchases' => (float) $totalPurchases,
-            'inventory_value' => (float) $inventoryValue,
-            'low_stock_count' => $lowStockCount,
-            'sales_count' => $salesCount,
-            'purchase_count' => $purchaseCount,
-            'gross_margin' => $revenue > 0 ? (($revenue - $cogs) / $revenue) * 100 : 0,
-        ];
+            $purchaseCount = Purchase::accessibleBy($locationIds)
+                ->where('status', 'Completed')
+                ->whereBetween('transaction_date', [$start, $end])
+                ->count();
+
+            return [
+                'revenue'          => (float)$revenue,
+                'net_profit'       => (float)$netProfit,
+                'total_purchases'  => (float)$totalPurchases,
+                'inventory_value'  => (float)$inventoryValue,
+                'low_stock_count'  => $lowStockCount,
+                'sales_count'      => $salesCount,
+                'purchase_count'   => $purchaseCount,
+                'gross_margin'     => $revenue > 0 ? (($revenue - $cogs) / $revenue) * 100 : 0,
+            ];
+        });
     }
 
     private function getSalesChart(?array $locationIds, array $dateConfig): array
@@ -240,7 +248,18 @@ class DashboardController extends Controller
 
     private function getRecentMovements(?array $locationIds)
     {
-        return StockMovement::with(['product', 'location', 'reference'])
+        return StockMovement::with([
+            'product',
+            'location',
+            'reference' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    Purchase::class => ['supplier'],
+                    Sell::class => ['customer'],
+                    StockTransfer::class => ['fromLocation', 'toLocation'],
+                    \App\Models\User::class => [],
+                ]);
+            }
+        ])
             ->accessibleBy($locationIds)
             ->latest('created_at')
             ->take(6)

@@ -19,6 +19,17 @@ class StockTransfer extends Model
         'transfer_date',
         'notes',
         'status',
+        'received_by',
+        'received_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
+    ];
+
+    protected $casts = [
+        'transfer_date' => 'date',
+        'received_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     public function fromLocation(): BelongsTo
@@ -34,6 +45,16 @@ class StockTransfer extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function receivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     public function stockMovements(): MorphMany

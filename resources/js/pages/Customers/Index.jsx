@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Edit, MoreVertical, Archive, ArchiveRestore, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({ auth, customers, customerTypes, filters }) {
     const { params, setFilter } = useIndexPageFilters(
@@ -25,9 +26,11 @@ export default function Index({ auth, customers, customerTypes, filters }) {
         filters,
     );
 
-    const roleCode = auth.user.role?.code;
-    const canCrudCustomers = auth.user.level === 1 || roleCode === "BRM";
-    const canViewCustomers = auth.user.level <= 20 && roleCode !== "WHM";
+    const { isManager, isOperational } = usePermission();
+
+    const canCrudCustomers = isManager;
+
+    const canViewCustomers = isOperational;
 
     const {
         confirmingDeletion,

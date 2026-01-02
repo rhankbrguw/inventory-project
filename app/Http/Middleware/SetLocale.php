@@ -11,15 +11,23 @@ use Symfony\Component\HttpFoundation\Response;
 class SetLocale
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * Handle an incoming request and set the application locale.
+     * Priority: User DB preference > Session > Config default
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = Session::get('locale', config('app.locale'));
+        $user = $request->user();
 
-        App::setLocale($locale);
+        if ($user && $user->locale) {
+            $locale = $user->locale;
+            Session::put('locale', $locale);
+        } else {
+            $locale = Session::get('locale', config('app.locale'));
+        }
+
+        if (in_array($locale, ['id', 'en'])) {
+            App::setLocale($locale);
+        }
 
         return $next($request);
     }

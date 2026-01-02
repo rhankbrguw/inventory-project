@@ -25,6 +25,7 @@ import {
     ArchiveRestore,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function Index({
     auth,
@@ -47,8 +48,8 @@ export default function Index({
         restoreItem,
     } = useSoftDeletes({ resourceName: "products", data: products.data });
 
-    const roleCode = auth.user.role?.code;
-    const canCrudProducts = auth.user.level === 1 || roleCode === "BRM";
+    const { isManager } = usePermission();
+    const canCrudProducts = isManager;
 
     const renderActionDropdown = (product) => (
         <DropdownMenu>

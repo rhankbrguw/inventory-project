@@ -8,15 +8,15 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class LowStockAlertNotification extends Notification implements ShouldQueue
+class TransferRejectedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public $lowStockItems,
-        public $locationName
-    ) {
-    }
+        public $transfer,
+        public $rejectedByName,
+        public $reason
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -32,12 +32,11 @@ class LowStockAlertNotification extends Notification implements ShouldQueue
         $isIndonesian = $this->getUserLocale($notifiable) === 'id';
 
         return [
-            'title' => $isIndonesian ? '⚠️ Peringatan Stok Rendah' : '⚠️ Low Stock Alert',
+            'title' => $isIndonesian ? '❌ Transfer Ditolak' : '❌ Transfer Rejected',
             'message' => $isIndonesian
-                ? "{$this->lowStockItems->count()} item di bawah batas minimum di {$this->locationName}."
-                : "{$this->lowStockItems->count()} item(s) below minimum threshold at {$this->locationName}.",
-            'action_url' => route('stock.index'),
-            'sender' => $isIndonesian ? 'Sistem Otomatis' : 'System Automation',
+                ? "Transfer {$this->transfer->reference_code} ditolak. Alasan: {$this->reason}"
+                : "Transfer {$this->transfer->reference_code} rejected. Reason: {$this->reason}",
+            'action_url' => route('transactions.transfers.show', $this->transfer->id),
             'icon' => 'AlertTriangle',
             'type' => 'warning',
             'created_at' => now(),
@@ -59,52 +58,49 @@ class LowStockAlertNotification extends Notification implements ShouldQueue
     {
         $isIndonesian = $this->getUserLocale($notifiable) === 'id';
         $date = now()->format('d/m/Y H:i');
-        $limit = 10;
-
-        $items = $this->lowStockItems->take($limit)->map(function ($item) {
-            return "• {$item->product->name} ({$item->product->sku}): *{$item->quantity} {$item->product->unit}*";
-        })->join("\n");
-
-        $remaining = $this->lowStockItems->count() - $limit;
-        if ($remaining > 0) {
-            $moreText = $isIndonesian ? "dan {$remaining} item lainnya" : "and {$remaining} more";
-            $items .= "\n_{$moreText}_";
-        }
 
         if ($isIndonesian) {
+            $labelRef = str_pad("Ref", 9);
+            $labelStatus = str_pad("Status", 9);
+            $labelDitolak = str_pad("Ditolak", 9);
             $labelLokasi = str_pad("Lokasi", 9);
-            $labelTotal = str_pad("Total SKU", 9);
             $labelTanggal = str_pad("Tanggal", 9);
 
-            return "*PERINGATAN STOK KRITIS* ⚠️\n\n"
+            return "*TRANSFER DITOLAK* ❌\n\n"
                 . "Halo {$notifiable->name},\n\n"
-                . "Terdapat item dengan stok di bawah batas minimum:\n"
+                . "Transfer stok telah ditolak:\n"
                 . "```"
-                . "{$labelLokasi}: {$this->locationName}\n"
-                . "{$labelTotal}: {$this->lowStockItems->count()} Item\n"
+                . "{$labelRef}: {$this->transfer->reference_code}\n"
+                . "{$labelStatus}: DITOLAK\n"
+                . "{$labelDitolak}: {$this->rejectedByName}\n"
+                . "{$labelLokasi}: {$this->transfer->toLocation->name}\n"
                 . "{$labelTanggal}: {$date}"
                 . "```\n\n"
-                . "*Detail Item:*\n"
-                . "{$items}\n\n"
+                . "*Alasan Penolakan:*\n"
+                . "_{$this->reason}_\n\n"
                 . "*Akses Sistem:*\n"
-                . route('stock.index');
+                . route('transactions.transfers.show', $this->transfer->id);
         } else {
+            $labelRef = str_pad("Ref", 9);
+            $labelStatus = str_pad("Status", 9);
+            $labelRejected = str_pad("Rejected", 9);
             $labelLocation = str_pad("Location", 9);
-            $labelTotal = str_pad("Total SKU", 9);
             $labelDate = str_pad("Date", 9);
 
-            return "*CRITICAL STOCK ALERT* ⚠️\n\n"
+            return "*TRANSFER REJECTED* ❌\n\n"
                 . "Hello {$notifiable->name},\n\n"
-                . "Items below minimum threshold detected:\n"
+                . "Stock transfer has been rejected:\n"
                 . "```"
-                . "{$labelLocation}: {$this->locationName}\n"
-                . "{$labelTotal}: {$this->lowStockItems->count()} Items\n"
+                . "{$labelRef}: {$this->transfer->reference_code}\n"
+                . "{$labelStatus}: REJECTED\n"
+                . "{$labelRejected}: {$this->rejectedByName}\n"
+                . "{$labelLocation}: {$this->transfer->toLocation->name}\n"
                 . "{$labelDate}: {$date}"
                 . "```\n\n"
-                . "*Item Details:*\n"
-                . "{$items}\n\n"
+                . "*Rejection Reason:*\n"
+                . "_{$this->reason}_\n\n"
                 . "*System Access:*\n"
-                . route('stock.index');
+                . route('transactions.transfers.show', $this->transfer->id);
         }
     }
 

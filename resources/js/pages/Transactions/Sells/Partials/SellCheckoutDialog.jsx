@@ -44,7 +44,7 @@ export default function SellCheckoutDialog({
             notes: "",
             payment_method_type_id: "",
             installment_terms: "1",
-            status: "Completed",
+            status: "",
             items: [],
         });
 

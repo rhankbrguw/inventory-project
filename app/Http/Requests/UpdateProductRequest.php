@@ -26,7 +26,7 @@ class UpdateProductRequest extends FormRequest
             'suppliers.*' => ['exists:suppliers,id'],
             'default_supplier_id' => ['nullable', 'exists:suppliers,id'],
             'sku' => ['required', 'string', 'max:50', new UniqueRule('products', $this->product->id)],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'gt:0'],
             'unit' => ['required', new IsValidProductUnit()],
             'description' => ['nullable', 'string', 'max:1000'],
             'channel_prices' => ['nullable', 'array'],

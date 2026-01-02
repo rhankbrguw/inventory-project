@@ -354,6 +354,27 @@ export const stockMovementColumns = [
     },
 ];
 
+export const transferDetailColumns = [
+    {
+        accessorKey: "product.sku",
+        header: "SKU",
+        className: "whitespace-nowrap text-center px-4 w-[160px]",
+        cell: ({ row }) => row.product?.sku || "-",
+    },
+    {
+        accessorKey: "product.name",
+        header: "Nama Produk",
+        className: "whitespace-nowrap text-center px-4",
+        cell: ({ row }) => row.product?.name || "Produk Telah Dihapus",
+    },
+    {
+        accessorKey: "quantity",
+        header: "Qty",
+        className: "whitespace-nowrap text-center px-4 w-[140px] tabular-nums",
+        cell: ({ row }) => `${Math.abs(row.quantity)} ${row.product?.unit}`,
+    },
+];
+
 export const purchaseDetailColumns = [
     {
         accessorKey: "product.name",
@@ -432,9 +453,8 @@ export const sellDetailColumns = [
         header: "Qty",
         cell: ({ row }) => {
             const item = row;
-            return `${formatNumber(Math.abs(item.quantity))} ${
-                item.product?.unit || ""
-            }`;
+            return `${formatNumber(Math.abs(item.quantity))} ${item.product?.unit || ""
+                }`;
         },
         className: "text-center whitespace-nowrap px-4",
     },

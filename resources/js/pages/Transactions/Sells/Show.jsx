@@ -1,3 +1,6 @@
+import React from "react";
+import { router } from "@inertiajs/react";
+import { Truck, CheckCircle } from "lucide-react";
 import ContentPageLayout from "@/components/ContentPageLayout";
 import PrintButton from "@/components/PrintButton";
 import InstallmentSchedule from "@/components/InstallmentSchedule";
@@ -11,13 +14,56 @@ import {
 import { TableFooter, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
 import DataTable from "@/components/DataTable";
 import { sellDetailColumns } from "@/constants/tableColumns";
-import React from "react";
 
-export default function Show({ auth, sell }) {
+export default function Show({ auth, sell, canShip, canReceive }) {
     const { data } = sell;
+
+    const [isShipDialogOpen, setIsShipDialogOpen] = React.useState(false);
+    const [isReceiveDialogOpen, setIsReceiveDialogOpen] = React.useState(false);
+    const [isProcessing, setIsProcessing] = React.useState(false);
+
+    const handleShipConfirm = () => {
+        setIsProcessing(true);
+        router.post(
+            route("transactions.sells.ship", data.id),
+            {},
+            {
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setIsShipDialogOpen(false);
+                },
+            },
+        );
+    };
+
+    const handleReceiveConfirm = () => {
+        setIsProcessing(true);
+        router.post(
+            route("transactions.sells.receive", data.id),
+            {},
+            {
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setIsReceiveDialogOpen(false);
+                },
+            },
+        );
+    };
 
     const totals = React.useMemo(() => {
         let totalSell = 0;
@@ -32,8 +78,11 @@ export default function Show({ auth, sell }) {
             totalCost += quantity * avgCost;
         });
 
-        const totalMargin = totalSell - totalCost;
-        return { totalSell, totalCost, totalMargin };
+        return {
+            totalSell,
+            totalCost,
+            totalMargin: totalSell - totalCost,
+        };
     }, [data.items]);
 
     const renderMobileItem = (item) => {
@@ -60,6 +109,7 @@ export default function Show({ auth, sell }) {
                             {item.product?.sku || "-"}
                         </p>
                     </div>
+
                     <div className="flex justify-between items-center text-sm">
                         <span>
                             {formatNumber(quantity)} {item.product?.unit} ×{" "}
@@ -69,6 +119,7 @@ export default function Show({ auth, sell }) {
                             {formatCurrency(total)}
                         </span>
                     </div>
+
                     <div className="flex justify-between items-center text-xs border-t pt-2 mt-2">
                         <span className="text-muted-foreground">
                             Harga Modal
@@ -77,13 +128,14 @@ export default function Show({ auth, sell }) {
                             {formatCurrency(avgCost)}
                         </span>
                     </div>
+
                     <div className="flex justify-between items-center text-xs">
                         <span className="text-muted-foreground">Margin</span>
                         <span
                             className={cn(
                                 "font-semibold",
                                 margin > 0
-                                    ? "text-[hsl(var(--success))]"
+                                    ? "text-success"
                                     : "text-destructive",
                             )}
                         >
@@ -130,7 +182,7 @@ export default function Show({ auth, sell }) {
                     className={cn(
                         "text-right font-bold text-base",
                         totals.totalMargin > 0
-                            ? "text-[hsl(var(--success))]"
+                            ? "text-success"
                             : "text-destructive",
                     )}
                 >
@@ -145,12 +197,41 @@ export default function Show({ auth, sell }) {
             auth={auth}
             title="Detail Transaksi"
             backRoute="transactions.index"
+            action={
+                <div className="flex gap-2 print-hidden">
+                    <PrintButton>
+                        <span className="hidden sm:inline">Cetak</span>
+                    </PrintButton>
+
+                    {canShip && (
+                        <Button
+                            onClick={() => setIsShipDialogOpen(true)}
+                            className="btn-transfer flex items-center gap-2"
+                        >
+                            <Truck className="w-4 h-4" />
+                            Kirim Barang
+                        </Button>
+                    )}
+
+                    {/* Button terima barang */}
+                    {canReceive && (
+                        <Button
+                            onClick={() => setIsReceiveDialogOpen(true)}
+                            className="btn-sell flex items-center gap-2"
+                        >
+                            <CheckCircle className="w-4 h-4" />
+                            Terima Barang
+                        </Button>
+                    )}
+                </div>
+            }
         >
             <Card>
                 <CardHeader>
                     <CardTitle>Informasi Umum</CardTitle>
                     <CardDescription>{data.reference_code}</CardDescription>
                 </CardHeader>
+
                 <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
                     <div>
                         <p className="text-muted-foreground">
@@ -158,12 +239,14 @@ export default function Show({ auth, sell }) {
                         </p>
                         <p className="font-semibold">{data.location?.name}</p>
                     </div>
+
                     <div>
                         <p className="text-muted-foreground">Pelanggan</p>
                         <p className="font-semibold">
                             {data.customer?.name || "Pelanggan Umum"}
                         </p>
                     </div>
+
                     <div>
                         <p className="text-muted-foreground">
                             Tanggal Transaksi
@@ -172,6 +255,7 @@ export default function Show({ auth, sell }) {
                             {formatDate(data.transaction_date)}
                         </p>
                     </div>
+
                     {data.sales_channel && (
                         <div>
                             <p className="text-muted-foreground">
@@ -190,12 +274,14 @@ export default function Show({ auth, sell }) {
                             </div>
                         </div>
                     )}
+
                     <div>
                         <p className="text-muted-foreground">Status</p>
                         <Badge variant="outline" className="capitalize">
                             {data.status}
                         </Badge>
                     </div>
+
                     <div>
                         <p className="text-muted-foreground">Pembayaran</p>
                         <div className="flex items-center gap-2">
@@ -210,27 +296,29 @@ export default function Show({ auth, sell }) {
                                         data.payment_status === "paid"
                                             ? "default"
                                             : data.payment_status === "partial"
-                                                ? "secondary"
-                                                : "outline"
+                                              ? "secondary"
+                                              : "outline"
                                     }
                                     className={cn(
                                         data.payment_status === "paid" &&
-                                        "bg-success/10 text-success border-success/20",
+                                            "bg-success/10 text-success border-success/20",
                                     )}
                                 >
                                     {data.payment_status === "paid"
                                         ? "Lunas"
                                         : data.payment_status === "partial"
-                                            ? "Sebagian"
-                                            : "Belum Bayar"}
+                                          ? "Sebagian"
+                                          : "Belum Bayar"}
                                 </Badge>
                             )}
                         </div>
                     </div>
+
                     <div>
                         <p className="text-muted-foreground">PIC</p>
                         <p className="font-semibold">{data.user?.name}</p>
                     </div>
+
                     {data.notes && (
                         <div className="sm:col-span-3">
                             <p className="text-muted-foreground">Catatan</p>
@@ -248,29 +336,23 @@ export default function Show({ auth, sell }) {
             )}
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardHeader>
                     <CardTitle>Rincian Item</CardTitle>
-                    <PrintButton>
-                        <span className="hidden sm:inline">Cetak</span>
-                    </PrintButton>
                 </CardHeader>
+
                 <CardContent>
-                    {/* Mobile View */}
                     <div className="md:hidden space-y-3">
                         {data.items.map(renderMobileItem)}
 
                         <Separator className="my-4" />
 
                         <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-base">
-                                    Total Penjualan
-                                </span>
-                                <span className="font-bold text-base">
-                                    {formatCurrency(totals.totalSell)}
-                                </span>
+                            <div className="flex justify-between font-bold">
+                                <span>Total Penjualan</span>
+                                <span>{formatCurrency(totals.totalSell)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm">
+
+                            <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">
                                     Total Modal (HPP)
                                 </span>
@@ -278,16 +360,15 @@ export default function Show({ auth, sell }) {
                                     {formatCurrency(totals.totalCost)}
                                 </span>
                             </div>
+
                             <Separator />
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-base">
-                                    Total Margin
-                                </span>
+
+                            <div className="flex justify-between font-bold">
+                                <span>Total Margin</span>
                                 <span
                                     className={cn(
-                                        "font-bold text-base",
                                         totals.totalMargin > 0
-                                            ? "text-[hsl(var(--success))]"
+                                            ? "text-success"
                                             : "text-destructive",
                                     )}
                                 >
@@ -297,7 +378,6 @@ export default function Show({ auth, sell }) {
                         </div>
                     </div>
 
-                    {/* Desktop View */}
                     <div className="hidden md:block">
                         <DataTable
                             columns={sellDetailColumns}
@@ -307,6 +387,65 @@ export default function Show({ auth, sell }) {
                     </div>
                 </CardContent>
             </Card>
+
+            <AlertDialog
+                open={isShipDialogOpen}
+                onOpenChange={setIsShipDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Konfirmasi Kirim Barang
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Status transaksi akan berubah menjadi "Shipping".
+                            Apakah Anda yakin ingin melanjutkan?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isProcessing}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleShipConfirm}
+                            disabled={isProcessing}
+                            className="btn-transfer"
+                        >
+                            {isProcessing ? "Memproses..." : "Kirim Barang"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={isReceiveDialogOpen}
+                onOpenChange={setIsReceiveDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Konfirmasi Terima Barang
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Stok akan otomatis masuk ke inventory cabang Anda.
+                            Tindakan ini tidak dapat dibatalkan. Apakah Anda
+                            yakin?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isProcessing}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleReceiveConfirm}
+                            disabled={isProcessing}
+                            className="btn-sell"
+                        >
+                            {isProcessing ? "Memproses..." : "Terima Barang"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </ContentPageLayout>
     );
 }
