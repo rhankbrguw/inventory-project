@@ -12,6 +12,10 @@ use App\Models\Product;
 use App\Models\Sell;
 use App\Models\SalesChannel;
 use App\Models\Type;
+use App\Models\Purchase;
+use App\Models\User;
+use App\Models\Role;
+use App\Notifications\SellShipmentNotification;
 use App\Traits\ManagesStock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +41,9 @@ class SellController extends Controller
         }
 
         $allLocations = $locationsQuery->get();
-        $filteredLocations = $allLocations->filter(fn($location) => $user->canTransactAtLocation($location->id, 'sell'));
+
+        $filteredLocations = $allLocations
+            ->filter(fn($location) => $user->canTransactAtLocation($location->id, 'sell'));
 
         $locationsWithPermissions = $filteredLocations->values()->map(fn($location) => [
             'id' => $location->id,
@@ -52,11 +58,14 @@ class SellController extends Controller
         if ($accessibleLocationIds && $locationId && !in_array($locationId, $accessibleLocationIds)) {
             $locationId = null;
         }
+
         if (!$locationId && $locationsWithPermissions->count() === 1) {
             $locationId = $locationsWithPermissions->first()['id'];
         }
 
-        $cartItems = $user->sellCartItems()->with(["product.prices", "location"])->get();
+        $cartItems = $user->sellCartItems()
+            ->with(["product.prices", "location"])
+            ->get();
 
         $productsQuery = Product::with(["defaultSupplier:id,name", "prices"])
             ->when($search, fn($q, $s) => $q->where("name", "like", "%{$s}%")->orWhere("sku", "like", "%{$s}%"))
@@ -64,7 +73,11 @@ class SellController extends Controller
             ->orderBy("name");
 
         if ($locationId) {
-            $productsQuery->whereHas("inventories", fn($q) => $q->where("location_id", $locationId)->where("quantity", ">", 0));
+            $productsQuery->whereHas(
+                "inventories",
+                fn($q) =>
+                $q->where("location_id", $locationId)->where("quantity", ">", 0)
+            );
         } else {
             $productsQuery->whereRaw("1 = 0");
         }
@@ -72,9 +85,13 @@ class SellController extends Controller
         return Inertia::render("Transactions/Sells/Create", [
             "locations" => $locationsWithPermissions,
             "customers" => Customer::orderBy("name")->get(["id", "name"]),
-            "allProducts" => $productsQuery->paginate(12)->withQueryString()->through(fn($product) => array_merge($product->toArray(), [
-                'channel_prices' => $product->prices->pluck('price', 'sales_channel_id'),
-            ])),
+            "allProducts" => $productsQuery
+                ->paginate(12)
+                ->withQueryString()
+                ->through(fn($product) => array_merge(
+                    $product->toArray(),
+                    ['channel_prices' => $product->prices->pluck('price', 'sales_channel_id')]
+                )),
             "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)->orderBy("name")->get(["id", "name"]),
             "productTypes" => Type::where("group", Type::GROUP_PRODUCT)->orderBy("name")->get(["id", "name"]),
             "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)->orderBy("name")->get(["id", "name"]),
@@ -94,10 +111,15 @@ class SellController extends Controller
         }
 
         $itemsData = $validated["items"];
-        $totalPrice = collect($itemsData)->sum(fn($item) => $item["quantity"] * $item["sell_price"]);
-        $sellType = Type::where("group", Type::GROUP_TRANSACTION)->where("name", "Penjualan")->firstOrFail();
+        $totalPrice = collect($itemsData)
+            ->sum(fn($item) => $item["quantity"] * $item["sell_price"]);
+
+        $sellType = Type::where("group", Type::GROUP_TRANSACTION)
+            ->where("name", "Penjualan")
+            ->firstOrFail();
 
         DB::transaction(function () use ($validated, $itemsData, $totalPrice, $sellType, $request) {
+
             $sell = Sell::create([
                 "type_id" => $sellType->id,
                 "location_id" => $validated["location_id"],
@@ -107,7 +129,7 @@ class SellController extends Controller
                 "reference_code" => "SL-" . now()->format("Ymd-His"),
                 "transaction_date" => Carbon::parse($validated["transaction_date"])->format("Y-m-d"),
                 "total_price" => $totalPrice,
-                "status" => $validated["status"] ?? 'completed',
+                "status" => $validated["status"] ?? 'Completed',
                 "payment_method_type_id" => $validated["payment_method_type_id"],
                 "notes" => $validated["notes"],
                 "installment_terms" => $validated["installment_terms"],
@@ -115,11 +137,16 @@ class SellController extends Controller
             ]);
 
             if ($validated["installment_terms"] > 1) {
-                $this->createInstallments($sell, $totalPrice, $validated["installment_terms"], $validated["transaction_date"]);
+                $this->createInstallments(
+                    $sell,
+                    $totalPrice,
+                    $validated["installment_terms"],
+                    $validated["transaction_date"]
+                );
             }
 
             foreach ($itemsData as $item) {
-                $product = Product::find($item["product_id"]);
+                $product = Product::findOrFail($item["product_id"]);
 
                 $this->handleStockOut(
                     product: $product,
@@ -132,16 +159,21 @@ class SellController extends Controller
                 );
             }
 
-            $request->user()->sellCartItems()->where("location_id", $validated["location_id"])->delete();
+            $request->user()
+                ->sellCartItems()
+                ->where("location_id", $validated["location_id"])
+                ->delete();
         });
 
-        return Redirect::route("transactions.index")->with("success", "Penjualan berhasil disimpan.");
+        return Redirect::route("transactions.index")
+            ->with("success", "Penjualan berhasil disimpan.");
     }
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)
     {
         $amountPer = $totalAmount / $terms;
         $date = Carbon::parse($startDate);
+
         for ($i = 1; $i <= $terms; $i++) {
             $transaction->installments()->create([
                 'installment_number' => $i,
@@ -154,13 +186,129 @@ class SellController extends Controller
 
     public function show(Sell $sell): Response
     {
+        $this->authorize('view', $sell);
+
         $user = Auth::user();
-        $accessible = $user->getAccessibleLocationIds();
-        if ($accessible && !in_array($sell->location_id, $accessible)) {
-            abort(403);
+
+        $sell->load([
+            "location",
+            "customer",
+            "salesChannel",
+            "user",
+            "paymentMethod",
+            "stockMovements.product",
+            "type",
+            "installments",
+        ]);
+
+        $canShip = strtolower($sell->status) === 'pending' && $user->canTransactAtLocation($sell->location_id, 'sell');
+
+        $targetLocId = $sell->customer?->related_location_id;
+
+        $canReceive = strtolower($sell->status) === 'shipping'
+            && $targetLocId
+            && $user->canTransactAtLocation($targetLocId, 'purchase');
+
+        return Inertia::render(
+            "Transactions/Sells/Show",
+            [
+                "sell" => SellResource::make($sell),
+                "canShip" => $canShip,
+                "canReceive" => $canReceive,
+            ]
+        );
+    }
+
+    public function ship(Sell $sell): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (!$user->canTransactAtLocation($sell->location_id, 'sell')) {
+            abort(403, 'Anda tidak memiliki akses untuk mengirim pesanan ini.');
         }
 
-        $sell->load(["location", "customer", "salesChannel", "user", "paymentMethod", "stockMovements.product", "type", "installments"]);
-        return Inertia::render("Transactions/Sells/Show", ["sell" => SellResource::make($sell)]);
+        if (strtolower($sell->status) !== 'pending') {
+            return back()->with('error', 'Pesanan tidak bisa dikirim. Status saat ini: ' . $sell->status);
+        }
+
+        $sell->update(['status' => 'shipping']);
+
+        if ($sell->customer && $sell->customer->related_location_id) {
+
+            $brmRoleId = Role::where('code', Role::CODE_BRANCH_MGR)->value('id');
+
+            if ($brmRoleId) {
+                $targetManagers = User::whereHas('locations', function ($q) use ($sell, $brmRoleId) {
+                    $q->where('locations.id', $sell->customer->related_location_id)
+                        ->where('location_user.role_id', $brmRoleId);
+                })->get();
+
+                foreach ($targetManagers as $manager) {
+                    try {
+                        $manager->notify(
+                            new SellShipmentNotification($sell, $user->name)
+                        );
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+        }
+
+        return back()->with('success', 'Barang sedang dalam proses pengiriman.');
+    }
+
+    public function receive(Request $request, Sell $sell): RedirectResponse
+    {
+        $user = $request->user();
+        $targetLocationId = $sell->customer->related_location_id;
+
+        if (!$targetLocationId) {
+            abort(400, 'Transaksi ini bukan penjualan antar-cabang.');
+        }
+
+        if (!$user->canTransactAtLocation($targetLocationId, 'purchase')) {
+            abort(403, 'Anda tidak berhak menerima barang di cabang ini.');
+        }
+
+        if (strtolower($sell->status) !== 'shipping') {
+            return back()->with('error', 'Barang belum dikirim atau sudah diterima.');
+        }
+
+        DB::transaction(function () use ($sell, $user, $targetLocationId) {
+
+            $sell->update(['status' => 'Completed']);
+
+            $purchaseType = Type::where('group', Type::GROUP_TRANSACTION)
+                ->where('name', 'Pembelian')
+                ->value('id');
+
+            $purchase = Purchase::create([
+                'type_id' => $purchaseType,
+                'location_id' => $targetLocationId,
+                'supplier_id' => null,
+                'user_id' => $user->id,
+                'reference_code' => 'PO-AUTO-' . now()->format('Ymd-His'),
+                'transaction_date' => now(),
+                'total_cost' => $sell->total_price,
+                'status' => 'Completed',
+                'notes' => 'Auto-generated from Sell Ref: ' . $sell->reference_code,
+                'payment_status' => 'paid',
+                'installment_terms' => 1,
+            ]);
+
+            foreach ($sell->stockMovements as $movementOut) {
+                $this->handleStockIn(
+                    product: $movementOut->product,
+                    locationId: $targetLocationId,
+                    qty: abs($movementOut->quantity),
+                    cost: $movementOut->cost_per_unit,
+                    type: 'purchase',
+                    ref: $purchase,
+                    notes: 'Terima barang dari Gudang Pusat'
+                );
+            }
+        });
+
+        return back()->with('success', 'Barang diterima! Stok cabang otomatis bertambah.');
     }
 }

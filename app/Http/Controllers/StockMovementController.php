@@ -9,6 +9,7 @@ use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sell;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
@@ -25,7 +26,7 @@ class StockMovementController extends Controller
         $user = Auth::user();
         $roleCode = $user->roles->first()?->code;
 
-        if ($user->level > 20 || $roleCode === 'CSH') {
+        if ($user->level > Role::THRESHOLD_STAFF || $roleCode === Role::CODE_CASHIER) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 

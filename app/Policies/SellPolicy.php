@@ -21,7 +21,24 @@ class SellPolicy
         if (Role::isSuperAdmin($user->level)) {
             return true;
         }
-        return in_array($sell->location_id, $user->getAccessibleLocationIds() ?? []);
+
+        $accessibleLocationIds = $user->getAccessibleLocationIds() ?? [];
+
+        if (in_array($sell->location_id, $accessibleLocationIds)) {
+            return true;
+        }
+
+        if (!$sell->relationLoaded('customer')) {
+            $sell->load('customer');
+        }
+
+        $targetLocationId = $sell->customer?->related_location_id;
+
+        if ($targetLocationId && in_array($targetLocationId, $accessibleLocationIds)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function create(User $user): bool
@@ -29,24 +46,26 @@ class SellPolicy
         return Role::isOperational($user->level);
     }
 
-    public function createAtLocation(User $user, $locationId): bool
+    public function createAtLocation(User $user, int $locationId): bool
     {
         return $user->canTransactAtLocation($locationId, 'sell');
     }
 
     public function update(User $user, Sell $sell): bool
     {
-        if ($sell->status !== 'Pending') {
+        if (strtolower($sell->status) !== 'pending') {
             return false;
         }
+
         return $user->canTransactAtLocation($sell->location_id, 'sell');
     }
 
     public function delete(User $user, Sell $sell): bool
     {
-        if ($sell->status !== 'Pending') {
+        if (strtolower($sell->status) !== 'pending') {
             return false;
         }
+
         return $user->canTransactAtLocation($sell->location_id, 'sell');
     }
 }

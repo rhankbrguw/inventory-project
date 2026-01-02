@@ -14,6 +14,8 @@ class Role extends SpatieRole
     public const CODE_SUPER_ADMIN = 'ADM';
     public const CODE_WAREHOUSE_MGR = 'WHM';
     public const CODE_BRANCH_MGR  = 'BRM';
+    public const CODE_CASHIER = 'CSH';
+    public const CODE_STAFF = 'STF';
 
     protected $fillable = [
         'name',

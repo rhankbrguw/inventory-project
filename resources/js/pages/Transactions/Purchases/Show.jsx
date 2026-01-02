@@ -67,19 +67,19 @@ export default function Show({ auth, purchase }) {
                                         data.payment_status === "paid"
                                             ? "default"
                                             : data.payment_status === "partial"
-                                                ? "secondary"
-                                                : "outline"
+                                              ? "secondary"
+                                              : "outline"
                                     }
                                     className={cn(
                                         data.payment_status === "paid" &&
-                                        "bg-success/10 text-success border-success/20",
+                                            "bg-success/10 text-success border-success/20",
                                     )}
                                 >
                                     {data.payment_status === "paid"
                                         ? "Lunas"
                                         : data.payment_status === "partial"
-                                            ? "Sebagian"
-                                            : "Belum Bayar"}
+                                          ? "Sebagian"
+                                          : "Belum Bayar"}
                                 </Badge>
                             )}
                         </div>
@@ -119,7 +119,7 @@ export default function Show({ auth, purchase }) {
                                 className={cn(
                                     "p-3",
                                     item.product?.deleted_at &&
-                                    "opacity-60 bg-muted/50",
+                                        "opacity-60 bg-muted/50",
                                 )}
                             >
                                 <div className="space-y-2">
@@ -141,7 +141,7 @@ export default function Show({ auth, purchase }) {
                                         <span className="font-semibold">
                                             {formatCurrency(
                                                 item.quantity *
-                                                item.cost_per_unit,
+                                                    item.cost_per_unit,
                                             )}
                                         </span>
                                     </div>

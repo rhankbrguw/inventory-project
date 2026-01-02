@@ -132,6 +132,8 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
     Route::get('/transactions/sells/create', [SellController::class, 'create'])->name('transactions.sells.create');
     Route::post('/transactions/sells', [SellController::class, 'store'])->name('transactions.sells.store');
     Route::get('/transactions/sells/{sell}', [SellController::class, 'show'])->name('transactions.sells.show');
+    Route::post('/transactions/sells/{sell}/ship', [SellController::class, 'ship'])->name('transactions.sells.ship');
+    Route::post('/transactions/sells/{sell}/receive', [SellController::class, 'receive'])->name('transactions.sells.receive');
 
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('/stock/adjust', [StockController::class, 'showAdjustForm'])->name('stock.adjust.form');

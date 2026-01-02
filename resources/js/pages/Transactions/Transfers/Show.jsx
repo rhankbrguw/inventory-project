@@ -127,13 +127,13 @@ export default function Show({ auth, transfer, can_accept }) {
                                     ini
                                 </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 w-full sm:w-auto">
                                 <Button
                                     onClick={() => setIsRejectDialogOpen(true)}
                                     variant="outline"
                                     size="sm"
                                     disabled={isProcessing}
-                                    className="gap-2"
+                                    className="gap-2 flex-1 sm:flex-none"
                                 >
                                     <XCircle className="h-4 w-4" />
                                     Tolak
@@ -142,7 +142,7 @@ export default function Show({ auth, transfer, can_accept }) {
                                     onClick={() => setIsAcceptDialogOpen(true)}
                                     size="sm"
                                     disabled={isProcessing}
-                                    className="gap-2 bg-success hover:bg-success/90"
+                                    className="gap-2 bg-success hover:bg-success/90 flex-1 sm:flex-none"
                                 >
                                     <CheckCircle className="h-4 w-4" />
                                     Terima
@@ -186,9 +186,9 @@ export default function Show({ auth, transfer, can_accept }) {
                             className={cn(
                                 "capitalize",
                                 data.status === "completed" &&
-                                "border-success/20 bg-success/10 text-success",
+                                    "border-success/20 bg-success/10 text-success",
                                 data.status === "rejected" &&
-                                "border-destructive/20 bg-destructive/10 text-destructive",
+                                    "border-destructive/20 bg-destructive/10 text-destructive",
                             )}
                         >
                             {data.status}
