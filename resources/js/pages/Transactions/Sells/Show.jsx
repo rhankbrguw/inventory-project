@@ -1,14 +1,14 @@
-import React from "react";
-import { router } from "@inertiajs/react";
-import { Truck, CheckCircle } from "lucide-react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import PrintButton from "@/components/PrintButton";
-import InstallmentSchedule from "@/components/InstallmentSchedule";
-import TransactionInfoGrid from "@/components/Transaction/TransactionInfoGrid";
-import TransactionPaymentBadge from "@/components/Transaction/TransactionPaymentBadge";
-import TransactionItemsSection from "@/components/Transaction/TransactionItemsSection";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { router } from '@inertiajs/react';
+import { Truck, CheckCircle } from 'lucide-react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import PrintButton from '@/components/PrintButton';
+import InstallmentSchedule from '@/components/InstallmentSchedule';
+import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
+import TransactionPaymentBadge from '@/components/Transaction/TransactionPaymentBadge';
+import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,9 +18,10 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { sellDetailColumns } from "@/constants/tableColumns";
-import { formatDate } from "@/lib/utils";
+} from '@/components/ui/alert-dialog';
+import { sellDetailColumns } from '@/constants/tableColumns';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { formatDate } from '@/lib/utils';
 
 export default function Show({ auth, sell, canShip, canReceive }) {
     const { data } = sell;
@@ -32,28 +33,28 @@ export default function Show({ auth, sell, canShip, canReceive }) {
     const handleShipConfirm = () => {
         setIsProcessing(true);
         router.post(
-            route("transactions.sells.ship", data.id),
+            route('transactions.sells.ship', data.id),
             {},
             {
                 onFinish: () => {
                     setIsProcessing(false);
                     setIsShipDialogOpen(false);
                 },
-            },
+            }
         );
     };
 
     const handleReceiveConfirm = () => {
         setIsProcessing(true);
         router.post(
-            route("transactions.sells.receive", data.id),
+            route('transactions.sells.receive', data.id),
             {},
             {
                 onFinish: () => {
                     setIsProcessing(false);
                     setIsReceiveDialogOpen(false);
                 },
-            },
+            }
         );
     };
 
@@ -79,19 +80,19 @@ export default function Show({ auth, sell, canShip, canReceive }) {
 
     const infoFields = [
         {
-            label: "Lokasi Penjualan",
+            label: 'Lokasi Penjualan',
             value: data.location?.name,
         },
         {
-            label: "Pelanggan",
-            value: data.customer?.name || "Pelanggan Umum",
+            label: 'Pelanggan',
+            value: data.customer?.name || 'Pelanggan Umum',
         },
         {
-            label: "Tanggal Transaksi",
+            label: 'Tanggal Transaksi',
             value: formatDate(data.transaction_date),
         },
         {
-            label: "Channel Penjualan",
+            label: 'Channel Penjualan',
             value: data.sales_channel ? (
                 <div className="flex items-center gap-2">
                     <span className="font-semibold">
@@ -105,16 +106,11 @@ export default function Show({ auth, sell, canShip, canReceive }) {
             hidden: !data.sales_channel,
         },
         {
-            label: "Status",
-            badge: data.status,
-            badgeVariant: "default",
-            badgeClassName: cn(
-                "capitalize",
-                `status-${data.status.toLowerCase()}`,
-            ),
+            label: 'Status',
+            value: <UnifiedBadge text={data.status} code={data.status} />,
         },
         {
-            label: "Pembayaran",
+            label: 'Pembayaran',
             value: null,
             badge: (
                 <TransactionPaymentBadge
@@ -125,13 +121,13 @@ export default function Show({ auth, sell, canShip, canReceive }) {
             ),
         },
         {
-            label: "PIC",
+            label: 'PIC',
             value: data.user?.name,
         },
         {
-            label: "Catatan",
+            label: 'Catatan',
             value: data.notes,
-            span: "full",
+            span: 'full',
             hidden: !data.notes,
         },
     ];
@@ -212,7 +208,7 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                             disabled={isProcessing}
                             className="btn-transfer"
                         >
-                            {isProcessing ? "Memproses..." : "Kirim Barang"}
+                            {isProcessing ? 'Memproses...' : 'Kirim Barang'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -242,7 +238,7 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                             disabled={isProcessing}
                             className="btn-sell"
                         >
-                            {isProcessing ? "Memproses..." : "Terima Barang"}
+                            {isProcessing ? 'Memproses...' : 'Terima Barang'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

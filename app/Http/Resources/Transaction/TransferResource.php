@@ -27,17 +27,22 @@ class TransferResource extends JsonResource
             'transfer_date' => $this->transfer_date,
             'status' => $this->status,
             'notes' => $this->notes,
-            'received_by' => $this->receivedBy ? [
-                'id' => $this->receivedBy->id,
-                'name' => $this->receivedBy->name,
+
+            'received_by' => $this->receiver ? [
+                'id' => $this->receiver->id,
+                'name' => $this->receiver->name,
             ] : null,
+
             'received_at' => $this->received_at,
-            'rejected_by' => $this->rejectedBy ? [
-                'id' => $this->rejectedBy->id,
-                'name' => $this->rejectedBy->name,
+
+            'rejected_by' => $this->rejector ? [
+                'id' => $this->rejector->id,
+                'name' => $this->rejector->name,
             ] : null,
+
             'rejected_at' => $this->rejected_at,
             'rejection_reason' => $this->rejection_reason,
+
             'items' => $this->stockMovements()
                 ->where('type', 'transfer_out')
                 ->with(['product' => function ($q) {

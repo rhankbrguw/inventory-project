@@ -1,8 +1,8 @@
-import React from "react";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import ReportContent from "./Partials/ReportContent";
-import ReportFilterCard from "./Partials/ReportFilterCard";
-import { BarChart3 } from "lucide-react";
+import React from 'react';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import ReportContent from './Partials/ReportContent';
+import ReportFilterCard from './Partials/ReportFilterCard';
+import { BarChart3 } from 'lucide-react';
 
 export default function ReportsIndex({
     auth,

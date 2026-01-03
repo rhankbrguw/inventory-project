@@ -25,8 +25,8 @@ class LocationsController extends Controller
 
         $locations = Location::query()
             ->with(['type', 'users'])
-            ->when($accessibleLocationIds, fn($q) => $q->whereIn('id', $accessibleLocationIds))
-            ->when($request->input('search'), fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($accessibleLocationIds, fn ($q) => $q->whereIn('id', $accessibleLocationIds))
+            ->when($request->input('search'), fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
             ->when($request->input('status'), function ($query, $status) {
                 if ($status === 'active') {
                     $query->whereNull('deleted_at');
@@ -34,7 +34,7 @@ class LocationsController extends Controller
                     $query->whereNotNull('deleted_at');
                 }
             })
-            ->when($request->input('type_id'), fn($q, $id) => $q->where('type_id', $id))
+            ->when($request->input('type_id'), fn ($q, $id) => $q->where('type_id', $id))
             ->withTrashed()
             ->orderBy('name')
             ->paginate(10)
@@ -64,9 +64,9 @@ class LocationsController extends Controller
 
     public function edit(Location $location): Response
     {
-        $location->load(['type', 'users' => fn($q) => $q->with('roles')]);
+        $location->load(['type', 'users' => fn ($q) => $q->with('roles')]);
 
-        $users = User::with('roles')->orderBy('name')->get()->map(fn($u) => [
+        $users = User::with('roles')->orderBy('name')->get()->map(fn ($u) => [
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
@@ -74,8 +74,7 @@ class LocationsController extends Controller
             'global_level' => $u->level,
         ]);
 
-        // Ambil semua role yang tersedia untuk assignment
-        $roles = Role::orderBy('level', 'asc')->get()->map(fn($r) => [
+        $roles = Role::orderBy('level', 'asc')->get()->map(fn ($r) => [
             'id' => $r->id,
             'name' => $r->name,
             'code' => $r->code,
@@ -117,7 +116,7 @@ class LocationsController extends Controller
             }
         }
 
-        $assignments = collect($assignmentsInput)->mapWithKeys(fn($a) => [$a['user_id'] => ['role_id' => $a['role_id']]]);
+        $assignments = collect($assignmentsInput)->mapWithKeys(fn ($a) => [$a['user_id'] => ['role_id' => $a['role_id']]]);
         $location->users()->sync($assignments);
 
         return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diperbarui.');

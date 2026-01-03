@@ -1,16 +1,16 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 const sortOptions = [
-    { value: "name_asc", label: "Nama (A-Z)" },
-    { value: "name_desc", label: "Nama (Z-A)" },
+    { value: 'name_asc', label: 'Nama (A-Z)' },
+    { value: 'name_desc', label: 'Nama (Z-A)' },
 ];
 
 export default function UserFilterCard({ params, setFilter, roles }) {
@@ -20,13 +20,13 @@ export default function UserFilterCard({ params, setFilter, roles }) {
                 <Input
                     type="search"
                     placeholder="Cari nama atau email..."
-                    value={params.search || ""}
-                    onChange={(e) => setFilter("search", e.target.value)}
+                    value={params.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
                 <Select
-                    value={params.role || "all"}
-                    onValueChange={(value) => setFilter("role", value)}
+                    value={params.role || 'all'}
+                    onValueChange={(value) => setFilter('role', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Semua Jabatan" />
@@ -41,8 +41,8 @@ export default function UserFilterCard({ params, setFilter, roles }) {
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.sort || "name_asc"}
-                    onValueChange={(value) => setFilter("sort", value)}
+                    value={params.sort || 'name_asc'}
+                    onValueChange={(value) => setFilter('sort', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Urutkan" />

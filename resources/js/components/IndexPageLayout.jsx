@@ -1,8 +1,8 @@
-import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import { Head, Link, usePage } from "@inertiajs/react";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import NoLocationAssigned from "@/components/NoLocationAssigned";
+import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import NoLocationAssigned from '@/components/NoLocationAssigned';
 
 export default function IndexPageLayout({
     title,

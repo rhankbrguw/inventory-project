@@ -1,21 +1,21 @@
-import { Link, router } from "@inertiajs/react";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { stockColumns } from "@/constants/tableColumns.jsx";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import StockMobileCard from "./Partials/StockMobileCard";
-import Pagination from "@/components/Pagination";
-import StockFilterCard from "./Partials/StockFilterCard";
+import { Link, router } from '@inertiajs/react';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { stockColumns } from '@/constants/tableColumns.jsx';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import StockMobileCard from './Partials/StockMobileCard';
+import Pagination from '@/components/Pagination';
+import StockFilterCard from './Partials/StockFilterCard';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Wrench, Eye, MoreVertical } from "lucide-react";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Wrench, Eye, MoreVertical } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -24,7 +24,7 @@ export default function Index({
     products = [],
     filters = {},
 }) {
-    const { params, setFilter } = useIndexPageFilters("stock.index", filters);
+    const { params, setFilter } = useIndexPageFilters('stock.index', filters);
 
     const { isManager } = usePermission();
     const canAdjustStock = isManager;
@@ -43,7 +43,7 @@ export default function Index({
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
                     className="cursor-pointer"
-                    onSelect={() => router.get(route("stock.show", item.id))}
+                    onSelect={() => router.get(route('stock.show', item.id))}
                 >
                     <Eye className="w-4 h-4 mr-2" />
                     Lihat
@@ -56,7 +56,7 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Stok"
-            createRoute={canAdjustStock ? "stock.adjust.form" : null}
+            createRoute={canAdjustStock ? 'stock.adjust.form' : null}
             buttonLabel="Penyesuaian Stok"
             icon={Wrench}
         >
@@ -71,7 +71,7 @@ export default function Index({
                 <MobileCardList
                     data={inventories.data}
                     renderItem={(item) => (
-                        <Link href={route("stock.show", item.id)} key={item.id}>
+                        <Link href={route('stock.show', item.id)} key={item.id}>
                             <StockMobileCard
                                 item={item}
                                 renderActionDropdown={renderActionDropdown}

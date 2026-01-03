@@ -1,31 +1,31 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
 export default function Create({ auth }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        name: "",
-        contact_person: "",
-        email: "",
-        phone: "",
-        address: "",
-        notes: "",
+        name: '',
+        contact_person: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("suppliers.store"));
+        post(route('suppliers.store'));
     };
 
     return (
@@ -54,7 +54,7 @@ export default function Create({ auth }) {
                                     placeholder="Nama Perusahaan Supplier"
                                     value={data.name}
                                     onChange={(e) =>
-                                        setData("name", e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                 />
                             </FormField>
@@ -70,8 +70,8 @@ export default function Create({ auth }) {
                                     value={data.contact_person}
                                     onChange={(e) =>
                                         setData(
-                                            "contact_person",
-                                            e.target.value,
+                                            'contact_person',
+                                            e.target.value
                                         )
                                     }
                                 />
@@ -90,7 +90,7 @@ export default function Create({ auth }) {
                                     placeholder="email@supplier.com"
                                     value={data.email}
                                     onChange={(e) =>
-                                        setData("email", e.target.value)
+                                        setData('email', e.target.value)
                                     }
                                 />
                             </FormField>
@@ -107,8 +107,8 @@ export default function Create({ auth }) {
                                     value={data.phone}
                                     onChange={(e) =>
                                         setData(
-                                            "phone",
-                                            e.target.value.replace(/\D/g, ""),
+                                            'phone',
+                                            e.target.value.replace(/\D/g, '')
                                         )
                                     }
                                 />
@@ -125,7 +125,7 @@ export default function Create({ auth }) {
                                 placeholder="Alamat kantor/gudang supplier..."
                                 value={data.address}
                                 onChange={(e) =>
-                                    setData("address", e.target.value)
+                                    setData('address', e.target.value)
                                 }
                             />
                         </FormField>
@@ -140,13 +140,13 @@ export default function Create({ auth }) {
                                 placeholder="Catatan tambahan tentang supplier ini..."
                                 value={data.notes}
                                 onChange={(e) =>
-                                    setData("notes", e.target.value)
+                                    setData('notes', e.target.value)
                                 }
                             />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4">
-                            <Link href={route("suppliers.index")}>
+                            <Link href={route('suppliers.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

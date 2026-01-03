@@ -1,23 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import UnifiedBadge from "@/components/UnifiedBadge";
-import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { router } from "@inertiajs/react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { router } from '@inertiajs/react';
 
 export default function TransactionMobileCard({
     transaction,
     renderActionDropdown,
 }) {
-    const isTransfer = transaction.type === "Transfer";
+    const isTransfer = transaction.type === 'Transfer';
 
-    const getStatusClass = (status) => {
+    (status) => {
         const statusMap = {
-            completed: "status-completed",
-            pending: "status-pending",
-            rejected: "status-rejected",
-            shipping: "status-shipping",
+            completed: 'status-completed',
+            pending: 'status-pending',
+            rejected: 'status-rejected',
+            shipping: 'status-shipping',
         };
-        return statusMap[status?.toLowerCase()] || "status-pending";
+        return statusMap[status?.toLowerCase()] || 'status-pending';
     };
 
     return (
@@ -31,14 +30,10 @@ export default function TransactionMobileCard({
                         {formatDate(transaction.transaction_date)}
                     </p>
                     {transaction.status && (
-                        <Badge
-                            className={cn(
-                                "capitalize text-[9px] h-4 px-1.5 font-medium",
-                                getStatusClass(transaction.status),
-                            )}
-                        >
-                            {transaction.status}
-                        </Badge>
+                        <UnifiedBadge
+                            text={transaction.status}
+                            code={transaction.status}
+                        />
                     )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -57,22 +52,22 @@ export default function TransactionMobileCard({
                 )}
                 <div className="text-xs space-y-1">
                     <p>
-                        Lokasi:{" "}
+                        Lokasi:{' '}
                         <span className="font-medium">
                             {transaction.location}
                         </span>
                     </p>
                     <p>
                         {transaction.party_type ||
-                            (transaction.type === "Pembelian"
-                                ? "Supplier"
-                                : "Customer")}{" "}
+                            (transaction.type === 'Pembelian'
+                                ? 'Supplier'
+                                : 'Customer')}{' '}
                         <span className="font-medium">
-                            {transaction.party_name || "-"}
+                            {transaction.party_name || '-'}
                         </span>
                     </p>
                     <p>
-                        PIC:{" "}
+                        PIC:{' '}
                         <span className="font-medium">{transaction.user}</span>
                     </p>
                 </div>

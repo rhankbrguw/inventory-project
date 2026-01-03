@@ -1,38 +1,34 @@
-import ContentPageLayout from "@/components/ContentPageLayout";
-import InstallmentSchedule from "@/components/InstallmentSchedule";
-import TransactionInfoGrid from "@/components/Transaction/TransactionInfoGrid";
-import TransactionPaymentBadge from "@/components/Transaction/TransactionPaymentBadge";
-import TransactionItemsSection from "@/components/Transaction/TransactionItemsSection";
-import { purchaseDetailColumns } from "@/constants/tableColumns";
-import { formatDate } from "@/lib/utils";
+import ContentPageLayout from '@/components/ContentPageLayout';
+import InstallmentSchedule from '@/components/InstallmentSchedule';
+import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
+import TransactionPaymentBadge from '@/components/Transaction/TransactionPaymentBadge';
+import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
+import { purchaseDetailColumns } from '@/constants/tableColumns';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { formatDate } from '@/lib/utils';
 
 export default function Show({ auth, purchase }) {
     const { data } = purchase;
 
     const infoFields = [
         {
-            label: "Lokasi Penerima",
+            label: 'Lokasi Penerima',
             value: data.location.name,
         },
         {
-            label: "Supplier Utama",
-            value: data.supplier?.name || "Supplier Umum",
+            label: 'Supplier Utama',
+            value: data.supplier?.name || 'Supplier Umum',
         },
         {
-            label: "Tanggal Transaksi",
+            label: 'Tanggal Transaksi',
             value: formatDate(data.transaction_date),
         },
         {
-            label: "Status",
-            badge: data.status,
-            badgeVariant: "default",
-            badgeClassName: cn(
-                "capitalize",
-                `status-${data.status.toLowerCase()}`,
-            ),
+            label: 'Status',
+            value: <UnifiedBadge text={data.status} code={data.status} />,
         },
         {
-            label: "Pembayaran",
+            label: 'Pembayaran',
             value: null,
             badge: (
                 <TransactionPaymentBadge
@@ -43,13 +39,13 @@ export default function Show({ auth, purchase }) {
             ),
         },
         {
-            label: "PIC",
+            label: 'PIC',
             value: data.user.name,
         },
         {
-            label: "Catatan",
+            label: 'Catatan',
             value: data.notes,
-            span: "full",
+            span: 'full',
             hidden: !data.notes,
         },
     ];

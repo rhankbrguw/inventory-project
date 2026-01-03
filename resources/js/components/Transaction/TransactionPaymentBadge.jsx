@@ -1,6 +1,6 @@
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function TransactionPaymentBadge({
     installmentTerms,
@@ -8,7 +8,7 @@ export default function TransactionPaymentBadge({
     hasInstallments,
 }) {
     const getPaymentText = () => {
-        if (installmentTerms === 1) return "Lunas";
+        if (installmentTerms === 1) return 'Lunas';
         return `Cicilan ${installmentTerms}x`;
     };
 
@@ -17,19 +17,19 @@ export default function TransactionPaymentBadge({
 
         const statusConfig = {
             paid: {
-                text: "Lunas",
-                variant: "default",
-                className: "bg-success/10 text-success border-success/20",
+                text: 'Lunas',
+                variant: 'default',
+                className: 'bg-success/10 text-success border-success/20',
             },
             partial: {
-                text: "Sebagian",
-                variant: "secondary",
-                className: "",
+                text: 'Sebagian',
+                variant: 'secondary',
+                className: '',
             },
             unpaid: {
-                text: "Belum Bayar",
-                variant: "outline",
-                className: "",
+                text: 'Belum Bayar',
+                variant: 'outline',
+                className: '',
             },
         };
 

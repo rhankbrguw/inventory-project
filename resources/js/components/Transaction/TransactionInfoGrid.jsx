@@ -1,13 +1,13 @@
-import React from "react";
+import React from 'react';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function TransactionInfoGrid({ title, subtitle, fields }) {
     return (
@@ -24,8 +24,8 @@ export default function TransactionInfoGrid({ title, subtitle, fields }) {
                         <div
                             key={index}
                             className={cn(
-                                field.span === "full" && "sm:col-span-3",
-                                field.span === 2 && "sm:col-span-2",
+                                field.span === 'full' && 'sm:col-span-3',
+                                field.span === 2 && 'sm:col-span-2'
                             )}
                         >
                             <p className="text-muted-foreground">
@@ -40,11 +40,11 @@ export default function TransactionInfoGrid({ title, subtitle, fields }) {
                                     )}
                                     <Badge
                                         variant={
-                                            field.badgeVariant || "outline"
+                                            field.badgeVariant || 'outline'
                                         }
                                         className={cn(
-                                            "capitalize",
-                                            field.badgeClassName,
+                                            'capitalize',
+                                            field.badgeClassName
                                         )}
                                     >
                                         {field.badge}
@@ -52,7 +52,7 @@ export default function TransactionInfoGrid({ title, subtitle, fields }) {
                                 </div>
                             ) : (
                                 <p className="font-semibold mt-1">
-                                    {field.value || "-"}
+                                    {field.value || '-'}
                                 </p>
                             )}
                         </div>

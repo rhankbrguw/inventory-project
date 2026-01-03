@@ -1,16 +1,16 @@
-import { useState, useMemo, useEffect } from "react";
-import { Head, Link, router } from "@inertiajs/react";
-import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import { useSellCart } from "@/hooks/useSellCart";
-import SellProductGrid from "./Partials/SellProductGrid";
-import SellCart from "./Partials/SellCart";
-import SellCheckoutDialog from "./Partials/SellCheckoutDialog";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { formatNumber } from "@/lib/utils";
+import { useState, useMemo, useEffect } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
+import { useSellCart } from '@/hooks/useSellCart';
+import SellProductGrid from './Partials/SellProductGrid';
+import SellCart from './Partials/SellCart';
+import SellCheckoutDialog from './Partials/SellCheckoutDialog';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { formatNumber } from '@/lib/utils';
 
 export default function Create({
     auth,
@@ -25,8 +25,8 @@ export default function Create({
     filters,
 }) {
     const { params, setFilter } = useIndexPageFilters(
-        "transactions.sells.create",
-        filters,
+        'transactions.sells.create',
+        filters
     );
 
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -38,12 +38,12 @@ export default function Create({
     const [pendingLocationId, setPendingLocationId] = useState(null);
 
     const selectedLocationId = useMemo(
-        () => params.location_id || "",
-        [params.location_id],
+        () => params.location_id || '',
+        [params.location_id]
     );
 
     const [selectedChannelId, setSelectedChannelId] = useState(
-        salesChannels.length > 0 ? salesChannels[0].id.toString() : "",
+        salesChannels.length > 0 ? salesChannels[0].id.toString() : ''
     );
 
     const {
@@ -65,7 +65,7 @@ export default function Create({
             locations.length > 0 &&
             !filters.location_id
         ) {
-            setFilter("location_id", locations[0].id.toString());
+            setFilter('location_id', locations[0].id.toString());
         }
     }, [selectedLocationId, locations, filters.location_id]);
 
@@ -79,14 +79,14 @@ export default function Create({
 
         if (cart.length > 0 && selectedLocationId) {
             router.patch(
-                route("sell.cart.update-prices"),
+                route('sell.cart.update-prices'),
                 {
                     location_id: selectedLocationId,
                     sales_channel_id: channelId,
                 },
                 {
                     preserveScroll: true,
-                },
+                }
             );
         }
     };
@@ -97,15 +97,15 @@ export default function Create({
         if (cart.length > 0) {
             setPendingLocationId(locationId);
         } else {
-            setFilter("location_id", locationId);
+            setFilter('location_id', locationId);
         }
     };
 
     const confirmLocationChange = () => {
         clearCart();
-        setFilter("search", "");
-        setFilter("type_id", "all");
-        setFilter("location_id", pendingLocationId);
+        setFilter('search', '');
+        setFilter('type_id', 'all');
+        setFilter('location_id', pendingLocationId);
         setPendingLocationId(null);
     };
 
@@ -138,7 +138,7 @@ export default function Create({
         <AuthenticatedLayout user={auth.user}>
             <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
-                    <Link href={route("transactions.index")}>
+                    <Link href={route('transactions.index')}>
                         <Button
                             variant="outline"
                             size="icon"

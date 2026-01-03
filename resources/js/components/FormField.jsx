@@ -1,10 +1,10 @@
-import { Label } from "@/components/ui/label";
+import { Label } from '@/components/ui/label';
 
 export default function FormField({
     label,
     htmlFor,
     children,
-    className = "",
+    className = '',
 }) {
     return (
         <div className={`space-y-2 ${className}`}>

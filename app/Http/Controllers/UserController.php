@@ -22,43 +22,43 @@ class UserController extends Controller
         $currentUserLevel = $request->user()->level;
 
         $users = User::query()
-            ->with("roles")
+            ->with('roles')
             ->whereHas('roles', function ($q) use ($currentUserLevel) {
                 $q->where('level', '>=', $currentUserLevel);
             })
-            ->when($request->input("search"), function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where("name", "like", "%{$search}%")
-                        ->orWhere("email", "like", "%{$search}%")
-                        ->orWhere("phone", "like", "%{$search}%");
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
             })
-            ->when($request->input("role"), function ($query, $role) {
+            ->when($request->input('role'), function ($query, $role) {
                 $query->whereHas(
-                    "roles",
-                    fn ($q) => $q->where("name", "like", "%{$role}%"),
+                    'roles',
+                    fn($q) => $q->where('name', 'like', "%{$role}%"),
                 );
             })
             ->when(
-                $request->input("sort"),
+                $request->input('sort'),
                 function ($query, $sort) {
                     match ($sort) {
-                        "name_asc" => $query->orderBy("name", "asc"),
-                        "name_desc" => $query->orderBy("name", "desc"),
-                        default => $query->orderBy("name", "asc"),
+                        'name_asc' => $query->orderBy('name', 'asc'),
+                        'name_desc' => $query->orderBy('name', 'desc'),
+                        default => $query->orderBy('name', 'asc'),
                     };
                 },
                 function ($query) {
-                    $query->orderBy("name", "asc");
+                    $query->orderBy('name', 'asc');
                 },
             )
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render("Users/Index", [
-            "users" => UserResource::collection($users),
-            "roles" => Role::where('level', '>=', $currentUserLevel)->orderBy("name")->get(["name"]),
-            "filters" => (object) $request->only(["search", "sort", "role"]),
+        return Inertia::render('Users/Index', [
+            'users' => UserResource::collection($users),
+            'roles' => Role::where('level', '>=', $currentUserLevel)->orderBy('name')->get(['name']),
+            'filters' => (object) $request->only(['search', 'sort', 'role']),
         ]);
     }
 
@@ -66,11 +66,11 @@ class UserController extends Controller
     {
         $currentUserLevel = $request->user()->level;
 
-        return Inertia::render("Users/Create", [
-            "roles" => Type::where("group", Type::GROUP_USER_ROLE)
+        return Inertia::render('Users/Create', [
+            'roles' => Type::where('group', Type::GROUP_USER_ROLE)
                 ->where('level', '>', $currentUserLevel)
-                ->orderBy("name")
-                ->pluck("name")
+                ->orderBy('name')
+                ->pluck('name')
                 ->toArray(),
         ]);
     }
@@ -80,7 +80,7 @@ class UserController extends Controller
         $validated = $request->validated();
 
         $roleType = Type::where('group', Type::GROUP_USER_ROLE)
-            ->where('name', $validated["role"])
+            ->where('name', $validated['role'])
             ->first();
 
         if (!$roleType || $roleType->level <= $request->user()->level) {
@@ -88,17 +88,17 @@ class UserController extends Controller
         }
 
         $user = User::create([
-            "name" => $validated["name"],
-            "email" => $validated["email"],
-            "phone" => $validated["phone"] ?? null,
-            "password" => Hash::make($validated["password"]),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => Hash::make($validated['password']),
         ]);
 
-        $user->assignRole($validated["role"]);
+        $user->assignRole($validated['role']);
 
-        return Redirect::route("users.index")->with(
-            "success",
-            "Pengguna berhasil ditambahkan.",
+        return Redirect::route('users.index')->with(
+            'success',
+            'Pengguna berhasil ditambahkan.',
         );
     }
 
@@ -106,12 +106,12 @@ class UserController extends Controller
     {
         $currentUserLevel = $request->user()->level;
 
-        return Inertia::render("Users/Edit", [
-            "user" => UserResource::make($user->load("roles")),
-            "roles" => Type::where("group", Type::GROUP_USER_ROLE)
+        return Inertia::render('Users/Edit', [
+            'user' => UserResource::make($user->load('roles')),
+            'roles' => Type::where('group', Type::GROUP_USER_ROLE)
                 ->where('level', '>=', $currentUserLevel)
-                ->orderBy("name")
-                ->pluck("name")
+                ->orderBy('name')
+                ->pluck('name')
                 ->toArray(),
         ]);
     }
@@ -122,9 +122,9 @@ class UserController extends Controller
     ): RedirectResponse {
         $validated = $request->validated();
 
-        if (isset($validated["role"])) {
+        if (isset($validated['role'])) {
             $roleType = Type::where('group', Type::GROUP_USER_ROLE)
-                ->where('name', $validated["role"])
+                ->where('name', $validated['role'])
                 ->first();
 
             if (!$roleType || $roleType->level < $request->user()->level) {
@@ -135,12 +135,12 @@ class UserController extends Controller
         $oldRole = $user->roles->first();
 
         $user->update([
-            "name" => $validated["name"],
-            "email" => $validated["email"],
-            "phone" => $validated["phone"] ?? null,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
         ]);
 
-        $user->syncRoles($validated["role"]);
+        $user->syncRoles($validated['role']);
 
         $newRole = $user->roles->first();
         $locationCount = $user->locations()->count();
@@ -157,26 +157,26 @@ class UserController extends Controller
             );
         }
 
-        return Redirect::route("users.index")->with(
-            "success",
-            "Pengguna berhasil diperbarui.",
+        return Redirect::route('users.index')->with(
+            'success',
+            'Pengguna berhasil diperbarui.',
         );
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
         if ($user->id === $request->user()->id) {
-            return Redirect::route("users.index")->with(
-                "error",
-                "Anda tidak bisa menghapus akun sendiri.",
+            return Redirect::route('users.index')->with(
+                'error',
+                'Anda tidak bisa menghapus akun sendiri.',
             );
         }
 
         $user->delete();
 
-        return Redirect::route("users.index")->with(
-            "success",
-            "Pengguna berhasil dihapus.",
+        return Redirect::route('users.index')->with(
+            'success',
+            'Pengguna berhasil dihapus.',
         );
     }
 }

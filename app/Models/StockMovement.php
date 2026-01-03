@@ -16,14 +16,15 @@ class StockMovement extends Model
     protected $fillable = [
         'product_id',
         'location_id',
-        'type',
         'quantity',
+        'type',
+        'reference_type',
+        'reference_id',
+        'user_id',
         'cost_per_unit',
         'average_cost_per_unit',
         'notes',
-        'reference_id',
-        'reference_type',
-        'user_id',
+        'date',
     ];
 
     public static function getMovementTypes(): array

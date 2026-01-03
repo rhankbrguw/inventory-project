@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
     format,
     subDays,
     startOfMonth,
     endOfMonth,
     isSameYear,
-} from "date-fns";
-import { id } from "date-fns/locale";
-import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
-import { cn, getNormalizedDate } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+} from 'date-fns';
+import { id } from 'date-fns/locale';
+import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { cn, getNormalizedDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 
 export default function SmartDateFilter({ filters, onFilterChange }) {
     const getInitialState = () => {
-        const range = filters.date_range || "this_month";
+        const range = filters.date_range || 'this_month';
 
-        if (range === "custom" && filters.start_date && filters.end_date) {
+        if (range === 'custom' && filters.start_date && filters.end_date) {
             return {
                 from: new Date(filters.start_date),
                 to: new Date(filters.end_date),
@@ -29,10 +29,10 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
         }
 
         const today = new Date();
-        if (range === "today") {
+        if (range === 'today') {
             return { from: today, to: today };
         }
-        if (range === "last_7_days") {
+        if (range === 'last_7_days') {
             return { from: subDays(today, 6), to: today };
         }
 
@@ -52,22 +52,22 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
 
     const presets = [
         {
-            label: "Hari Ini",
+            label: 'Hari Ini',
             getValue: () => ({ from: new Date(), to: new Date() }),
-            key: "today",
+            key: 'today',
         },
         {
-            label: "7 Hari Terakhir",
+            label: '7 Hari Terakhir',
             getValue: () => ({ from: subDays(new Date(), 6), to: new Date() }),
-            key: "last_7_days",
+            key: 'last_7_days',
         },
         {
-            label: "Bulan Ini",
+            label: 'Bulan Ini',
             getValue: () => ({
                 from: startOfMonth(new Date()),
                 to: endOfMonth(new Date()),
             }),
-            key: "this_month",
+            key: 'this_month',
         },
     ];
 
@@ -96,9 +96,9 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
                 : normalizedFrom;
 
             onFilterChange({
-                date_range: "custom",
-                start_date: format(normalizedFrom, "yyyy-MM-dd"),
-                end_date: format(normalizedTo, "yyyy-MM-dd"),
+                date_range: 'custom',
+                start_date: format(normalizedFrom, 'yyyy-MM-dd'),
+                end_date: format(normalizedTo, 'yyyy-MM-dd'),
             });
             setIsOpen(false);
             setIsDirty(false);
@@ -113,30 +113,30 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
     const getDisplayLabel = () => {
         const today = new Date();
 
-        if (filters.date_range === "today")
-            return format(today, "d MMM", { locale: id });
-        if (filters.date_range === "last_7_days") {
+        if (filters.date_range === 'today')
+            return format(today, 'd MMM', { locale: id });
+        if (filters.date_range === 'last_7_days') {
             const sevenDaysAgo = subDays(today, 6);
-            return `${format(sevenDaysAgo, "d MMM", { locale: id })} - ${format(today, "d MMM", { locale: id })}`;
+            return `${format(sevenDaysAgo, 'd MMM', { locale: id })} - ${format(today, 'd MMM', { locale: id })}`;
         }
-        if (filters.date_range === "this_month")
-            return format(today, "MMMM", { locale: id });
+        if (filters.date_range === 'this_month')
+            return format(today, 'MMMM', { locale: id });
 
         if (date?.from) {
             if (!date.to) {
-                return format(date.from, "d MMM yy", { locale: id });
+                return format(date.from, 'd MMM yy', { locale: id });
             }
 
             const sameYear =
                 isSameYear(date.from, today) && isSameYear(date.to, today);
 
             if (sameYear) {
-                return `${format(date.from, "d MMM", { locale: id })} - ${format(date.to, "d MMM", { locale: id })}`;
+                return `${format(date.from, 'd MMM', { locale: id })} - ${format(date.to, 'd MMM', { locale: id })}`;
             }
-            return `${format(date.from, "d MMM yy", { locale: id })} - ${format(date.to, "d MMM yy", { locale: id })}`;
+            return `${format(date.from, 'd MMM yy', { locale: id })} - ${format(date.to, 'd MMM yy', { locale: id })}`;
         }
 
-        return "Pilih Periode";
+        return 'Pilih Periode';
     };
 
     return (
@@ -145,8 +145,8 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
                 <Button
                     variant="outline"
                     className={cn(
-                        "w-full h-9 px-3 font-normal justify-start",
-                        !date && "text-muted-foreground",
+                        'w-full h-9 px-3 font-normal justify-start',
+                        !date && 'text-muted-foreground'
                     )}
                 >
                     <div className="flex items-center gap-2 min-w-0">
@@ -171,9 +171,9 @@ export default function SmartDateFilter({ filters, onFilterChange }) {
                                     variant="ghost"
                                     size="sm"
                                     className={cn(
-                                        "justify-center sm:justify-start text-[11px] sm:text-xs font-normal h-7 sm:h-8 whitespace-nowrap flex-shrink-0",
+                                        'justify-center sm:justify-start text-[11px] sm:text-xs font-normal h-7 sm:h-8 whitespace-nowrap flex-shrink-0',
                                         filters.date_range === preset.key &&
-                                        "bg-primary/10 text-primary font-medium",
+                                            'bg-primary/10 text-primary font-medium'
                                     )}
                                     onClick={() => handlePresetClick(preset)}
                                 >

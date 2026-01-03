@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import FormField from "@/components/FormField";
-import { PlusCircle, Trash2 } from "lucide-react";
-import { useMemo } from "react";
+} from '@/components/ui/select';
+import FormField from '@/components/FormField';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function AssignmentManager({
     assignments,
@@ -23,15 +23,14 @@ export default function AssignmentManager({
         if (!allRoles || allRoles.length === 0) return [];
         locationType?.level;
 
-        return allRoles.filter(r => r.level > 1);
-
+        return allRoles.filter((r) => r.level > 1);
     }, [locationType, allRoles]);
 
     const getRolesForUser = (userId) => {
         if (!userId) return baseRoles;
 
         const user = allUsers.find(
-            (u) => u.id.toString() === userId.toString(),
+            (u) => u.id.toString() === userId.toString()
         );
 
         if (!user) return baseRoles;
@@ -40,27 +39,27 @@ export default function AssignmentManager({
     };
 
     const addAssignment = () => {
-        setData("assignments", [...assignments, { user_id: "", role_id: "" }]);
+        setData('assignments', [...assignments, { user_id: '', role_id: '' }]);
     };
 
     const removeAssignment = (index) => {
         setData(
-            "assignments",
-            assignments.filter((_, i) => i !== index),
+            'assignments',
+            assignments.filter((_, i) => i !== index)
         );
     };
 
     const updateAssignment = (index, field, value) => {
         const updated = assignments.map((assignment, i) => {
             if (i === index) {
-                if (field === "user_id") {
-                    return { ...assignment, user_id: value, role_id: "" };
+                if (field === 'user_id') {
+                    return { ...assignment, user_id: value, role_id: '' };
                 }
                 return { ...assignment, [field]: value };
             }
             return assignment;
         });
-        setData("assignments", updated);
+        setData('assignments', updated);
     };
 
     return (
@@ -95,8 +94,8 @@ export default function AssignmentManager({
                                         onValueChange={(val) =>
                                             updateAssignment(
                                                 index,
-                                                "user_id",
-                                                val,
+                                                'user_id',
+                                                val
                                             )
                                         }
                                     >
@@ -127,8 +126,8 @@ export default function AssignmentManager({
                                         onValueChange={(val) =>
                                             updateAssignment(
                                                 index,
-                                                "role_id",
-                                                val,
+                                                'role_id',
+                                                val
                                             )
                                         }
                                         disabled={!assignment.user_id}

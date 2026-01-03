@@ -1,9 +1,9 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import StockAvailability from "@/components/StockAvailability";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Trash2 } from 'lucide-react';
+import { formatCurrency, formatNumber } from '@/lib/utils';
+import StockAvailability from '@/components/StockAvailability';
 
 export default function SellItemManager({
     cart,
@@ -19,8 +19,8 @@ export default function SellItemManager({
 
     const getDisplayValue = (item) => {
         const val = getItemQuantity(item);
-        if (val === "" || val === null || val === undefined) return "";
-        if (typeof val === "string" && val.endsWith(",")) return val;
+        if (val === '' || val === null || val === undefined) return '';
+        if (typeof val === 'string' && val.endsWith(',')) return val;
         return formatNumber(val);
     };
 
@@ -92,7 +92,7 @@ export default function SellItemManager({
                                             const rawValue =
                                                 e.target.value.replace(
                                                     /\./g,
-                                                    "",
+                                                    ''
                                                 );
                                             updateItem(item, rawValue);
                                         }}

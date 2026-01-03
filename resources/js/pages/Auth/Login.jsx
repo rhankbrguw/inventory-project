@@ -1,26 +1,26 @@
-import { useEffect } from "react";
-import GuestLayout from "@/layouts/GuestLayout";
-import { Head, Link, useForm } from "@inertiajs/react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import InputError from "@/components/InputError";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Mail, Lock, LogIn } from "lucide-react";
-import { PasswordInput } from "@/components/PasswordInput";
+import { useEffect } from 'react';
+import GuestLayout from '@/layouts/GuestLayout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import InputError from '@/components/InputError';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Mail, Lock, LogIn } from 'lucide-react';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export default function Login({ canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: "",
-        password: "",
+        email: '',
+        password: '',
         remember: false,
     });
 
-    useEffect(() => () => reset("password"), []);
+    useEffect(() => () => reset('password'), []);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("login"));
+        post(route('login'));
     };
 
     return (
@@ -53,7 +53,7 @@ export default function Login({ canResetPassword }) {
                                 className="w-full pl-10 pr-4 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="username"
                                 onChange={(e) =>
-                                    setData("email", e.target.value)
+                                    setData('email', e.target.value)
                                 }
                             />
                         </div>
@@ -75,7 +75,7 @@ export default function Login({ canResetPassword }) {
                                 className="w-full pl-10 pr-12 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="current-password"
                                 onChange={(e) =>
-                                    setData("password", e.target.value)
+                                    setData('password', e.target.value)
                                 }
                             />
                         </div>
@@ -92,7 +92,7 @@ export default function Login({ canResetPassword }) {
                                 name="remember"
                                 checked={data.remember}
                                 onCheckedChange={(checked) =>
-                                    setData("remember", checked)
+                                    setData('remember', checked)
                                 }
                             />
                             <Label
@@ -104,7 +104,7 @@ export default function Login({ canResetPassword }) {
                         </label>
                         {canResetPassword && (
                             <Link
-                                href={route("password.request")}
+                                href={route('password.request')}
                                 className="font-semibold text-foreground/90 hover:text-foreground transition-colors duration-200"
                             >
                                 Lupa password?
@@ -123,9 +123,9 @@ export default function Login({ canResetPassword }) {
                 </form>
 
                 <p className="text-center text-sm text-muted-foreground mt-6">
-                    Belum punya akun?{" "}
+                    Belum punya akun?{' '}
                     <Link
-                        href={route("register")}
+                        href={route('register')}
                         className="font-bold text-foreground hover:text-foreground/80 transition-colors duration-200"
                     >
                         Daftar di sini

@@ -1,21 +1,21 @@
-import GuestLayout from "@/layouts/GuestLayout";
-import { Button } from "@/components/ui/button";
-import { Head, Link, useForm } from "@inertiajs/react";
+import GuestLayout from '@/layouts/GuestLayout';
+import { Button } from '@/components/ui/button';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { MailCheck } from "lucide-react";
+} from '@/components/ui/card';
+import { MailCheck } from 'lucide-react';
 
 export default function VerifyEmail({ status }) {
     const { post, processing } = useForm({});
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("verification.send"));
+        post(route('verification.send'));
     };
 
     return (
@@ -37,7 +37,7 @@ export default function VerifyEmail({ status }) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {status === "verification-link-sent" && (
+                    {status === 'verification-link-sent' && (
                         <div className="mb-4 font-medium text-sm text-success-foreground bg-success/10 p-3 rounded-lg text-center">
                             Tautan verifikasi baru telah berhasil dikirim.
                         </div>
@@ -49,7 +49,7 @@ export default function VerifyEmail({ status }) {
                                 Kirim Ulang Email
                             </Button>
                             <Link
-                                href={route("logout")}
+                                href={route('logout')}
                                 method="post"
                                 as="button"
                                 className="underline text-sm text-muted-foreground hover:text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"

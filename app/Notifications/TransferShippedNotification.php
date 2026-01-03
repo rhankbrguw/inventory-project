@@ -8,14 +8,15 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class TransferAcceptedNotification extends Notification implements ShouldQueue
+class TransferShippedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
         public $transfer,
-        public $acceptedByName
-    ) {}
+        public $senderName
+    ) {
+    }
 
     public function via(object $notifiable): array
     {
@@ -34,14 +35,14 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
 
         return [
             'title' => $isIndonesian
-                ? '✅ Transfer Disetujui'
-                : '✅ Transfer Approved',
+                ? '🚚 Barang Dalam Pengiriman'
+                : '🚚 Items Shipped',
             'message' => $isIndonesian
-                ? "Transfer {$this->transfer->reference_code} telah disetujui. Silakan proses pengiriman."
-                : "Transfer {$this->transfer->reference_code} approved. Please proceed to shipping.",
+                ? "Transfer {$this->transfer->reference_code} sedang dalam perjalanan ke lokasi Anda."
+                : "Transfer {$this->transfer->reference_code} is on the way to your location.",
             'action_url' => route('transactions.transfers.show', $this->transfer->id),
-            'icon' => 'CheckCircle',
-            'type' => 'success',
+            'icon' => 'Truck',
+            'type' => 'info',
             'created_at' => now(),
         ];
     }
@@ -63,55 +64,67 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
         $date = now()->format('d/m/Y H:i');
 
         $items = $this->transfer->stockMovements()
-            ->where('type', 'transfer_in')
+            ->where('type', 'transfer_out')
             ->with('product')
             ->get();
 
-        $totalQty = $items->sum(fn($i) => abs($i->quantity));
+        $totalItems = $items->count();
+        $totalQty = $items->sum(fn ($i) => abs($i->quantity));
+
+        $itemsList = $items->take(5)->map(
+            fn ($item) =>
+            "• {$item->product->name}: " . abs($item->quantity) . " {$item->product->unit}"
+        )->join("\n");
+
+        if ($items->count() > 5) {
+            $moreText = $isIndonesian
+                ? 'dan ' . ($items->count() - 5) . ' item lainnya'
+                : 'and ' . ($items->count() - 5) . ' more items';
+
+            $itemsList .= "\n_{$moreText}_";
+        }
 
         if ($isIndonesian) {
-            $labelRef      = str_pad('Ref', 9);
-            $labelStatus   = str_pad('Status', 9);
-            $labelApproved = str_pad('Disetujui', 9);
-            $labelLokasi   = str_pad('Tujuan', 9);
-            $labelTotal    = str_pad('Total', 9);
-            $labelTanggal  = str_pad('Tanggal', 9);
+            $labelRef     = str_pad('Ref', 9);
+            $labelAsal    = str_pad('Dari', 9);
+            $labelOleh    = str_pad('Oleh', 9);
+            $labelTotal   = str_pad('Total', 9);
+            $labelTanggal = str_pad('Tanggal', 9);
 
-            return "*TRANSFER DISETUJUI* ✅\n\n"
+            return "*BARANG DALAM PENGIRIMAN* 🚚\n\n"
                 . "Halo {$notifiable->name},\n\n"
-                . "Permintaan transfer stok telah *disetujui*:\n"
+                . "Barang transfer sedang dikirim:\n"
                 . "```"
                 . "{$labelRef}: {$this->transfer->reference_code}\n"
-                . "{$labelStatus}: DISETUJUI\n"
-                . "{$labelApproved}: {$this->acceptedByName}\n"
-                . "{$labelLokasi}: {$this->transfer->toLocation->name}\n"
-                . "{$labelTotal}: {$totalQty} Unit\n"
+                . "{$labelAsal}: {$this->transfer->fromLocation->name}\n"
+                . "{$labelOleh}: {$this->senderName}\n"
+                . "{$labelTotal}: {$totalItems} SKU / {$totalQty} Unit\n"
                 . "{$labelTanggal}: {$date}"
                 . "```\n\n"
-                . "Silakan lanjutkan proses pengiriman.\n\n"
-                . "*Akses Sistem:*\n"
+                . "*Rincian Barang:*\n"
+                . "{$itemsList}\n\n"
+                . "*Siapkan penerimaan di sistem:*\n"
                 . route('transactions.transfers.show', $this->transfer->id);
         }
 
-        $labelRef      = str_pad('Ref', 9);
-        $labelStatus   = str_pad('Status', 9);
-        $labelApproved = str_pad('Approved', 9);
-        $labelLocation = str_pad('Dest', 9);
-        $labelTotal    = str_pad('Total', 9);
-        $labelDate     = str_pad('Date', 9);
+        $labelRef   = str_pad('Ref', 9);
+        $labelFrom  = str_pad('From', 9);
+        $labelBy    = str_pad('By', 9);
+        $labelTotal = str_pad('Total', 9);
+        $labelDate  = str_pad('Date', 9);
 
-        return "*TRANSFER APPROVED* ✅\n\n"
+        return "*ITEMS SHIPPED* 🚚\n\n"
             . "Hello {$notifiable->name},\n\n"
-            . "Stock transfer request has been *approved*:\n"
+            . "Transfer items are being shipped:\n"
             . "```"
             . "{$labelRef}: {$this->transfer->reference_code}\n"
-            . "{$labelStatus}: APPROVED\n"
-            . "{$labelApproved}: {$this->acceptedByName}\n"
-            . "{$labelLocation}: {$this->transfer->toLocation->name}\n"
-            . "{$labelTotal}: {$totalQty} Units\n"
+            . "{$labelFrom}: {$this->transfer->fromLocation->name}\n"
+            . "{$labelBy}: {$this->senderName}\n"
+            . "{$labelTotal}: {$totalItems} SKU / {$totalQty} Units\n"
             . "{$labelDate}: {$date}"
             . "```\n\n"
-            . "Please proceed with shipment.\n\n"
+            . "*Items:*\n"
+            . "{$itemsList}\n\n"
             . "*System Access:*\n"
             . route('transactions.transfers.show', $this->transfer->id);
     }

@@ -19,17 +19,17 @@ class SellCartController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
-        $product = Product::findOrFail($validated["product_id"]);
+        $product = Product::findOrFail($validated['product_id']);
 
-        $validated["quantity"] = $validated["quantity"] ?? 1.0;
+        $validated['quantity'] = $validated['quantity'] ?? 1.0;
         $sellPrice = $validated['sell_price'] ?? $product->price;
 
         SellCartItem::create([
-            "user_id" => $user->id,
-            "location_id" => $validated["location_id"],
-            "product_id" => $product->id,
-            "quantity" => $validated["quantity"],
-            "sell_price" => $sellPrice,
+            'user_id' => $user->id,
+            'location_id' => $validated['location_id'],
+            'product_id' => $product->id,
+            'quantity' => $validated['quantity'],
+            'sell_price' => $sellPrice,
         ]);
 
         return Redirect::back();
@@ -68,7 +68,7 @@ class SellCartController extends Controller
 
     public function destroyItem(SellCartItem $cartItem): RedirectResponse
     {
-        $this->authorize("delete", $cartItem);
+        $this->authorize('delete', $cartItem);
         $cartItem->delete();
 
         return Redirect::back();
@@ -77,12 +77,12 @@ class SellCartController extends Controller
     public function destroyLocation(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            "location_id" => ["required", "integer", "exists:locations,id"],
+            'location_id' => ['required', 'integer', 'exists:locations,id'],
         ]);
 
         Auth::user()
             ->sellCartItems()
-            ->where("location_id", $validated["location_id"])
+            ->where('location_id', $validated['location_id'])
             ->delete();
 
         return Redirect::back();

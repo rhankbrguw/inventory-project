@@ -1,31 +1,31 @@
-import { Link, router } from "@inertiajs/react";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { useSoftDeletes } from "@/hooks/useSoftDeletes";
-import { productColumns } from "@/constants/tableColumns.jsx";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import ProductMobileCard from "./Partials/ProductMobileCard";
-import Pagination from "@/components/Pagination";
-import QuickAddTypeModal from "@/components/QuickAddTypeModal";
-import ProductFilterCard from "./Partials/ProductFilterCard";
+import { Link, router } from '@inertiajs/react';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { useSoftDeletes } from '@/hooks/useSoftDeletes';
+import { productColumns } from '@/constants/tableColumns.jsx';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import ProductMobileCard from './Partials/ProductMobileCard';
+import Pagination from '@/components/Pagination';
+import QuickAddTypeModal from '@/components/QuickAddTypeModal';
+import ProductFilterCard from './Partials/ProductFilterCard';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import {
     Edit,
     MoreVertical,
     PlusCircle,
     Archive,
     ArchiveRestore,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { usePermission } from "@/hooks/usePermission";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -35,8 +35,8 @@ export default function Index({
     filters = {},
 }) {
     const { params, setFilter } = useIndexPageFilters(
-        "products.index",
-        filters,
+        'products.index',
+        filters
     );
 
     const {
@@ -46,7 +46,7 @@ export default function Index({
         itemToDeactivate,
         deactivateItem,
         restoreItem,
-    } = useSoftDeletes({ resourceName: "products", data: products.data });
+    } = useSoftDeletes({ resourceName: 'products', data: products.data });
 
     const { isManager } = usePermission();
     const canCrudProducts = isManager;
@@ -66,7 +66,7 @@ export default function Index({
                 <DropdownMenuItem
                     className="cursor-pointer"
                     onSelect={() =>
-                        router.get(route("products.edit", product.id))
+                        router.get(route('products.edit', product.id))
                     }
                 >
                     <Edit className="w-4 h-4 mr-2" /> Edit
@@ -94,7 +94,7 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Produk"
-            createRoute={canCrudProducts ? "products.create" : null}
+            createRoute={canCrudProducts ? 'products.create' : null}
             buttonLabel="Tambah Produk"
             headerActions={
                 canCrudProducts && (
@@ -131,14 +131,14 @@ export default function Index({
                         <Link
                             href={
                                 canCrudProducts
-                                    ? route("products.edit", product.id)
-                                    : "#"
+                                    ? route('products.edit', product.id)
+                                    : '#'
                             }
                             key={product.id}
                             className={cn(
-                                "block",
-                                !canCrudProducts && "pointer-events-none",
-                                product.deleted_at && "opacity-50",
+                                'block',
+                                !canCrudProducts && 'pointer-events-none',
+                                product.deleted_at && 'opacity-50'
                             )}
                         >
                             <ProductMobileCard
@@ -157,9 +157,9 @@ export default function Index({
                         columns={productColumns}
                         data={products.data}
                         actions={canCrudProducts ? renderActionDropdown : null}
-                        showRoute={canCrudProducts ? "products.edit" : null}
+                        showRoute={canCrudProducts ? 'products.edit' : null}
                         rowClassName={(row) =>
-                            row.deleted_at ? "opacity-50" : ""
+                            row.deleted_at ? 'opacity-50' : ''
                         }
                     />
                 </div>

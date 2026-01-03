@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
     Command,
     CommandEmpty,
@@ -6,18 +6,18 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import InputError from "@/components/InputError";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { useDebounce } from "use-debounce";
-import axios from "axios";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import InputError from '@/components/InputError';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { useDebounce } from 'use-debounce';
+import axios from 'axios';
+import { cn } from '@/lib/utils';
 
 export default function ProductCombobox({
     value,
@@ -27,7 +27,7 @@ export default function ProductCombobox({
     products: initialProducts = [],
 }) {
     const [open, setOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState('');
     const [debouncedQuery] = useDebounce(searchQuery, 300);
     const [options, setOptions] = useState(initialProducts);
     const [loading, setLoading] = useState(false);
@@ -42,14 +42,15 @@ export default function ProductCombobox({
 
     const label = selectedProduct
         ? `${selectedProduct.name} (${selectedProduct.sku})`
-        : "Pilih produk...";
+        : 'Pilih produk...';
 
     useEffect(() => {
         if (!open) return;
         if (debouncedQuery.length < 2) return;
 
         setLoading(true);
-        axios.get(`/api/products/search?query=${debouncedQuery}`)
+        axios
+            .get(`/api/products/search?query=${debouncedQuery}`)
             .then((res) => {
                 setOptions(res.data);
             })
@@ -87,47 +88,52 @@ export default function ProductCombobox({
                         <CommandList>
                             {loading && (
                                 <div className="py-6 flex justify-center items-center text-sm text-muted-foreground">
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mencari...
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{' '}
+                                    Mencari...
                                 </div>
                             )}
 
                             {!loading && options.length === 0 && (
-                                <CommandEmpty>Produk tidak ditemukan.</CommandEmpty>
+                                <CommandEmpty>
+                                    Produk tidak ditemukan.
+                                </CommandEmpty>
                             )}
 
                             <CommandGroup>
-                                {!loading && options.map((product) => (
-                                    <CommandItem
-                                        key={product.id}
-                                        value={product.id.toString()}
-                                        onSelect={() => {
-                                            onChange(product);
-                                            setOpen(false);
-                                        }}
-                                        disabled={
-                                            disabledIds.includes(product.id) &&
-                                            product.id !== value
-                                        }
-                                        className="flex items-start cursor-pointer"
-                                    >
-                                        <Check
-                                            className={cn(
-                                                "mr-2 h-4 w-4 shrink-0 mt-0.5",
-                                                value === product.id
-                                                    ? "opacity-100"
-                                                    : "opacity-0"
-                                            )}
-                                        />
-                                        <div className="min-w-0 flex-1 overflow-hidden">
-                                            <p className="truncate font-medium">
-                                                {product.name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground truncate">
-                                                SKU: {product.sku}
-                                            </p>
-                                        </div>
-                                    </CommandItem>
-                                ))}
+                                {!loading &&
+                                    options.map((product) => (
+                                        <CommandItem
+                                            key={product.id}
+                                            value={product.id.toString()}
+                                            onSelect={() => {
+                                                onChange(product);
+                                                setOpen(false);
+                                            }}
+                                            disabled={
+                                                disabledIds.includes(
+                                                    product.id
+                                                ) && product.id !== value
+                                            }
+                                            className="flex items-start cursor-pointer"
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    'mr-2 h-4 w-4 shrink-0 mt-0.5',
+                                                    value === product.id
+                                                        ? 'opacity-100'
+                                                        : 'opacity-0'
+                                                )}
+                                            />
+                                            <div className="min-w-0 flex-1 overflow-hidden">
+                                                <p className="truncate font-medium">
+                                                    {product.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    SKU: {product.sku}
+                                                </p>
+                                            </div>
+                                        </CommandItem>
+                                    ))}
                             </CommandGroup>
                         </CommandList>
                     </Command>

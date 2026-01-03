@@ -57,7 +57,7 @@ trait ManagesStock
             'location_id' => $locationId,
             'type' => $type,
             'quantity' => -abs($qty),
-            'cost_per_unit' => $sellPrice,
+            'cost_per_unit' => $sellPrice ?? 0,
             'average_cost_per_unit' => $inventory->average_cost,
             'reference_type' => get_class($ref),
             'reference_id' => $ref->id,

@@ -1,23 +1,23 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TableFooter, TableRow, TableCell } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
-import { formatCurrency, cn } from "@/lib/utils";
-import PrintButton from "@/components/PrintButton";
-import DataTable from "@/components/DataTable";
-import TransactionItemMobileCard from "./TransactionItemMobileCard";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TableFooter, TableRow, TableCell } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
+import { formatCurrency, cn } from '@/lib/utils';
+import PrintButton from '@/components/PrintButton';
+import DataTable from '@/components/DataTable';
+import TransactionItemMobileCard from './TransactionItemMobileCard';
 
 export default function TransactionItemsSection({
-    type = "purchase",
+    type = 'purchase',
     items,
     columns,
     totals,
-    totalLabel = "Total Pembelian",
+    totalLabel = 'Total Pembelian',
     totalAmount,
     showPrintButton = true,
 }) {
     const renderMobileView = () => {
-        if (type === "sell" && totals) {
+        if (type === 'sell' && totals) {
             return (
                 <div className="md:hidden space-y-3">
                     {items.map((item) => (
@@ -52,8 +52,8 @@ export default function TransactionItemsSection({
                             <span
                                 className={cn(
                                     totals.totalMargin > 0
-                                        ? "text-success"
-                                        : "text-destructive",
+                                        ? 'text-success'
+                                        : 'text-destructive'
                                 )}
                             >
                                 {formatCurrency(totals.totalMargin)}
@@ -74,19 +74,19 @@ export default function TransactionItemsSection({
                         type={type}
                     />
                 ))}
-                {totalAmount !== undefined && type !== "transfer" && (
+                {totalAmount !== undefined && type !== 'transfer' && (
                     <div className="flex justify-between items-center pt-3 border-t font-bold text-base">
                         <span>{totalLabel}</span>
                         <span>{formatCurrency(totalAmount)}</span>
                     </div>
                 )}
-                {type === "transfer" && <Separator className="my-4" />}
+                {type === 'transfer' && <Separator className="my-4" />}
             </div>
         );
     };
 
     const renderDesktopFooter = () => {
-        if (type === "sell" && totals) {
+        if (type === 'sell' && totals) {
             return (
                 <TableFooter>
                     <TableRow>
@@ -120,10 +120,10 @@ export default function TransactionItemsSection({
                         </TableCell>
                         <TableCell
                             className={cn(
-                                "text-right font-bold text-base",
+                                'text-right font-bold text-base',
                                 totals.totalMargin > 0
-                                    ? "text-success"
-                                    : "text-destructive",
+                                    ? 'text-success'
+                                    : 'text-destructive'
                             )}
                         >
                             {formatCurrency(totals.totalMargin)}
@@ -133,7 +133,7 @@ export default function TransactionItemsSection({
             );
         }
 
-        if (totalAmount !== undefined && type !== "transfer") {
+        if (totalAmount !== undefined && type !== 'transfer') {
             return (
                 <TableFooter>
                     <TableRow>

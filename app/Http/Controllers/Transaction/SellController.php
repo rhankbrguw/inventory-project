@@ -35,7 +35,7 @@ class SellController extends Controller
         $user = Auth::user();
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
-        $locationsQuery = Location::orderBy("name")->with('type');
+        $locationsQuery = Location::orderBy('name')->with('type');
         if ($accessibleLocationIds) {
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
@@ -43,17 +43,17 @@ class SellController extends Controller
         $allLocations = $locationsQuery->get();
 
         $filteredLocations = $allLocations
-            ->filter(fn($location) => $user->canTransactAtLocation($location->id, 'sell'));
+            ->filter(fn ($location) => $user->canTransactAtLocation($location->id, 'sell'));
 
-        $locationsWithPermissions = $filteredLocations->values()->map(fn($location) => [
+        $locationsWithPermissions = $filteredLocations->values()->map(fn ($location) => [
             'id' => $location->id,
             'name' => $location->name,
             'role_at_location' => $user->getRoleCodeAtLocation($location->id),
         ]);
 
-        $locationId = $request->input("location_id");
-        $search = $request->input("search");
-        $typeId = $request->input("type_id");
+        $locationId = $request->input('location_id');
+        $search = $request->input('search');
+        $typeId = $request->input('type_id');
 
         if ($accessibleLocationIds && $locationId && !in_array($locationId, $accessibleLocationIds)) {
             $locationId = null;
@@ -64,40 +64,40 @@ class SellController extends Controller
         }
 
         $cartItems = $user->sellCartItems()
-            ->with(["product.prices", "location"])
+            ->with(['product.prices', 'location'])
             ->get();
 
-        $productsQuery = Product::with(["defaultSupplier:id,name", "prices"])
-            ->when($search, fn($q, $s) => $q->where("name", "like", "%{$s}%")->orWhere("sku", "like", "%{$s}%"))
-            ->when($typeId && $typeId !== "all", fn($q) => $q->where("type_id", $typeId))
-            ->orderBy("name");
+        $productsQuery = Product::with(['defaultSupplier:id,name', 'prices'])
+            ->when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
+            ->when($typeId && $typeId !== 'all', fn ($q) => $q->where('type_id', $typeId))
+            ->orderBy('name');
 
         if ($locationId) {
             $productsQuery->whereHas(
-                "inventories",
-                fn($q) =>
-                $q->where("location_id", $locationId)->where("quantity", ">", 0)
+                'inventories',
+                fn ($q) =>
+                $q->where('location_id', $locationId)->where('quantity', '>', 0)
             );
         } else {
-            $productsQuery->whereRaw("1 = 0");
+            $productsQuery->whereRaw('1 = 0');
         }
 
-        return Inertia::render("Transactions/Sells/Create", [
-            "locations" => $locationsWithPermissions,
-            "customers" => Customer::orderBy("name")->get(["id", "name"]),
-            "allProducts" => $productsQuery
+        return Inertia::render('Transactions/Sells/Create', [
+            'locations' => $locationsWithPermissions,
+            'customers' => Customer::orderBy('name')->get(['id', 'name']),
+            'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
-                ->through(fn($product) => array_merge(
+                ->through(fn ($product) => array_merge(
                     $product->toArray(),
                     ['channel_prices' => $product->prices->pluck('price', 'sales_channel_id')]
                 )),
-            "paymentMethods" => Type::where("group", Type::GROUP_PAYMENT)->orderBy("name")->get(["id", "name"]),
-            "productTypes" => Type::where("group", Type::GROUP_PRODUCT)->orderBy("name")->get(["id", "name"]),
-            "customerTypes" => Type::where("group", Type::GROUP_CUSTOMER)->orderBy("name")->get(["id", "name"]),
-            "salesChannels" => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
-            "cart" => SellCartItemResource::collection($cartItems),
-            "filters" => (object) $request->only(["location_id", "search", "type_id"]),
+            'paymentMethods' => Type::where('group', Type::GROUP_PAYMENT)->orderBy('name')->get(['id', 'name']),
+            'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(['id', 'name']),
+            'customerTypes' => Type::where('group', Type::GROUP_CUSTOMER)->orderBy('name')->get(['id', 'name']),
+            'salesChannels' => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'cart' => SellCartItemResource::collection($cartItems),
+            'filters' => (object) $request->only(['location_id', 'search', 'type_id']),
         ]);
     }
 
@@ -110,43 +110,43 @@ class SellController extends Controller
             abort(403, 'Lokasi ini tidak memiliki izin untuk Penjualan.');
         }
 
-        $itemsData = $validated["items"];
+        $itemsData = $validated['items'];
         $totalPrice = collect($itemsData)
-            ->sum(fn($item) => $item["quantity"] * $item["sell_price"]);
+            ->sum(fn ($item) => $item['quantity'] * $item['sell_price']);
 
-        $sellType = Type::where("group", Type::GROUP_TRANSACTION)
-            ->where("name", "Penjualan")
+        $sellType = Type::where('group', Type::GROUP_TRANSACTION)
+            ->where('name', 'Penjualan')
             ->firstOrFail();
 
         DB::transaction(function () use ($validated, $itemsData, $totalPrice, $sellType, $request) {
 
             $sell = Sell::create([
-                "type_id" => $sellType->id,
-                "location_id" => $validated["location_id"],
-                "customer_id" => $validated["customer_id"],
-                "sales_channel_id" => $validated["sales_channel_id"] ?? null,
-                "user_id" => $request->user()->id,
-                "reference_code" => "SL-" . now()->format("Ymd-His"),
-                "transaction_date" => Carbon::parse($validated["transaction_date"])->format("Y-m-d"),
-                "total_price" => $totalPrice,
-                "status" => $validated["status"] ?? 'Completed',
-                "payment_method_type_id" => $validated["payment_method_type_id"],
-                "notes" => $validated["notes"],
-                "installment_terms" => $validated["installment_terms"],
-                "payment_status" => $validated["installment_terms"] > 1 ? "pending" : "paid",
+                'type_id' => $sellType->id,
+                'location_id' => $validated['location_id'],
+                'customer_id' => $validated['customer_id'],
+                'sales_channel_id' => $validated['sales_channel_id'] ?? null,
+                'user_id' => $request->user()->id,
+                'reference_code' => 'SL-' . now()->format('Ymd-His'),
+                'transaction_date' => Carbon::parse($validated['transaction_date'])->format('Y-m-d'),
+                'total_price' => $totalPrice,
+                'status' => $validated['status'] ?? 'Completed',
+                'payment_method_type_id' => $validated['payment_method_type_id'],
+                'notes' => $validated['notes'],
+                'installment_terms' => $validated['installment_terms'],
+                'payment_status' => $validated['installment_terms'] > 1 ? 'pending' : 'paid',
             ]);
 
-            if ($validated["installment_terms"] > 1) {
+            if ($validated['installment_terms'] > 1) {
                 $this->createInstallments(
                     $sell,
                     $totalPrice,
-                    $validated["installment_terms"],
-                    $validated["transaction_date"]
+                    $validated['installment_terms'],
+                    $validated['transaction_date']
                 );
             }
 
             foreach ($itemsData as $item) {
-                $product = Product::findOrFail($item["product_id"]);
+                $product = Product::findOrFail($item['product_id']);
 
                 $this->handleStockOut(
                     product: $product,
@@ -161,12 +161,12 @@ class SellController extends Controller
 
             $request->user()
                 ->sellCartItems()
-                ->where("location_id", $validated["location_id"])
+                ->where('location_id', $validated['location_id'])
                 ->delete();
         });
 
-        return Redirect::route("transactions.index")
-            ->with("success", "Penjualan berhasil disimpan.");
+        return Redirect::route('transactions.index')
+            ->with('success', 'Penjualan berhasil disimpan.');
     }
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)
@@ -191,14 +191,14 @@ class SellController extends Controller
         $user = Auth::user();
 
         $sell->load([
-            "location",
-            "customer",
-            "salesChannel",
-            "user",
-            "paymentMethod",
-            "stockMovements.product",
-            "type",
-            "installments",
+            'location',
+            'customer',
+            'salesChannel',
+            'user',
+            'paymentMethod',
+            'stockMovements.product',
+            'type',
+            'installments',
         ]);
 
         $canShip = strtolower($sell->status) === 'pending' && $user->canTransactAtLocation($sell->location_id, 'sell');
@@ -210,11 +210,11 @@ class SellController extends Controller
             && $user->canTransactAtLocation($targetLocId, 'purchase');
 
         return Inertia::render(
-            "Transactions/Sells/Show",
+            'Transactions/Sells/Show',
             [
-                "sell" => SellResource::make($sell),
-                "canShip" => $canShip,
-                "canReceive" => $canReceive,
+                'sell' => SellResource::make($sell),
+                'canShip' => $canShip,
+                'canReceive' => $canReceive,
             ]
         );
     }

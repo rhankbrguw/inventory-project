@@ -1,29 +1,29 @@
-import { Link, router } from "@inertiajs/react";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import CustomerMobileCard from "./Partials/CustomerMobileCard";
-import { customerColumns } from "@/constants/tableColumns";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { useSoftDeletes } from "@/hooks/useSoftDeletes";
-import Pagination from "@/components/Pagination";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
-import CustomerFilterCard from "./Partials/CustomerFilterCard";
-import { Button } from "@/components/ui/button";
+import { Link, router } from '@inertiajs/react';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import CustomerMobileCard from './Partials/CustomerMobileCard';
+import { customerColumns } from '@/constants/tableColumns';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { useSoftDeletes } from '@/hooks/useSoftDeletes';
+import Pagination from '@/components/Pagination';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import CustomerFilterCard from './Partials/CustomerFilterCard';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Edit, MoreVertical, Archive, ArchiveRestore, Eye } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/dropdown-menu';
+import { Edit, MoreVertical, Archive, ArchiveRestore, Eye } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({ auth, customers, customerTypes, filters }) {
     const { params, setFilter } = useIndexPageFilters(
-        "customers.index",
-        filters,
+        'customers.index',
+        filters
     );
 
     const { isManager, isOperational } = usePermission();
@@ -39,7 +39,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
         itemToDeactivate,
         deactivateItem,
         restoreItem,
-    } = useSoftDeletes({ resourceName: "customers", data: customers.data });
+    } = useSoftDeletes({ resourceName: 'customers', data: customers.data });
 
     const renderActionDropdown = (customer) => (
         <DropdownMenu>
@@ -58,7 +58,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                         <DropdownMenuItem
                             className="cursor-pointer"
                             onSelect={() =>
-                                router.get(route("customers.edit", customer.id))
+                                router.get(route('customers.edit', customer.id))
                             }
                         >
                             <Edit className="w-4 h-4 mr-2" /> Edit
@@ -68,7 +68,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                                 className="cursor-pointer text-success focus:text-success"
                                 onSelect={() => restoreItem(customer.id)}
                             >
-                                <ArchiveRestore className="w-4 h-4 mr-2" />{" "}
+                                <ArchiveRestore className="w-4 h-4 mr-2" />{' '}
                                 Aktifkan
                             </DropdownMenuItem>
                         ) : (
@@ -86,7 +86,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     <DropdownMenuItem
                         className="cursor-pointer"
                         onSelect={() =>
-                            router.get(route("customers.edit", customer.id))
+                            router.get(route('customers.edit', customer.id))
                         }
                     >
                         <Eye className="w-4 h-4 mr-2" /> Lihat
@@ -100,7 +100,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
         <IndexPageLayout
             auth={auth}
             title="Manajemen Pelanggan"
-            createRoute={canCrudCustomers ? "customers.create" : null}
+            createRoute={canCrudCustomers ? 'customers.create' : null}
             buttonLabel="Tambah Pelanggan"
         >
             <div className="space-y-4">
@@ -115,13 +115,13 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                         <Link
                             href={
                                 canViewCustomers
-                                    ? route("customers.edit", customer.id)
-                                    : "#"
+                                    ? route('customers.edit', customer.id)
+                                    : '#'
                             }
                             key={customer.id}
                             className={cn(
-                                !canViewCustomers && "pointer-events-none",
-                                customer.deleted_at && "opacity-50",
+                                !canViewCustomers && 'pointer-events-none',
+                                customer.deleted_at && 'opacity-50'
                             )}
                         >
                             <CustomerMobileCard
@@ -140,9 +140,9 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                         columns={customerColumns}
                         data={customers.data}
                         actions={canViewCustomers ? renderActionDropdown : null}
-                        showRoute={canViewCustomers ? "customers.edit" : null}
+                        showRoute={canViewCustomers ? 'customers.edit' : null}
                         rowClassName={(row) =>
-                            row.deleted_at ? "opacity-50" : ""
+                            row.deleted_at ? 'opacity-50' : ''
                         }
                     />
                 </div>

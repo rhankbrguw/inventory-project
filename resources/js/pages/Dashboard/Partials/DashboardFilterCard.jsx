@@ -1,24 +1,24 @@
-import React from "react";
-import { router } from "@inertiajs/react";
+import React from 'react';
+import { router } from '@inertiajs/react';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { MapPin } from "lucide-react";
-import SmartDateFilter from "@/components/SmartDateFilter";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/select';
+import { MapPin } from 'lucide-react';
+import SmartDateFilter from '@/components/SmartDateFilter';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function DashboardFilterCard({ locations, filters }) {
     const { isSuperAdmin } = usePermission();
 
     const handleFilterChange = (newFilters) => {
         router.get(
-            route("dashboard"),
+            route('dashboard'),
             { ...filters, ...newFilters },
-            { preserveState: true, preserveScroll: true },
+            { preserveState: true, preserveScroll: true }
         );
     };
 
@@ -29,8 +29,8 @@ export default function DashboardFilterCard({ locations, filters }) {
                     Dashboard
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                    Overview performa & stok{" "}
-                    {filters.location_id ? "lokasi terpilih" : "global"}.
+                    Overview performa & stok{' '}
+                    {filters.location_id ? 'lokasi terpilih' : 'global'}.
                 </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -42,7 +42,7 @@ export default function DashboardFilterCard({ locations, filters }) {
                 </div>
                 <div className="w-full sm:w-[240px] md:w-[280px]">
                     <Select
-                        value={filters.location_id || "all"}
+                        value={filters.location_id || 'all'}
                         onValueChange={(val) =>
                             handleFilterChange({ location_id: val })
                         }

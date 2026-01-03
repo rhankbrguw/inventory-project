@@ -1,18 +1,18 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 const sortOptions = [
-    { value: "newest", label: "Pelanggan Terbaru" },
-    { value: "oldest", label: "Pelanggan Terlama" },
-    { value: "name_asc", label: "Nama (A-Z)" },
-    { value: "name_desc", label: "Nama (Z-A)" },
+    { value: 'newest', label: 'Pelanggan Terbaru' },
+    { value: 'oldest', label: 'Pelanggan Terlama' },
+    { value: 'name_asc', label: 'Nama (A-Z)' },
+    { value: 'name_desc', label: 'Nama (Z-A)' },
 ];
 
 export default function CustomerFilterCard({
@@ -26,13 +26,13 @@ export default function CustomerFilterCard({
                 <Input
                     type="search"
                     placeholder="Cari nama, email, atau telepon..."
-                    value={params.search || ""}
-                    onChange={(e) => setFilter("search", e.target.value)}
+                    value={params.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
                 <Select
-                    value={params.type_id || "all"}
-                    onValueChange={(value) => setFilter("type_id", value)}
+                    value={params.type_id || 'all'}
+                    onValueChange={(value) => setFilter('type_id', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Semua Tipe" />
@@ -50,8 +50,8 @@ export default function CustomerFilterCard({
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.sort || "newest"}
-                    onValueChange={(value) => setFilter("sort", value)}
+                    value={params.sort || 'newest'}
+                    onValueChange={(value) => setFilter('sort', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Urutkan" />

@@ -47,7 +47,7 @@ class TransactionController extends Controller
                 DB::raw("'supplier' AS party_type"),
                 DB::raw("'completed' AS status")
             )
-            ->when($accessibleLocationIds, fn($q) => $q->whereIn('purchases.location_id', $accessibleLocationIds))
+            ->when($accessibleLocationIds, fn ($q) => $q->whereIn('purchases.location_id', $accessibleLocationIds))
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('purchases.reference_code', 'like', "%{$search}%")
@@ -59,7 +59,7 @@ class TransactionController extends Controller
                         });
                 });
             })
-            ->when($locationId && $locationId !== 'all', fn($q) => $q->where('purchases.location_id', $locationId));
+            ->when($locationId && $locationId !== 'all', fn ($q) => $q->where('purchases.location_id', $locationId));
 
         $sellsQuery = DB::table('sells')
             ->select(
@@ -76,7 +76,7 @@ class TransactionController extends Controller
                 DB::raw("'customer' AS party_type"),
                 DB::raw("'completed' AS status")
             )
-            ->when($accessibleLocationIds, fn($q) => $q->whereIn('sells.location_id', $accessibleLocationIds))
+            ->when($accessibleLocationIds, fn ($q) => $q->whereIn('sells.location_id', $accessibleLocationIds))
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('sells.reference_code', 'like', "%{$search}%")
@@ -88,7 +88,7 @@ class TransactionController extends Controller
                         });
                 });
             })
-            ->when($locationId && $locationId !== 'all', fn($q) => $q->where('sells.location_id', $locationId));
+            ->when($locationId && $locationId !== 'all', fn ($q) => $q->where('sells.location_id', $locationId));
 
         $transfersQuery = DB::table('stock_transfers')
             ->select(
@@ -111,7 +111,7 @@ class TransactionController extends Controller
                         ->orWhereIn('stock_transfers.to_location_id', $accessibleLocationIds);
                 });
             })
-            ->when($search, fn($q, $search) => $q->where('stock_transfers.reference_code', 'like', "%{$search}%"))
+            ->when($search, fn ($q, $search) => $q->where('stock_transfers.reference_code', 'like', "%{$search}%"))
             ->when($locationId && $locationId !== 'all', function ($q) use ($locationId) {
                 $q->where(function ($sub) use ($locationId) {
                     $sub->where('stock_transfers.from_location_id', $locationId)
@@ -160,7 +160,7 @@ class TransactionController extends Controller
             'user:id,name',
             'supplier:id,name',
             'paymentMethodType:id,name',
-            'stockMovements' => fn($q) => $q->select('id', 'reference_type', 'reference_id', 'product_id')
+            'stockMovements' => fn ($q) => $q->select('id', 'reference_type', 'reference_id', 'product_id')
                 ->with('product:id,name')
                 ->limit(2)
         ])->findMany($purchaseIds)->keyBy('id');
@@ -171,7 +171,7 @@ class TransactionController extends Controller
             'user:id,name',
             'customer:id,name',
             'paymentMethod:id,name',
-            'stockMovements' => fn($q) => $q->select('id', 'reference_type', 'reference_id', 'product_id')
+            'stockMovements' => fn ($q) => $q->select('id', 'reference_type', 'reference_id', 'product_id')
                 ->with('product:id,name')
                 ->limit(2)
         ])->findMany($sellIds)->keyBy('id');
@@ -180,7 +180,7 @@ class TransactionController extends Controller
             'fromLocation:id,name',
             'toLocation:id,name',
             'user:id,name',
-            'stockMovements' => fn($q) => $q->select('id', 'reference_type', 'reference_id', 'product_id')
+            'stockMovements' => fn ($q) => $q->select('id', 'reference_type', 'reference_id', 'product_id')
                 ->with('product:id,name')
                 ->limit(2)
         ])->findMany($transferIds)->keyBy('id');
@@ -220,13 +220,13 @@ class TransactionController extends Controller
         $locations = Cache::remember(
             'locations_' . ($accessibleLocationIds ? implode('_', $accessibleLocationIds) : 'all'),
             3600,
-            fn() => $locationsQuery->get()
+            fn () => $locationsQuery->get()
         );
 
         $transactionTypes = Cache::remember(
             'transaction_types',
             3600,
-            fn() => Type::where('group', Type::GROUP_TRANSACTION)->select('id', 'name')->orderBy('name')->get()
+            fn () => Type::where('group', Type::GROUP_TRANSACTION)->select('id', 'name')->orderBy('name')->get()
         );
 
         return Inertia::render('Transactions/Index', [

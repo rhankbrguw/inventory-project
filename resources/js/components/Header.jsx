@@ -1,5 +1,5 @@
-import { Link, usePage, router } from "@inertiajs/react";
-import { LogOut, Menu, User as ProfileIcon, Globe } from "lucide-react";
+import { Link, usePage, router } from '@inertiajs/react';
+import { LogOut, Menu, User as ProfileIcon, Globe } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -7,10 +7,10 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "./ui/button";
-import UnifiedBadge from "./UnifiedBadge";
-import NotificationDropdown from "./NotificationDropdown";
+} from '@/components/ui/dropdown-menu';
+import { Button } from './ui/button';
+import UnifiedBadge from './UnifiedBadge';
+import NotificationDropdown from './NotificationDropdown';
 
 const UserAvatar = ({ user }) => (
     <div className="relative">
@@ -57,7 +57,7 @@ const UserDropdownMenu = () => {
 
                 <DropdownMenuSeparator />
 
-                <Link href={route("profile.edit")}>
+                <Link href={route('profile.edit')}>
                     <DropdownMenuItem className="group cursor-pointer rounded-lg px-3 py-2 text-sm">
                         <ProfileIcon className="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                         <span className="font-medium text-foreground">
@@ -69,7 +69,7 @@ const UserDropdownMenu = () => {
                 <DropdownMenuSeparator />
 
                 <Link
-                    href={route("logout")}
+                    href={route('logout')}
                     method="post"
                     as="button"
                     className="w-full"
@@ -86,15 +86,15 @@ const UserDropdownMenu = () => {
 
 export default function Header({ setSidebarOpen }) {
     const { props } = usePage();
-    const currentLocale = props.locale || "id";
+    const currentLocale = props.locale || 'id';
 
     const switchLanguage = (lang) => {
         router.post(
-            route("locale.update"),
+            route('locale.update'),
             { locale: lang },
             {
                 preserveScroll: true,
-            },
+            }
         );
     };
 
@@ -130,21 +130,21 @@ export default function Header({ setSidebarOpen }) {
 
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                    onClick={() => switchLanguage("id")}
+                                    onClick={() => switchLanguage('id')}
                                     className={
-                                        currentLocale === "id"
-                                            ? "bg-accent"
-                                            : ""
+                                        currentLocale === 'id'
+                                            ? 'bg-accent'
+                                            : ''
                                     }
                                 >
                                     🇮🇩 Indonesia
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => switchLanguage("en")}
+                                    onClick={() => switchLanguage('en')}
                                     className={
-                                        currentLocale === "en"
-                                            ? "bg-accent"
-                                            : ""
+                                        currentLocale === 'en'
+                                            ? 'bg-accent'
+                                            : ''
                                     }
                                 >
                                     🇺🇸 English

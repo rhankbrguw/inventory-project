@@ -1,14 +1,14 @@
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { formatCurrency, formatNumber, cn } from "@/lib/utils";
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import { formatCurrency, formatNumber, cn } from '@/lib/utils';
 
-export default function TransactionItemMobileCard({ item, type = "purchase" }) {
+export default function TransactionItemMobileCard({ item, type = 'purchase' }) {
     const quantity = Math.abs(item.quantity || 0);
     const isDeleted = item.product?.deleted_at;
 
     const renderContent = () => {
         switch (type) {
-            case "sell": {
+            case 'sell': {
                 const sellPrice = item.cost_per_unit || 0;
                 const avgCost = item.average_cost_per_unit || 0;
                 const total = quantity * sellPrice;
@@ -18,7 +18,7 @@ export default function TransactionItemMobileCard({ item, type = "purchase" }) {
                     <>
                         <div className="flex justify-between items-center text-sm">
                             <span>
-                                {formatNumber(quantity)} {item.product?.unit} ×{" "}
+                                {formatNumber(quantity)} {item.product?.unit} ×{' '}
                                 {formatCurrency(sellPrice)}
                             </span>
                             <span className="font-semibold">
@@ -41,10 +41,10 @@ export default function TransactionItemMobileCard({ item, type = "purchase" }) {
                             </span>
                             <span
                                 className={cn(
-                                    "font-semibold",
+                                    'font-semibold',
                                     margin > 0
-                                        ? "text-success"
-                                        : "text-destructive",
+                                        ? 'text-success'
+                                        : 'text-destructive'
                                 )}
                             >
                                 {formatCurrency(margin)}
@@ -54,7 +54,7 @@ export default function TransactionItemMobileCard({ item, type = "purchase" }) {
                 );
             }
 
-            case "transfer": {
+            case 'transfer': {
                 return (
                     <div className="flex justify-between items-center border-t pt-2">
                         <span className="text-muted-foreground text-sm">
@@ -67,7 +67,7 @@ export default function TransactionItemMobileCard({ item, type = "purchase" }) {
                 );
             }
 
-            case "purchase":
+            case 'purchase':
             default: {
                 const costPerUnit = item.cost_per_unit || 0;
                 const total = quantity * costPerUnit;
@@ -75,7 +75,7 @@ export default function TransactionItemMobileCard({ item, type = "purchase" }) {
                 return (
                     <div className="flex justify-between items-center text-sm">
                         <span>
-                            {formatNumber(quantity)} {item.product?.unit} ×{" "}
+                            {formatNumber(quantity)} {item.product?.unit} ×{' '}
                             {formatCurrency(costPerUnit)}
                         </span>
                         <span className="font-semibold">
@@ -88,14 +88,14 @@ export default function TransactionItemMobileCard({ item, type = "purchase" }) {
     };
 
     return (
-        <Card className={cn("p-3", isDeleted && "opacity-60 bg-muted/50")}>
+        <Card className={cn('p-3', isDeleted && 'opacity-60 bg-muted/50')}>
             <div className="space-y-2">
                 <div>
                     <p className="font-medium text-sm">
-                        {item.product?.name || "Produk Telah Dihapus"}
+                        {item.product?.name || 'Produk Telah Dihapus'}
                     </p>
                     <p className="text-xs text-muted-foreground font-mono">
-                        {item.product?.sku || "-"}
+                        {item.product?.sku || '-'}
                     </p>
                 </div>
                 {renderContent()}

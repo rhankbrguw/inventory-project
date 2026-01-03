@@ -1,28 +1,28 @@
-import { useEffect } from "react";
-import GuestLayout from "@/layouts/GuestLayout";
-import { Head, useForm } from "@inertiajs/react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import InputError from "@/components/InputError";
-import { User, Mail, Lock, Settings } from "lucide-react";
-import { PasswordInput } from "@/components/PasswordInput";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+import { useEffect } from 'react';
+import GuestLayout from '@/layouts/GuestLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import InputError from '@/components/InputError';
+import { User, Mail, Lock, Settings } from 'lucide-react';
+import { PasswordInput } from '@/components/PasswordInput';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 
 export default function Setup() {
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        password_confirmation: "",
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        password_confirmation: '',
     });
 
-    useEffect(() => () => reset("password", "password_confirmation"), []);
+    useEffect(() => () => reset('password', 'password_confirmation'), []);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("setup.store"));
+        post(route('setup.store'));
     };
 
     return (
@@ -58,7 +58,7 @@ export default function Setup() {
                                 autoComplete="name"
                                 placeholder="Nama lengkap/Perusahaan"
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData('name', e.target.value)
                                 }
                                 required
                                 autoFocus
@@ -84,7 +84,7 @@ export default function Setup() {
                                 autoComplete="username"
                                 placeholder="nama@perusahaan.com"
                                 onChange={(e) =>
-                                    setData("email", e.target.value)
+                                    setData('email', e.target.value)
                                 }
                                 required
                             />
@@ -108,9 +108,8 @@ export default function Setup() {
                             placeholder="81234567890"
                             onChange={(e) =>
                                 setData(
-                                    "phone",
-                                    e.target.value
-                                        .replace(/\D/g, "")
+                                    'phone',
+                                    e.target.value.replace(/\D/g, '')
                                 )
                             }
                         />
@@ -133,7 +132,7 @@ export default function Setup() {
                                 autoComplete="new-password"
                                 placeholder="Masukkan password yang kuat"
                                 onChange={(e) =>
-                                    setData("password", e.target.value)
+                                    setData('password', e.target.value)
                                 }
                                 required
                             />
@@ -164,8 +163,8 @@ export default function Setup() {
                                 placeholder="Ulangi password yang sama"
                                 onChange={(e) =>
                                     setData(
-                                        "password_confirmation",
-                                        e.target.value,
+                                        'password_confirmation',
+                                        e.target.value
                                     )
                                 }
                                 required
@@ -182,7 +181,7 @@ export default function Setup() {
                             className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-xl hover:shadow-lg hover:-translate-y-px transition-all duration-300"
                             disabled={processing}
                         >
-                            {processing ? "Memproses..." : "Selesaikan Setup"}
+                            {processing ? 'Memproses...' : 'Selesaikan Setup'}
                         </Button>
                     </div>
                 </form>

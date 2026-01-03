@@ -21,12 +21,15 @@ const Dropdown = ({ children }) => {
 const Trigger = ({ children }) => {
     const { toggleOpen } = useContext(DropDownContext);
 
-    return (
-        <div onClick={toggleOpen}>{children}</div>
-    );
+    return <div onClick={toggleOpen}>{children}</div>;
 };
 
-const Content = ({ align = 'right', width = '48', contentClasses = 'py-1 bg-popover', children }) => {
+const Content = ({
+    align = 'right',
+    width = '48',
+    contentClasses = 'py-1 bg-popover',
+    children,
+}) => {
     const { open, setOpen } = useContext(DropDownContext);
 
     let alignmentClasses = 'origin-top';

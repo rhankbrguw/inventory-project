@@ -15,14 +15,14 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        "type_id",
-        "default_supplier_id",
-        "name",
-        "sku",
-        "description",
-        "price",
-        "unit",
-        "image_path",
+        'type_id',
+        'default_supplier_id',
+        'name',
+        'sku',
+        'description',
+        'price',
+        'unit',
+        'image_path',
     ];
 
     public function type(): BelongsTo
@@ -32,12 +32,12 @@ class Product extends Model
 
     public function defaultSupplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class, "default_supplier_id");
+        return $this->belongsTo(Supplier::class, 'default_supplier_id');
     }
 
     public function suppliers(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, "product_supplier");
+        return $this->belongsToMany(Supplier::class, 'product_supplier');
     }
 
     public function inventories(): HasMany
@@ -50,14 +50,17 @@ class Product extends Model
         return $this->hasMany(CartItem::class);
     }
 
-    public function prices()
+    public function prices(): HasMany
     {
         return $this->hasMany(ProductPrice::class);
     }
 
     public function getPriceForChannel($channelId)
     {
-        $specialPrice = $this->prices->where('sales_channel_id', $channelId)->first();
+        $specialPrice = $this->prices
+            ->where('sales_channel_id', $channelId)
+            ->first();
+
         return $specialPrice ? $specialPrice->price : $this->price;
     }
 }

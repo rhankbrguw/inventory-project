@@ -1,8 +1,8 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Calendar } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { Calendar } from 'lucide-react';
 
 export default function InstallmentSchedule({ installments, paymentStatus }) {
     if (!installments || installments.length === 0) {
@@ -33,11 +33,11 @@ export default function InstallmentSchedule({ installments, paymentStatus }) {
 
     const totalPaid = installments.reduce(
         (sum, inst) => sum + parseFloat(inst.paid_amount || 0),
-        0,
+        0
     );
     const totalAmount = installments.reduce(
         (sum, inst) => sum + parseFloat(inst.amount),
-        0,
+        0
     );
     const paidCount = installments.filter((inst) => inst.is_paid).length;
     const progressPercentage = (totalPaid / totalAmount) * 100;
@@ -71,10 +71,10 @@ export default function InstallmentSchedule({ installments, paymentStatus }) {
                     <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                         <div
                             className={cn(
-                                "h-full transition-all duration-500 rounded-full",
-                                paymentStatus === "paid"
-                                    ? "bg-[hsl(var(--success))]"
-                                    : "bg-primary",
+                                'h-full transition-all duration-500 rounded-full',
+                                paymentStatus === 'paid'
+                                    ? 'bg-[hsl(var(--success))]'
+                                    : 'bg-primary'
                             )}
                             style={{ width: `${progressPercentage}%` }}
                         />
@@ -88,12 +88,12 @@ export default function InstallmentSchedule({ installments, paymentStatus }) {
                         <div
                             key={installment.id}
                             className={cn(
-                                "flex items-center justify-between p-2.5 rounded-md border transition-colors text-xs",
+                                'flex items-center justify-between p-2.5 rounded-md border transition-colors text-xs',
                                 installment.is_paid
-                                    ? "bg-success/5 border-success/20"
+                                    ? 'bg-success/5 border-success/20'
                                     : installment.is_overdue
-                                        ? "bg-destructive/5 border-destructive/20"
-                                        : "bg-card hover:bg-muted/30",
+                                      ? 'bg-destructive/5 border-destructive/20'
+                                      : 'bg-card hover:bg-muted/30'
                             )}
                         >
                             <div className="flex-1 min-w-0 mr-3">
@@ -107,7 +107,7 @@ export default function InstallmentSchedule({ installments, paymentStatus }) {
                                     {formatDate(installment.due_date)}
                                     {installment.paid_date && (
                                         <span className="ml-1.5">
-                                            •{" "}
+                                            •{' '}
                                             {formatDate(installment.paid_date)}
                                         </span>
                                     )}

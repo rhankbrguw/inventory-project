@@ -1,38 +1,38 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
-} from "@/components/ui/card";
-import { PasswordInput } from "@/components/PasswordInput";
+} from '@/components/ui/card';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export default function Create({ auth, roles }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        password_confirmation: "",
-        role: "",
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        password_confirmation: '',
+        role: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("users.store"));
+        post(route('users.store'));
     };
 
     return (
@@ -60,7 +60,7 @@ export default function Create({ auth, roles }) {
                                 placeholder="Nama Lengkap Staf"
                                 value={data.name}
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData('name', e.target.value)
                                 }
                             />
                         </FormField>
@@ -76,7 +76,7 @@ export default function Create({ auth, roles }) {
                                     placeholder="email.kerja@perusahaan.com"
                                     value={data.email}
                                     onChange={(e) =>
-                                        setData("email", e.target.value)
+                                        setData('email', e.target.value)
                                     }
                                 />
                             </FormField>
@@ -92,8 +92,8 @@ export default function Create({ auth, roles }) {
                                     value={data.phone}
                                     onChange={(e) =>
                                         setData(
-                                            "phone",
-                                            e.target.value.replace(/\D/g, ""),
+                                            'phone',
+                                            e.target.value.replace(/\D/g, '')
                                         )
                                     }
                                 />
@@ -110,7 +110,7 @@ export default function Create({ auth, roles }) {
                                     placeholder="Minimal 8 karakter"
                                     value={data.password}
                                     onChange={(e) =>
-                                        setData("password", e.target.value)
+                                        setData('password', e.target.value)
                                     }
                                 />
                             </FormField>
@@ -125,8 +125,8 @@ export default function Create({ auth, roles }) {
                                     value={data.password_confirmation}
                                     onChange={(e) =>
                                         setData(
-                                            "password_confirmation",
-                                            e.target.value,
+                                            'password_confirmation',
+                                            e.target.value
                                         )
                                     }
                                 />
@@ -139,7 +139,7 @@ export default function Create({ auth, roles }) {
                         >
                             <Select
                                 onValueChange={(value) =>
-                                    setData("role", value)
+                                    setData('role', value)
                                 }
                             >
                                 <SelectTrigger>
@@ -158,7 +158,7 @@ export default function Create({ auth, roles }) {
                             </Select>
                         </FormField>
                         <div className="flex items-center gap-4 justify-end">
-                            <Link href={route("users.index")}>
+                            <Link href={route('users.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

@@ -126,8 +126,10 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
     Route::get('/transactions/transfers/create', [StockTransferController::class, 'create'])->name('transactions.transfers.create');
     Route::post('/transactions/transfers', [StockTransferController::class, 'store'])->name('transactions.transfers.store');
     Route::get('/transactions/transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('transactions.transfers.show');
-    Route::post('/transactions/transfers/{stockTransfer}/accept', [StockTransferController::class, 'accept'])->name('transactions.transfers.accept');
+    Route::post('/transactions/transfers/{stockTransfer}/approve', [StockTransferController::class, 'approve'])->name('transactions.transfers.approve');
     Route::post('/transactions/transfers/{stockTransfer}/reject', [StockTransferController::class, 'reject'])->name('transactions.transfers.reject');
+    Route::post('/transactions/transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship'])->name('transactions.transfers.ship');
+    Route::post('/transactions/transfers/{stockTransfer}/receive', [StockTransferController::class, 'receive'])->name('transactions.transfers.receive');
 
     Route::get('/transactions/sells/create', [SellController::class, 'create'])->name('transactions.sells.create');
     Route::post('/transactions/sells', [SellController::class, 'store'])->name('transactions.sells.store');

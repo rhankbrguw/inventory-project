@@ -1,9 +1,9 @@
-import ContentPageLayout from "@/components/ContentPageLayout";
-import TransactionInfoGrid from "@/components/Transaction/TransactionInfoGrid";
-import TransactionItemsSection from "@/components/Transaction/TransactionItemsSection";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import ContentPageLayout from '@/components/ContentPageLayout';
+import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
+import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Dialog,
     DialogContent,
@@ -11,7 +11,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -21,125 +21,119 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { formatDate, cn } from "@/lib/utils";
-import { transferDetailColumns } from "@/constants/tableColumns";
-import { router } from "@inertiajs/react";
-import React from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { formatDate } from '@/lib/utils';
+import { transferDetailColumns } from '@/constants/tableColumns';
+import { router } from '@inertiajs/react';
+import React from 'react';
+import {
+    CheckCircle,
+    XCircle,
+    Truck,
+    PackageCheck,
+    AlertTriangle,
+} from 'lucide-react';
+import UnifiedBadge from '@/components/UnifiedBadge';
 
-export default function Show({ auth, transfer, can_accept }) {
+export default function Show({
+    auth,
+    transfer,
+    canApprove,
+    canShip,
+    canReceive,
+}) {
     const { data } = transfer;
 
     const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
-    const [isAcceptDialogOpen, setIsAcceptDialogOpen] = React.useState(false);
-    const [rejectionReason, setRejectionReason] = React.useState("");
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = React.useState(false);
+    const [rejectionReason, setRejectionReason] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
 
-    const handleAcceptConfirm = () => {
+    const handleApprove = () => {
         setIsProcessing(true);
         router.post(
-            route("transactions.transfers.accept", data.id),
+            route('transactions.transfers.approve', data.id),
             {},
             {
                 onFinish: () => {
                     setIsProcessing(false);
-                    setIsAcceptDialogOpen(false);
+                    setIsApproveDialogOpen(false);
                 },
-            },
+            }
         );
     };
 
     const handleReject = () => {
-        if (!rejectionReason.trim()) {
-            return;
-        }
+        if (!rejectionReason.trim()) return;
         setIsProcessing(true);
         router.post(
-            route("transactions.transfers.reject", data.id),
-            { rejection_reason: rejectionReason },
+            route('transactions.transfers.reject', data.id),
+            { reason: rejectionReason },
             {
                 onFinish: () => {
                     setIsProcessing(false);
                     setIsRejectDialogOpen(false);
-                    setRejectionReason("");
+                    setRejectionReason('');
                 },
-            },
+            }
+        );
+    };
+
+    const handleShip = () => {
+        setIsProcessing(true);
+        router.post(
+            route('transactions.transfers.ship', data.id),
+            {},
+            {
+                onFinish: () => setIsProcessing(false),
+            }
+        );
+    };
+
+    const handleReceive = () => {
+        setIsProcessing(true);
+        router.post(
+            route('transactions.transfers.receive', data.id),
+            {},
+            {
+                onFinish: () => setIsProcessing(false),
+            }
         );
     };
 
     const infoFields = [
+        { label: 'Dari Lokasi', value: data.from_location?.name },
+        { label: 'Ke Lokasi', value: data.to_location?.name },
+        { label: 'Tanggal Transfer', value: formatDate(data.transfer_date) },
         {
-            label: "Dari Lokasi",
-            value: data.from_location?.name,
+            label: 'Status',
+            value: <UnifiedBadge text={data.status} code={data.status} />,
         },
+        { label: 'Dibuat Oleh', value: data.user?.name },
         {
-            label: "Ke Lokasi",
-            value: data.to_location?.name,
-        },
-        {
-            label: "Tanggal Transfer",
-            value: formatDate(data.transfer_date),
-        },
-        {
-            label: "Status",
-            badge: data.status,
-            badgeVariant: "default",
-            badgeClassName: cn(
-                "capitalize",
-                `status-${data.status.toLowerCase()}`,
-            ),
-        },
-        {
-            label: "Dibuat Oleh",
-            value: data.user?.name,
-        },
-        {
-            label: "Diterima Oleh",
-            value: data.received_by ? (
-                <>
-                    <span className="font-semibold">
-                        {data.received_by.name}
-                    </span>
-                    {data.received_at && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatDate(data.received_at)}
-                        </p>
-                    )}
-                </>
-            ) : null,
+            label: 'Diterima Oleh',
+            value: data.received_by?.name,
             hidden: !data.received_by,
         },
         {
-            label: "Ditolak Oleh",
-            value: data.rejected_by ? (
-                <>
-                    <span className="font-semibold">
-                        {data.rejected_by.name}
-                    </span>
-                    {data.rejected_at && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatDate(data.rejected_at)}
-                        </p>
-                    )}
-                </>
-            ) : null,
+            label: 'Ditolak Oleh',
+            value: data.rejected_by?.name,
             hidden: !data.rejected_by,
         },
         {
-            label: "Alasan Penolakan",
+            label: 'Alasan Penolakan',
             value: (
-                <span className="font-semibold text-destructive">
+                <span className="text-destructive font-medium">
                     {data.rejection_reason}
                 </span>
             ),
-            span: "full",
+            span: 'full',
             hidden: !data.rejection_reason,
         },
         {
-            label: "Catatan",
+            label: 'Catatan',
             value: data.notes,
-            span: "full",
+            span: 'full',
             hidden: !data.notes,
         },
     ];
@@ -147,41 +141,41 @@ export default function Show({ auth, transfer, can_accept }) {
     return (
         <ContentPageLayout
             auth={auth}
-            title="Detail Transfer Stok"
+            title={`Transfer ${data.reference_code}`}
             backRoute="transactions.index"
         >
-            {data.status === "pending" && can_accept && (
-                <Card className="border-info/20 bg-info/5">
+            {data.status === 'Pending Approval' && canApprove && (
+                <Card className="mb-6">
                     <CardContent className="pt-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div>
-                                <h3 className="font-semibold mb-1">
-                                    Transfer Menunggu Konfirmasi
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Anda dapat menerima atau menolak transfer
-                                    ini
-                                </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="h-5 w-5 text-warning" />
+                                <div>
+                                    <h3 className="font-semibold">
+                                        Menunggu Persetujuan
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Transfer membutuhkan konfirmasi Anda
+                                    </p>
+                                </div>
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <Button
-                                    onClick={() => setIsRejectDialogOpen(true)}
                                     variant="outline"
-                                    size="sm"
+                                    className="flex-1 sm:flex-none"
+                                    onClick={() => setIsRejectDialogOpen(true)}
                                     disabled={isProcessing}
-                                    className="gap-2 flex-1 sm:flex-none"
                                 >
-                                    <XCircle className="h-4 w-4" />
+                                    <XCircle className="h-4 w-4 mr-2" />
                                     Tolak
                                 </Button>
                                 <Button
-                                    onClick={() => setIsAcceptDialogOpen(true)}
-                                    size="sm"
+                                    className="bg-success hover:bg-success/90 text-primary-foreground flex-1 sm:flex-none"
+                                    onClick={() => setIsApproveDialogOpen(true)}
                                     disabled={isProcessing}
-                                    className="gap-2 bg-success hover:bg-success/90 flex-1 sm:flex-none"
                                 >
-                                    <CheckCircle className="h-4 w-4" />
-                                    Terima
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Setujui
                                 </Button>
                             </div>
                         </div>
@@ -189,8 +183,64 @@ export default function Show({ auth, transfer, can_accept }) {
                 </Card>
             )}
 
+            {data.status === 'Approved' && canShip && (
+                <Card className="mb-6">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <Truck className="h-5 w-5 text-info" />
+                                <div>
+                                    <h3 className="font-semibold">
+                                        Siap Dikirim
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Transfer telah disetujui
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                className="bg-info hover:bg-info/90 text-primary-foreground"
+                                onClick={handleShip}
+                                disabled={isProcessing}
+                            >
+                                <Truck className="h-4 w-4 mr-2" />
+                                Kirim Barang
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {data.status === 'Shipping' && canReceive && (
+                <Card className="mb-6">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <PackageCheck className="h-5 w-5 text-purple" />
+                                <div>
+                                    <h3 className="font-semibold">
+                                        Dalam Pengiriman
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Konfirmasi setelah barang diterima
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                className="bg-success hover:bg-success/90 text-primary-foreground"
+                                onClick={handleReceive}
+                                disabled={isProcessing}
+                            >
+                                <PackageCheck className="h-4 w-4 mr-2" />
+                                Terima Barang
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <TransactionInfoGrid
-                title="Informasi Umum"
+                title="Informasi Transfer"
                 subtitle={data.reference_code}
                 fields={infoFields}
             />
@@ -202,15 +252,14 @@ export default function Show({ auth, transfer, can_accept }) {
             />
 
             <AlertDialog
-                open={isAcceptDialogOpen}
-                onOpenChange={setIsAcceptDialogOpen}
+                open={isApproveDialogOpen}
+                onOpenChange={setIsApproveDialogOpen}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Terima Transfer?</AlertDialogTitle>
+                        <AlertDialogTitle>Setujui Transfer?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Stok akan masuk ke lokasi Anda. Tindakan ini tidak
-                            dapat dibatalkan.
+                            Stok belum berpindah sampai barang diterima
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -218,11 +267,11 @@ export default function Show({ auth, transfer, can_accept }) {
                             Batal
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={handleAcceptConfirm}
+                            onClick={handleApprove}
                             disabled={isProcessing}
-                            className="bg-success hover:bg-success/90"
+                            className="bg-success hover:bg-success/90 text-primary-foreground"
                         >
-                            {isProcessing ? "Memproses..." : "Terima Transfer"}
+                            {isProcessing ? 'Memproses...' : 'Setujui Transfer'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -234,15 +283,16 @@ export default function Show({ auth, transfer, can_accept }) {
             >
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Tolak Transfer</DialogTitle>
+                        <DialogTitle className="text-destructive">
+                            Tolak Transfer
+                        </DialogTitle>
                         <DialogDescription>
-                            Berikan alasan penolakan transfer ini
+                            Berikan alasan penolakan
                         </DialogDescription>
                     </DialogHeader>
                     <Textarea
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
-                        placeholder="Contoh: Barang tidak sesuai pesanan"
                         rows={4}
                     />
                     <DialogFooter>
@@ -258,7 +308,7 @@ export default function Show({ auth, transfer, can_accept }) {
                             onClick={handleReject}
                             disabled={isProcessing || !rejectionReason.trim()}
                         >
-                            {isProcessing ? "Memproses..." : "Tolak Transfer"}
+                            {isProcessing ? 'Memproses...' : 'Tolak Transfer'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
