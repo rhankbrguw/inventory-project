@@ -1,14 +1,7 @@
 import ContentPageLayout from "@/components/ContentPageLayout";
-import PrintButton from "@/components/PrintButton";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import TransactionInfoGrid from "@/components/Transaction/TransactionInfoGrid";
+import TransactionItemsSection from "@/components/Transaction/TransactionItemsSection";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -29,8 +22,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatDate, formatNumber, cn } from "@/lib/utils";
-import DataTable from "@/components/DataTable";
+import { formatDate, cn } from "@/lib/utils";
 import { transferDetailColumns } from "@/constants/tableColumns";
 import { router } from "@inertiajs/react";
 import React from "react";
@@ -76,37 +68,81 @@ export default function Show({ auth, transfer, can_accept }) {
         );
     };
 
-    const renderMobileItem = (item) => {
-        const quantity = Math.abs(item.quantity || 0);
-
-        return (
-            <Card
-                key={item.id}
-                className={cn(
-                    "p-3",
-                    item.product?.deleted_at && "opacity-60 bg-muted/50",
-                )}
-            >
-                <div className="space-y-2 text-sm">
-                    <div>
-                        <p className="font-medium">
-                            {item.product?.name || "Produk Telah Dihapus"}
+    const infoFields = [
+        {
+            label: "Dari Lokasi",
+            value: data.from_location?.name,
+        },
+        {
+            label: "Ke Lokasi",
+            value: data.to_location?.name,
+        },
+        {
+            label: "Tanggal Transfer",
+            value: formatDate(data.transfer_date),
+        },
+        {
+            label: "Status",
+            badge: data.status,
+            badgeVariant: "default",
+            badgeClassName: cn(
+                "capitalize",
+                `status-${data.status.toLowerCase()}`,
+            ),
+        },
+        {
+            label: "Dibuat Oleh",
+            value: data.user?.name,
+        },
+        {
+            label: "Diterima Oleh",
+            value: data.received_by ? (
+                <>
+                    <span className="font-semibold">
+                        {data.received_by.name}
+                    </span>
+                    {data.received_at && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            {formatDate(data.received_at)}
                         </p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                            {item.product?.sku || "-"}
+                    )}
+                </>
+            ) : null,
+            hidden: !data.received_by,
+        },
+        {
+            label: "Ditolak Oleh",
+            value: data.rejected_by ? (
+                <>
+                    <span className="font-semibold">
+                        {data.rejected_by.name}
+                    </span>
+                    {data.rejected_at && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            {formatDate(data.rejected_at)}
                         </p>
-                    </div>
-
-                    <div className="flex justify-between items-center border-t pt-2">
-                        <span className="text-muted-foreground">Qty</span>
-                        <span className="font-semibold">
-                            {formatNumber(quantity)} {item.product?.unit}
-                        </span>
-                    </div>
-                </div>
-            </Card>
-        );
-    };
+                    )}
+                </>
+            ) : null,
+            hidden: !data.rejected_by,
+        },
+        {
+            label: "Alasan Penolakan",
+            value: (
+                <span className="font-semibold text-destructive">
+                    {data.rejection_reason}
+                </span>
+            ),
+            span: "full",
+            hidden: !data.rejection_reason,
+        },
+        {
+            label: "Catatan",
+            value: data.notes,
+            span: "full",
+            hidden: !data.notes,
+        },
+    ];
 
     return (
         <ContentPageLayout
@@ -153,125 +189,17 @@ export default function Show({ auth, transfer, can_accept }) {
                 </Card>
             )}
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informasi Umum</CardTitle>
-                    <CardDescription>{data.reference_code}</CardDescription>
-                </CardHeader>
-                <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
-                    <div>
-                        <p className="text-muted-foreground">Dari Lokasi</p>
-                        <p className="font-semibold">
-                            {data.from_location?.name}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Ke Lokasi</p>
-                        <p className="font-semibold">
-                            {data.to_location?.name}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">
-                            Tanggal Transfer
-                        </p>
-                        <p className="font-semibold">
-                            {formatDate(data.transfer_date)}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Status</p>
-                        <Badge
-                            variant="outline"
-                            className={cn(
-                                "capitalize",
-                                data.status === "completed" &&
-                                    "border-success/20 bg-success/10 text-success",
-                                data.status === "rejected" &&
-                                    "border-destructive/20 bg-destructive/10 text-destructive",
-                            )}
-                        >
-                            {data.status}
-                        </Badge>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Dibuat Oleh</p>
-                        <p className="font-semibold">{data.user?.name}</p>
-                    </div>
+            <TransactionInfoGrid
+                title="Informasi Umum"
+                subtitle={data.reference_code}
+                fields={infoFields}
+            />
 
-                    {data.received_by && (
-                        <div>
-                            <p className="text-muted-foreground">
-                                Diterima Oleh
-                            </p>
-                            <p className="font-semibold">
-                                {data.received_by.name}
-                            </p>
-                            {data.received_at && (
-                                <p className="text-xs text-muted-foreground">
-                                    {formatDate(data.received_at)}
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {data.rejected_by && (
-                        <>
-                            <div>
-                                <p className="text-muted-foreground">
-                                    Ditolak Oleh
-                                </p>
-                                <p className="font-semibold">
-                                    {data.rejected_by.name}
-                                </p>
-                                {data.rejected_at && (
-                                    <p className="text-xs text-muted-foreground">
-                                        {formatDate(data.rejected_at)}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="sm:col-span-3">
-                                <p className="text-muted-foreground">
-                                    Alasan Penolakan
-                                </p>
-                                <p className="font-semibold text-destructive">
-                                    {data.rejection_reason}
-                                </p>
-                            </div>
-                        </>
-                    )}
-
-                    {data.notes && (
-                        <div className="sm:col-span-3">
-                            <p className="text-muted-foreground">Catatan</p>
-                            <p className="font-semibold">{data.notes}</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle>Rincian Item</CardTitle>
-                    <PrintButton>
-                        <span className="hidden sm:inline">Cetak</span>
-                    </PrintButton>
-                </CardHeader>
-
-                <CardContent>
-                    <div className="md:hidden space-y-3">
-                        {data.items.map(renderMobileItem)}
-                        <Separator className="my-4" />
-                    </div>
-
-                    <div className="hidden md:block">
-                        <DataTable
-                            columns={transferDetailColumns}
-                            data={data.items}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+            <TransactionItemsSection
+                type="transfer"
+                items={data.items}
+                columns={transferDetailColumns}
+            />
 
             <AlertDialog
                 open={isAcceptDialogOpen}

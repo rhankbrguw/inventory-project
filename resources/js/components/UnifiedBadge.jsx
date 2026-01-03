@@ -13,6 +13,10 @@ export default function UnifiedBadge({ text, code }) {
         CBG: "customer-type-cabang",
         MTR: "customer-type-mitra",
 
+        Pembelian: "transaction-type-pembelian",
+        Penjualan: "transaction-type-penjualan",
+        Transfer: "transaction-type-transfer",
+
         "Super Admin": "role-super-admin",
         "Warehouse Manager": "role-warehouse-manager",
         "Branch Manager": "role-branch-manager",

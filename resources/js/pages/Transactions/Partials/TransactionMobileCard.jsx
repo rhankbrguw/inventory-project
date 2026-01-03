@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import UnifiedBadge from "@/components/UnifiedBadge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { router } from "@inertiajs/react";
 
 export default function TransactionMobileCard({
@@ -9,31 +9,40 @@ export default function TransactionMobileCard({
     renderActionDropdown,
 }) {
     const isTransfer = transaction.type === "Transfer";
-    const statusVariant =
-        {
-            pending: "warning",
-            completed: "success",
-            rejected: "destructive",
-        }[transaction.status] || "default";
+
+    const getStatusClass = (status) => {
+        const statusMap = {
+            completed: "status-completed",
+            pending: "status-pending",
+            rejected: "status-rejected",
+            shipping: "status-shipping",
+        };
+        return statusMap[status?.toLowerCase()] || "status-pending";
+    };
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div className="space-y-1">
+            <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div className="space-y-1.5">
                     <CardTitle className="text-sm font-mono">
                         {transaction.reference_code}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground">
                         {formatDate(transaction.transaction_date)}
                     </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <UnifiedBadge text={transaction.type} />
-                    {isTransfer && (
-                        <Badge variant={statusVariant}>
+                    {transaction.status && (
+                        <Badge
+                            className={cn(
+                                "capitalize text-[9px] h-4 px-1.5 font-medium",
+                                getStatusClass(transaction.status),
+                            )}
+                        >
                             {transaction.status}
                         </Badge>
                     )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <UnifiedBadge text={transaction.type} />
                     {renderActionDropdown(transaction)}
                 </div>
             </CardHeader>

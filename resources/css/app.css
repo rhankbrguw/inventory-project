@@ -139,6 +139,7 @@
         @apply px-2.5 py-0.5 rounded-full text-xs font-semibold border border-transparent transition-colors;
     }
 
+    /* Role Badges */
     .role-super-admin {
         @apply badge-base bg-primary text-primary-foreground hover:bg-primary/90;
     }
@@ -165,6 +166,7 @@
         @apply badge-base bg-muted text-muted-foreground;
     }
 
+    /* Customer Type Badges */
     .customer-type-individu {
         @apply badge-base;
         background-color: hsl(var(--sky) / 0.15);
@@ -183,6 +185,55 @@
         color: hsl(var(--success));
     }
 
+    /* Transaction Type Badges */
+    .transaction-type-pembelian {
+        @apply badge-base;
+        background-color: hsl(var(--orange) / 0.15);
+        color: hsl(var(--orange));
+    }
+
+    .transaction-type-penjualan {
+        @apply badge-base;
+        background-color: hsl(var(--success) / 0.15);
+        color: hsl(var(--success));
+    }
+
+    .transaction-type-transfer {
+        @apply badge-base;
+        background-color: hsl(var(--purple) / 0.15);
+        color: hsl(var(--purple));
+    }
+
+    /* Transaction Status Badges */
+    .status-completed {
+        @apply badge-base;
+        background-color: hsl(var(--success) / 0.15);
+        color: hsl(var(--success));
+        border-color: hsl(var(--success) / 0.2);
+    }
+
+    .status-pending {
+        @apply badge-base;
+        background-color: hsl(var(--warning) / 0.15);
+        color: hsl(var(--warning));
+        border-color: hsl(var(--warning) / 0.2);
+    }
+
+    .status-rejected {
+        @apply badge-base;
+        background-color: hsl(var(--destructive) / 0.15);
+        color: hsl(var(--destructive));
+        border-color: hsl(var(--destructive) / 0.2);
+    }
+
+    .status-shipping {
+        @apply badge-base;
+        background-color: hsl(var(--blue) / 0.15);
+        color: hsl(var(--blue));
+        border-color: hsl(var(--blue) / 0.2);
+    }
+
+    /* Transaction Buttons */
     .btn-purchase {
         background-color: hsl(var(--secondary));
         color: hsl(var(--secondary-foreground));
