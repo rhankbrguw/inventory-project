@@ -39,13 +39,14 @@ class TransactionController extends Controller
                 'purchases.reference_code',
                 'purchases.transaction_date',
                 'purchases.total_cost AS total_amount',
+                'purchases.notes',
                 'purchases.created_at',
                 'purchases.location_id',
                 'purchases.user_id',
                 'purchases.supplier_id AS party_id',
                 DB::raw("'purchase' AS transaction_type"),
                 DB::raw("'supplier' AS party_type"),
-                DB::raw("'completed' AS status")
+                'purchases.status'
             )
             ->when($accessibleLocationIds, fn ($q) => $q->whereIn('purchases.location_id', $accessibleLocationIds))
             ->when($search, function ($query, $search) {
@@ -68,13 +69,14 @@ class TransactionController extends Controller
                 'sells.reference_code',
                 'sells.transaction_date',
                 'sells.total_price AS total_amount',
+                'sells.notes',
                 'sells.created_at',
                 'sells.location_id',
                 'sells.user_id',
                 'sells.customer_id AS party_id',
                 DB::raw("'sell' AS transaction_type"),
                 DB::raw("'customer' AS party_type"),
-                DB::raw("'completed' AS status")
+                'sells.status'
             )
             ->when($accessibleLocationIds, fn ($q) => $q->whereIn('sells.location_id', $accessibleLocationIds))
             ->when($search, function ($query, $search) {
@@ -97,6 +99,7 @@ class TransactionController extends Controller
                 'stock_transfers.reference_code',
                 'stock_transfers.transfer_date AS transaction_date',
                 DB::raw('0 AS total_amount'),
+                'stock_transfers.notes',
                 'stock_transfers.created_at',
                 'stock_transfers.from_location_id AS location_id',
                 'stock_transfers.user_id',

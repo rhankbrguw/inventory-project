@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class () extends Migration {
+return new class() extends Migration {
     public function up(): void
     {
         Schema::table('stock_movements', function (Blueprint $table) {
@@ -19,5 +19,7 @@ return new class () extends Migration {
 
     public function down(): void
     {
+        // Cannot safely rollback - data migration already performed
+        // Schema::dropColumn('date') would lose data
     }
 };

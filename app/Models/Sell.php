@@ -13,6 +13,12 @@ class Sell extends Model
     use HasFactory;
     use ScopedByLocation;
 
+    public const STATUS_PENDING_APPROVAL = 'Pending Approval';
+    public const STATUS_APPROVED = 'Approved';
+    public const STATUS_SHIPPING = 'Shipping';
+    public const STATUS_COMPLETED = 'Completed';
+    public const STATUS_REJECTED = 'Rejected';
+
     protected $fillable = [
         'type_id',
         'location_id',
@@ -27,6 +33,11 @@ class Sell extends Model
         'payment_method_type_id',
         'installment_terms',
         'payment_status',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason'
     ];
 
     protected $casts = [
@@ -92,5 +103,15 @@ class Sell extends Model
     public function isPartiallyPaid(): bool
     {
         return $this->payment_status === 'partial';
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

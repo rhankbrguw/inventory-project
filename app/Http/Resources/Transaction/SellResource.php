@@ -19,6 +19,16 @@ class SellResource extends JsonResource
             'transaction_date' => $this->transaction_date?->format('Y-m-d'),
             'installment_terms' => $this->installment_terms,
             'payment_status' => $this->payment_status,
+            'approved_by' => $this->approver ? [
+                'id' => $this->approver->id,
+                'name' => $this->approver->name,
+            ] : null,
+
+            'rejected_by' => $this->rejector ? [
+                'id' => $this->rejector->id,
+                'name' => $this->rejector->name,
+            ] : null,
+            'rejection_reason' => $this->rejection_reason,
             'has_installments' => $this->hasInstallments(),
             'is_fully_paid' => $this->isFullyPaid(),
             'type' => $this->whenLoaded('type', fn () => [
