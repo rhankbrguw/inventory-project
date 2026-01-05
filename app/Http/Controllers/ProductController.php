@@ -9,7 +9,6 @@ use App\Http\Resources\SupplierResource;
 use App\Http\Resources\TypeResource;
 use App\Models\Inventory;
 use App\Models\Product;
-use App\Models\SalesChannel;
 use App\Models\Supplier;
 use App\Models\Type;
 use Illuminate\Http\RedirectResponse;
@@ -74,6 +73,7 @@ class ProductController extends Controller
             'allProducts' => Product::orderBy('name')->get(['id', 'name', 'sku']),
             'suppliers' => SupplierResource::collection(Supplier::orderBy('name')->get()),
             'productTypes' => TypeResource::collection(Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get()),
+            'salesChannels' => TypeResource::collection(Type::where('group', Type::GROUP_SALES_CHANNEL)->orderBy('name')->get()),
             'filters' => (object) $request->only(['search', 'status', 'sort', 'type_id']),
         ]);
     }
@@ -101,7 +101,7 @@ class ProductController extends Controller
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'validUnits' => self::VALID_UNITS,
-            'salesChannels' => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'salesChannels' => Type::where('group', Type::GROUP_SALES_CHANNEL)->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
 
@@ -137,7 +137,7 @@ class ProductController extends Controller
             foreach ($channelPrices as $channelId => $price) {
                 if ($price !== null && $price !== '') {
                     $product->prices()->create([
-                        'sales_channel_id' => $channelId,
+                        'type_id' => $channelId,
                         'price' => $price
                     ]);
                 }
@@ -166,7 +166,7 @@ class ProductController extends Controller
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'validUnits' => self::VALID_UNITS,
-            'salesChannels' => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'salesChannels' => Type::where('group', Type::GROUP_SALES_CHANNEL)->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
 
@@ -201,11 +201,11 @@ class ProductController extends Controller
             foreach ($channelPrices as $channelId => $price) {
                 if ($price !== null && $price !== '') {
                     $product->prices()->updateOrCreate(
-                        ['sales_channel_id' => $channelId],
+                        ['type_id' => $channelId],
                         ['price' => $price]
                     );
                 } else {
-                    $product->prices()->where('sales_channel_id', $channelId)->delete();
+                    $product->prices()->where('type_id', $channelId)->delete();
                 }
             }
         });

@@ -55,10 +55,10 @@ class Product extends Model
         return $this->hasMany(ProductPrice::class);
     }
 
-    public function getPriceForChannel($channelId)
+    public function getPriceForChannel($channelTypeId)
     {
         $specialPrice = $this->prices
-            ->where('sales_channel_id', $channelId)
+            ->where('type_id', $channelTypeId)
             ->first();
 
         return $specialPrice ? $specialPrice->price : $this->price;

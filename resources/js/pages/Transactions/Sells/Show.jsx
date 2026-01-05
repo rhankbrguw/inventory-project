@@ -29,9 +29,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { sellDetailColumns } from '@/constants/tableColumns';
 import UnifiedBadge from '@/components/UnifiedBadge';
 import { formatDate } from '@/lib/utils';
+import { sellDetailColumns } from '@/constants/tableColumns';
 
 export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
     const { data } = sell;
@@ -101,26 +101,6 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
         );
     };
 
-    const totals = React.useMemo(() => {
-        let totalSell = 0;
-        let totalCost = 0;
-
-        data.items.forEach((item) => {
-            const quantity = Math.abs(item.quantity || 0);
-            const sellPrice = item.cost_per_unit || 0;
-            const avgCost = item.average_cost_per_unit || 0;
-
-            totalSell += quantity * sellPrice;
-            totalCost += quantity * avgCost;
-        });
-
-        return {
-            totalSell,
-            totalCost,
-            totalMargin: totalSell - totalCost,
-        };
-    }, [data.items]);
-
     const infoFields = [
         {
             label: 'Lokasi Penjualan',
@@ -137,14 +117,14 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
         {
             label: 'Channel Penjualan',
             value: data.sales_channel ? (
-                <div className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
                     <span className="font-semibold">
                         {data.sales_channel.name}
                     </span>
                     <Badge variant="outline" className="text-[10px] font-mono">
                         {data.sales_channel.code}
                     </Badge>
-                </div>
+                </span>
             ) : null,
             hidden: !data.sales_channel,
         },
@@ -169,13 +149,13 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
         },
         {
             label: 'Disetujui Oleh',
-            value: data.approver?.name,
-            hidden: !data.approver,
+            value: data.approved_by?.name,
+            hidden: !data.approved_by,
         },
         {
             label: 'Ditolak Oleh',
-            value: data.rejector?.name,
-            hidden: !data.rejector,
+            value: data.rejected_by?.name,
+            hidden: !data.rejected_by,
         },
         {
             label: 'Alasan Penolakan',
@@ -323,7 +303,8 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                 type="sell"
                 items={data.items}
                 columns={sellDetailColumns}
-                totals={totals}
+                totals={data.totals}
+                totalAmount={data.total_price}
             />
 
             <AlertDialog
@@ -431,8 +412,7 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             Stok akan otomatis masuk ke inventory cabang Anda.
-                            Tindakan ini tidak dapat dibatalkan. Apakah Anda
-                            yakin?
+                            Tindakan ini tidak dapat dibatalkan.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

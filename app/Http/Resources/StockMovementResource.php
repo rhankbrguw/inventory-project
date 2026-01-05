@@ -17,38 +17,41 @@ class StockMovementResource extends JsonResource
             'type' => $this->type,
             'quantity' => $this->quantity,
             'cost_per_unit' => $this->cost_per_unit,
+            'sell_price' => $this->cost_per_unit,
             'average_cost_per_unit' => $this->average_cost_per_unit,
             'notes' => $this->notes,
             'origin_destination' => $this->getOriginDestination(),
+            'sales_channel' => $this->whenLoaded('salesChannel', fn () => [
+                'id' => $this->salesChannel->id,
+                'name' => $this->salesChannel->name,
+                'code' => $this->salesChannel->code,
+            ]),
             'reference' => $this->whenLoaded('reference', function () {
                 if (!$this->reference) {
                     return null;
                 }
-
                 $code = $this->reference->reference_code ?? null;
                 $url = '#';
-
                 if ($this->reference instanceof Purchase) {
                     $url = route('transactions.purchases.show', $this->reference->id);
                 } elseif ($this->reference instanceof Sell) {
                     $url = route('transactions.sells.show', $this->reference->id);
                 } elseif ($this->reference instanceof StockTransfer) {
                 }
-
                 return [
                     'id' => $this->reference->id,
                     'code' => $code,
                     'url' => $url,
                 ];
             }),
-            'product' => $this->whenLoaded('product', fn() => [
-                'id' => $this->product->id,
-                'name' => $this->product->name,
-                'sku' => $this->product->sku,
-                'unit' => $this->product->unit,
+            'product' => [
+                'id' => $this->product->id ?? null,
+                'name' => $this->product->name ?? 'Produk Dihapus',
+                'sku' => $this->product->sku ?? '-',
+                'unit' => $this->product->unit ?? 'unit',
                 'deleted_at' => $this->product->deleted_at?->toISOString(),
-            ]),
-            'location' => $this->whenLoaded('location', fn() => [
+            ],
+            'location' => $this->whenLoaded('location', fn () => [
                 'id' => $this->location->id,
                 'name' => $this->location->name,
             ]),

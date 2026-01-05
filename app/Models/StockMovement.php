@@ -16,15 +16,16 @@ class StockMovement extends Model
     protected $fillable = [
         'product_id',
         'location_id',
-        'quantity',
-        'type',
-        'reference_type',
-        'reference_id',
         'user_id',
+        'sales_channel_type_id',
+        'type',
+        'quantity',
         'cost_per_unit',
         'average_cost_per_unit',
-        'notes',
+        'reference_type',
+        'reference_id',
         'date',
+        'notes',
     ];
 
     public static function getMovementTypes(): array
@@ -51,5 +52,10 @@ class StockMovement extends Model
     public function reference(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function salesChannel()
+    {
+        return $this->belongsTo(Type::class, 'sales_channel_type_id');
     }
 }

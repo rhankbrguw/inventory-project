@@ -426,67 +426,95 @@ export const sellDetailColumns = [
     {
         accessorKey: 'product.name',
         header: 'Nama Item',
-        cell: ({ row }) => (
-            <div
-                className={cn(
-                    row.product?.deleted_at && 'text-muted-foreground'
-                )}
-            >
-                {row.product?.name || 'Produk Telah Dihapus'}
-                {row.product?.deleted_at && (
-                    <span className="ml-2 text-xs text-destructive">
-                        (Nonaktif)
-                    </span>
-                )}
-            </div>
-        ),
-        className: 'text-center font-medium whitespace-nowrap px-4',
+        cell: ({ row }) => {
+            const productName =
+                row.product?.name || row.product_name || 'Produk Telah Dihapus';
+            const unit = row.product?.unit || row.unit;
+            return (
+                <div
+                    className={cn(
+                        row.product?.deleted_at && 'text-muted-foreground'
+                    )}
+                >
+                    <div className="font-medium text-sm">{productName}</div>
+                    {unit && (
+                        <div className="text-[10px] text-muted-foreground">
+                            Unit: {unit}
+                        </div>
+                    )}
+                    {row.product?.deleted_at && (
+                        <span className="text-[10px] text-destructive">
+                            (Nonaktif)
+                        </span>
+                    )}
+                </div>
+            );
+        },
+        className: 'text-center whitespace-nowrap',
     },
     {
         accessorKey: 'product.sku',
         header: 'SKU',
         cell: ({ row }) => row.product?.sku || '-',
-        className: 'text-center font-mono text-xs whitespace-nowrap px-4',
+        className: 'text-center font-mono text-[11px] whitespace-nowrap',
+    },
+    {
+        accessorKey: 'channel_name',
+        header: 'Channel',
+        cell: ({ row }) => {
+            if (!row.channel_name || row.channel_name === '-') {
+                return <span className="text-muted-foreground text-xs">-</span>;
+            }
+            return <UnifiedBadge text={row.channel_name} />;
+        },
+        className: 'text-center whitespace-nowrap',
     },
     {
         accessorKey: 'quantity',
         header: 'Qty',
         cell: ({ row }) => {
-            const item = row;
-            return `${formatNumber(Math.abs(item.quantity))} ${
-                item.product?.unit || ''
-            }`;
+            const qty = Math.abs(row.quantity || 0);
+            const unit = row.product?.unit || row.unit || '';
+            return (
+                <span className="text-sm">
+                    {formatNumber(qty)} {unit}
+                </span>
+            );
         },
-        className: 'text-center whitespace-nowrap px-4',
+        className: 'text-center whitespace-nowrap',
     },
     {
         accessorKey: 'average_cost_per_unit',
         header: 'Harga Modal',
-        cell: ({ row }) => {
-            return formatCurrency(row.average_cost_per_unit || 0);
-        },
-        className: 'text-center whitespace-nowrap px-4',
+        cell: ({ row }) => (
+            <span className="text-sm">
+                {formatCurrency(row.average_cost_per_unit || 0)}
+            </span>
+        ),
+        className: 'text-center whitespace-nowrap',
     },
     {
         accessorKey: 'cost_per_unit',
         header: 'Harga Jual',
-        cell: ({ row }) => {
-            return formatCurrency(row.cost_per_unit || 0);
-        },
-        className: 'text-center whitespace-nowrap px-4',
+        cell: ({ row }) => (
+            <span className="text-sm">
+                {formatCurrency(row.cost_per_unit || row.price || 0)}
+            </span>
+        ),
+        className: 'text-center whitespace-nowrap',
     },
     {
         id: 'margin',
         header: 'Margin',
         cell: ({ row }) => {
-            const item = row;
-            const quantity = Math.abs(item.quantity || 0);
-            const sellPrice = item.cost_per_unit || 0;
-            const avgCost = item.average_cost_per_unit || 0;
+            const quantity = Math.abs(row.quantity || 0);
+            const sellPrice = row.cost_per_unit || row.price || 0;
+            const avgCost = row.average_cost_per_unit || 0;
             const margin = (sellPrice - avgCost) * quantity;
             return (
                 <span
                     className={cn(
+                        'text-sm font-semibold',
                         margin > 0 ? 'text-success' : 'text-destructive'
                     )}
                 >
@@ -494,19 +522,22 @@ export const sellDetailColumns = [
                 </span>
             );
         },
-        className: 'text-center font-semibold whitespace-nowrap px-4',
+        className: 'text-center whitespace-nowrap',
     },
     {
         id: 'total',
         header: 'Total Jual',
         cell: ({ row }) => {
-            const item = row;
-            const quantity = Math.abs(item.quantity || 0);
-            const sellPrice = item.cost_per_unit || 0;
-            const total = quantity * sellPrice;
-            return formatCurrency(total);
+            const quantity = Math.abs(row.quantity || 0);
+            const sellPrice = row.cost_per_unit || row.price || 0;
+            const total = row.total || quantity * sellPrice;
+            return (
+                <span className="text-sm font-semibold">
+                    {formatCurrency(total)}
+                </span>
+            );
         },
-        className: 'text-center font-semibold whitespace-nowrap px-4',
+        className: 'text-center whitespace-nowrap',
     },
 ];
 

@@ -44,7 +44,7 @@ export function useSellCart(cart = [], locationId) {
                 (sum, item) =>
                     sum +
                     (parseFloat(item.quantity) || 0) *
-                        (Number(item.sell_price) || 0),
+                    (Number(item.sell_price) || 0),
                 0
             ),
         [effectiveCart]
@@ -106,12 +106,19 @@ export function useSellCart(cart = [], locationId) {
     );
 
     const addItem = useCallback(
-        (product, sellPrice = null) => {
+        (product, sellPrice = null, channelId = null) => {
             if (!locationId || processingItem === product.id) return;
 
-            const existingItem = effectiveCart.find(
-                (item) => item.product.id === product.id
-            );
+            const existingItem = effectiveCart.find((item) => {
+                const itemChannelId =
+                    item.sales_channel?.id?.toString() || null;
+                const targetChannelId = channelId?.toString() || null;
+
+                return (
+                    item.product.id === product.id &&
+                    itemChannelId === targetChannelId
+                );
+            });
 
             setProcessingItem(product.id);
 
@@ -137,6 +144,7 @@ export function useSellCart(cart = [], locationId) {
                         location_id: locationId,
                         quantity: 1,
                         sell_price: sellPrice ?? product.price,
+                        sales_channel_id: channelId,
                     },
                     {
                         preserveScroll: true,

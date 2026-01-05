@@ -9,23 +9,24 @@ use App\Http\Resources\Transaction\SellResource;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Product;
-use App\Models\Sell;
-use App\Models\SalesChannel;
-use App\Models\Type;
 use App\Models\Purchase;
-use App\Models\User;
 use App\Models\Role;
-use App\Notifications\SellCreatedNotification;
+use App\Models\Sell;
+use App\Models\SellItem;
+use App\Models\StockMovement;
+use App\Models\Type;
+use App\Models\User;
 use App\Notifications\SellAcceptedNotification;
+use App\Notifications\SellCreatedNotification;
 use App\Notifications\SellRejectedNotification;
 use App\Notifications\SellShipmentNotification;
 use App\Traits\ManagesStock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,9 +47,9 @@ class SellController extends Controller
         $allLocations = $locationsQuery->get();
 
         $filteredLocations = $allLocations
-            ->filter(fn ($location) => $user->canTransactAtLocation($location->id, 'sell'));
+            ->filter(fn($location) => $user->canTransactAtLocation($location->id, 'sell'));
 
-        $locationsWithPermissions = $filteredLocations->values()->map(fn ($location) => [
+        $locationsWithPermissions = $filteredLocations->values()->map(fn($location) => [
             'id' => $location->id,
             'name' => $location->name,
             'role_at_location' => $user->getRoleCodeAtLocation($location->id),
@@ -67,18 +68,18 @@ class SellController extends Controller
         }
 
         $cartItems = $user->sellCartItems()
-            ->with(['product.prices', 'location'])
+            ->with(['product.prices', 'location', 'salesChannel'])
             ->get();
 
         $productsQuery = Product::with(['defaultSupplier:id,name', 'prices'])
-            ->when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
-            ->when($typeId && $typeId !== 'all', fn ($q) => $q->where('type_id', $typeId))
+            ->when($search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
+            ->when($typeId && $typeId !== 'all', fn($q) => $q->where('type_id', $typeId))
             ->orderBy('name');
 
         if ($locationId) {
             $productsQuery->whereHas(
                 'inventories',
-                fn ($q) =>
+                fn($q) =>
                 $q->where('location_id', $locationId)->where('quantity', '>', 0)
             );
         } else {
@@ -91,14 +92,14 @@ class SellController extends Controller
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
-                ->through(fn ($product) => array_merge(
+                ->through(fn($product) => array_merge(
                     $product->toArray(),
-                    ['channel_prices' => $product->prices->pluck('price', 'sales_channel_id')]
+                    ['channel_prices' => $product->prices->pluck('price', 'type_id')]
                 )),
             'paymentMethods' => Type::where('group', Type::GROUP_PAYMENT)->orderBy('name')->get(['id', 'name']),
             'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(['id', 'name']),
             'customerTypes' => Type::where('group', Type::GROUP_CUSTOMER)->orderBy('name')->get(['id', 'name']),
-            'salesChannels' => SalesChannel::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+            'salesChannels' => Type::where('group', Type::GROUP_SALES_CHANNEL)->orderBy('name')->get(['id', 'name', 'code']),
             'cart' => SellCartItemResource::collection($cartItems),
             'filters' => (object) $request->only(['location_id', 'search', 'type_id']),
         ]);
@@ -114,12 +115,11 @@ class SellController extends Controller
         }
 
         $itemsData = $validated['items'];
-        $totalPrice = collect($itemsData)
-            ->sum(fn ($item) => $item['quantity'] * $item['sell_price']);
+        $totalPrice = collect($itemsData)->sum(fn($item) => $item['quantity'] * $item['sell_price']);
 
-        $sellType = Type::where('group', Type::GROUP_TRANSACTION)
-            ->where('name', 'Penjualan')
-            ->firstOrFail();
+        $sellTypeId = Type::where('name', 'Penjualan')
+            ->where('group', Type::GROUP_TRANSACTION)
+            ->value('id');
 
         $customerId = $validated['customer_id'] ?? null;
         $targetLocationId = null;
@@ -133,35 +133,52 @@ class SellController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, $itemsData, $totalPrice, $sellType, $request, $initialStatus, $targetLocationId) {
+        $channelId = $validated['sales_channel_type_id'] ?? $validated['sales_channel_id'] ?? null;
+
+        DB::transaction(function () use ($request, $itemsData, $totalPrice, $validated, $initialStatus, $targetLocationId, $sellTypeId, $channelId) {
+
             $sell = Sell::create([
-                'type_id' => $sellType->id,
-                'location_id' => $validated['location_id'],
-                'customer_id' => $validated['customer_id'],
-                'sales_channel_id' => $validated['sales_channel_id'] ?? null,
+                'type_id' => $sellTypeId,
+                'location_id' => $request->location_id,
+                'customer_id' => $request->customer_id,
                 'user_id' => $request->user()->id,
-                'reference_code' => 'SL-' . now()->format('Ymd-His'),
-                'transaction_date' => Carbon::parse($validated['transaction_date'])->format('Y-m-d'),
+                'reference_code' => 'SL-' . now()->format('YmdHis'),
+                'transaction_date' => now(),
                 'total_price' => $totalPrice,
                 'status' => $initialStatus,
-                'payment_method_type_id' => $validated['payment_method_type_id'],
-                'notes' => $validated['notes'],
-                'installment_terms' => $validated['installment_terms'],
-                'payment_status' => $validated['installment_terms'] > 1 ? 'pending' : 'paid',
+                'notes' => $request->notes,
+                'sales_channel_type_id' => $channelId,
+                'payment_method_type_id' => $validated['payment_method_type_id'] ?? null,
+                'installment_terms' => $validated['installment_terms'] ?? 1,
+                'payment_status' => $validated['payment_status'] ?? 'paid',
             ]);
 
-            if ($validated['installment_terms'] > 1) {
+            if (($validated['installment_terms'] ?? 1) > 1) {
                 $this->createInstallments(
                     $sell,
                     $totalPrice,
                     $validated['installment_terms'],
-                    $validated['transaction_date']
+                    $validated['transaction_date'] ?? now()
                 );
             }
 
             foreach ($itemsData as $item) {
+                $itemChannelId = $item['sales_channel_type_id'] ?? $item['sales_channel_id'] ?? null;
+
+                $product = Product::findOrFail($item['product_id']);
+                $currentCost = $product->average_cost ?? 0;
+
+                SellItem::create([
+                    'sell_id' => $sell->id,
+                    'product_id' => $item['product_id'],
+                    'sales_channel_type_id' => $itemChannelId,
+                    'quantity' => $item['quantity'],
+                    'sell_price' => $item['sell_price'],
+                    'cost_per_unit' => $currentCost,
+                ]);
+
                 if ($initialStatus === Sell::STATUS_PENDING_APPROVAL) {
-                    \App\Models\StockMovement::create([
+                    StockMovement::create([
                         'product_id' => $item['product_id'],
                         'location_id' => $validated['location_id'],
                         'quantity' => -abs($item['quantity']),
@@ -172,9 +189,9 @@ class SellController extends Controller
                         'user_id' => $request->user()->id,
                         'date' => now(),
                         'notes' => 'Pending Approval',
+                        'sales_channel_type_id' => $itemChannelId,
                     ]);
                 } else {
-                    $product = Product::findOrFail($item['product_id']);
                     $this->handleStockOut(
                         product: $product,
                         locationId: $validated['location_id'],
@@ -182,7 +199,8 @@ class SellController extends Controller
                         sellPrice: $item['sell_price'],
                         type: 'sell',
                         ref: $sell,
-                        notes: $validated['notes']
+                        notes: $validated['notes'],
+                        channelId: $itemChannelId
                     );
                 }
             }
@@ -193,17 +211,11 @@ class SellController extends Controller
                 ->delete();
 
             if ($initialStatus === Sell::STATUS_PENDING_APPROVAL && $targetLocationId) {
-                $managerRoleIds = Role::whereIn('code', [
-                    Role::CODE_BRANCH_MGR,
-                    Role::CODE_WAREHOUSE_MGR,
-                ])->pluck('id');
-
+                $managerRoleIds = Role::whereIn('code', [Role::CODE_BRANCH_MGR, Role::CODE_WAREHOUSE_MGR])->pluck('id');
                 if ($managerRoleIds->isNotEmpty()) {
                     $targets = User::whereHas('locations', function ($q) use ($targetLocationId, $managerRoleIds) {
-                        $q->where('locations.id', $targetLocationId)
-                            ->whereIn('location_user.role_id', $managerRoleIds);
+                        $q->where('locations.id', $targetLocationId)->whereIn('location_user.role_id', $managerRoleIds);
                     })->get();
-
                     foreach ($targets as $target) {
                         try {
                             $target->notify(new SellCreatedNotification($sell, $request->user()->name));
@@ -214,8 +226,7 @@ class SellController extends Controller
             }
         });
 
-        return Redirect::route('transactions.index')
-            ->with('success', 'Penjualan berhasil disimpan.');
+        return Redirect::route('transactions.index')->with('success', 'Penjualan berhasil disimpan.');
     }
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)
@@ -316,9 +327,13 @@ class SellController extends Controller
             'approver',
             'rejector',
             'paymentMethod',
-            'stockMovements.product',
             'type',
             'installments',
+            'salesChannel',
+            'items.product' => fn($q) => $q->withTrashed(),
+            'items.salesChannel',
+            'stockMovements.product' => fn($q) => $q->withTrashed(),
+            'stockMovements.salesChannel',
         ]);
 
         $targetLocationId = $sell->customer?->related_location_id;
@@ -377,17 +392,11 @@ class SellController extends Controller
             }
 
             foreach ($sell->stockMovements as $movement) {
-                $product = $movement->product;
-                $qty = abs($movement->quantity);
-                $price = $movement->cost_per_unit;
-
-                $movement->delete();
-
                 $this->handleStockOut(
-                    $product,
+                    $movement->product,
                     $sell->location_id,
-                    $qty,
-                    $price,
+                    abs($movement->quantity),
+                    $movement->cost_per_unit,
                     'sell',
                     $sell,
                     'Shipped'
@@ -446,7 +455,7 @@ class SellController extends Controller
                 );
             }
 
-            $outboundMovements = \App\Models\StockMovement::where('reference_type', Sell::class)
+            $outboundMovements = StockMovement::where('reference_type', Sell::class)
                 ->where('reference_id', $sell->id)
                 ->where('type', 'sell')
                 ->with('product')

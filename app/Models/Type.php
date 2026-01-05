@@ -15,6 +15,7 @@ class Type extends Model
     protected $fillable = ['name', 'group', 'code', 'level'];
 
     public const GROUP_PRODUCT = 'product_type';
+    public const GROUP_SALES_CHANNEL = 'sales_channel';
     public const GROUP_USER_ROLE = 'user_role';
     public const GROUP_LOCATION = 'location_type';
     public const GROUP_TRANSACTION = 'transaction_type';
@@ -27,6 +28,10 @@ class Type extends Model
             self::GROUP_PRODUCT => [
                 'label' => 'Tipe Produk',
                 'description' => 'Digunakan untuk mengkategorikan produk.',
+            ],
+            self::GROUP_SALES_CHANNEL => [
+                'label' => 'Channel Penjualan',
+                'description' => 'Platform penjualan (GoFood, Grab, dll).',
             ],
             self::GROUP_USER_ROLE => [
                 'label' => 'Role Pengguna',

@@ -34,6 +34,8 @@
         --blue: 221 83% 53%;
         --purple: 262 83% 58%;
         --red: 0 84% 60%;
+        --grab-green: 142 76% 28%;
+        --tiktok-black: 220 13% 18%;
         --status-online: 139 51% 51%;
         --border: 220 13% 91%;
         --input: 220 13% 91%;
@@ -75,6 +77,8 @@
         --blue: 217 91% 60%;
         --purple: 270 95% 75%;
         --red: 0 62% 30%;
+        --grab-green: 142 71% 35%;
+        --tiktok-black: 0 0% 95%;
         --status-online: 139 51% 51%;
         --border: 220 13% 14%;
         --input: 220 13% 14%;
@@ -208,6 +212,36 @@
         background-color: hsl(var(--purple) / 0.15);
         color: hsl(var(--purple));
         border-color: hsl(var(--purple) / 0.2);
+    }
+
+    .channel-cash {
+        @apply badge-base;
+        background-color: hsl(var(--primary) / 0.15);
+        color: hsl(var(--primary));
+    }
+
+    .channel-gofood {
+        @apply badge-base;
+        background-color: hsl(var(--success) / 0.15);
+        color: hsl(var(--success));
+    }
+
+    .channel-grabfood {
+        @apply badge-base;
+        background-color: hsl(var(--grab-green) / 0.15);
+        color: hsl(var(--grab-green));
+    }
+
+    .channel-shopeefood {
+        @apply badge-base;
+        background-color: hsl(var(--orange) / 0.15);
+        color: hsl(var(--orange));
+    }
+
+    .channel-tiktokshop {
+        @apply badge-base;
+        background-color: hsl(var(--tiktok-black) / 0.15);
+        color: hsl(var(--tiktok-black));
     }
 
     .btn-purchase {

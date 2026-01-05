@@ -16,7 +16,7 @@ class SellCartItemResource extends JsonResource
             'sell_price' => $this->sell_price,
             'product' => $this->whenLoaded(
                 'product',
-                fn() => [
+                fn () => [
                     'id' => $this->product->id,
                     'name' => $this->product->name,
                     'sku' => $this->product->sku,
@@ -27,13 +27,21 @@ class SellCartItemResource extends JsonResource
                         : null,
                     'prices' => $this->product->prices ?? [],
                     'channel_prices' => $this->product->prices
-                        ? $this->product->prices->pluck('price', 'sales_channel_id')
+                        ? $this->product->prices->pluck('price', 'type_id')
                         : [],
                 ],
             ),
+            'sales_channel' => $this->whenLoaded(
+                'salesChannel',
+                fn () => [
+                    'id' => $this->salesChannel->id,
+                    'name' => $this->salesChannel->name,
+                    'code' => $this->salesChannel->code,
+                ]
+            ),
             'location' => $this->whenLoaded(
                 "location",
-                fn() => [
+                fn () => [
                     "id" => $this->location->id,
                     "name" => $this->location->name,
                 ],

@@ -16,8 +16,16 @@ export default function Show({ auth, purchase }) {
             value: data.location.name,
         },
         {
-            label: 'Supplier Utama',
-            value: data.supplier?.name || 'Supplier Umum',
+            label: 'Sumber / Supplier',
+            value: data.supplier ? (
+                data.supplier.name
+            ) : data.notes && data.notes.includes('Internal Transfer') ? (
+                <span className="font-semibold text-blue-600">
+                    Internal Transfer (Pusat)
+                </span>
+            ) : (
+                'Supplier Umum'
+            ),
         },
         {
             label: 'Tanggal Transaksi',

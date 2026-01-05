@@ -91,7 +91,7 @@ export default function TransactionItemsSection({
                 <TableFooter>
                     <TableRow>
                         <TableCell
-                            colSpan={6}
+                            colSpan={7}
                             className="text-right font-bold text-base"
                         >
                             Total Penjualan
@@ -102,7 +102,7 @@ export default function TransactionItemsSection({
                     </TableRow>
                     <TableRow>
                         <TableCell
-                            colSpan={6}
+                            colSpan={7}
                             className="text-right font-medium text-muted-foreground"
                         >
                             Total Modal (HPP)
@@ -113,7 +113,7 @@ export default function TransactionItemsSection({
                     </TableRow>
                     <TableRow>
                         <TableCell
-                            colSpan={6}
+                            colSpan={7}
                             className="text-right font-bold text-base"
                         >
                             Total Margin

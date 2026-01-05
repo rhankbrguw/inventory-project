@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import {

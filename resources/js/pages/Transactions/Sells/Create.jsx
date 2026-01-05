@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
 import { useSellCart } from '@/hooks/useSellCart';
 import SellProductGrid from './Partials/SellProductGrid';
@@ -30,11 +30,8 @@ export default function Create({
     );
 
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-
     const [cartOpen, setCartOpen] = useState(false);
-
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
-
     const [pendingLocationId, setPendingLocationId] = useState(null);
 
     const selectedLocationId = useMemo(
@@ -76,19 +73,6 @@ export default function Create({
 
     const handleChannelChange = (channelId) => {
         setSelectedChannelId(channelId);
-
-        if (cart.length > 0 && selectedLocationId) {
-            router.patch(
-                route('sell.cart.update-prices'),
-                {
-                    location_id: selectedLocationId,
-                    sales_channel_id: channelId,
-                },
-                {
-                    preserveScroll: true,
-                }
-            );
-        }
     };
 
     const handleLocationChange = (locationId) => {
@@ -170,7 +154,7 @@ export default function Create({
                         setFilter={setFilter}
                         onProductClick={(product) => {
                             const price = getProductPrice(product);
-                            addItem(product, price);
+                            addItem(product, price, selectedChannelId);
                         }}
                         selectedProductIds={selectedProductIds}
                         processingItem={processingItem}

@@ -16,15 +16,15 @@ export default function UnifiedBadge({ text, code }) {
         Whm: 'role-warehouse-manager',
         Brm: 'role-branch-manager',
         Csh: 'role-cashier',
+
         'Super admin': 'role-super-admin',
         'Warehouse manager': 'role-warehouse-manager',
         'Branch manager': 'role-branch-manager',
-        Cashier: 'role-cashier',
 
+        Cashier: 'role-cashier',
         Ind: 'customer-type-individu',
         Cbg: 'customer-type-cabang',
         Mtr: 'customer-type-mitra',
-
         Pembelian: 'transaction-type-pembelian',
         Penjualan: 'transaction-type-penjualan',
         Transfer: 'transaction-type-transfer',
@@ -34,6 +34,13 @@ export default function UnifiedBadge({ text, code }) {
         Shipping: 'status-shipping',
         Completed: 'status-completed',
         Rejected: 'status-rejected',
+
+        Cash: 'channel-cash',
+        Counter: 'channel-cash',
+        Gofood: 'channel-gofood',
+        Grabfood: 'channel-grabfood',
+        Shopeefood: 'channel-shopeefood',
+        Tiktokshop: 'channel-tiktokshop',
     };
 
     const preDefinedClass =

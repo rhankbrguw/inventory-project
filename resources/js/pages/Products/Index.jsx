@@ -23,6 +23,7 @@ import {
     PlusCircle,
     Archive,
     ArchiveRestore,
+    Tags,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermission } from '@/hooks/usePermission';
@@ -32,6 +33,7 @@ export default function Index({
     products,
     allProducts,
     productTypes,
+    salesChannels,
     filters = {},
 }) {
     const { params, setFilter } = useIndexPageFilters(
@@ -98,23 +100,43 @@ export default function Index({
             buttonLabel="Tambah Produk"
             headerActions={
                 canCrudProducts && (
-                    <QuickAddTypeModal
-                        group="product_type"
-                        title="Tambah Tipe Produk Cepat"
-                        description="Tipe yang baru dibuat akan langsung tersedia di dropdown pada form."
-                        existingTypes={productTypes.data}
-                        trigger={
-                            <Button
-                                variant="outline"
-                                className="flex items-center gap-2 px-2 sm:px-4"
-                            >
-                                <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4" />
-                                <span className="hidden sm:inline">
-                                    Tambah Tipe
-                                </span>
-                            </Button>
-                        }
-                    />
+                    <div className="flex gap-2">
+                        <QuickAddTypeModal
+                            group="product_type"
+                            title="Tambah Tipe Produk"
+                            description="Tipe baru akan muncul di dropdown form produk."
+                            existingTypes={productTypes.data}
+                            trigger={
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 px-2 sm:px-4"
+                                >
+                                    <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4" />
+                                    <span className="hidden sm:inline">
+                                        Tipe Produk
+                                    </span>
+                                </Button>
+                            }
+                        />
+
+                        <QuickAddTypeModal
+                            group="sales_channel"
+                            title="Tambah Channel Penjualan"
+                            description="Channel baru (misal: TikTok Shop) akan muncul untuk setting harga khusus."
+                            existingTypes={salesChannels.data}
+                            trigger={
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 px-2 sm:px-4 border-dashed border-primary/50 hover:border-primary hover:bg-primary/5"
+                                >
+                                    <Tags className="w-5 h-5 sm:w-4 sm:h-4 text-primary" />
+                                    <span className="hidden sm:inline text-primary font-medium">
+                                        Tipe Channel
+                                    </span>
+                                </Button>
+                            }
+                        />
+                    </div>
                 )
             }
         >

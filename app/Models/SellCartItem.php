@@ -16,6 +16,7 @@ class SellCartItem extends Model
         'user_id',
         'location_id',
         'product_id',
+        'sales_channel_type_id',
         'quantity',
         'sell_price',
     ];
@@ -38,5 +39,10 @@ class SellCartItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function salesChannel()
+    {
+        return $this->belongsTo(Type::class, 'sales_channel_type_id');
     }
 }

@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductPrice extends Model
 {
-    protected $fillable = ['product_id', 'sales_channel_id', 'price'];
+    protected $fillable = ['product_id', 'type_id', 'price'];
 
-    public function channel()
+    public function type()
     {
-        return $this->belongsTo(SalesChannel::class, 'sales_channel_id');
+        return $this->belongsTo(Type::class, 'type_id');
     }
 }
