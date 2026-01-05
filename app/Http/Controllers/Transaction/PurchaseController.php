@@ -104,6 +104,21 @@ class PurchaseController extends Controller
             foreach ($validated['items'] as $item) {
                 $product = Product::find($item['product_id']);
 
+                $currentGlobalStock = $product->inventories()->sum('quantity');
+                $currentGlobalAvgCost = $product->average_cost ?? 0;
+                $totalValueOld = $currentGlobalStock * $currentGlobalAvgCost;
+
+                $incomingQty = $item['quantity'];
+                $incomingCost = $item['cost_per_unit'];
+                $totalValueNew = $incomingQty * $incomingCost;
+
+                $totalQty = $currentGlobalStock + $incomingQty;
+
+                if ($totalQty > 0) {
+                    $newAvgCost = ($totalValueOld + $totalValueNew) / $totalQty;
+                    $product->update(['average_cost' => $newAvgCost]);
+                }
+
                 $this->handleStockIn(
                     product: $product,
                     locationId: $validated['location_id'],

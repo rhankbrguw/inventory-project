@@ -62,6 +62,7 @@ export default function SellCheckoutDialog({
                     product_id: item.product.id,
                     quantity: item.quantity,
                     sell_price: item.sell_price || item.product.price,
+                    sales_channel_id: item.sales_channel?.id || null,
                 })),
             });
         }
