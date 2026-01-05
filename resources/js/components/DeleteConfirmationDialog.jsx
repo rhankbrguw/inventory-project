@@ -7,15 +7,15 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 export default function DeleteConfirmationDialog({
     open,
     onOpenChange,
     onConfirm,
-    title = "Apakah Anda Yakin?",
-    description = "Tindakan ini tidak dapat dibatalkan. Data akan dihapus secara permanen.",
-    confirmText = "Hapus",
+    title = 'Apakah Anda Yakin?',
+    description = 'Tindakan ini tidak dapat dibatalkan. Data akan dihapus secara permanen.',
+    confirmText = 'Hapus',
     isDeleting = false,
 }) {
     return (
@@ -34,7 +34,7 @@ export default function DeleteConfirmationDialog({
                         disabled={isDeleting}
                         className="bg-destructive hover:bg-destructive/90"
                     >
-                        {isDeleting ? "Menghapus..." : confirmText}
+                        {isDeleting ? 'Menghapus...' : confirmText}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -1,8 +1,8 @@
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
-import { usePage } from "@inertiajs/react";
-import { useEffect, useState } from "react";
-import { Toaster, toast } from "sonner";
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
+import { usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import { Toaster, toast } from 'sonner';
 
 export default function AuthenticatedLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,9 +60,9 @@ export default function AuthenticatedLayout({ children }) {
                     visibleToasts={1}
                     toastOptions={{
                         classNames: {
-                            toast: "w-[90vw] sm:w-full mx-auto sm:mx-0 right-0 top-2 sm:top-0 rounded-xl shadow-lg",
-                            title: "text-sm font-bold",
-                            description: "text-xs",
+                            toast: 'w-[90vw] sm:w-full mx-auto sm:mx-0 right-0 top-2 sm:top-0 rounded-xl shadow-lg',
+                            title: 'text-sm font-bold',
+                            description: 'text-xs',
                         },
                     }}
                 />

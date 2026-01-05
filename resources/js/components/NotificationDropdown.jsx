@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
-import { Bell, Truck, Info, AlertTriangle, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useEffect } from 'react';
+import { Bell, Truck, Info, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import axios from "axios";
-import { router, usePage } from "@inertiajs/react";
-import { formatDistanceToNow } from "date-fns";
-import { id } from "date-fns/locale";
+} from '@/components/ui/popover';
+import axios from 'axios';
+import { router, usePage } from '@inertiajs/react';
+import { formatDistanceToNow } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 export default function NotificationDropdown() {
     const { auth } = usePage().props;
@@ -20,11 +20,11 @@ export default function NotificationDropdown() {
 
     const fetchNotifications = async () => {
         try {
-            const response = await axios.get(route("notifications.index"));
+            const response = await axios.get(route('notifications.index'));
             setNotifications(response.data);
             setUnreadCount(response.data.filter((n) => !n.read_at).length);
         } catch (error) {
-            console.error("Gagal memuat notifikasi", error);
+            console.error('Gagal memuat notifikasi', error);
         }
     };
 
@@ -35,16 +35,16 @@ export default function NotificationDropdown() {
 
         if (userId && window.Echo) {
             console.log(
-                "🔔 Setting up notification listener for user:",
-                userId,
+                '🔔 Setting up notification listener for user:',
+                userId
             );
 
             const channel = window.Echo.private(`App.Models.User.${userId}`);
 
             channel.notification((notification) => {
                 console.log(
-                    "📬 Real-time notification received:",
-                    notification,
+                    '📬 Real-time notification received:',
+                    notification
                 );
 
                 setNotifications((prev) => [
@@ -63,22 +63,22 @@ export default function NotificationDropdown() {
             });
 
             channel.error((error) => {
-                console.error("❌ Channel subscription error:", error);
+                console.error('❌ Channel subscription error:', error);
             });
 
             channel.subscribed(() => {
                 console.log(
-                    "✅ Successfully subscribed to notification channel",
+                    '✅ Successfully subscribed to notification channel'
                 );
             });
         } else {
             if (!userId) {
                 console.warn(
-                    "⚠️ User ID not found, cannot setup notifications",
+                    '⚠️ User ID not found, cannot setup notifications'
                 );
             }
             if (!window.Echo) {
-                console.error("❌ Echo not initialized, check bootstrap.js");
+                console.error('❌ Echo not initialized, check bootstrap.js');
             }
         }
 
@@ -87,7 +87,7 @@ export default function NotificationDropdown() {
         return () => {
             clearInterval(interval);
             if (userId && window.Echo) {
-                console.log("🔕 Leaving notification channel");
+                console.log('🔕 Leaving notification channel');
                 window.Echo.leave(`App.Models.User.${userId}`);
             }
         };
@@ -96,17 +96,17 @@ export default function NotificationDropdown() {
     const handleMarkAsRead = async (notification) => {
         if (!notification.read_at) {
             try {
-                await axios.post(route("notifications.read", notification.id));
+                await axios.post(route('notifications.read', notification.id));
                 setNotifications((prev) =>
                     prev.map((n) =>
                         n.id === notification.id
                             ? { ...n, read_at: new Date().toISOString() }
-                            : n,
-                    ),
+                            : n
+                    )
                 );
                 setUnreadCount((prev) => Math.max(0, prev - 1));
             } catch (error) {
-                console.error("Error marking read", error);
+                console.error('Error marking read', error);
             }
         }
 
@@ -118,23 +118,23 @@ export default function NotificationDropdown() {
 
     const handleMarkAllRead = async () => {
         try {
-            await axios.post(route("notifications.readAll"));
+            await axios.post(route('notifications.readAll'));
             setNotifications((prev) =>
-                prev.map((n) => ({ ...n, read_at: new Date().toISOString() })),
+                prev.map((n) => ({ ...n, read_at: new Date().toISOString() }))
             );
             setUnreadCount(0);
         } catch (error) {
-            console.error("Error marking all read", error);
+            console.error('Error marking all read', error);
         }
     };
 
     const getIcon = (type) => {
         switch (type) {
-            case "Truck":
+            case 'Truck':
                 return <Truck className="h-4 w-4 text-info" />;
-            case "warning":
+            case 'warning':
                 return <AlertTriangle className="h-4 w-4 text-warning" />;
-            case "success":
+            case 'success':
                 return <CheckCircle className="h-4 w-4 text-success" />;
             default:
                 return <Info className="h-4 w-4 text-muted-foreground" />;
@@ -183,10 +183,11 @@ export default function NotificationDropdown() {
                             {notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`p-4 hover:bg-accent/50 transition-colors cursor-pointer flex gap-3 ${!notification.read_at
-                                            ? "bg-accent/30"
-                                            : "bg-card"
-                                        }`}
+                                    className={`p-4 hover:bg-accent/50 transition-colors cursor-pointer flex gap-3 ${
+                                        !notification.read_at
+                                            ? 'bg-accent/30'
+                                            : 'bg-card'
+                                    }`}
                                     onClick={() =>
                                         handleMarkAsRead(notification)
                                     }
@@ -194,15 +195,16 @@ export default function NotificationDropdown() {
                                     <div className="mt-1 shrink-0">
                                         {getIcon(
                                             notification.data.icon ||
-                                            notification.data.type,
+                                                notification.data.type
                                         )}
                                     </div>
                                     <div className="space-y-1 flex-1">
                                         <p
-                                            className={`text-sm leading-none ${!notification.read_at
-                                                    ? "font-semibold text-foreground"
-                                                    : "font-medium text-muted-foreground"
-                                                }`}
+                                            className={`text-sm leading-none ${
+                                                !notification.read_at
+                                                    ? 'font-semibold text-foreground'
+                                                    : 'font-medium text-muted-foreground'
+                                            }`}
                                         >
                                             {notification.data.title}
                                         </p>
@@ -212,12 +214,12 @@ export default function NotificationDropdown() {
                                         <p className="text-[10px] text-muted-foreground/70 pt-1">
                                             {formatDistanceToNow(
                                                 new Date(
-                                                    notification.created_at,
+                                                    notification.created_at
                                                 ),
                                                 {
                                                     addSuffix: true,
                                                     locale: id,
-                                                },
+                                                }
                                             )}
                                         </p>
                                     </div>

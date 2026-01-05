@@ -1,29 +1,29 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Edit({ auth, supplier: supplierResource }) {
     const { data: supplier } = supplierResource;
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: supplier.name || "",
-        contact_person: supplier.contact_person || "",
-        email: supplier.email || "",
+        name: supplier.name || '',
+        contact_person: supplier.contact_person || '',
+        email: supplier.email || '',
         phone: supplier.phone
-            ? supplier.phone.replace("+62 ", "").replace(/-/g, "")
-            : "",
-        address: supplier.address || "",
-        notes: supplier.notes || "",
+            ? supplier.phone.replace('+62 ', '').replace(/-/g, '')
+            : '',
+        address: supplier.address || '',
+        notes: supplier.notes || '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("suppliers.update", supplier.id));
+        patch(route('suppliers.update', supplier.id));
     };
 
     return (
@@ -50,7 +50,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                     placeholder="Nama Perusahaan Supplier"
                                     value={data.name}
                                     onChange={(e) =>
-                                        setData("name", e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                 />
                             </FormField>
@@ -66,8 +66,8 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                     value={data.contact_person}
                                     onChange={(e) =>
                                         setData(
-                                            "contact_person",
-                                            e.target.value,
+                                            'contact_person',
+                                            e.target.value
                                         )
                                     }
                                 />
@@ -86,7 +86,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                     placeholder="email@supplier.com"
                                     value={data.email}
                                     onChange={(e) =>
-                                        setData("email", e.target.value)
+                                        setData('email', e.target.value)
                                     }
                                 />
                             </FormField>
@@ -103,8 +103,8 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                     value={data.phone}
                                     onChange={(e) =>
                                         setData(
-                                            "phone",
-                                            e.target.value.replace(/\D/g, ""),
+                                            'phone',
+                                            e.target.value.replace(/\D/g, '')
                                         )
                                     }
                                 />
@@ -121,7 +121,7 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                 placeholder="Alamat kantor/gudang supplier..."
                                 value={data.address}
                                 onChange={(e) =>
-                                    setData("address", e.target.value)
+                                    setData('address', e.target.value)
                                 }
                             />
                         </FormField>
@@ -136,13 +136,13 @@ export default function Edit({ auth, supplier: supplierResource }) {
                                 placeholder="Catatan tambahan tentang supplier ini..."
                                 value={data.notes}
                                 onChange={(e) =>
-                                    setData("notes", e.target.value)
+                                    setData('notes', e.target.value)
                                 }
                             />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
-                            <Link href={route("suppliers.index")}>
+                            <Link href={route('suppliers.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

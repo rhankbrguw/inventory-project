@@ -1,9 +1,10 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import StockAvailability from "@/components/StockAvailability";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Trash2 } from 'lucide-react';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { formatCurrency, formatNumber } from '@/lib/utils';
+import StockAvailability from '@/components/StockAvailability';
 
 export default function SellItemManager({
     cart,
@@ -19,8 +20,8 @@ export default function SellItemManager({
 
     const getDisplayValue = (item) => {
         const val = getItemQuantity(item);
-        if (val === "" || val === null || val === undefined) return "";
-        if (typeof val === "string" && val.endsWith(",")) return val;
+        if (val === '' || val === null || val === undefined) return '';
+        if (typeof val === 'string' && val.endsWith(',')) return val;
         return formatNumber(val);
     };
 
@@ -39,21 +40,30 @@ export default function SellItemManager({
                 return (
                     <div
                         key={item.id}
-                        className="p-3 border rounded-lg bg-card space-y-3"
+                        className="p-3 border rounded-lg bg-card space-y-3 shadow-sm transition-colors hover:bg-accent/5"
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-sm leading-tight text-foreground">
                                     {item.product.name}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <p className="text-xs text-muted-foreground">
+
+                                <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                                    <p className="text-xs text-muted-foreground font-medium">
                                         {formatCurrency(priceToUse)}
                                     </p>
+
                                     {item.product.unit && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium uppercase tracking-wide">
                                             {item.product.unit}
                                         </span>
+                                    )}
+
+                                    {item.sales_channel && (
+                                        <UnifiedBadge
+                                            text={item.sales_channel.name}
+                                            code={item.sales_channel.name}
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -64,7 +74,7 @@ export default function SellItemManager({
                                 size="icon"
                                 onClick={() => removeItem(item.id)}
                                 disabled={isItemProcessing}
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 -mr-2 -mt-2"
                             >
                                 {isItemProcessing ? (
                                     <LoadingSpinner />
@@ -74,7 +84,7 @@ export default function SellItemManager({
                             </Button>
                         </div>
 
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center justify-between gap-4 pt-1">
                             <div className="space-y-1.5">
                                 <label
                                     htmlFor={`qty-${item.id}`}
@@ -92,20 +102,20 @@ export default function SellItemManager({
                                             const rawValue =
                                                 e.target.value.replace(
                                                     /\./g,
-                                                    "",
+                                                    ''
                                                 );
                                             updateItem(item, rawValue);
                                         }}
                                         onFocus={(e) => e.target.select()}
                                         disabled={isItemProcessing}
-                                        className="h-9 text-center font-bold text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        className="h-9 text-center font-bold text-sm bg-background"
                                         autoComplete="off"
                                         placeholder="0"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 text-right">
+                            <div className="space-y-1 text-right">
                                 <p className="text-xs font-medium text-muted-foreground">
                                     Subtotal
                                 </p>
@@ -115,11 +125,13 @@ export default function SellItemManager({
                             </div>
                         </div>
 
-                        <StockAvailability
-                            productId={item.product.id}
-                            locationId={locationId}
-                            unit={item.product.unit}
-                        />
+                        <div className="pt-1 border-t border-border/50">
+                            <StockAvailability
+                                productId={item.product.id}
+                                locationId={locationId}
+                                unit={item.product.unit}
+                            />
+                        </div>
                     </div>
                 );
             })}

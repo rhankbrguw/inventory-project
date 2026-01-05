@@ -1,24 +1,24 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
 export default function Edit({
     auth,
@@ -28,16 +28,16 @@ export default function Edit({
     const { data: customer } = customerResource;
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: customer.name || "",
-        type_id: customer.type_id || "",
-        email: customer.email || "",
-        phone: customer.phone?.replace("+62 ", "").replace(/-/g, "") || "",
-        address: customer.address || "",
+        name: customer.name || '',
+        type_id: customer.type_id || '',
+        email: customer.email || '',
+        phone: customer.phone?.replace('+62 ', '').replace(/-/g, '') || '',
+        address: customer.address || '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("customers.update", customer.id), {
+        patch(route('customers.update', customer.id), {
             preserveScroll: true,
         });
     };
@@ -68,7 +68,7 @@ export default function Edit({
                                 placeholder="Nama Lengkap Pelanggan"
                                 value={data.name}
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData('name', e.target.value)
                                 }
                             />
                         </FormField>
@@ -79,9 +79,9 @@ export default function Edit({
                             error={errors.type_id}
                         >
                             <Select
-                                value={data.type_id?.toString() ?? ""}
+                                value={data.type_id?.toString() ?? ''}
                                 onValueChange={(value) =>
-                                    setData("type_id", value)
+                                    setData('type_id', value)
                                 }
                             >
                                 <SelectTrigger id="type_id">
@@ -111,7 +111,7 @@ export default function Edit({
                                 placeholder="email@contoh.com"
                                 value={data.email}
                                 onChange={(e) =>
-                                    setData("email", e.target.value)
+                                    setData('email', e.target.value)
                                 }
                             />
                         </FormField>
@@ -128,8 +128,8 @@ export default function Edit({
                                 value={data.phone}
                                 onChange={(e) =>
                                     setData(
-                                        "phone",
-                                        e.target.value.replace(/\D/g, ""),
+                                        'phone',
+                                        e.target.value.replace(/\D/g, '')
                                     )
                                 }
                             />
@@ -145,19 +145,19 @@ export default function Edit({
                                 placeholder="Alamat domisili pelanggan..."
                                 value={data.address}
                                 onChange={(e) =>
-                                    setData("address", e.target.value)
+                                    setData('address', e.target.value)
                                 }
                             />
                         </FormField>
 
                         <div className="flex items-center gap-4 justify-end">
-                            <Link href={route("customers.index")}>
+                            <Link href={route('customers.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                {processing ? "Menyimpan..." : "Simpan"}
+                                {processing ? 'Menyimpan...' : 'Simpan'}
                             </Button>
                         </div>
                     </form>

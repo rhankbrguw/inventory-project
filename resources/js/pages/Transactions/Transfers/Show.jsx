@@ -1,16 +1,9 @@
-import ContentPageLayout from "@/components/ContentPageLayout";
-import PrintButton from "@/components/PrintButton";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import ContentPageLayout from '@/components/ContentPageLayout';
+import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
+import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Dialog,
     DialogContent,
@@ -18,7 +11,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,124 +21,161 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { formatDate, formatNumber, cn } from "@/lib/utils";
-import DataTable from "@/components/DataTable";
-import { transferDetailColumns } from "@/constants/tableColumns";
-import { router } from "@inertiajs/react";
-import React from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { formatDate } from '@/lib/utils';
+import { transferDetailColumns } from '@/constants/tableColumns';
+import { router } from '@inertiajs/react';
+import React from 'react';
+import {
+    CheckCircle,
+    XCircle,
+    Truck,
+    PackageCheck,
+    AlertTriangle,
+} from 'lucide-react';
+import UnifiedBadge from '@/components/UnifiedBadge';
 
-export default function Show({ auth, transfer, can_accept }) {
+export default function Show({
+    auth,
+    transfer,
+    canApprove,
+    canShip,
+    canReceive,
+}) {
     const { data } = transfer;
 
     const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
-    const [isAcceptDialogOpen, setIsAcceptDialogOpen] = React.useState(false);
-    const [rejectionReason, setRejectionReason] = React.useState("");
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = React.useState(false);
+    const [rejectionReason, setRejectionReason] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
 
-    const handleAcceptConfirm = () => {
+    const handleApprove = () => {
         setIsProcessing(true);
         router.post(
-            route("transactions.transfers.accept", data.id),
+            route('transactions.transfers.approve', data.id),
             {},
             {
                 onFinish: () => {
                     setIsProcessing(false);
-                    setIsAcceptDialogOpen(false);
+                    setIsApproveDialogOpen(false);
                 },
-            },
+            }
         );
     };
 
     const handleReject = () => {
-        if (!rejectionReason.trim()) {
-            return;
-        }
+        if (!rejectionReason.trim()) return;
         setIsProcessing(true);
         router.post(
-            route("transactions.transfers.reject", data.id),
-            { rejection_reason: rejectionReason },
+            route('transactions.transfers.reject', data.id),
+            { reason: rejectionReason },
             {
                 onFinish: () => {
                     setIsProcessing(false);
                     setIsRejectDialogOpen(false);
-                    setRejectionReason("");
+                    setRejectionReason('');
                 },
-            },
+            }
         );
     };
 
-    const renderMobileItem = (item) => {
-        const quantity = Math.abs(item.quantity || 0);
-
-        return (
-            <Card
-                key={item.id}
-                className={cn(
-                    "p-3",
-                    item.product?.deleted_at && "opacity-60 bg-muted/50",
-                )}
-            >
-                <div className="space-y-2 text-sm">
-                    <div>
-                        <p className="font-medium">
-                            {item.product?.name || "Produk Telah Dihapus"}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                            {item.product?.sku || "-"}
-                        </p>
-                    </div>
-
-                    <div className="flex justify-between items-center border-t pt-2">
-                        <span className="text-muted-foreground">Qty</span>
-                        <span className="font-semibold">
-                            {formatNumber(quantity)} {item.product?.unit}
-                        </span>
-                    </div>
-                </div>
-            </Card>
+    const handleShip = () => {
+        setIsProcessing(true);
+        router.post(
+            route('transactions.transfers.ship', data.id),
+            {},
+            {
+                onFinish: () => setIsProcessing(false),
+            }
         );
     };
+
+    const handleReceive = () => {
+        setIsProcessing(true);
+        router.post(
+            route('transactions.transfers.receive', data.id),
+            {},
+            {
+                onFinish: () => setIsProcessing(false),
+            }
+        );
+    };
+
+    const infoFields = [
+        { label: 'Dari Lokasi', value: data.from_location?.name },
+        { label: 'Ke Lokasi', value: data.to_location?.name },
+        { label: 'Tanggal Transfer', value: formatDate(data.transfer_date) },
+        {
+            label: 'Status',
+            value: <UnifiedBadge text={data.status} code={data.status} />,
+        },
+        { label: 'Dibuat Oleh', value: data.user?.name },
+        {
+            label: 'Diterima Oleh',
+            value: data.received_by?.name,
+            hidden: !data.received_by,
+        },
+        {
+            label: 'Ditolak Oleh',
+            value: data.rejected_by?.name,
+            hidden: !data.rejected_by,
+        },
+        {
+            label: 'Alasan Penolakan',
+            value: (
+                <span className="text-destructive font-medium">
+                    {data.rejection_reason}
+                </span>
+            ),
+            span: 'full',
+            hidden: !data.rejection_reason,
+        },
+        {
+            label: 'Catatan',
+            value: data.notes,
+            span: 'full',
+            hidden: !data.notes,
+        },
+    ];
 
     return (
         <ContentPageLayout
             auth={auth}
-            title="Detail Transfer Stok"
+            title={`Transfer ${data.reference_code}`}
             backRoute="transactions.index"
         >
-            {data.status === "pending" && can_accept && (
-                <Card className="border-info/20 bg-info/5">
+            {data.status === 'Pending Approval' && canApprove && (
+                <Card className="mb-6">
                     <CardContent className="pt-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div>
-                                <h3 className="font-semibold mb-1">
-                                    Transfer Menunggu Konfirmasi
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Anda dapat menerima atau menolak transfer
-                                    ini
-                                </p>
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="h-5 w-5 text-warning" />
+                                <div>
+                                    <h3 className="font-semibold">
+                                        Menunggu Persetujuan
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Transfer membutuhkan konfirmasi Anda
+                                    </p>
+                                </div>
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <Button
-                                    onClick={() => setIsRejectDialogOpen(true)}
                                     variant="outline"
-                                    size="sm"
+                                    className="flex-1 sm:flex-none"
+                                    onClick={() => setIsRejectDialogOpen(true)}
                                     disabled={isProcessing}
-                                    className="gap-2 flex-1 sm:flex-none"
                                 >
-                                    <XCircle className="h-4 w-4" />
+                                    <XCircle className="h-4 w-4 mr-2" />
                                     Tolak
                                 </Button>
                                 <Button
-                                    onClick={() => setIsAcceptDialogOpen(true)}
-                                    size="sm"
+                                    className="bg-success hover:bg-success/90 text-primary-foreground flex-1 sm:flex-none"
+                                    onClick={() => setIsApproveDialogOpen(true)}
                                     disabled={isProcessing}
-                                    className="gap-2 bg-success hover:bg-success/90 flex-1 sm:flex-none"
                                 >
-                                    <CheckCircle className="h-4 w-4" />
-                                    Terima
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Setujui
                                 </Button>
                             </div>
                         </div>
@@ -153,136 +183,83 @@ export default function Show({ auth, transfer, can_accept }) {
                 </Card>
             )}
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informasi Umum</CardTitle>
-                    <CardDescription>{data.reference_code}</CardDescription>
-                </CardHeader>
-                <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
-                    <div>
-                        <p className="text-muted-foreground">Dari Lokasi</p>
-                        <p className="font-semibold">
-                            {data.from_location?.name}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Ke Lokasi</p>
-                        <p className="font-semibold">
-                            {data.to_location?.name}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">
-                            Tanggal Transfer
-                        </p>
-                        <p className="font-semibold">
-                            {formatDate(data.transfer_date)}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Status</p>
-                        <Badge
-                            variant="outline"
-                            className={cn(
-                                "capitalize",
-                                data.status === "completed" &&
-                                    "border-success/20 bg-success/10 text-success",
-                                data.status === "rejected" &&
-                                    "border-destructive/20 bg-destructive/10 text-destructive",
-                            )}
-                        >
-                            {data.status}
-                        </Badge>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Dibuat Oleh</p>
-                        <p className="font-semibold">{data.user?.name}</p>
-                    </div>
-
-                    {data.received_by && (
-                        <div>
-                            <p className="text-muted-foreground">
-                                Diterima Oleh
-                            </p>
-                            <p className="font-semibold">
-                                {data.received_by.name}
-                            </p>
-                            {data.received_at && (
-                                <p className="text-xs text-muted-foreground">
-                                    {formatDate(data.received_at)}
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {data.rejected_by && (
-                        <>
-                            <div>
-                                <p className="text-muted-foreground">
-                                    Ditolak Oleh
-                                </p>
-                                <p className="font-semibold">
-                                    {data.rejected_by.name}
-                                </p>
-                                {data.rejected_at && (
-                                    <p className="text-xs text-muted-foreground">
-                                        {formatDate(data.rejected_at)}
+            {data.status === 'Approved' && canShip && (
+                <Card className="mb-6">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <Truck className="h-5 w-5 text-info" />
+                                <div>
+                                    <h3 className="font-semibold">
+                                        Siap Dikirim
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Transfer telah disetujui
                                     </p>
-                                )}
+                                </div>
                             </div>
-                            <div className="sm:col-span-3">
-                                <p className="text-muted-foreground">
-                                    Alasan Penolakan
-                                </p>
-                                <p className="font-semibold text-destructive">
-                                    {data.rejection_reason}
-                                </p>
-                            </div>
-                        </>
-                    )}
-
-                    {data.notes && (
-                        <div className="sm:col-span-3">
-                            <p className="text-muted-foreground">Catatan</p>
-                            <p className="font-semibold">{data.notes}</p>
+                            <Button
+                                className="bg-info hover:bg-info/90 text-primary-foreground"
+                                onClick={handleShip}
+                                disabled={isProcessing}
+                            >
+                                <Truck className="h-4 w-4 mr-2" />
+                                Kirim Barang
+                            </Button>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            )}
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle>Rincian Item</CardTitle>
-                    <PrintButton>
-                        <span className="hidden sm:inline">Cetak</span>
-                    </PrintButton>
-                </CardHeader>
+            {data.status === 'Shipping' && canReceive && (
+                <Card className="mb-6">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <PackageCheck className="h-5 w-5 text-purple" />
+                                <div>
+                                    <h3 className="font-semibold">
+                                        Dalam Pengiriman
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Konfirmasi setelah barang diterima
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                className="bg-success hover:bg-success/90 text-primary-foreground"
+                                onClick={handleReceive}
+                                disabled={isProcessing}
+                            >
+                                <PackageCheck className="h-4 w-4 mr-2" />
+                                Terima Barang
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
-                <CardContent>
-                    <div className="md:hidden space-y-3">
-                        {data.items.map(renderMobileItem)}
-                        <Separator className="my-4" />
-                    </div>
+            <TransactionInfoGrid
+                title="Informasi Transfer"
+                subtitle={data.reference_code}
+                fields={infoFields}
+            />
 
-                    <div className="hidden md:block">
-                        <DataTable
-                            columns={transferDetailColumns}
-                            data={data.items}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+            <TransactionItemsSection
+                type="transfer"
+                items={data.items}
+                columns={transferDetailColumns}
+            />
 
             <AlertDialog
-                open={isAcceptDialogOpen}
-                onOpenChange={setIsAcceptDialogOpen}
+                open={isApproveDialogOpen}
+                onOpenChange={setIsApproveDialogOpen}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Terima Transfer?</AlertDialogTitle>
+                        <AlertDialogTitle>Setujui Transfer?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Stok akan masuk ke lokasi Anda. Tindakan ini tidak
-                            dapat dibatalkan.
+                            Stok belum berpindah sampai barang diterima
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -290,11 +267,11 @@ export default function Show({ auth, transfer, can_accept }) {
                             Batal
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={handleAcceptConfirm}
+                            onClick={handleApprove}
                             disabled={isProcessing}
-                            className="bg-success hover:bg-success/90"
+                            className="bg-success hover:bg-success/90 text-primary-foreground"
                         >
-                            {isProcessing ? "Memproses..." : "Terima Transfer"}
+                            {isProcessing ? 'Memproses...' : 'Setujui Transfer'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -306,15 +283,16 @@ export default function Show({ auth, transfer, can_accept }) {
             >
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Tolak Transfer</DialogTitle>
+                        <DialogTitle className="text-destructive">
+                            Tolak Transfer
+                        </DialogTitle>
                         <DialogDescription>
-                            Berikan alasan penolakan transfer ini
+                            Berikan alasan penolakan
                         </DialogDescription>
                     </DialogHeader>
                     <Textarea
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
-                        placeholder="Contoh: Barang tidak sesuai pesanan"
                         rows={4}
                     />
                     <DialogFooter>
@@ -330,7 +308,7 @@ export default function Show({ auth, transfer, can_accept }) {
                             onClick={handleReject}
                             disabled={isProcessing || !rejectionReason.trim()}
                         >
-                            {isProcessing ? "Memproses..." : "Tolak Transfer"}
+                            {isProcessing ? 'Memproses...' : 'Tolak Transfer'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

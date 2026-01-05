@@ -1,30 +1,30 @@
-import { useEffect } from "react";
-import GuestLayout from "@/layouts/GuestLayout";
-import { Head, useForm } from "@inertiajs/react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import InputError from "@/components/InputError";
-import { Mail, Lock } from "lucide-react";
-import { PasswordInput } from "@/components/PasswordInput";
+import { useEffect } from 'react';
+import GuestLayout from '@/layouts/GuestLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import InputError from '@/components/InputError';
+import { Mail, Lock } from 'lucide-react';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export default function ResetPassword({ token, email }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
-        password: "",
-        password_confirmation: "",
+        password: '',
+        password_confirmation: '',
     });
 
     useEffect(() => {
         return () => {
-            reset("password", "password_confirmation");
+            reset('password', 'password_confirmation');
         };
     }, []);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("password.store"));
+        post(route('password.store'));
     };
 
     return (
@@ -55,7 +55,7 @@ export default function ResetPassword({ token, email }) {
                                 className="w-full pl-10 pr-4 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="username"
                                 onChange={(e) =>
-                                    setData("email", e.target.value)
+                                    setData('email', e.target.value)
                                 }
                                 required
                             />
@@ -79,7 +79,7 @@ export default function ResetPassword({ token, email }) {
                                 className="w-full pl-10 pr-12 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 autoComplete="new-password"
                                 onChange={(e) =>
-                                    setData("password", e.target.value)
+                                    setData('password', e.target.value)
                                 }
                                 required
                             />
@@ -107,7 +107,7 @@ export default function ResetPassword({ token, email }) {
                                 autoComplete="new-password"
                                 onChange={(e) =>
                                     setData(
-                                        "password_confirmation",
+                                        'password_confirmation',
                                         e.target.value
                                     )
                                 }

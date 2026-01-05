@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { formatNumber, cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { formatNumber, cn } from '@/lib/utils';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function StockAvailability({ productId, locationId, unit }) {
     const [stock, setStock] = useState(null);
@@ -13,7 +13,7 @@ export default function StockAvailability({ productId, locationId, unit }) {
             setStock(null);
             axios
                 .get(
-                    route("api.inventory.quantity", {
+                    route('api.inventory.quantity', {
                         product_id: productId,
                         location_id: locationId,
                     })
@@ -37,8 +37,8 @@ export default function StockAvailability({ productId, locationId, unit }) {
         return (
             <p
                 className={cn(
-                    "text-xs mt-1 flex items-center gap-1",
-                    isAvailable ? "text-muted-foreground" : "text-destructive"
+                    'text-xs mt-1 flex items-center gap-1',
+                    isAvailable ? 'text-muted-foreground' : 'text-destructive'
                 )}
             >
                 {isAvailable ? (

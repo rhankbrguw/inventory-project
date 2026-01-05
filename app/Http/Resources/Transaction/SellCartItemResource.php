@@ -11,36 +11,44 @@ class SellCartItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            "id" => $this->id,
-            "quantity" => $this->quantity,
-            "sell_price" => $this->sell_price,
-            "product" => $this->whenLoaded(
-                "product",
-                fn() => [
-                    "id" => $this->product->id,
-                    "name" => $this->product->name,
-                    "sku" => $this->product->sku,
-                    "price" => $this->product->price,
-                    "unit" => $this->product->unit,
-                    "image_url" => $this->product->image_path
+            'id' => $this->id,
+            'quantity' => $this->quantity,
+            'sell_price' => $this->sell_price,
+            'product' => $this->whenLoaded(
+                'product',
+                fn () => [
+                    'id' => $this->product->id,
+                    'name' => $this->product->name,
+                    'sku' => $this->product->sku,
+                    'price' => $this->product->price,
+                    'unit' => $this->product->unit,
+                    'image_url' => $this->product->image_path
                         ? Storage::url($this->product->image_path)
                         : null,
-                    "prices" => $this->product->prices ?? [],
-                    "channel_prices" => $this->product->prices
-                        ? $this->product->prices->pluck('price', 'sales_channel_id')
+                    'prices' => $this->product->prices ?? [],
+                    'channel_prices' => $this->product->prices
+                        ? $this->product->prices->pluck('price', 'type_id')
                         : [],
                 ],
             ),
-            "location" => $this->whenLoaded(
+            'sales_channel' => $this->whenLoaded(
+                'salesChannel',
+                fn () => [
+                    'id' => $this->salesChannel->id,
+                    'name' => $this->salesChannel->name,
+                    'code' => $this->salesChannel->code,
+                ]
+            ),
+            'location' => $this->whenLoaded(
                 "location",
-                fn() => [
+                fn () => [
                     "id" => $this->location->id,
                     "name" => $this->location->name,
                 ],
             ),
-            "user_id" => $this->user_id,
-            "created_at" => $this->created_at?->toISOString(),
-            "updated_at" => $this->updated_at?->toISOString(),
+            'user_id' => $this->user_id,
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
 }

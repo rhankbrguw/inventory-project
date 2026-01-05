@@ -1,19 +1,19 @@
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { formatCurrency } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
-import CurrencyInput from "@/components/CurrencyInput";
-import InputError from "@/components/InputError";
-import { usePage } from "@inertiajs/react";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { formatCurrency } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import CurrencyInput from '@/components/CurrencyInput';
+import InputError from '@/components/InputError';
+import { usePage } from '@inertiajs/react';
 
 const cleanNumberString = (numStr) => {
-    if (typeof numStr !== "string") {
+    if (typeof numStr !== 'string') {
         return String(numStr);
     }
-    return numStr.replace(/\./g, "").replace(/,/g, ".");
+    return numStr.replace(/\./g, '').replace(/,/g, '.');
 };
 
 export default function PurchaseItemManager({
@@ -61,7 +61,7 @@ export default function PurchaseItemManager({
                                 checked={isSelected}
                                 onCheckedChange={() =>
                                     toggleSupplierSelection(
-                                        groupData.supplier_id,
+                                        groupData.supplier_id
                                     )
                                 }
                                 disabled={isGroupProcessing}
@@ -80,7 +80,7 @@ export default function PurchaseItemManager({
                                     size="icon"
                                     onClick={() =>
                                         onRemoveSupplierGroup(
-                                            groupData.supplier_id,
+                                            groupData.supplier_id
                                         )
                                     }
                                     disabled={
@@ -104,9 +104,7 @@ export default function PurchaseItemManager({
                                     processingItem === item.id;
                                 const subtotal =
                                     (parseFloat(
-                                        cleanNumberString(
-                                            getItemQuantity(item),
-                                        ),
+                                        cleanNumberString(getItemQuantity(item))
                                     ) || 0) *
                                     (parseFloat(getItemCost(item)) || 0);
 
@@ -163,18 +161,18 @@ export default function PurchaseItemManager({
                                                     type="text"
                                                     inputMode="numeric"
                                                     value={getItemQuantity(
-                                                        item,
+                                                        item
                                                     )}
                                                     onChange={(e) => {
                                                         const rawValue =
                                                             e.target.value.replace(
                                                                 /\./g,
-                                                                "",
+                                                                ''
                                                             );
                                                         onUpdateItem(
                                                             item,
-                                                            "quantity",
-                                                            rawValue,
+                                                            'quantity',
+                                                            rawValue
                                                         );
                                                     }}
                                                     onFocus={(e) => {
@@ -204,8 +202,8 @@ export default function PurchaseItemManager({
                                                     onValueChange={(value) =>
                                                         onUpdateItem(
                                                             item,
-                                                            "cost_per_unit",
-                                                            value || "0",
+                                                            'cost_per_unit',
+                                                            value || '0'
                                                         )
                                                     }
                                                     disabled={

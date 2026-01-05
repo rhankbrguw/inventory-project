@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStockTransferRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\Transaction\TransferResource;
-use App\Models\Inventory;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\StockTransfer;
+use App\Models\StockMovement;
 use App\Models\User;
+use App\Models\Role;
 use App\Notifications\StockTransferNotification;
 use App\Notifications\TransferAcceptedNotification;
 use App\Notifications\TransferRejectedNotification;
@@ -33,37 +34,40 @@ class StockTransferController extends Controller
         $accessibleLocationIds = $user->getAccessibleLocationIds();
 
         $sourceLocationsQuery = Location::orderBy('name')->with('type');
+
         if ($accessibleLocationIds) {
             $sourceLocationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
         $sourceLocations = $sourceLocationsQuery->get()
-            ->filter(fn($loc) => $user->canTransactAtLocation($loc->id, 'transfer'))
-            ->map(fn($loc) => ['id' => $loc->id, 'name' => $loc->name])
+            ->filter(fn ($loc) => $user->canTransactAtLocation($loc->id, 'transfer'))
+            ->map(fn ($loc) => [
+                'id' => $loc->id,
+                'name' => $loc->name,
+            ])
             ->values();
 
         $destinationLocations = Location::orderBy('name')->get(['id', 'name']);
 
         $productsQuery = Product::with([
-            'inventories' => fn($q) => $q->where('quantity', '>', 0),
-            'inventories.location:id,name'
+            'inventories' => fn ($q) => $q->where('quantity', '>', 0),
+            'inventories.location:id,name',
         ])->orderBy('name');
 
         if ($accessibleLocationIds) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) => $q->whereIn('location_id', $accessibleLocationIds)->where('quantity', '>', 0)
+                fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)
+                    ->where('quantity', '>', 0)
             );
         }
 
         $products = $productsQuery->get()->map(function ($product) {
-            $product->locations = $product->inventories->map(function ($inv) {
-                return [
-                    'id' => $inv->location->id,
-                    'name' => $inv->location->name,
-                    'quantity' => $inv->quantity,
-                ];
-            });
+            $product->locations = $product->inventories->map(fn ($inv) => [
+                'id' => $inv->location->id,
+                'name' => $inv->location->name,
+                'quantity' => $inv->quantity,
+            ]);
             return $product;
         });
 
@@ -77,188 +81,251 @@ class StockTransferController extends Controller
     public function store(StoreStockTransferRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $user = $request->user();
+        $user = Auth::user();
 
-        if (!$user->canTransactAtLocation($validated['from_location_id'], 'transfer')) {
-            abort(403, 'Anda tidak memiliki akses untuk transfer dari lokasi ini.');
+        if (! $user->canTransactAtLocation($validated['from_location_id'], 'transfer')) {
+            abort(403);
         }
 
-        $transfer = DB::transaction(function () use ($validated, $user) {
+        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
+            return back()->with('error', 'Hanya Manager yang dapat membuat permintaan transfer.');
+        }
+
+        DB::transaction(function () use ($validated, $user) {
             $transfer = StockTransfer::create([
-                'reference_code'     => 'TRF-' . now()->format('Ymd-His'),
-                'from_location_id'   => $validated['from_location_id'],
-                'to_location_id'     => $validated['to_location_id'],
-                'user_id'            => $user->id,
-                'transfer_date'      => now(),
-                'notes'              => $validated['notes'],
-                'status'             => 'pending',
+                'reference_code' => 'TRF-' . now()->format('YmdHis'),
+                'from_location_id' => $validated['from_location_id'],
+                'to_location_id' => $validated['to_location_id'],
+                'user_id' => $user->id,
+                'transfer_date' => $validated['transfer_date'] ?? now(),
+                'notes' => $validated['notes'],
+                'status' => StockTransfer::STATUS_PENDING_APPROVAL,
             ]);
 
             foreach ($validated['items'] as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                $qty = abs($item['quantity']);
-
-                $inventory = Inventory::where('product_id', $product->id)
-                    ->where('location_id', $validated['from_location_id'])
-                    ->first();
-
-                $cost = $inventory ? $inventory->average_cost : 0;
-
-                $this->handleStockOut(
-                    product: $product,
-                    locationId: $validated['from_location_id'],
-                    qty: $qty,
-                    sellPrice: $cost,
-                    type: 'transfer_out',
-                    ref: $transfer,
-                    notes: $validated['notes']
-                );
+                StockMovement::create([
+                    'product_id' => $item['product_id'],
+                    'location_id' => $validated['from_location_id'],
+                    'quantity' => -abs($item['quantity']),
+                    'type' => 'transfer_out',
+                    'reference_type' => StockTransfer::class,
+                    'reference_id' => $transfer->id,
+                    'user_id' => $user->id,
+                    'date' => $validated['transfer_date'] ?? now(),
+                    'notes' => 'Pending Approval',
+                ]);
             }
 
-            return $transfer;
-        });
+            $managerRoleIds = Role::whereIn('code', [
+                Role::CODE_BRANCH_MGR,
+                Role::CODE_WAREHOUSE_MGR,
+            ])->pluck('id');
 
-        $targetManagerIds = DB::table('location_user')
-            ->join('roles', 'location_user.role_id', '=', 'roles.id')
-            ->where('location_user.location_id', $transfer->to_location_id)
-            ->where('roles.level', '<=', 10)
-            ->where('location_user.user_id', '!=', $user->id)
-            ->pluck('location_user.user_id');
+            if ($managerRoleIds->isNotEmpty()) {
+                $targets = User::whereHas('locations', function ($q) use ($transfer, $managerRoleIds) {
+                    $q->where('locations.id', $transfer->to_location_id)
+                        ->whereIn('location_user.role_id', $managerRoleIds);
+                })
+                    ->where('id', '!=', $user->id)
+                    ->get();
 
-        if ($targetManagerIds->isNotEmpty()) {
-            $users = User::whereIn('id', $targetManagerIds)->get();
-            foreach ($users as $manager) {
-                try {
-                    $manager->notify(new StockTransferNotification($transfer, $user->name));
-                } catch (\Throwable) {
+                foreach ($targets as $manager) {
+                    $manager->notify(
+                        new StockTransferNotification($transfer, $user->name, 'new_request')
+                    );
                 }
             }
-        }
+        });
 
         return Redirect::route('transactions.index')
-            ->with('success', 'Transfer stok berhasil dibuat & menunggu konfirmasi penerima.');
+            ->with('success', 'Permintaan transfer dibuat.');
     }
 
-    public function show(StockTransfer $stockTransfer): Response
+    public function approve(StockTransfer $stockTransfer): RedirectResponse
     {
-        $this->authorize('view', $stockTransfer);
+        $user = Auth::user();
 
-        $stockTransfer->load([
-            'fromLocation:id,name',
-            'toLocation:id,name',
-            'user:id,name',
-            'receivedBy:id,name',
-            'rejectedBy:id,name',
-            'stockMovements' => fn($q) =>
-            $q->where('type', 'transfer_out')
-                ->select('id', 'reference_type', 'reference_id', 'product_id', 'quantity', 'cost_per_unit')
-                ->with(['product' => fn($q) => $q->withTrashed()->select('id', 'name', 'sku', 'unit', 'deleted_at')]),
-        ]);
-
-        return Inertia::render('Transactions/Transfers/Show', [
-            'transfer' => new TransferResource($stockTransfer),
-            'can_accept' => Auth::user()->can('accept', $stockTransfer),
-        ]);
-    }
-
-    public function accept(Request $request, StockTransfer $stockTransfer): RedirectResponse
-    {
-        $this->authorize('accept', $stockTransfer);
-
-        if ($stockTransfer->status !== 'pending') {
-            return back()->with('error', 'Transfer sudah diproses sebelumnya.');
+        if (! $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase')) {
+            abort(403);
         }
 
-        DB::transaction(function () use ($stockTransfer, $request) {
-            $stockTransfer->update([
-                'status' => 'completed',
-                'received_by' => $request->user()->id,
-                'received_at' => now(),
-            ]);
+        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
+            return back()->with('error', 'Hanya Manager yang dapat menyetujui transfer.');
+        }
 
-            $movementsOut = $stockTransfer->stockMovements()
-                ->where('type', 'transfer_out')
-                ->get();
+        if ($stockTransfer->status !== StockTransfer::STATUS_PENDING_APPROVAL) {
+            return back()->with('error', 'Status tidak valid.');
+        }
 
-            foreach ($movementsOut as $movement) {
-                $product = Product::withTrashed()->find($movement->product_id);
-                $qty = abs($movement->quantity);
-                $cost = $movement->cost_per_unit;
-
-                $this->handleStockIn(
-                    product: $product,
-                    locationId: $stockTransfer->to_location_id,
-                    qty: $qty,
-                    cost: $cost,
-                    type: 'transfer_in',
-                    ref: $stockTransfer,
-                    notes: $stockTransfer->notes
-                );
-            }
-        });
+        $stockTransfer->update([
+            'status' => StockTransfer::STATUS_APPROVED,
+        ]);
 
         try {
             $stockTransfer->user->notify(
-                new TransferAcceptedNotification($stockTransfer, $request->user()->name)
+                new TransferAcceptedNotification($stockTransfer, $user->name)
             );
         } catch (\Throwable) {
         }
 
-        return back()->with('success', 'Transfer berhasil diterima & stok tujuan ditambahkan.');
+        return back()->with('success', 'Transfer disetujui. Menunggu pengiriman.');
     }
 
     public function reject(Request $request, StockTransfer $stockTransfer): RedirectResponse
     {
-        $this->authorize('reject', $stockTransfer);
+        $user = Auth::user();
 
-        if ($stockTransfer->status !== 'pending') {
-            return back()->with('error', 'Transfer sudah diproses sebelumnya.');
+        if (! $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase')) {
+            abort(403);
         }
 
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string|max:500',
+        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
+            return back()->with('error', 'Akses ditolak.');
+        }
+
+        $reason = $request->input('rejection_reason');
+
+        $stockTransfer->update([
+            'status' => StockTransfer::STATUS_REJECTED,
+            'rejected_by' => $user->id,
+            'rejected_at' => now(),
+            'rejection_reason' => $reason,
         ]);
-
-        DB::transaction(function () use ($stockTransfer, $request, $validated) {
-            $stockTransfer->update([
-                'status' => 'rejected',
-                'rejected_by' => $request->user()->id,
-                'rejected_at' => now(),
-                'rejection_reason' => $validated['rejection_reason'],
-            ]);
-
-            $movementsOut = $stockTransfer->stockMovements()
-                ->where('type', 'transfer_out')
-                ->get();
-
-            foreach ($movementsOut as $movement) {
-                $product = Product::withTrashed()->find($movement->product_id);
-                $qty = abs($movement->quantity);
-                $cost = $movement->cost_per_unit;
-
-                $this->handleStockIn(
-                    product: $product,
-                    locationId: $stockTransfer->from_location_id,
-                    qty: $qty,
-                    cost: $cost,
-                    type: 'transfer_in',
-                    ref: $stockTransfer,
-                    notes: 'Pengembalian Stok (Ditolak): ' . $validated['rejection_reason']
-                );
-            }
-        });
 
         try {
             $stockTransfer->user->notify(
-                new TransferRejectedNotification(
-                    $stockTransfer,
-                    $request->user()->name,
-                    $validated['rejection_reason']
-                )
+                new TransferRejectedNotification($stockTransfer, $user->name, $reason)
             );
         } catch (\Throwable) {
         }
 
-        return back()->with('success', 'Transfer ditolak dan stok dikembalikan ke lokasi asal.');
+        return back()->with('success', 'Transfer ditolak.');
+    }
+
+    public function ship(StockTransfer $stockTransfer): RedirectResponse
+    {
+        $stockTransfer->load(['items.product']);
+
+        $user = Auth::user();
+
+        if (! $user->canTransactAtLocation($stockTransfer->from_location_id, 'transfer')) {
+            abort(403);
+        }
+
+        if ($stockTransfer->status !== StockTransfer::STATUS_APPROVED) {
+            return back()->with('error', 'Belum disetujui.');
+        }
+
+        DB::transaction(function () use ($stockTransfer, $user) {
+            $stockTransfer->update([
+                'status' => StockTransfer::STATUS_SHIPPING,
+            ]);
+
+            $targetRoleIds = Role::whereIn('code', [
+                Role::CODE_BRANCH_MGR,
+                Role::CODE_WAREHOUSE_MGR,
+            ])->pluck('id');
+
+            if ($targetRoleIds->isNotEmpty()) {
+                $receivers = User::whereHas('locations', function ($q) use ($stockTransfer, $targetRoleIds) {
+                    $q->where('locations.id', $stockTransfer->to_location_id)
+                        ->whereIn('location_user.role_id', $targetRoleIds);
+                })->get();
+
+                foreach ($receivers as $receiver) {
+                    try {
+                        $receiver->notify(new \App\Notifications\TransferShippedNotification(
+                            $stockTransfer,
+                            $user->name
+                        ));
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+
+            foreach ($stockTransfer->items as $movement) {
+                $product = $movement->product;
+                $qty = abs($movement->quantity);
+
+                $movement->delete();
+
+                $this->handleStockOut(
+                    $product,
+                    $stockTransfer->from_location_id,
+                    $qty,
+                    0,
+                    'transfer_out',
+                    $stockTransfer,
+                    'Shipped'
+                );
+            }
+        });
+
+        return back()->with('success', 'Barang dikirim.');
+    }
+
+    public function receive(Request $request, StockTransfer $stockTransfer): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase')) {
+            abort(403);
+        }
+
+        if ($stockTransfer->status !== StockTransfer::STATUS_SHIPPING) {
+            return back()->with('error', 'Belum dikirim.');
+        }
+
+        DB::transaction(function () use ($stockTransfer, $user) {
+            $stockTransfer->update([
+                'status' => StockTransfer::STATUS_COMPLETED,
+                'received_by' => $user->id,
+                'received_at' => now(),
+            ]);
+
+            $outboundMovements = StockMovement::where('reference_type', StockTransfer::class)
+                ->where('reference_id', $stockTransfer->id)
+                ->where('type', 'transfer_out')
+                ->with('product')
+                ->get();
+
+            foreach ($outboundMovements as $movementOut) {
+                $this->handleStockIn(
+                    $movementOut->product,
+                    $stockTransfer->to_location_id,
+                    abs($movementOut->quantity),
+                    $movementOut->average_cost_per_unit ?? 0,
+                    'transfer_in',
+                    $stockTransfer,
+                    'Received'
+                );
+            }
+        });
+
+        return back()->with('success', 'Barang diterima.');
+    }
+
+    public function show(StockTransfer $stockTransfer): Response
+    {
+        $user = Auth::user();
+
+        $stockTransfer->load([
+            'fromLocation',
+            'toLocation',
+            'user',
+            'receiver',
+            'rejector',
+            'items.product',
+        ]);
+
+        return Inertia::render('Transactions/Transfers/Show', [
+            'transfer' => new TransferResource($stockTransfer),
+            'canApprove' => $stockTransfer->status === StockTransfer::STATUS_PENDING_APPROVAL
+                && $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase'),
+            'canShip' => $stockTransfer->status === StockTransfer::STATUS_APPROVED
+                && $user->canTransactAtLocation($stockTransfer->from_location_id, 'transfer'),
+            'canReceive' => $stockTransfer->status === StockTransfer::STATUS_SHIPPING
+                && $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase'),
+        ]);
     }
 }

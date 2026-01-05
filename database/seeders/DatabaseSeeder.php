@@ -12,7 +12,6 @@ class DatabaseSeeder extends Seeder
             TypeSeeder::class,
             RoleSeeder::class,
             LocationSeeder::class,
-            SalesChannelSeeder::class,
         ]);
 
         $this->command->info('✅ Base data seeded successfully!');

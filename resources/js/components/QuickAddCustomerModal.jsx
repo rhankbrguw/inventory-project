@@ -1,5 +1,5 @@
-import { useForm, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useForm, router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -9,11 +9,11 @@ import {
     DialogFooter,
     DialogClose,
     DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import InputError from "@/components/InputError";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import InputError from '@/components/InputError';
 import {
     Select,
     SelectContent,
@@ -21,8 +21,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+} from '@/components/ui/select';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 
 export default function QuickAddCustomerModal({
     children,
@@ -31,20 +31,20 @@ export default function QuickAddCustomerModal({
 }) {
     const { data, setData, post, processing, errors, isDirty, reset } = useForm(
         {
-            name: "",
-            email: "",
-            phone: "",
-            address: "",
-            type_id: "",
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            type_id: '',
             _from_modal: true,
-        },
+        }
     );
 
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("customers.store"), {
+        post(route('customers.store'), {
             preserveScroll: true,
             onSuccess: (page) => {
                 const newCustomer = page.props.flash.newCustomer;
@@ -52,7 +52,7 @@ export default function QuickAddCustomerModal({
                 setOpen(false);
                 reset();
                 router.reload({
-                    only: ["customers"],
+                    only: ['customers'],
                     preserveScroll: true,
                 });
             },
@@ -90,7 +90,7 @@ export default function QuickAddCustomerModal({
                             id="customerName"
                             placeholder="Nama Lengkap Pelanggan"
                             value={data.name}
-                            onChange={(e) => setData("name", e.target.value)}
+                            onChange={(e) => setData('name', e.target.value)}
                             className="h-8 text-sm"
                         />
                         <InputError message={errors.name} />
@@ -108,7 +108,7 @@ export default function QuickAddCustomerModal({
                             type="email"
                             placeholder="email@contoh.com"
                             value={data.email}
-                            onChange={(e) => setData("email", e.target.value)}
+                            onChange={(e) => setData('email', e.target.value)}
                             className="h-8 text-sm"
                         />
                         <InputError message={errors.email} />
@@ -123,7 +123,7 @@ export default function QuickAddCustomerModal({
                         </Label>
                         <Select
                             value={data.type_id}
-                            onValueChange={(value) => setData("type_id", value)}
+                            onValueChange={(value) => setData('type_id', value)}
                         >
                             <SelectTrigger
                                 id="customerType"
@@ -162,8 +162,8 @@ export default function QuickAddCustomerModal({
                             value={data.phone}
                             onChange={(e) =>
                                 setData(
-                                    "phone",
-                                    e.target.value.replace(/\D/g, ""),
+                                    'phone',
+                                    e.target.value.replace(/\D/g, '')
                                 )
                             }
                             className="h-8 text-sm"
@@ -185,7 +185,7 @@ export default function QuickAddCustomerModal({
                             disabled={processing || !isDirty}
                             className="h-8 text-xs"
                         >
-                            {processing ? "Menyimpan..." : "Simpan"}
+                            {processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </form>

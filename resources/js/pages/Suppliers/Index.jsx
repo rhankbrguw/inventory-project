@@ -1,29 +1,29 @@
-import { Link, router } from "@inertiajs/react";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import SupplierMobileCard from "./Partials/SupplierMobileCard";
-import { supplierColumns } from "@/constants/tableColumns";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { useSoftDeletes } from "@/hooks/useSoftDeletes";
-import Pagination from "@/components/Pagination";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
-import SupplierFilterCard from "./Partials/SupplierFilterCard";
-import { Button } from "@/components/ui/button";
+import { Link, router } from '@inertiajs/react';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import SupplierMobileCard from './Partials/SupplierMobileCard';
+import { supplierColumns } from '@/constants/tableColumns';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { useSoftDeletes } from '@/hooks/useSoftDeletes';
+import Pagination from '@/components/Pagination';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import SupplierFilterCard from './Partials/SupplierFilterCard';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/dropdown-menu';
+import { Edit, MoreVertical, Archive, ArchiveRestore } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({ auth, suppliers, filters }) {
     const { params, setFilter } = useIndexPageFilters(
-        "suppliers.index",
-        filters,
+        'suppliers.index',
+        filters
     );
 
     const { isManager } = usePermission();
@@ -36,7 +36,7 @@ export default function Index({ auth, suppliers, filters }) {
         itemToDeactivate,
         deactivateItem,
         restoreItem,
-    } = useSoftDeletes({ resourceName: "suppliers", data: suppliers.data });
+    } = useSoftDeletes({ resourceName: 'suppliers', data: suppliers.data });
 
     const renderActionDropdown = (supplier) => (
         <DropdownMenu>
@@ -53,7 +53,7 @@ export default function Index({ auth, suppliers, filters }) {
                 <DropdownMenuItem
                     className="cursor-pointer"
                     onSelect={() =>
-                        router.get(route("suppliers.edit", supplier.id))
+                        router.get(route('suppliers.edit', supplier.id))
                     }
                 >
                     <Edit className="w-4 h-4 mr-2" /> Edit
@@ -81,7 +81,7 @@ export default function Index({ auth, suppliers, filters }) {
         <IndexPageLayout
             auth={auth}
             title="Manajemen Supplier"
-            createRoute={canCrudSuppliers ? "suppliers.create" : null}
+            createRoute={canCrudSuppliers ? 'suppliers.create' : null}
             buttonLabel="Tambah Supplier"
         >
             <div className="space-y-4">
@@ -92,13 +92,13 @@ export default function Index({ auth, suppliers, filters }) {
                         <Link
                             href={
                                 canCrudSuppliers
-                                    ? route("suppliers.edit", supplier.id)
-                                    : "#"
+                                    ? route('suppliers.edit', supplier.id)
+                                    : '#'
                             }
                             key={supplier.id}
                             className={cn(
-                                !canCrudSuppliers && "pointer-events-none",
-                                supplier.deleted_at && "opacity-50",
+                                !canCrudSuppliers && 'pointer-events-none',
+                                supplier.deleted_at && 'opacity-50'
                             )}
                         >
                             <SupplierMobileCard
@@ -117,9 +117,9 @@ export default function Index({ auth, suppliers, filters }) {
                         columns={supplierColumns}
                         data={suppliers.data}
                         actions={canCrudSuppliers ? renderActionDropdown : null}
-                        showRoute={canCrudSuppliers ? "suppliers.edit" : null}
+                        showRoute={canCrudSuppliers ? 'suppliers.edit' : null}
                         rowClassName={(row) =>
-                            row.deleted_at ? "opacity-50" : ""
+                            row.deleted_at ? 'opacity-50' : ''
                         }
                     />
                 </div>

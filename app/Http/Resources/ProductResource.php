@@ -19,7 +19,7 @@ class ProductResource extends JsonResource
             'unit' => $this->unit,
             'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
             'channel_prices' => $this->whenLoaded('prices', function () {
-                return $this->prices->pluck('price', 'sales_channel_id');
+                return $this->prices->pluck('price', 'type_id');
             }),
             'type' => $this->whenLoaded('type', fn () => [
                 'id' => $this->type->id,

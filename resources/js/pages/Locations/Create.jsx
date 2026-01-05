@@ -1,28 +1,28 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function Create({ auth, locationTypes }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        name: "",
-        type_id: "",
-        address: "",
+        name: '',
+        type_id: '',
+        address: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("locations.store"));
+        post(route('locations.store'));
     };
 
     return (
@@ -47,7 +47,7 @@ export default function Create({ auth, locationTypes }) {
                                 placeholder="Contoh: Gudang Pusat A"
                                 value={data.name}
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData('name', e.target.value)
                                 }
                             />
                         </FormField>
@@ -60,7 +60,7 @@ export default function Create({ auth, locationTypes }) {
                             <Select
                                 value={data.type_id}
                                 onValueChange={(value) =>
-                                    setData("type_id", value)
+                                    setData('type_id', value)
                                 }
                             >
                                 <SelectTrigger>
@@ -89,13 +89,13 @@ export default function Create({ auth, locationTypes }) {
                                 placeholder="Masukkan alamat lengkap lokasi..."
                                 value={data.address}
                                 onChange={(e) =>
-                                    setData("address", e.target.value)
+                                    setData('address', e.target.value)
                                 }
                             />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4">
-                            <Link href={route("locations.index")}>
+                            <Link href={route('locations.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

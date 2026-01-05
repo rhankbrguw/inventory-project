@@ -1,31 +1,31 @@
-import { Link, router } from "@inertiajs/react";
-import { useState } from "react";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { typeColumns } from "@/constants/tableColumns.jsx";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import TypeMobileCard from "./Partials/TypeMobileCard";
-import Pagination from "@/components/Pagination";
-import TypeFilterCard from "./Partials/TypeFilterCard";
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { typeColumns } from '@/constants/tableColumns.jsx';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import TypeMobileCard from './Partials/TypeMobileCard';
+import Pagination from '@/components/Pagination';
+import TypeFilterCard from './Partials/TypeFilterCard';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2, MoreVertical } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Edit, Trash2, MoreVertical } from 'lucide-react';
 
 export default function Index({ auth, types, filters = {}, groups = {} }) {
-    const { params, setFilter } = useIndexPageFilters("types.index", filters);
+    const { params, setFilter } = useIndexPageFilters('types.index', filters);
     const [confirmingTypeDeletion, setConfirmingTypeDeletion] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const deleteType = () => {
         setIsProcessing(true);
-        router.delete(route("types.destroy", confirmingTypeDeletion), {
+        router.delete(route('types.destroy', confirmingTypeDeletion), {
             preserveScroll: true,
             onSuccess: () => setConfirmingTypeDeletion(null),
             onFinish: () => setIsProcessing(false),
@@ -33,7 +33,7 @@ export default function Index({ auth, types, filters = {}, groups = {} }) {
     };
 
     const typeToDelete = types.data.find(
-        (t) => t.id === confirmingTypeDeletion,
+        (t) => t.id === confirmingTypeDeletion
     );
 
     const renderActionDropdown = (type) => (
@@ -50,7 +50,7 @@ export default function Index({ auth, types, filters = {}, groups = {} }) {
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
                     className="cursor-pointer"
-                    onSelect={() => router.get(route("types.edit", type.id))}
+                    onSelect={() => router.get(route('types.edit', type.id))}
                 >
                     <Edit className="w-4 h-4 mr-2" /> Edit
                 </DropdownMenuItem>
@@ -81,7 +81,7 @@ export default function Index({ auth, types, filters = {}, groups = {} }) {
                 <MobileCardList
                     data={types.data}
                     renderItem={(type) => (
-                        <Link href={route("types.edit", type.id)} key={type.id}>
+                        <Link href={route('types.edit', type.id)} key={type.id}>
                             <TypeMobileCard
                                 type={type}
                                 renderActionDropdown={renderActionDropdown}
@@ -95,7 +95,7 @@ export default function Index({ auth, types, filters = {}, groups = {} }) {
                         columns={typeColumns}
                         data={types.data}
                         actions={renderActionDropdown}
-                        showRoute={"types.edit"}
+                        showRoute={'types.edit'}
                     />
                 </div>
 

@@ -1,20 +1,20 @@
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { formatCurrency, formatNumber, cn } from "@/lib/utils";
-import { Package, TrendingUp } from "lucide-react";
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import { formatCurrency, formatNumber, cn } from '@/lib/utils';
+import { Package, TrendingUp } from 'lucide-react';
 
 export default function ReportMobileCard({ product, rank, compact = false }) {
-    const Wrapper = compact ? "div" : Card;
+    const Wrapper = compact ? 'div' : Card;
     const wrapperClasses = compact
-        ? "border-b last:border-0 pb-3 last:pb-0"
-        : "hover:bg-muted/20 transition-colors mb-2";
+        ? 'border-b last:border-0 pb-3 last:pb-0'
+        : 'hover:bg-muted/20 transition-colors mb-2';
 
     return (
         <Wrapper className={wrapperClasses}>
             <div
                 className={cn(
-                    "flex flex-row items-center gap-3",
-                    !compact && "p-3",
+                    'flex flex-row items-center gap-3',
+                    !compact && 'p-3'
                 )}
             >
                 <div className="p-2 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 h-8 w-8">

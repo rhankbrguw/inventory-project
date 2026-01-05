@@ -1,18 +1,18 @@
-import React from "react";
-import PurchaseItemManager from "./PurchaseItemManager";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
-import QuickAddSupplierModal from "@/components/QuickAddSupplierModal";
+import React from 'react';
+import PurchaseItemManager from './PurchaseItemManager';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { UserPlus } from 'lucide-react';
+import QuickAddSupplierModal from '@/components/QuickAddSupplierModal';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { ShoppingBag } from "lucide-react";
-import { formatNumber } from "@/lib/utils";
+} from '@/components/ui/select';
+import { ShoppingBag } from 'lucide-react';
+import { formatNumber } from '@/lib/utils';
 
 export default function PurchaseCart({
     cartGroups,
@@ -69,7 +69,7 @@ export default function PurchaseCart({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <QuickAddSupplierModal onSuccess={() => { }}>
+                        <QuickAddSupplierModal onSuccess={() => {}}>
                             <Button
                                 type="button"
                                 variant="outline"

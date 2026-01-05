@@ -11,6 +11,13 @@ class StockTransfer extends Model
 {
     use HasFactory;
 
+    public const STATUS_DRAFT = 'Draft';
+    public const STATUS_PENDING_APPROVAL = 'Pending Approval';
+    public const STATUS_APPROVED = 'Approved';
+    public const STATUS_SHIPPING = 'Shipping';
+    public const STATUS_COMPLETED = 'Completed';
+    public const STATUS_REJECTED = 'Rejected';
+
     protected $fillable = [
         'reference_code',
         'from_location_id',
@@ -23,7 +30,7 @@ class StockTransfer extends Model
         'received_at',
         'rejected_by',
         'rejected_at',
-        'rejection_reason',
+        'rejection_reason'
     ];
 
     protected $casts = [
@@ -32,33 +39,38 @@ class StockTransfer extends Model
         'rejected_at' => 'datetime',
     ];
 
-    public function fromLocation(): BelongsTo
+    public function items(): MorphMany
     {
-        return $this->belongsTo(Location::class, 'from_location_id');
-    }
-
-    public function toLocation(): BelongsTo
-    {
-        return $this->belongsTo(Location::class, 'to_location_id');
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function receivedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'received_by');
-    }
-
-    public function rejectedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'rejected_by');
+        return $this->morphMany(StockMovement::class, 'reference');
     }
 
     public function stockMovements(): MorphMany
     {
-        return $this->morphMany(StockMovement::class, 'reference');
+        return $this->items();
+    }
+
+    public function fromLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'from_location_id')->withTrashed();
+    }
+
+    public function toLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'to_location_id')->withTrashed();
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function receiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function rejector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

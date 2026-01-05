@@ -1,21 +1,62 @@
-import ContentPageLayout from "@/components/ContentPageLayout";
-import PrintButton from "@/components/PrintButton";
-import InstallmentSchedule from "@/components/InstallmentSchedule";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { TableFooter, TableRow, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
-import DataTable from "@/components/DataTable";
-import { purchaseDetailColumns } from "@/constants/tableColumns";
+import ContentPageLayout from '@/components/ContentPageLayout';
+import InstallmentSchedule from '@/components/InstallmentSchedule';
+import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
+import TransactionPaymentBadge from '@/components/Transaction/TransactionPaymentBadge';
+import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
+import { purchaseDetailColumns } from '@/constants/tableColumns';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { formatDate } from '@/lib/utils';
 
 export default function Show({ auth, purchase }) {
     const { data } = purchase;
+
+    const infoFields = [
+        {
+            label: 'Lokasi Penerima',
+            value: data.location.name,
+        },
+        {
+            label: 'Sumber / Supplier',
+            value: data.supplier ? (
+                data.supplier.name
+            ) : data.notes && data.notes.includes('Internal Transfer') ? (
+                <span className="font-semibold text-blue-600">
+                    Internal Transfer (Pusat)
+                </span>
+            ) : (
+                'Supplier Umum'
+            ),
+        },
+        {
+            label: 'Tanggal Transaksi',
+            value: formatDate(data.transaction_date),
+        },
+        {
+            label: 'Status',
+            value: <UnifiedBadge text={data.status} code={data.status} />,
+        },
+        {
+            label: 'Pembayaran',
+            value: null,
+            badge: (
+                <TransactionPaymentBadge
+                    installmentTerms={data.installment_terms}
+                    paymentStatus={data.payment_status}
+                    hasInstallments={data.has_installments}
+                />
+            ),
+        },
+        {
+            label: 'PIC',
+            value: data.user.name,
+        },
+        {
+            label: 'Catatan',
+            value: data.notes,
+            span: 'full',
+            hidden: !data.notes,
+        },
+    ];
 
     return (
         <ContentPageLayout
@@ -23,79 +64,11 @@ export default function Show({ auth, purchase }) {
             title="Detail Transaksi"
             backRoute="transactions.index"
         >
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informasi Umum</CardTitle>
-                    <CardDescription>{data.reference_code}</CardDescription>
-                </CardHeader>
-                <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
-                    <div>
-                        <p className="text-muted-foreground">Lokasi Penerima</p>
-                        <p className="font-semibold">{data.location.name}</p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Supplier Utama</p>
-                        <p className="font-semibold">
-                            {data.supplier?.name || "Supplier Umum"}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">
-                            Tanggal Transaksi
-                        </p>
-                        <p className="font-semibold">
-                            {formatDate(data.transaction_date)}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Status</p>
-                        <Badge variant="outline" className="capitalize">
-                            {data.status}
-                        </Badge>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Pembayaran</p>
-                        <div className="flex items-center gap-2">
-                            <span className="font-semibold">
-                                {data.installment_terms === 1
-                                    ? "Lunas"
-                                    : `Cicilan ${data.installment_terms}x`}
-                            </span>
-                            {data.has_installments && (
-                                <Badge
-                                    variant={
-                                        data.payment_status === "paid"
-                                            ? "default"
-                                            : data.payment_status === "partial"
-                                              ? "secondary"
-                                              : "outline"
-                                    }
-                                    className={cn(
-                                        data.payment_status === "paid" &&
-                                            "bg-success/10 text-success border-success/20",
-                                    )}
-                                >
-                                    {data.payment_status === "paid"
-                                        ? "Lunas"
-                                        : data.payment_status === "partial"
-                                          ? "Sebagian"
-                                          : "Belum Bayar"}
-                                </Badge>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">PIC</p>
-                        <p className="font-semibold">{data.user.name}</p>
-                    </div>
-                    {data.notes && (
-                        <div className="sm:col-span-3">
-                            <p className="text-muted-foreground">Catatan</p>
-                            <p className="font-semibold">{data.notes}</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            <TransactionInfoGrid
+                title="Informasi Umum"
+                subtitle={data.reference_code}
+                fields={infoFields}
+            />
 
             {data.has_installments && (
                 <InstallmentSchedule
@@ -104,79 +77,13 @@ export default function Show({ auth, purchase }) {
                 />
             )}
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle>Rincian Item</CardTitle>
-                    <PrintButton>
-                        <span className="hidden sm:inline">Cetak</span>
-                    </PrintButton>
-                </CardHeader>
-                <CardContent>
-                    <div className="md:hidden space-y-3">
-                        {data.items.map((item) => (
-                            <Card
-                                key={item.id}
-                                className={cn(
-                                    "p-3",
-                                    item.product?.deleted_at &&
-                                        "opacity-60 bg-muted/50",
-                                )}
-                            >
-                                <div className="space-y-2">
-                                    <div>
-                                        <p className="font-medium text-sm">
-                                            {item.product?.name ||
-                                                "Produk Telah Dihapus"}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground font-mono">
-                                            {item.product?.sku || "-"}
-                                        </p>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span>
-                                            {formatNumber(item.quantity)}{" "}
-                                            {item.product?.unit} ×{" "}
-                                            {formatCurrency(item.cost_per_unit)}
-                                        </span>
-                                        <span className="font-semibold">
-                                            {formatCurrency(
-                                                item.quantity *
-                                                    item.cost_per_unit,
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                        <div className="flex justify-between items-center pt-3 border-t font-bold text-base">
-                            <span>Total Pembelian</span>
-                            <span>{formatCurrency(data.total_cost)}</span>
-                        </div>
-                    </div>
-
-                    <div className="hidden md:block">
-                        <DataTable
-                            columns={purchaseDetailColumns}
-                            data={data.items}
-                            footer={
-                                <TableFooter>
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={4}
-                                            className="text-right font-bold"
-                                        >
-                                            Total Pembelian
-                                        </TableCell>
-                                        <TableCell className="text-center font-bold">
-                                            {formatCurrency(data.total_cost)}
-                                        </TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            }
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+            <TransactionItemsSection
+                type="purchase"
+                items={data.items}
+                columns={purchaseDetailColumns}
+                totalLabel="Total Pembelian"
+                totalAmount={data.total_cost}
+            />
         </ContentPageLayout>
     );
 }

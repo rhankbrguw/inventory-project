@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration {
+return new class () extends Migration {
     public function up(): void
     {
         Schema::create('stock_transfers', function (Blueprint $table) {
@@ -17,8 +17,6 @@ return new class() extends Migration {
             $table->text('notes')->nullable();
             $table->string('status');
             $table->timestamps();
-            $table->foreignId('received_by')->nullable()->constrained('users')->onDelete('restrict');
-            $table->timestamp('received_at')->nullable();
         });
     }
 

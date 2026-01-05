@@ -1,24 +1,24 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 const sortOptions = [
-    { value: "newest", label: "Produk Terbaru" },
-    { value: "oldest", label: "Produk Terlama" },
-    { value: "price_desc", label: "Harga Tertinggi" },
-    { value: "price_asc", label: "Harga Terendah" },
+    { value: 'newest', label: 'Produk Terbaru' },
+    { value: 'oldest', label: 'Produk Terlama' },
+    { value: 'price_desc', label: 'Harga Tertinggi' },
+    { value: 'price_asc', label: 'Harga Terendah' },
 ];
 
 const statusOptions = [
-    { value: "all", label: "Semua Status" },
-    { value: "active", label: "Aktif" },
-    { value: "inactive", label: "Nonaktif" },
+    { value: 'all', label: 'Semua Status' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'inactive', label: 'Nonaktif' },
 ];
 
 export default function ProductFilterCard({ params, setFilter, productTypes }) {
@@ -28,13 +28,13 @@ export default function ProductFilterCard({ params, setFilter, productTypes }) {
                 <Input
                     type="search"
                     placeholder="Cari nama atau sku..."
-                    value={params.search || ""}
-                    onChange={(e) => setFilter("search", e.target.value)}
+                    value={params.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
                 <Select
-                    value={params.type_id || "all"}
-                    onValueChange={(value) => setFilter("type_id", value)}
+                    value={params.type_id || 'all'}
+                    onValueChange={(value) => setFilter('type_id', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Pilih produk..." />
@@ -52,8 +52,8 @@ export default function ProductFilterCard({ params, setFilter, productTypes }) {
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.status || "all"}
-                    onValueChange={(value) => setFilter("status", value)}
+                    value={params.status || 'all'}
+                    onValueChange={(value) => setFilter('status', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Semua Status" />
@@ -67,8 +67,8 @@ export default function ProductFilterCard({ params, setFilter, productTypes }) {
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.sort || "newest"}
-                    onValueChange={(value) => setFilter("sort", value)}
+                    value={params.sort || 'newest'}
+                    onValueChange={(value) => setFilter('sort', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Urutkan" />

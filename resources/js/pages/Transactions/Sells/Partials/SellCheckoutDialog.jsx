@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
-import { useForm } from "@inertiajs/react";
-import { format } from "date-fns";
+import { useEffect } from 'react';
+import { useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
 import {
     Dialog,
     DialogContent,
@@ -8,22 +8,22 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import DatePicker from "@/components/DatePicker";
-import { Button } from "@/components/ui/button";
-import FormField from "@/components/FormField";
-import InputError from "@/components/InputError";
-import { formatCurrency, getNormalizedDate } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import DatePicker from '@/components/DatePicker';
+import { Button } from '@/components/ui/button';
+import FormField from '@/components/FormField';
+import InputError from '@/components/InputError';
+import { formatCurrency, getNormalizedDate } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function SellCheckoutDialog({
     isOpen,
@@ -37,14 +37,14 @@ export default function SellCheckoutDialog({
 }) {
     const { data, setData, post, processing, errors, isDirty, transform } =
         useForm({
-            location_id: locationId || "",
+            location_id: locationId || '',
             customer_id: customerId || null,
             sales_channel_id: salesChannelId || null,
             transaction_date: getNormalizedDate(),
-            notes: "",
-            payment_method_type_id: "",
-            installment_terms: "1",
-            status: "",
+            notes: '',
+            payment_method_type_id: '',
+            installment_terms: '1',
+            status: '',
             items: [],
         });
 
@@ -56,8 +56,8 @@ export default function SellCheckoutDialog({
                 customer_id: customerId,
                 sales_channel_id: salesChannelId,
                 transaction_date: data.transaction_date || getNormalizedDate(),
-                payment_method_type_id: paymentMethods[0]?.id.toString() || "",
-                installment_terms: "1",
+                payment_method_type_id: paymentMethods[0]?.id.toString() || '',
+                installment_terms: '1',
                 items: cartItems.map((item) => ({
                     product_id: item.product.id,
                     quantity: item.quantity,
@@ -72,11 +72,11 @@ export default function SellCheckoutDialog({
 
         transform((data) => ({
             ...data,
-            transaction_date: format(data.transaction_date, "yyyy-MM-dd"),
+            transaction_date: format(data.transaction_date, 'yyyy-MM-dd'),
             installment_terms: parseInt(data.installment_terms),
         }));
 
-        post(route("transactions.sells.store"), {
+        post(route('transactions.sells.store'), {
             onSuccess: () => onOpenChange(false),
         });
     };
@@ -87,7 +87,7 @@ export default function SellCheckoutDialog({
                 <DialogHeader>
                     <DialogTitle>Konfirmasi Penjualan</DialogTitle>
                     <DialogDescription>
-                        Selesaikan transaksi dengan total{" "}
+                        Selesaikan transaksi dengan total{' '}
                         <span className="font-bold text-primary">
                             {formatCurrency(totalPrice)}
                         </span>
@@ -103,7 +103,7 @@ export default function SellCheckoutDialog({
                                 <DatePicker
                                     value={data.transaction_date}
                                     onSelect={(date) =>
-                                        setData("transaction_date", date)
+                                        setData('transaction_date', date)
                                     }
                                     className="h-9 text-xs [&>button]:h-9"
                                 />
@@ -118,7 +118,7 @@ export default function SellCheckoutDialog({
                                 <Select
                                     value={data.payment_method_type_id}
                                     onValueChange={(value) =>
-                                        setData("payment_method_type_id", value)
+                                        setData('payment_method_type_id', value)
                                     }
                                 >
                                     <SelectTrigger
@@ -151,7 +151,7 @@ export default function SellCheckoutDialog({
                             <RadioGroup
                                 value={data.installment_terms}
                                 onValueChange={(value) =>
-                                    setData("installment_terms", value)
+                                    setData('installment_terms', value)
                                 }
                                 className="flex flex-col space-y-2"
                             >
@@ -205,7 +205,7 @@ export default function SellCheckoutDialog({
                                 id="notes"
                                 value={data.notes}
                                 onChange={(e) =>
-                                    setData("notes", e.target.value)
+                                    setData('notes', e.target.value)
                                 }
                                 placeholder="Catatan transaksi..."
                                 className="h-9 text-xs"
@@ -233,7 +233,7 @@ export default function SellCheckoutDialog({
                             disabled={processing || !isDirty}
                             className="h-9 text-xs font-semibold"
                         >
-                            {processing ? "Memproses..." : "Selesaikan"}
+                            {processing ? 'Memproses...' : 'Selesaikan'}
                         </Button>
                     </DialogFooter>
                 </form>

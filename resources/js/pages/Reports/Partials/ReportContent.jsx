@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
     LineChart,
     Line,
@@ -14,7 +14,7 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 import {
     TrendingUp,
     Package,
@@ -22,10 +22,10 @@ import {
     ShoppingCart,
     BarChart2,
     PackageX,
-} from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import ReportMobileCard from "./ReportMobileCard";
-import { topProductsColumns } from "@/constants/tableColumns";
+} from 'lucide-react';
+import { formatCurrency, formatNumber } from '@/lib/utils';
+import ReportMobileCard from './ReportMobileCard';
+import { topProductsColumns } from '@/constants/tableColumns';
 
 const StatCard = ({
     title,
@@ -47,7 +47,7 @@ const StatCard = ({
         </CardHeader>
         <CardContent className="pt-0 space-y-1">
             <div
-                className={`text-xl sm:text-2xl font-bold ${valueColor || ""}`}
+                className={`text-xl sm:text-2xl font-bold ${valueColor || ''}`}
             >
                 {value}
             </div>
@@ -165,8 +165,7 @@ export default function ReportContent({ stats, charts }) {
                                                         </p>
                                                         <p className="font-semibold text-info">
                                                             {formatCurrency(
-                                                                payload[0]
-                                                                    .value,
+                                                                payload[0].value
                                                             )}
                                                         </p>
                                                     </div>
@@ -226,7 +225,7 @@ export default function ReportContent({ stats, charts }) {
                                                         >
                                                             {column.header}
                                                         </th>
-                                                    ),
+                                                    )
                                                 )}
                                             </tr>
                                         </thead>
@@ -250,17 +249,17 @@ export default function ReportContent({ stats, charts }) {
                                                                               {
                                                                                   row: product,
                                                                                   index,
-                                                                              },
+                                                                              }
                                                                           )
                                                                         : product[
                                                                               column
                                                                                   .accessorKey
                                                                           ]}
                                                                 </td>
-                                                            ),
+                                                            )
                                                         )}
                                                     </tr>
-                                                ),
+                                                )
                                             )}
                                         </tbody>
                                     </table>
@@ -274,7 +273,7 @@ export default function ReportContent({ stats, charts }) {
                                                 product={product}
                                                 rank={index + 1}
                                             />
-                                        ),
+                                        )
                                     )}
                                 </div>
                             </>

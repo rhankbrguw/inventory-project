@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { router } from "@inertiajs/react";
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { router } from '@inertiajs/react';
 
 export const useSoftDeletes = ({ resourceName, data }) => {
     const [confirmingDeletion, setConfirmingDeletion] = useState(null);
@@ -14,7 +14,7 @@ export const useSoftDeletes = ({ resourceName, data }) => {
 
     const itemToDeactivate = useMemo(
         () => data.find((item) => item.id === confirmingDeletion),
-        [data, confirmingDeletion],
+        [data, confirmingDeletion]
     );
 
     const safeSetProcessing = useCallback((value) => {
@@ -51,10 +51,10 @@ export const useSoftDeletes = ({ resourceName, data }) => {
                     preserveScroll: true,
                     preserveState: false,
                     onFinish: () => safeSetProcessing(false),
-                },
+                }
             );
         },
-        [resourceName, safeSetProcessing],
+        [resourceName, safeSetProcessing]
     );
 
     return {

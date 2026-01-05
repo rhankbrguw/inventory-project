@@ -1,5 +1,5 @@
-import { useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -9,14 +9,14 @@ import {
     DialogFooter,
     DialogClose,
     DialogDescription,
-} from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import InputError from "@/components/InputError";
-import { Info } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import InputError from '@/components/InputError';
+import { Info } from 'lucide-react';
 
 export default function QuickAddTypeModal({
     group,
@@ -27,18 +27,18 @@ export default function QuickAddTypeModal({
 }) {
     const { data, setData, post, processing, errors, isDirty, reset } = useForm(
         {
-            name: "",
-            code: "",
+            name: '',
+            code: '',
             group: group,
             _from_modal: true,
-        },
+        }
     );
 
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("types.store"), {
+        post(route('types.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 setOpen(false);
@@ -70,7 +70,7 @@ export default function QuickAddTypeModal({
                         <Input
                             id="typeName"
                             value={data.name}
-                            onChange={(e) => setData("name", e.target.value)}
+                            onChange={(e) => setData('name', e.target.value)}
                             placeholder="Masukkan nama tipe"
                             className="h-8 text-sm"
                         />
@@ -87,7 +87,7 @@ export default function QuickAddTypeModal({
                         <Input
                             id="typeCode"
                             value={data.code}
-                            onChange={(e) => setData("code", e.target.value)}
+                            onChange={(e) => setData('code', e.target.value)}
                             placeholder="Masukkan kode tipe"
                             className="h-8 text-sm"
                         />

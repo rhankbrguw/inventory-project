@@ -1,18 +1,18 @@
-import { useRef } from "react";
-import InputError from "@/components/InputError";
-import { useForm } from "@inertiajs/react";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { useRef } from 'react';
+import InputError from '@/components/InputError';
+import { useForm } from '@inertiajs/react';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Transition } from "@headlessui/react";
-import { PasswordInput } from "@/components/PasswordInput";
+} from '@/components/ui/card';
+import { Transition } from '@headlessui/react';
+import { PasswordInput } from '@/components/PasswordInput';
 
-export default function UpdatePasswordForm({ className = "" }) {
+export default function UpdatePasswordForm({ className = '' }) {
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
 
@@ -26,26 +26,26 @@ export default function UpdatePasswordForm({ className = "" }) {
         recentlySuccessful,
         isDirty,
     } = useForm({
-        current_password: "",
-        password: "",
-        password_confirmation: "",
+        current_password: '',
+        password: '',
+        password_confirmation: '',
     });
 
     const updatePassword = (e) => {
         e.preventDefault();
 
-        put(route("password.update"), {
+        put(route('password.update'), {
             preserveScroll: true,
             onSuccess: () => {
                 reset();
             },
             onError: (errors) => {
                 if (errors.password) {
-                    reset("password", "password_confirmation");
+                    reset('password', 'password_confirmation');
                     passwordInput.current?.focus();
                 }
                 if (errors.current_password) {
-                    reset("current_password");
+                    reset('current_password');
                     currentPasswordInput.current?.focus();
                 }
             },
@@ -73,7 +73,7 @@ export default function UpdatePasswordForm({ className = "" }) {
                             ref={currentPasswordInput}
                             value={data.current_password}
                             onChange={(e) =>
-                                setData("current_password", e.target.value)
+                                setData('current_password', e.target.value)
                             }
                             className="w-full"
                             autoComplete="current-password"
@@ -92,7 +92,7 @@ export default function UpdatePasswordForm({ className = "" }) {
                             ref={passwordInput}
                             value={data.password}
                             onChange={(e) =>
-                                setData("password", e.target.value)
+                                setData('password', e.target.value)
                             }
                             className="w-full"
                             autoComplete="new-password"
@@ -112,7 +112,7 @@ export default function UpdatePasswordForm({ className = "" }) {
                             id="password_confirmation"
                             value={data.password_confirmation}
                             onChange={(e) =>
-                                setData("password_confirmation", e.target.value)
+                                setData('password_confirmation', e.target.value)
                             }
                             className="w-full"
                             autoComplete="new-password"
@@ -126,7 +126,7 @@ export default function UpdatePasswordForm({ className = "" }) {
 
                     <div className="flex items-center gap-4">
                         <Button type="submit" disabled={processing || !isDirty}>
-                            {processing ? "Menyimpan..." : "Simpan"}
+                            {processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
 
                         <Transition

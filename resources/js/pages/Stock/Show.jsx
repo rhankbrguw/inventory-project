@@ -1,18 +1,18 @@
-import ContentPageLayout from "@/components/ContentPageLayout";
-import { Link } from "@inertiajs/react";
+import ContentPageLayout from '@/components/ContentPageLayout';
+import { Link } from '@inertiajs/react';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import StockMovementMobileCard from "../StockMovements/Partials/StockMovementMobileCard";
-import { Eye } from "lucide-react";
-import DataTable from "@/components/DataTable";
-import { stockMovementPreviewColumns } from "@/constants/tableColumns";
+} from '@/components/ui/card';
+import { formatCurrency, formatNumber } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import StockMovementMobileCard from '../StockMovements/Partials/StockMovementMobileCard';
+import { Eye } from 'lucide-react';
+import DataTable from '@/components/DataTable';
+import { stockMovementPreviewColumns } from '@/constants/tableColumns';
 
 export default function Show({ auth, inventory, stockMovements }) {
     const inventoryData = inventory.data || inventory;
@@ -43,7 +43,7 @@ export default function Show({ auth, inventory, stockMovements }) {
                                 Jumlah Stok Saat Ini
                             </p>
                             <p className="font-semibold text-lg">
-                                {formatNumber(inventoryData.quantity)}{" "}
+                                {formatNumber(inventoryData.quantity)}{' '}
                                 {inventoryData.product?.unit}
                             </p>
                         </div>
@@ -62,7 +62,7 @@ export default function Show({ auth, inventory, stockMovements }) {
                         <div className="flex items-center justify-between">
                             <CardTitle>Pergerakan Terakhir</CardTitle>
                             <Link
-                                href={route("stock-movements.index", {
+                                href={route('stock-movements.index', {
                                     product_id: inventoryData.product.id,
                                     location_id: inventoryData.location.id,
                                 })}

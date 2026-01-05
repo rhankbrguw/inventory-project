@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\ScopedByLocation;
+use App\Models\SellItem;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -13,11 +14,17 @@ class Sell extends Model
     use HasFactory;
     use ScopedByLocation;
 
+    public const STATUS_PENDING_APPROVAL = 'Pending Approval';
+    public const STATUS_APPROVED = 'Approved';
+    public const STATUS_SHIPPING = 'Shipping';
+    public const STATUS_COMPLETED = 'Completed';
+    public const STATUS_REJECTED = 'Rejected';
+
     protected $fillable = [
         'type_id',
         'location_id',
         'customer_id',
-        'sales_channel_id',
+        'sales_channel_type_id',
         'user_id',
         'reference_code',
         'transaction_date',
@@ -27,6 +34,11 @@ class Sell extends Model
         'payment_method_type_id',
         'installment_terms',
         'payment_status',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason'
     ];
 
     protected $casts = [
@@ -51,7 +63,12 @@ class Sell extends Model
 
     public function salesChannel(): BelongsTo
     {
-        return $this->belongsTo(SalesChannel::class);
+        return $this->belongsTo(Type::class, 'sales_channel_type_id');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SellItem::class);
     }
 
     public function user(): BelongsTo
@@ -92,5 +109,15 @@ class Sell extends Model
     public function isPartiallyPaid(): bool
     {
         return $this->payment_status === 'partial';
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

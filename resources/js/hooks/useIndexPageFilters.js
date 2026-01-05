@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { router } from "@inertiajs/react";
-import { useDebounce } from "use-debounce";
+import { useState, useEffect, useRef } from 'react';
+import { router } from '@inertiajs/react';
+import { useDebounce } from 'use-debounce';
 
 export const useIndexPageFilters = (routeName, filters = {}) => {
     const [params, setParams] = useState(filters);
@@ -22,9 +22,9 @@ export const useIndexPageFilters = (routeName, filters = {}) => {
 
         Object.keys(queryParams).forEach((key) => {
             if (
-                queryParams[key] === "" ||
+                queryParams[key] === '' ||
                 queryParams[key] === null ||
-                queryParams[key] === "all"
+                queryParams[key] === 'all'
             ) {
                 delete queryParams[key];
             }

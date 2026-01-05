@@ -1,19 +1,19 @@
-import GuestLayout from "@/layouts/GuestLayout";
-import { Head, useForm } from "@inertiajs/react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import InputError from "@/components/InputError";
-import { Mail } from "lucide-react";
+import GuestLayout from '@/layouts/GuestLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import InputError from '@/components/InputError';
+import { Mail } from 'lucide-react';
 
 export default function ForgotPassword({ status }) {
     const { data, setData, post, processing, errors } = useForm({
-        email: "",
+        email: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("password.email"));
+        post(route('password.email'));
     };
 
     return (
@@ -49,7 +49,7 @@ export default function ForgotPassword({ status }) {
                                 value={data.email}
                                 className="w-full pl-10 pr-4 py-3 bg-background/20 border-border/30 rounded-xl focus:border-secondary transition-all"
                                 onChange={(e) =>
-                                    setData("email", e.target.value)
+                                    setData('email', e.target.value)
                                 }
                                 required
                             />

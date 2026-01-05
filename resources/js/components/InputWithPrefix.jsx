@@ -1,6 +1,6 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import * as React from 'react';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 const InputWithPrefix = React.forwardRef(
     ({ className, prefix, ...props }, ref) => {
@@ -11,14 +11,14 @@ const InputWithPrefix = React.forwardRef(
                 </div>
 
                 <Input
-                    className={cn("pl-12", className)}
+                    className={cn('pl-12', className)}
                     ref={ref}
                     {...props}
                 />
             </div>
         );
-    },
+    }
 );
-InputWithPrefix.displayName = "InputWithPrefix";
+InputWithPrefix.displayName = 'InputWithPrefix';
 
 export { InputWithPrefix };

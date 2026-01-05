@@ -1,12 +1,12 @@
-import IndexPageLayout from "@/components/IndexPageLayout";
-import Pagination from "@/components/Pagination";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { stockMovementColumns } from "@/constants/tableColumns.jsx";
-import DataTable from "@/components/DataTable";
-import StockMovementFilterCard from "./Partials/StockMovementFilterCard";
-import MobileCardList from "@/components/MobileCardList";
-import StockMovementMobileCard from "./Partials/StockMovementMobileCard";
-import { ArrowRightLeft } from "lucide-react";
+import IndexPageLayout from '@/components/IndexPageLayout';
+import Pagination from '@/components/Pagination';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { stockMovementColumns } from '@/constants/tableColumns.jsx';
+import DataTable from '@/components/DataTable';
+import StockMovementFilterCard from './Partials/StockMovementFilterCard';
+import MobileCardList from '@/components/MobileCardList';
+import StockMovementMobileCard from './Partials/StockMovementMobileCard';
+import { ArrowRightLeft } from 'lucide-react';
 
 export default function Index({
     auth,
@@ -17,8 +17,8 @@ export default function Index({
     filters,
 }) {
     const { params, setFilter } = useIndexPageFilters(
-        "stock-movements.index",
-        filters,
+        'stock-movements.index',
+        filters
     );
 
     return (

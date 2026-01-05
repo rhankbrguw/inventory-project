@@ -1,17 +1,17 @@
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Search, PackageOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
-import ProductCard from "../../Purchases/Partials/ProductCard";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Search, PackageOpen } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import ProductCard from '../../Purchases/Partials/ProductCard';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import Pagination from "@/components/Pagination";
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import Pagination from '@/components/Pagination';
 
 export default function SellProductGrid({
     locations,
@@ -29,9 +29,9 @@ export default function SellProductGrid({
     processingItem,
     paginationLinks,
 }) {
-    const selectedLocationId = params.location_id || "";
-    const searchQuery = params.search || "";
-    const selectedType = params.type_id || "all";
+    const selectedLocationId = params.location_id || '';
+    const searchQuery = params.search || '';
+    const selectedType = params.type_id || 'all';
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -116,7 +116,7 @@ export default function SellProductGrid({
                                 placeholder="Cari produk (Nama atau SKU)..."
                                 value={searchQuery}
                                 onChange={(e) =>
-                                    setFilter("search", e.target.value)
+                                    setFilter('search', e.target.value)
                                 }
                                 className="pl-9 h-9 text-sm"
                             />
@@ -125,12 +125,12 @@ export default function SellProductGrid({
                         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth -mx-1 px-1">
                             <button
                                 type="button"
-                                onClick={() => setFilter("type_id", "all")}
+                                onClick={() => setFilter('type_id', 'all')}
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
-                                    selectedType === "all"
-                                        ? "bg-primary text-primary-foreground border-primary"
-                                        : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
+                                    'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border',
+                                    selectedType === 'all'
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30'
                                 )}
                             >
                                 Semua
@@ -140,13 +140,13 @@ export default function SellProductGrid({
                                     key={type.id}
                                     type="button"
                                     onClick={() =>
-                                        setFilter("type_id", type.id.toString())
+                                        setFilter('type_id', type.id.toString())
                                     }
                                     className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border",
+                                        'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border',
                                         selectedType === type.id.toString()
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30'
                                     )}
                                 >
                                     {type.name}
@@ -170,7 +170,7 @@ export default function SellProductGrid({
                                                 onProductClick(product)
                                             }
                                             selected={selectedProductIds.includes(
-                                                product.id,
+                                                product.id
                                             )}
                                             processing={
                                                 processingItem === product.id

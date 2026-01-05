@@ -1,26 +1,26 @@
-import { useForm, Link } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import CurrencyInput from "@/components/CurrencyInput";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useForm, Link } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import CurrencyInput from '@/components/CurrencyInput';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Checkbox from "@/components/Checkbox";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Checkbox from '@/components/Checkbox';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import { Check, Upload, Tag } from "lucide-react";
-import { useImageUpload } from "@/hooks/useImageUpload";
+} from '@/components/ui/popover';
+import { Check, Upload, Tag } from 'lucide-react';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function Edit({
     auth,
@@ -34,21 +34,21 @@ export default function Edit({
 
     const { data, setData, post, errors, processing, isDirty, transform } =
         useForm({
-            name: product.name || "",
-            sku: product.sku || "",
-            price: product.price || "",
-            unit: product.unit || "",
-            description: product.description || "",
+            name: product.name || '',
+            sku: product.sku || '',
+            price: product.price || '',
+            unit: product.unit || '',
+            description: product.description || '',
             image: null,
-            type_id: product.type?.id?.toString() || "",
+            type_id: product.type?.id?.toString() || '',
             suppliers: product.suppliers
                 ? product.suppliers.map((s) => s.id)
                 : [],
-            default_supplier_id: product.default_supplier?.id?.toString() || "",
+            default_supplier_id: product.default_supplier?.id?.toString() || '',
 
             channel_prices: product.channel_prices || {},
 
-            _method: "patch",
+            _method: 'patch',
         });
 
     const { preview, fileInputRef, handleChange, triggerInput } =
@@ -64,16 +64,16 @@ export default function Edit({
                 suppliers: newSuppliers,
                 default_supplier_id:
                     data.default_supplier_id == id
-                        ? ""
+                        ? ''
                         : data.default_supplier_id,
             });
         } else {
-            setData("suppliers", [...currentSuppliers, id]);
+            setData('suppliers', [...currentSuppliers, id]);
         }
     };
 
     const handleChannelPriceChange = (channelId, value) => {
-        setData("channel_prices", {
+        setData('channel_prices', {
             ...data.channel_prices,
             [channelId]: value,
         });
@@ -83,28 +83,28 @@ export default function Edit({
         ...data,
         channel_prices: Object.fromEntries(
             Object.entries(data.channel_prices).filter(
-                ([_, value]) => value && Number(value) > 0,
-            ),
+                ([_, value]) => value && Number(value) > 0
+            )
         ),
     }));
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("products.update", product.id), {
+        post(route('products.update', product.id), {
             forceFormData: true,
         });
     };
 
     const selectedSupplierObjects = suppliers.filter((s) =>
-        data.suppliers.includes(s.id),
+        data.suppliers.includes(s.id)
     );
 
     const getSupplierDisplayText = () => {
         if (data.suppliers.length === 0)
-            return "Pilih Supplier (Bisa lebih dari satu)";
+            return 'Pilih Supplier (Bisa lebih dari satu)';
         if (data.suppliers.length === 1) {
             const supplier = suppliers.find((s) => s.id === data.suppliers[0]);
-            return supplier?.name || "1 supplier dipilih";
+            return supplier?.name || '1 supplier dipilih';
         }
         return `${data.suppliers.length} supplier dipilih`;
     };
@@ -131,7 +131,7 @@ export default function Edit({
                                     id="name"
                                     value={data.name}
                                     onChange={(e) =>
-                                        setData("name", e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                     required
                                 />
@@ -161,7 +161,7 @@ export default function Edit({
                                         <Upload className="mr-2 h-4 w-4" />
                                         {data.image
                                             ? data.image.name
-                                            : "Pilih gambar baru..."}
+                                            : 'Pilih gambar baru...'}
                                     </Button>
                                 </div>
                             </FormField>
@@ -187,7 +187,7 @@ export default function Edit({
                                 <Select
                                     value={data.type_id}
                                     onValueChange={(value) =>
-                                        setData("type_id", value)
+                                        setData('type_id', value)
                                     }
                                     required
                                 >
@@ -233,11 +233,11 @@ export default function Edit({
                                                     <Checkbox
                                                         id={`supp-${supplier.id}`}
                                                         checked={data.suppliers.includes(
-                                                            supplier.id,
+                                                            supplier.id
                                                         )}
                                                         onChange={() =>
                                                             handleSupplierToggle(
-                                                                supplier.id,
+                                                                supplier.id
                                                             )
                                                         }
                                                     />
@@ -248,10 +248,10 @@ export default function Edit({
                                                         {supplier.name}
                                                     </label>
                                                     {data.suppliers.includes(
-                                                        supplier.id,
+                                                        supplier.id
                                                     ) && (
-                                                            <Check className="h-4 w-4 text-primary" />
-                                                        )}
+                                                        <Check className="h-4 w-4 text-primary" />
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -268,7 +268,7 @@ export default function Edit({
                             <Select
                                 value={data.default_supplier_id?.toString()}
                                 onValueChange={(value) =>
-                                    setData("default_supplier_id", value)
+                                    setData('default_supplier_id', value)
                                 }
                                 disabled={data.suppliers.length === 0}
                             >
@@ -298,7 +298,7 @@ export default function Edit({
                                     id="sku"
                                     value={data.sku}
                                     onChange={(e) =>
-                                        setData("sku", e.target.value)
+                                        setData('sku', e.target.value)
                                     }
                                     required
                                 />
@@ -311,7 +311,7 @@ export default function Edit({
                                 <Select
                                     value={data.unit}
                                     onValueChange={(value) =>
-                                        setData("unit", value)
+                                        setData('unit', value)
                                     }
                                     required
                                 >
@@ -339,7 +339,7 @@ export default function Edit({
                                 id="description"
                                 value={data.description}
                                 onChange={(e) =>
-                                    setData("description", e.target.value)
+                                    setData('description', e.target.value)
                                 }
                                 className="h-24"
                             />
@@ -366,7 +366,7 @@ export default function Edit({
                                     id="price"
                                     value={data.price}
                                     onValueChange={(value) =>
-                                        setData("price", value)
+                                        setData('price', value)
                                     }
                                     className="text-lg font-bold"
                                     required
@@ -381,7 +381,7 @@ export default function Edit({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {salesChannels
                                     .filter(
-                                        (channel) => channel.code !== "CASH",
+                                        (channel) => channel.code !== 'CASH'
                                     )
                                     .map((channel) => (
                                         <FormField
@@ -390,7 +390,7 @@ export default function Edit({
                                             htmlFor={`price-${channel.id}`}
                                             error={
                                                 errors[
-                                                `channel_prices.${channel.id}`
+                                                    `channel_prices.${channel.id}`
                                                 ]
                                             }
                                         >
@@ -399,13 +399,13 @@ export default function Edit({
                                                 placeholder={`Ikut harga dasar (${data.price || 0})`}
                                                 value={
                                                     data.channel_prices[
-                                                    channel.id
+                                                        channel.id
                                                     ]
                                                 }
                                                 onValueChange={(val) =>
                                                     handleChannelPriceChange(
                                                         channel.id,
-                                                        val,
+                                                        val
                                                     )
                                                 }
                                             />
@@ -415,7 +415,7 @@ export default function Edit({
                         </div>
 
                         <div className="flex items-center justify-end gap-4 pt-4 border-t">
-                            <Link href={route("products.index")}>
+                            <Link href={route('products.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

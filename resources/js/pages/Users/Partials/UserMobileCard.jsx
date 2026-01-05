@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import UnifiedBadge from "@/components/UnifiedBadge";
-import { Mail, Phone } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { Mail, Phone } from 'lucide-react';
 
 export default function UserMobileCard({ user, renderActionDropdown }) {
     return (

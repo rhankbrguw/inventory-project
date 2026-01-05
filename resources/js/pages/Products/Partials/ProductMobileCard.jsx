@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Package } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Package } from 'lucide-react';
 
 export default function ProductMobileCard({ product, renderActionDropdown }) {
     const isInactive = !!product.deleted_at;
@@ -9,7 +9,7 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
     return (
         <Card
             key={product.id}
-            className={cn(isInactive && "opacity-50 bg-muted/50")}
+            className={cn(isInactive && 'opacity-50 bg-muted/50')}
         >
             <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="flex items-center gap-4">
@@ -43,11 +43,11 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
                     <span>Ditambahkan: {formatDate(product.created_at)}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
-                    <Badge variant={isInactive ? "destructive" : "success"}>
-                        {isInactive ? "Nonaktif" : "Aktif"}
+                    <Badge variant={isInactive ? 'destructive' : 'success'}>
+                        {isInactive ? 'Nonaktif' : 'Aktif'}
                     </Badge>
                     <Badge variant="outline">
-                        {product.type?.name || "Tanpa Tipe"}
+                        {product.type?.name || 'Tanpa Tipe'}
                     </Badge>
                 </div>
             </CardContent>

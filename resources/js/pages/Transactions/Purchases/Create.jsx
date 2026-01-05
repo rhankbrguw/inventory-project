@@ -1,22 +1,22 @@
-import React, { useState, useMemo } from "react";
-import { Head, Link } from "@inertiajs/react";
-import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import PurchaseDetailsManager from "./Partials/PurchaseDetailsManager";
-import PurchaseProductGrid from "./Partials/PurchaseProductGrid";
-import PurchaseCart from "./Partials/PurchaseCart";
-import usePurchaseCart from "@/hooks/usePurchaseCart";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import React, { useState, useMemo } from 'react';
+import { Head, Link } from '@inertiajs/react';
+import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
+import PurchaseDetailsManager from './Partials/PurchaseDetailsManager';
+import PurchaseProductGrid from './Partials/PurchaseProductGrid';
+import PurchaseCart from './Partials/PurchaseCart';
+import usePurchaseCart from '@/hooks/usePurchaseCart';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ShoppingCart } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
-} from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { formatNumber } from "@/lib/utils";
+} from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { formatNumber } from '@/lib/utils';
 
 export default function Create({
     auth,
@@ -54,27 +54,27 @@ export default function Create({
     } = usePurchaseCart(initialCart);
 
     const { params, setFilter } = useIndexPageFilters(
-        "transactions.purchases.create",
-        filters,
+        'transactions.purchases.create',
+        filters
     );
 
-    const currentSupplierFilter = params.supplier_id || "all";
+    const currentSupplierFilter = params.supplier_id || 'all';
 
     const supplierOptions = useMemo(() => suppliers, [suppliers]);
 
     const filteredCartGroups = useMemo(() => {
-        if (currentSupplierFilter === "all") {
+        if (currentSupplierFilter === 'all') {
             return cartGroups;
         }
 
-        if (currentSupplierFilter === "null") {
-            return cartGroups["Supplier Umum"]
-                ? { "Supplier Umum": cartGroups["Supplier Umum"] }
+        if (currentSupplierFilter === 'null') {
+            return cartGroups['Supplier Umum']
+                ? { 'Supplier Umum': cartGroups['Supplier Umum'] }
                 : {};
         }
 
         const supplierName = suppliers.find(
-            (s) => s.id.toString() === currentSupplierFilter,
+            (s) => s.id.toString() === currentSupplierFilter
         )?.name;
 
         const group = cartGroups[supplierName];
@@ -82,7 +82,7 @@ export default function Create({
     }, [cartGroups, currentSupplierFilter, suppliers]);
 
     const handleSupplierFilterChange = (value) => {
-        setFilter("supplier_id", value);
+        setFilter('supplier_id', value);
     };
 
     const handleOpenCheckout = (supplierId) => {
@@ -101,10 +101,10 @@ export default function Create({
 
     const getCartItemsForCheckout = () => {
         if (checkoutSupplierId === null) {
-            return cartGroups["Supplier Umum"]?.items || [];
+            return cartGroups['Supplier Umum']?.items || [];
         }
         const supplierName = suppliers.find(
-            (s) => s.id === checkoutSupplierId,
+            (s) => s.id === checkoutSupplierId
         )?.name;
         return cartGroups[supplierName]?.items || [];
     };
@@ -137,7 +137,7 @@ export default function Create({
         <AuthenticatedLayout user={auth.user}>
             <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
-                    <Link href={route("transactions.index")}>
+                    <Link href={route('transactions.index')}>
                         <Button
                             variant="outline"
                             size="icon"
@@ -209,11 +209,11 @@ export default function Create({
                         </DialogDescription>
                     </DialogHeader>
                     {checkoutSupplierId !== null ||
-                        cartGroups["Supplier Umum"] ? (
+                    cartGroups['Supplier Umum'] ? (
                         <PurchaseDetailsManager
                             key={
                                 checkoutSupplierId === null
-                                    ? "null"
+                                    ? 'null'
                                     : checkoutSupplierId
                             }
                             supplierId={checkoutSupplierId}

@@ -1,17 +1,17 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { ShoppingBag, UserPlus } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { ShoppingBag, UserPlus } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import QuickAddCustomerModal from "@/components/QuickAddCustomerModal";
-import SellItemManager from "./SellItemManager";
+} from '@/components/ui/select';
+import QuickAddCustomerModal from '@/components/QuickAddCustomerModal';
+import SellItemManager from './SellItemManager';
 
 export default function SellCart({
     cart,
@@ -55,10 +55,10 @@ export default function SellCart({
                     </Label>
                     <div className="flex gap-2">
                         <Select
-                            value={selectedCustomerId || ""}
+                            value={selectedCustomerId || ''}
                             onValueChange={(value) =>
                                 onCustomerChange(
-                                    value === "null" ? null : value,
+                                    value === 'null' ? null : value
                                 )
                             }
                         >

@@ -20,17 +20,17 @@ class PurchaseCartController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
-        $product = Product::findOrFail($validated["product_id"]);
-        $validated["quantity"] = $validated["quantity"] ?? 1.0;
-        $validated["cost_per_unit"] =
-            $validated["cost_per_unit"] ?? ($product->price ?? 0);
+        $product = Product::findOrFail($validated['product_id']);
+        $validated['quantity'] = $validated['quantity'] ?? 1.0;
+        $validated['cost_per_unit'] =
+            $validated['cost_per_unit'] ?? ($product->price ?? 0);
 
         PurchaseCartItem::create([
-            "user_id" => $user->id,
-            "product_id" => $product->id,
-            "supplier_id" => $validated["supplier_id"],
-            "quantity" => $validated["quantity"],
-            "cost_per_unit" => $validated["cost_per_unit"],
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'supplier_id' => $validated['supplier_id'],
+            'quantity' => $validated['quantity'],
+            'cost_per_unit' => $validated['cost_per_unit'],
         ]);
 
         return Redirect::back();
@@ -48,7 +48,7 @@ class PurchaseCartController extends Controller
 
     public function destroyItem(PurchaseCartItem $cartItem): RedirectResponse
     {
-        $this->authorize("delete", $cartItem);
+        $this->authorize('delete', $cartItem);
         $cartItem->delete();
 
         return Redirect::back();
@@ -57,16 +57,16 @@ class PurchaseCartController extends Controller
     public function destroySupplier(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            "supplier_id" => [
-                "nullable",
-                "integer",
-                "exists:suppliers,id",
+            'supplier_id' => [
+                'nullable',
+                'integer',
+                'exists:suppliers,id',
             ],
         ]);
 
         Auth::user()
             ->purchaseCartItems()
-            ->where("supplier_id", $validated["supplier_id"])
+            ->where('supplier_id', $validated['supplier_id'])
             ->delete();
 
         return Redirect::back();

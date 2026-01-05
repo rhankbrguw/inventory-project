@@ -4,16 +4,16 @@ import {
     CardHeader,
     CardTitle,
     CardDescription,
-} from "@/components/ui/card";
-import FormField from "@/components/FormField";
+} from '@/components/ui/card';
+import FormField from '@/components/FormField';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function TransferDetailsManager({
     data,
@@ -40,7 +40,7 @@ export default function TransferDetailsManager({
                         <Select
                             value={data.from_location_id}
                             onValueChange={(value) =>
-                                setData("from_location_id", value)
+                                setData('from_location_id', value)
                             }
                         >
                             <SelectTrigger>
@@ -66,7 +66,7 @@ export default function TransferDetailsManager({
                         <Select
                             value={data.to_location_id}
                             onValueChange={(value) =>
-                                setData("to_location_id", value)
+                                setData('to_location_id', value)
                             }
                         >
                             <SelectTrigger>
@@ -92,7 +92,7 @@ export default function TransferDetailsManager({
                 <FormField label="Catatan (Opsional)" error={errors.notes}>
                     <Textarea
                         value={data.notes}
-                        onChange={(e) => setData("notes", e.target.value)}
+                        onChange={(e) => setData('notes', e.target.value)}
                         placeholder="Keterangan transfer..."
                     />
                 </FormField>

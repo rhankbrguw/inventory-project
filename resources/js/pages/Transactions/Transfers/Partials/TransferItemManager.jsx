@@ -4,15 +4,15 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2 } from "lucide-react";
-import ProductCombobox from "@/components/ProductCombobox";
-import InputError from "@/components/InputError";
-import { Label } from "@/components/ui/label";
-import StockAvailability from "@/components/StockAvailability";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import ProductCombobox from '@/components/ProductCombobox';
+import InputError from '@/components/InputError';
+import { Label } from '@/components/ui/label';
+import StockAvailability from '@/components/StockAvailability';
+import { cn } from '@/lib/utils';
 
 export default function TransferItemManager({
     items,
@@ -26,7 +26,7 @@ export default function TransferItemManager({
     const handleItemChange = (index, field, value) => {
         const newItems = [...items];
         newItems[index][field] = value;
-        setData("items", newItems);
+        setData('items', newItems);
     };
 
     const handleProductSelect = (index, product) => {
@@ -36,18 +36,18 @@ export default function TransferItemManager({
             product_id: product.id,
             unit: product.unit,
         };
-        setData("items", newItems);
+        setData('items', newItems);
     };
 
     const addItem = () => {
-        setData("items", [...items, { product_id: "", quantity: 1, unit: "" }]);
+        setData('items', [...items, { product_id: '', quantity: 1, unit: '' }]);
     };
 
     const removeItem = (index) => {
         if (items.length <= 1) return;
         setData(
-            "items",
-            items.filter((_, i) => i !== index),
+            'items',
+            items.filter((_, i) => i !== index)
         );
     };
 
@@ -60,8 +60,8 @@ export default function TransferItemManager({
                     <CardTitle>Item Transfer</CardTitle>
                     <CardDescription>
                         {isLocked
-                            ? "Pilih lokasi asal terlebih dahulu untuk menambah item."
-                            : "Pilih produk yang akan ditransfer antar lokasi."}
+                            ? 'Pilih lokasi asal terlebih dahulu untuk menambah item.'
+                            : 'Pilih produk yang akan ditransfer antar lokasi.'}
                     </CardDescription>
                 </div>
                 <Button
@@ -77,13 +77,13 @@ export default function TransferItemManager({
             </CardHeader>
             <CardContent
                 className={cn(
-                    "space-y-4",
-                    isLocked && "opacity-50 pointer-events-none",
+                    'space-y-4',
+                    isLocked && 'opacity-50 pointer-events-none'
                 )}
             >
                 {items.map((item, index) => {
                     const selectedProduct = products.find(
-                        (p) => p.id === item.product_id,
+                        (p) => p.id === item.product_id
                     );
 
                     return (
@@ -135,8 +135,8 @@ export default function TransferItemManager({
                                             onChange={(e) =>
                                                 handleItemChange(
                                                     index,
-                                                    "quantity",
-                                                    e.target.value,
+                                                    'quantity',
+                                                    e.target.value
                                                 )
                                             }
                                             min="0.01"
@@ -144,7 +144,7 @@ export default function TransferItemManager({
                                             placeholder="Jumlah"
                                             disabled={!selectedProduct}
                                             className={
-                                                selectedProduct ? "pr-12" : ""
+                                                selectedProduct ? 'pr-12' : ''
                                             }
                                         />
                                         {selectedProduct && (

@@ -10,19 +10,19 @@ class PurchaseCartItem extends Model
 {
     use HasFactory;
 
-    protected $table = "purchase_cart_items";
+    protected $table = 'purchase_cart_items';
 
     protected $fillable = [
-        "user_id",
-        "product_id",
-        "supplier_id",
-        "quantity",
-        "cost_per_unit",
+        'user_id',
+        'product_id',
+        'supplier_id',
+        'quantity',
+        'cost_per_unit',
     ];
 
     protected $casts = [
-        "quantity" => "decimal:4",
-        "cost_per_unit" => "decimal:2",
+        'quantity' => 'decimal:4',
+        'cost_per_unit' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
