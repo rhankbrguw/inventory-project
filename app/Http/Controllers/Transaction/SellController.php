@@ -133,9 +133,13 @@ class SellController extends Controller
             }
         }
 
-        $channelId = $validated['sales_channel_type_id'] ?? $validated['sales_channel_id'] ?? null;
+        $headerChannelId = $validated['sales_channel_id'] ?? $validated['sales_channel_type_id'] ?? null;
 
-        DB::transaction(function () use ($request, $itemsData, $totalPrice, $validated, $initialStatus, $targetLocationId, $sellTypeId, $channelId) {
+        $installmentTerms = (int) ($validated['installment_terms'] ?? 1);
+
+        $paymentStatus = $installmentTerms > 1 ? 'pending' : 'paid';
+
+        DB::transaction(function () use ($request, $itemsData, $totalPrice, $validated, $initialStatus, $targetLocationId, $sellTypeId, $headerChannelId, $installmentTerms, $paymentStatus) {
 
             $sell = Sell::create([
                 'type_id' => $sellTypeId,
@@ -147,23 +151,25 @@ class SellController extends Controller
                 'total_price' => $totalPrice,
                 'status' => $initialStatus,
                 'notes' => $request->notes,
-                'sales_channel_type_id' => $channelId,
+
+                'sales_channel_type_id' => $headerChannelId,
+
                 'payment_method_type_id' => $validated['payment_method_type_id'] ?? null,
-                'installment_terms' => $validated['installment_terms'] ?? 1,
-                'payment_status' => $validated['payment_status'] ?? 'paid',
+                'installment_terms' => $installmentTerms,
+                'payment_status' => $paymentStatus,
             ]);
 
-            if (($validated['installment_terms'] ?? 1) > 1) {
+            if ($installmentTerms > 1) {
                 $this->createInstallments(
                     $sell,
                     $totalPrice,
-                    $validated['installment_terms'],
+                    $installmentTerms,
                     $validated['transaction_date'] ?? now()
                 );
             }
 
             foreach ($itemsData as $item) {
-                $itemChannelId = $item['sales_channel_type_id'] ?? $item['sales_channel_id'] ?? null;
+                $itemChannelId = $item['sales_channel_id'] ?? $item['sales_channel_type_id'] ?? null;
 
                 $product = Product::findOrFail($item['product_id']);
                 $currentCost = $product->average_cost ?? 0;
@@ -211,22 +217,30 @@ class SellController extends Controller
                 ->delete();
 
             if ($initialStatus === Sell::STATUS_PENDING_APPROVAL && $targetLocationId) {
-                $managerRoleIds = Role::whereIn('code', [Role::CODE_BRANCH_MGR, Role::CODE_WAREHOUSE_MGR])->pluck('id');
+                $managerRoleIds = Role::whereIn('code', [
+                    Role::CODE_BRANCH_MGR,
+                    Role::CODE_WAREHOUSE_MGR,
+                ])->pluck('id');
+
                 if ($managerRoleIds->isNotEmpty()) {
                     $targets = User::whereHas('locations', function ($q) use ($targetLocationId, $managerRoleIds) {
-                        $q->where('locations.id', $targetLocationId)->whereIn('location_user.role_id', $managerRoleIds);
+                        $q->where('locations.id', $targetLocationId)
+                            ->whereIn('location_user.role_id', $managerRoleIds);
                     })->get();
+
                     foreach ($targets as $target) {
                         try {
                             $target->notify(new SellCreatedNotification($sell, $request->user()->name));
                         } catch (\Throwable) {
+                            // Ignore notification errors
                         }
                     }
                 }
             }
         });
 
-        return Redirect::route('transactions.index')->with('success', 'Penjualan berhasil disimpan.');
+        return Redirect::route('transactions.index')
+            ->with('success', 'Penjualan berhasil disimpan.');
     }
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)

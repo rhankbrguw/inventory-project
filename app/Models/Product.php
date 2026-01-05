@@ -23,6 +23,7 @@ class Product extends Model
         'price',
         'unit',
         'image_path',
+        'average_cost',
     ];
 
     public function type(): BelongsTo

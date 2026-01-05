@@ -15,6 +15,7 @@ class StoreSellRequest extends FormRequest
     {
         return true;
     }
+
     public function rules(): array
     {
         $rules = [
@@ -28,7 +29,9 @@ class StoreSellRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id,deleted_at,NULL'],
             'items.*.sell_price' => ['required', 'numeric', 'min:0'],
+            'items.*.sales_channel_id' => ['nullable', 'integer', new ExistsInGroup('types', Type::GROUP_SALES_CHANNEL)],
         ];
+
         foreach (array_keys($this->input('items', [])) as $index) {
             $rules["items.$index.quantity"] = [
                 'required',
@@ -37,8 +40,10 @@ class StoreSellRequest extends FormRequest
                 new SufficientStock(),
             ];
         }
+
         return $rules;
     }
+
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
