@@ -1,37 +1,37 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
 export default function Create({ auth, customerTypes = { data: [] } }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        name: "",
-        type_id: "",
-        email: "",
-        phone: "",
-        address: "",
+        name: '',
+        type_id: '',
+        email: '',
+        phone: '',
+        address: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("customers.store"));
+        post(route('customers.store'));
     };
 
     return (
@@ -61,7 +61,7 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                                 placeholder="Nama Lengkap Pelanggan"
                                 value={data.name}
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData('name', e.target.value)
                                 }
                             />
                         </FormField>
@@ -74,7 +74,7 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                             <Select
                                 value={data.type_id}
                                 onValueChange={(value) =>
-                                    setData("type_id", value)
+                                    setData('type_id', value)
                                 }
                             >
                                 <SelectTrigger id="type_id">
@@ -104,7 +104,7 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                                 placeholder="email@contoh.com"
                                 value={data.email}
                                 onChange={(e) =>
-                                    setData("email", e.target.value)
+                                    setData('email', e.target.value)
                                 }
                             />
                         </FormField>
@@ -121,8 +121,8 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                                 value={data.phone}
                                 onChange={(e) =>
                                     setData(
-                                        "phone",
-                                        e.target.value.replace(/\D/g, ""),
+                                        'phone',
+                                        e.target.value.replace(/\D/g, '')
                                     )
                                 }
                             />
@@ -138,19 +138,19 @@ export default function Create({ auth, customerTypes = { data: [] } }) {
                                 placeholder="Alamat domisili pelanggan..."
                                 value={data.address}
                                 onChange={(e) =>
-                                    setData("address", e.target.value)
+                                    setData('address', e.target.value)
                                 }
                             />
                         </FormField>
 
                         <div className="flex items-center gap-4 justify-end">
-                            <Link href={route("customers.index")}>
+                            <Link href={route('customers.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>
                             </Link>
                             <Button disabled={processing || !isDirty}>
-                                {processing ? "Menyimpan..." : "Simpan"}
+                                {processing ? 'Menyimpan...' : 'Simpan'}
                             </Button>
                         </div>
                     </form>

@@ -1,10 +1,10 @@
-import { Fragment } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 
 export default function Modal({
     children,
     show = false,
-    maxWidth = "2xl",
+    maxWidth = '2xl',
     closeable = true,
     onClose = () => {},
 }) {
@@ -15,11 +15,11 @@ export default function Modal({
     };
 
     const maxWidthClass = {
-        sm: "sm:max-w-sm",
-        md: "sm:max-w-md",
-        lg: "sm:max-w-lg",
-        xl: "sm:max-w-xl",
-        "2xl": "sm:max-w-2xl",
+        sm: 'sm:max-w-sm',
+        md: 'sm:max-w-md',
+        lg: 'sm:max-w-lg',
+        xl: 'sm:max-w-xl',
+        '2xl': 'sm:max-w-2xl',
     }[maxWidth];
 
     return (

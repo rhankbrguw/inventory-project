@@ -1,25 +1,25 @@
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Link, useForm } from "@inertiajs/react";
-import { Info } from "lucide-react";
+} from '@/components/ui/select';
+import { Link, useForm } from '@inertiajs/react';
+import { Info } from 'lucide-react';
 
 export default function Edit({
     auth,
@@ -31,15 +31,15 @@ export default function Edit({
     const { data: type } = typeResource;
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: type.name || "",
-        group: type.group || "",
-        code: type.code || "",
-        level: type.level || "",
+        name: type.name || '',
+        group: type.group || '',
+        code: type.code || '',
+        level: type.level || '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("types.update", type.id));
+        patch(route('types.update', type.id));
     };
 
     const currentGroupHasLevels = data.group && availableLevels[data.group];
@@ -70,7 +70,7 @@ export default function Edit({
                                     id="name"
                                     value={data.name}
                                     onChange={(e) =>
-                                        setData("name", e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                     placeholder="Masukkan nama tipe"
                                 />
@@ -88,7 +88,7 @@ export default function Edit({
                                 <Select
                                     value={data.group}
                                     onValueChange={(value) =>
-                                        setData("group", value)
+                                        setData('group', value)
                                     }
                                     disabled={true}
                                 >
@@ -104,7 +104,7 @@ export default function Edit({
                                                 >
                                                     {label}
                                                 </SelectItem>
-                                            ),
+                                            )
                                         )}
                                     </SelectContent>
                                 </Select>
@@ -120,9 +120,13 @@ export default function Edit({
                                     description="Sesuaikan level untuk mengubah hak akses."
                                 >
                                     <Select
-                                        value={data.level ? data.level.toString() : ""}
+                                        value={
+                                            data.level
+                                                ? data.level.toString()
+                                                : ''
+                                        }
                                         onValueChange={(value) =>
-                                            setData("level", value)
+                                            setData('level', value)
                                         }
                                     >
                                         <SelectTrigger>
@@ -137,7 +141,7 @@ export default function Edit({
                                                     >
                                                         {lvl.label}
                                                     </SelectItem>
-                                                ),
+                                                )
                                             )}
                                         </SelectContent>
                                     </Select>
@@ -160,7 +164,7 @@ export default function Edit({
                                                 {t.name}
                                                 {t.level
                                                     ? ` (Lvl ${t.level})`
-                                                    : ""}
+                                                    : ''}
                                             </Badge>
                                         ))}
                                 </AlertDescription>
@@ -177,14 +181,14 @@ export default function Edit({
                                 id="code"
                                 value={data.code}
                                 onChange={(e) =>
-                                    setData("code", e.target.value)
+                                    setData('code', e.target.value)
                                 }
                                 placeholder="Masukkan kode tipe"
                             />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
-                            <Link href={route("types.index")}>
+                            <Link href={route('types.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

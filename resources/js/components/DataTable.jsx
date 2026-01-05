@@ -5,16 +5,16 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { router } from "@inertiajs/react";
+} from '@/components/ui/table';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { router } from '@inertiajs/react';
 
 export default function DataTable({
     columns,
     data,
     actions,
     showRoute,
-    showRouteKey = "id",
+    showRouteKey = 'id',
     rowClassName,
     footer,
     keyExtractor = (row) => row.id,
@@ -43,7 +43,7 @@ export default function DataTable({
                             ))}
                             {actions && (
                                 <TableHead className="text-center w-[100px]">
-                                    {" "}
+                                    {' '}
                                     Aksi
                                 </TableHead>
                             )}
@@ -55,8 +55,8 @@ export default function DataTable({
                                 key={keyExtractor(row)}
                                 onClick={() => handleRowClick(row)}
                                 className={`${
-                                    showRoute ? "cursor-pointer" : ""
-                                } ${rowClassName ? rowClassName(row) : ""}`}
+                                    showRoute ? 'cursor-pointer' : ''
+                                } ${rowClassName ? rowClassName(row) : ''}`}
                             >
                                 {columns.map((col) => (
                                     <TableCell

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import UnifiedBadge from "@/components/UnifiedBadge";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import UnifiedBadge from '@/components/UnifiedBadge';
 
 export default function CustomerMobileCard({ customer, renderActionDropdown }) {
     return (
@@ -16,7 +16,7 @@ export default function CustomerMobileCard({ customer, renderActionDropdown }) {
             <CardContent>
                 <div className="text-xs text-muted-foreground space-y-1">
                     <p>{customer.email}</p>
-                    <p>{customer.phone || "No phone number"}</p>
+                    <p>{customer.phone || 'No phone number'}</p>
                 </div>
             </CardContent>
         </Card>

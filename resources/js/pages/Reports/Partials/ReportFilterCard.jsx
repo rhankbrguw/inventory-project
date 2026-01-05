@@ -1,33 +1,33 @@
-import React from "react";
-import { router } from "@inertiajs/react";
+import React from 'react';
+import { router } from '@inertiajs/react';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { MapPin, Package } from "lucide-react";
-import SmartDateFilter from "@/components/SmartDateFilter";
-import PrintButton from "@/components/PrintButton";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/select';
+import { MapPin, Package } from 'lucide-react';
+import SmartDateFilter from '@/components/SmartDateFilter';
+import PrintButton from '@/components/PrintButton';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function ReportFilterCard({ locations, products, filters }) {
     const { isSuperAdmin } = usePermission();
 
     const handleFilterChange = (newFilters) => {
         router.get(
-            route("reports.index"),
+            route('reports.index'),
             { ...filters, ...newFilters },
-            { preserveState: true, preserveScroll: true, replace: true },
+            { preserveState: true, preserveScroll: true, replace: true }
         );
     };
 
     const getLocationValue = () => {
         if (isSuperAdmin) {
-            return filters.location_id || "all";
+            return filters.location_id || 'all';
         }
-        return filters.location_id || locations[0]?.id?.toString() || "all";
+        return filters.location_id || locations[0]?.id?.toString() || 'all';
     };
 
     return (
@@ -68,7 +68,7 @@ export default function ReportFilterCard({ locations, products, filters }) {
             {products && products.length > 0 && (
                 <div className="w-full sm:w-[180px]">
                     <Select
-                        value={filters.product_id || "all"}
+                        value={filters.product_id || 'all'}
                         onValueChange={(val) =>
                             handleFilterChange({ product_id: val })
                         }

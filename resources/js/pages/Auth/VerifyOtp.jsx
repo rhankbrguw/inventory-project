@@ -1,35 +1,35 @@
-import InputError from "@/components/InputError";
-import { Button } from "@/components/ui/button";
+import InputError from '@/components/InputError';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import GuestLayout from "@/layouts/GuestLayout";
-import { Head, useForm } from "@inertiajs/react";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import GuestLayout from '@/layouts/GuestLayout';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function VerifyOtp({ email, status }) {
     const { data, setData, post, processing, errors } = useForm({
-        email: email || "",
-        otp_code: "",
+        email: email || '',
+        otp_code: '',
     });
 
     const resendForm = useForm({
-        email: email || "",
+        email: email || '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("otp.verify"));
+        post(route('otp.verify'));
     };
 
     const handleResend = (e) => {
         e.preventDefault();
-        resendForm.post(route("verification.send"));
+        resendForm.post(route('verification.send'));
     };
 
     return (
@@ -40,7 +40,7 @@ export default function VerifyOtp({ email, status }) {
                 <CardHeader>
                     <CardTitle className="text-2xl">Verifikasi Akun</CardTitle>
                     <CardDescription>
-                        Kami telah mengirimkan kode 6 digit ke{" "}
+                        Kami telah mengirimkan kode 6 digit ke{' '}
                         <span className="font-semibold text-foreground">
                             {email}
                         </span>
@@ -67,7 +67,7 @@ export default function VerifyOtp({ email, status }) {
                                     autoComplete="one-time-code"
                                     autoFocus
                                     onChange={(e) =>
-                                        setData("otp_code", e.target.value)
+                                        setData('otp_code', e.target.value)
                                     }
                                     required
                                     maxLength="6"
@@ -90,7 +90,7 @@ export default function VerifyOtp({ email, status }) {
 
                     <div className="mt-4 text-center text-sm">
                         <span className="text-muted-foreground">
-                            Tidak menerima kode?{" "}
+                            Tidak menerima kode?{' '}
                         </span>
                         <Button
                             variant="link"

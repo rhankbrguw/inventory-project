@@ -1,17 +1,17 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 const statusOptions = [
-    { value: "all", label: "Semua Status" },
-    { value: "active", label: "Aktif" },
-    { value: "inactive", label: "Nonaktif" },
+    { value: 'all', label: 'Semua Status' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'inactive', label: 'Nonaktif' },
 ];
 
 export default function LocationFilterCard({
@@ -25,13 +25,13 @@ export default function LocationFilterCard({
                 <Input
                     type="search"
                     placeholder="Cari nama lokasi atau pengguna..."
-                    value={params.search || ""}
-                    onChange={(e) => setFilter("search", e.target.value)}
+                    value={params.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
                 <Select
-                    value={params.type_id || "all"}
-                    onValueChange={(value) => setFilter("type_id", value)}
+                    value={params.type_id || 'all'}
+                    onValueChange={(value) => setFilter('type_id', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Semua Tipe" />
@@ -49,8 +49,8 @@ export default function LocationFilterCard({
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.status || "all"}
-                    onValueChange={(value) => setFilter("status", value)}
+                    value={params.status || 'all'}
+                    onValueChange={(value) => setFilter('status', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Semua Status" />

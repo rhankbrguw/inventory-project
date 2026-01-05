@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export default function CurrencyInput({
     value: propValue,
@@ -9,7 +9,7 @@ export default function CurrencyInput({
     disabled,
     ...props
 }) {
-    const [displayValue, setDisplayValue] = useState("");
+    const [displayValue, setDisplayValue] = useState('');
     const [isFocused, setIsFocused] = useState(false);
 
     useEffect(() => {
@@ -19,18 +19,18 @@ export default function CurrencyInput({
     }, [propValue, isFocused]);
 
     const formatToUser = (val) => {
-        if (val === null || val === "" || val === undefined) {
-            return "";
+        if (val === null || val === '' || val === undefined) {
+            return '';
         }
         const num = Number(val);
         if (isNaN(num) || num === 0) {
-            return "";
+            return '';
         }
-        return new Intl.NumberFormat("id-ID").format(num);
+        return new Intl.NumberFormat('id-ID').format(num);
     };
 
     const cleanInput = (val) => {
-        return val.replace(/[^\d]/g, "");
+        return val.replace(/[^\d]/g, '');
     };
 
     const handleFocus = (e) => {
@@ -44,9 +44,9 @@ export default function CurrencyInput({
         const inputValue = e.target.value;
         const cleanedValue = cleanInput(inputValue);
 
-        if (cleanedValue === "" || /^\d+$/.test(cleanedValue)) {
+        if (cleanedValue === '' || /^\d+$/.test(cleanedValue)) {
             setDisplayValue(cleanedValue);
-            onValueChange(cleanedValue || "0");
+            onValueChange(cleanedValue || '0');
         }
     };
 
@@ -56,8 +56,8 @@ export default function CurrencyInput({
         const numValue = Number(cleanedValue);
 
         if (isNaN(numValue) || numValue <= 0) {
-            onValueChange("0");
-            setDisplayValue("");
+            onValueChange('0');
+            setDisplayValue('');
         } else {
             onValueChange(cleanedValue);
             setDisplayValue(formatToUser(cleanedValue));

@@ -75,7 +75,7 @@ class ReportController extends Controller
         $avgTransaction = $transactionCount > 0 ? $totalSales / $transactionCount : 0;
 
         $dailyData = (clone $query)
-            ->selectRaw('DATE(created_at) as date, SUM(ABS(quantity) * cost_per_unit) as value')
+            ->selectRaw('date, SUM(ABS(quantity) * cost_per_unit) as value')
             ->groupBy('date')
             ->orderBy('date')
             ->get()

@@ -1,17 +1,17 @@
-import React from "react";
-import { router } from "@inertiajs/react";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import SmartDateFilter from "@/components/SmartDateFilter";
-import DashboardContent from "./Partials/DashboardContent";
+import React from 'react';
+import { router } from '@inertiajs/react';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import SmartDateFilter from '@/components/SmartDateFilter';
+import DashboardContent from './Partials/DashboardContent';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { MapPin } from "lucide-react";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/select';
+import { MapPin } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -25,13 +25,13 @@ export default function Index({
 
     const handleFilterChange = (newFilters) => {
         router.get(
-            route("dashboard"),
+            route('dashboard'),
             { ...filters, ...newFilters },
-            { preserveState: true, preserveScroll: true },
+            { preserveState: true, preserveScroll: true }
         );
     };
 
-    const dateRangeLabel = filters.resolved_label || "Periode Ini";
+    const dateRangeLabel = filters.resolved_label || 'Periode Ini';
 
     const FilterBar = () => (
         <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
@@ -44,7 +44,7 @@ export default function Index({
 
             <div className="relative col-span-1">
                 <Select
-                    value={filters.location_id || "all"}
+                    value={filters.location_id || 'all'}
                     onValueChange={(val) =>
                         handleFilterChange({ location_id: val })
                     }

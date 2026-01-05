@@ -4,8 +4,8 @@ services:
             context: .
             dockerfile: Dockerfile
             args:
-                WWWUSER: "${WWWUSER:-1000}"
-                WWWGROUP: "${WWWGROUP:-1000}"
+                WWWUSER: '${WWWUSER:-1000}'
+                WWWGROUP: '${WWWGROUP:-1000}'
         image: inventory-app
         container_name: inventory_app
         restart: unless-stopped
@@ -14,7 +14,7 @@ services:
             - ./:/var/www
             - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
         environment:
-            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
         env_file:
             - .env
         networks:
@@ -33,7 +33,7 @@ services:
             - ./:/var/www
             - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
         environment:
-            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
         env_file:
             - .env
         networks:
@@ -52,7 +52,7 @@ services:
             - ./:/var/www
             - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
         environment:
-            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
         env_file:
             - .env
         networks:
@@ -65,7 +65,7 @@ services:
         container_name: inventory_nginx
         restart: unless-stopped
         ports:
-            - "8000:80"
+            - '8000:80'
         volumes:
             - ./:/var/www
             - ./docker/nginx/conf.d:/etc/nginx/conf.d
@@ -79,13 +79,13 @@ services:
         container_name: inventory_mysql
         restart: unless-stopped
         ports:
-            - "3308:3306"
+            - '3308:3306'
         environment:
             MYSQL_DATABASE: ${DB_DATABASE}
             MYSQL_USER: ${DB_USERNAME}
             MYSQL_PASSWORD: ${DB_PASSWORD}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
         volumes:
             - mysql_data:/var/lib/mysql
             - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
@@ -94,14 +94,14 @@ services:
         healthcheck:
             test:
                 [
-                    "CMD",
-                    "mysqladmin",
-                    "ping",
-                    "-h",
-                    "localhost",
-                    "-u",
-                    "root",
-                    "-p${DB_ROOT_PASSWORD}",
+                    'CMD',
+                    'mysqladmin',
+                    'ping',
+                    '-h',
+                    'localhost',
+                    '-u',
+                    'root',
+                    '-p${DB_ROOT_PASSWORD}',
                 ]
             interval: 10s
             timeout: 5s
@@ -116,7 +116,7 @@ services:
             - ./:/var/www
         command: sh -c "npm install && npm run dev"
         ports:
-            - "5173:5173"
+            - '5173:5173'
         networks:
             - inventory_network
         stdin_open: true
@@ -127,14 +127,14 @@ services:
         container_name: inventory_mailpit
         restart: unless-stopped
         ports:
-            - "8025:8025"
-            - "1025:1025"
+            - '8025:8025'
+            - '1025:1025'
         networks:
             - inventory_network
         environment:
             MP_SMTP_AUTH_ACCEPT_ANY: 1
             MP_SMTP_AUTH_ALLOW_INSECURE: 1
-            TZ: "${APP_TIMEZONE:-Asia/Jakarta}"
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
 
 networks:
     inventory_network:

@@ -1,19 +1,19 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/select';
+import { usePermission } from '@/hooks/usePermission';
 
 const sortOptions = [
-    { value: "newest", label: "Transaksi Terbaru" },
-    { value: "oldest", label: "Transaksi Terlama" },
-    { value: "total_desc", label: "Total Terbesar" },
-    { value: "total_asc", label: "Total Terkecil" },
+    { value: 'newest', label: 'Transaksi Terbaru' },
+    { value: 'oldest', label: 'Transaksi Terlama' },
+    { value: 'total_desc', label: 'Total Terbesar' },
+    { value: 'total_asc', label: 'Total Terkecil' },
 ];
 
 export default function TransactionFilterCard({
@@ -30,13 +30,13 @@ export default function TransactionFilterCard({
                 <Input
                     type="search"
                     placeholder="Cari ref, supplier, atau customer..."
-                    value={params.search || ""}
-                    onChange={(e) => setFilter("search", e.target.value)}
+                    value={params.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
                 <Select
-                    value={params.location_id || "all"}
-                    onValueChange={(value) => setFilter("location_id", value)}
+                    value={params.location_id || 'all'}
+                    onValueChange={(value) => setFilter('location_id', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Semua Lokasi" />
@@ -53,8 +53,8 @@ export default function TransactionFilterCard({
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.type || "all"}
-                    onValueChange={(value) => setFilter("type", value)}
+                    value={params.type || 'all'}
+                    onValueChange={(value) => setFilter('type', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Semua Tipe" />
@@ -70,13 +70,13 @@ export default function TransactionFilterCard({
                                     >
                                         {type.name}
                                     </SelectItem>
-                                ) : null,
+                                ) : null
                             )}
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.status || "all"}
-                    onValueChange={(value) => setFilter("status", value)}
+                    value={params.status || 'all'}
+                    onValueChange={(value) => setFilter('status', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Semua Status" />
@@ -89,8 +89,8 @@ export default function TransactionFilterCard({
                     </SelectContent>
                 </Select>
                 <Select
-                    value={params.sort || "newest"}
-                    onValueChange={(value) => setFilter("sort", value)}
+                    value={params.sort || 'newest'}
+                    onValueChange={(value) => setFilter('sort', value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Urutkan" />

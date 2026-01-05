@@ -1,25 +1,50 @@
-import { generateHslColorFromString } from "@/lib/utils";
+import { generateHslColorFromString } from '@/lib/utils';
 
 export default function UnifiedBadge({ text, code }) {
     if (!text) return <span>-</span>;
 
-    const staticClassMap = {
-        ADM: "role-super-admin",
-        WHM: "role-warehouse-manager",
-        BRM: "role-branch-manager",
-        CSH: "role-cashier",
-
-        IND: "customer-type-individu",
-        CBG: "customer-type-cabang",
-        MTR: "customer-type-mitra",
-
-        "Super Admin": "role-super-admin",
-        "Warehouse Manager": "role-warehouse-manager",
-        "Branch Manager": "role-branch-manager",
-        Cashier: "role-cashier",
+    const normalizeString = (str) => {
+        if (!str) return null;
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     };
 
-    const preDefinedClass = staticClassMap[code] || staticClassMap[text];
+    const normalizedText = normalizeString(text);
+    const normalizedCode = normalizeString(code);
+
+    const staticClassMap = {
+        Adm: 'role-super-admin',
+        Whm: 'role-warehouse-manager',
+        Brm: 'role-branch-manager',
+        Csh: 'role-cashier',
+
+        'Super admin': 'role-super-admin',
+        'Warehouse manager': 'role-warehouse-manager',
+        'Branch manager': 'role-branch-manager',
+
+        Cashier: 'role-cashier',
+        Ind: 'customer-type-individu',
+        Cbg: 'customer-type-cabang',
+        Mtr: 'customer-type-mitra',
+        Pembelian: 'transaction-type-pembelian',
+        Penjualan: 'transaction-type-penjualan',
+        Transfer: 'transaction-type-transfer',
+
+        'Pending approval': 'status-pending-approval',
+        Approved: 'status-approved',
+        Shipping: 'status-shipping',
+        Completed: 'status-completed',
+        Rejected: 'status-rejected',
+
+        Cash: 'channel-cash',
+        Counter: 'channel-cash',
+        Gofood: 'channel-gofood',
+        Grabfood: 'channel-grabfood',
+        Shopeefood: 'channel-shopeefood',
+        Tiktokshop: 'channel-tiktokshop',
+    };
+
+    const preDefinedClass =
+        staticClassMap[normalizedCode] || staticClassMap[normalizedText];
 
     if (preDefinedClass) {
         return <span className={`badge-base ${preDefinedClass}`}>{text}</span>;

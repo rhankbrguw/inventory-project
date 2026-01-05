@@ -1,19 +1,19 @@
-import { Link, router, usePage } from "@inertiajs/react";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { transactionColumns } from "@/constants/tableColumns.jsx";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import TransactionMobileCard from "./Partials/TransactionMobileCard";
-import Pagination from "@/components/Pagination";
-import TransactionFilterCard from "./Partials/TransactionFilterCard";
+import { Link, router, usePage } from '@inertiajs/react';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { transactionColumns } from '@/constants/tableColumns.jsx';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import TransactionMobileCard from './Partials/TransactionMobileCard';
+import Pagination from '@/components/Pagination';
+import TransactionFilterCard from './Partials/TransactionFilterCard';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import {
     Eye,
     MoreVertical,
@@ -21,8 +21,8 @@ import {
     ShoppingCart,
     Truck,
     ArrowRightLeft,
-} from "lucide-react";
-import { usePermission } from "@/hooks/usePermission";
+} from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -36,8 +36,8 @@ export default function Index({
     const { isSuperAdmin, isManager, isOperational } = usePermission();
 
     const { params, setFilter } = useIndexPageFilters(
-        "transactions.index",
-        filters,
+        'transactions.index',
+        filters
     );
 
     const hasLocations = locations.length > 0 || isSuperAdmin;
@@ -82,7 +82,7 @@ export default function Index({
                             <Button
                                 onClick={() =>
                                     router.get(
-                                        route("transactions.purchases.create"),
+                                        route('transactions.purchases.create')
                                     )
                                 }
                                 className="btn-purchase"
@@ -95,7 +95,7 @@ export default function Index({
                             <Button
                                 onClick={() =>
                                     router.get(
-                                        route("transactions.sells.create"),
+                                        route('transactions.sells.create')
                                     )
                                 }
                                 className="btn-sell"
@@ -108,7 +108,7 @@ export default function Index({
                             <Button
                                 onClick={() =>
                                     router.get(
-                                        route("transactions.transfers.create"),
+                                        route('transactions.transfers.create')
                                     )
                                 }
                                 className="btn-transfer"
@@ -135,8 +135,8 @@ export default function Index({
                                         onSelect={() =>
                                             router.get(
                                                 route(
-                                                    "transactions.purchases.create",
-                                                ),
+                                                    'transactions.purchases.create'
+                                                )
                                             )
                                         }
                                     >
@@ -150,8 +150,8 @@ export default function Index({
                                         onSelect={() =>
                                             router.get(
                                                 route(
-                                                    "transactions.sells.create",
-                                                ),
+                                                    'transactions.sells.create'
+                                                )
                                             )
                                         }
                                     >
@@ -165,8 +165,8 @@ export default function Index({
                                         onSelect={() =>
                                             router.get(
                                                 route(
-                                                    "transactions.transfers.create",
-                                                ),
+                                                    'transactions.transfers.create'
+                                                )
                                             )
                                         }
                                     >

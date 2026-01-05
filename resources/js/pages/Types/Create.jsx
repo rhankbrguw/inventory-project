@@ -1,37 +1,42 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Info } from "lucide-react";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Info } from 'lucide-react';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
     CardDescription,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
-export default function Create({ auth, availableGroups, availableLevels, allTypes }) {
+export default function Create({
+    auth,
+    availableGroups,
+    availableLevels,
+    allTypes,
+}) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        name: "",
-        group: "",
-        code: "",
-        level: "",
+        name: '',
+        group: '',
+        code: '',
+        level: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("types.store"));
+        post(route('types.store'));
     };
 
     const currentGroupHasLevels = data.group && availableLevels[data.group];
@@ -62,7 +67,7 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                     id="name"
                                     value={data.name}
                                     onChange={(e) =>
-                                        setData("name", e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                     placeholder="Masukan nama tipe baru"
                                 />
@@ -83,7 +88,7 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                         setData((prev) => ({
                                             ...prev,
                                             group: value,
-                                            level: "",
+                                            level: '',
                                         }));
                                     }}
                                 >
@@ -99,7 +104,7 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                                 >
                                                     {label}
                                                 </SelectItem>
-                                            ),
+                                            )
                                         )}
                                     </SelectContent>
                                 </Select>
@@ -115,9 +120,13 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                     description="Pilih level yang sesuai untuk menentukan hak akses sistem."
                                 >
                                     <Select
-                                        value={data.level ? data.level.toString() : ""}
+                                        value={
+                                            data.level
+                                                ? data.level.toString()
+                                                : ''
+                                        }
                                         onValueChange={(value) =>
-                                            setData("level", value)
+                                            setData('level', value)
                                         }
                                     >
                                         <SelectTrigger>
@@ -132,7 +141,7 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                                     >
                                                         {lvl.label}
                                                     </SelectItem>
-                                                ),
+                                                )
                                             )}
                                         </SelectContent>
                                     </Select>
@@ -153,7 +162,7 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                             {type.name}
                                             {type.level
                                                 ? ` (Lvl ${type.level})`
-                                                : ""}
+                                                : ''}
                                         </Badge>
                                     ))}
                                 </AlertDescription>
@@ -170,14 +179,14 @@ export default function Create({ auth, availableGroups, availableLevels, allType
                                 id="code"
                                 value={data.code}
                                 onChange={(e) =>
-                                    setData("code", e.target.value)
+                                    setData('code', e.target.value)
                                 }
                                 placeholder="Masukkan kode tipe"
                             />
                         </FormField>
 
                         <div className="flex items-center justify-end gap-4 pt-2">
-                            <Link href={route("types.index")}>
+                            <Link href={route('types.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

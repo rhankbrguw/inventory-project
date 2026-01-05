@@ -1,10 +1,10 @@
-import { Link, useForm } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import TransferItemManager from "./Partials/TransferItemManager";
-import TransferDetailsManager from "./Partials/TransferDetailsManager";
-import { Button } from "@/components/ui/button";
-import { formatNumber } from "@/lib/utils";
-import { useMemo } from "react";
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import TransferItemManager from './Partials/TransferItemManager';
+import TransferDetailsManager from './Partials/TransferDetailsManager';
+import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/utils';
+import { useMemo } from 'react';
 
 export default function Create({
     auth,
@@ -13,10 +13,10 @@ export default function Create({
     products,
 }) {
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        from_location_id: "",
-        to_location_id: "",
-        notes: "",
-        items: [{ product_id: "", quantity: 1, unit: "" }],
+        from_location_id: '',
+        to_location_id: '',
+        notes: '',
+        items: [{ product_id: '', quantity: 1, unit: '' }],
     });
 
     const isDetailsLocked =
@@ -34,8 +34,8 @@ export default function Create({
 
         return (products?.data || []).filter((product) =>
             product.locations?.some(
-                (loc) => loc.id?.toString() === data.from_location_id,
-            ),
+                (loc) => loc.id?.toString() === data.from_location_id
+            )
         );
     }, [data.from_location_id, products?.data]);
 
@@ -43,7 +43,7 @@ export default function Create({
         const totalItems = data.items.filter((item) => item.product_id).length;
         const totalQuantity = data.items.reduce(
             (sum, item) => sum + Number(item.quantity || 0),
-            0,
+            0
         );
         return { totalItems, totalQuantity };
     };
@@ -67,7 +67,7 @@ export default function Create({
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("transactions.transfers.store"), {});
+        post(route('transactions.transfers.store'), {});
     };
 
     return (
@@ -96,11 +96,11 @@ export default function Create({
                 />
                 <div className="flex items-center justify-between gap-3">
                     <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                        Total Item: {totalItems} | Qty:{" "}
+                        Total Item: {totalItems} | Qty:{' '}
                         {formatNumber(totalQuantity)}
                     </div>
                     <div className="flex gap-2">
-                        <Link href={route("transactions.index")}>
+                        <Link href={route('transactions.index')}>
                             <Button
                                 variant="outline"
                                 type="button"
@@ -115,7 +115,7 @@ export default function Create({
                             className="px-3 py-1"
                             disabled={processing || !isDirty || !isFormValid()}
                         >
-                            {processing ? "Menyimpan..." : "Simpan"}
+                            {processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </div>
                 </div>

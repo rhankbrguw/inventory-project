@@ -21,29 +21,29 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasRoles;
 
     protected $fillable = [
-        "name",
-        "email",
-        "phone",
+        'name',
+        'email',
+        'phone',
         'locale',
-        "password",
-        "otp_code",
-        "otp_expires_at",
-        "email_verified_at",
+        'password',
+        'otp_code',
+        'otp_expires_at',
+        'email_verified_at',
     ];
 
     protected $hidden = [
-        "password",
-        "remember_token",
-        "otp_code",
-        "otp_expires_at",
+        'password',
+        'remember_token',
+        'otp_code',
+        'otp_expires_at',
     ];
 
     protected function casts(): array
     {
         return [
-            "email_verified_at" => "datetime",
-            "password" => "hashed",
-            "otp_expires_at" => "datetime",
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'otp_expires_at' => 'datetime',
         ];
     }
 
@@ -60,7 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function locations(): BelongsToMany
     {
         return $this->belongsToMany(Location::class)
-            ->withPivot("role_id")
+            ->withPivot('role_id')
             ->withTimestamps();
     }
 
@@ -72,7 +72,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleAtLocation(int $locationId): ?Role
     {
         if ($this->level === Role::LEVEL_SUPER_ADMIN) {
-            return new Role(['name' => 'Super Admin', 'code' => Role::CODE_SUPER_ADMIN, 'level' => Role::LEVEL_SUPER_ADMIN]);
+            return new Role([
+                'name' => 'Super Admin',
+                'code' => Role::CODE_SUPER_ADMIN,
+                'level' => Role::LEVEL_SUPER_ADMIN,
+            ]);
         }
 
         $pivot = $this->locations()
@@ -89,6 +93,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleCodeAtLocation($locationId): ?string
     {
         $role = $this->getRoleAtLocation($locationId);
+
         return $role ? $role->code : null;
     }
 
@@ -98,7 +103,9 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        $ids = $this->locations()->pluck('locations.id')->toArray();
+        $ids = $this->locations()
+            ->pluck('locations.id')
+            ->toArray();
 
         if (empty($ids)) {
             return [0];
@@ -150,15 +157,17 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         if ($transactionType === 'transfer') {
-            return $roleLevel <= Role::THRESHOLD_MANAGERIAL;
+            return $roleLevel <= Role::THRESHOLD_STAFF;
         }
 
         return false;
     }
 
-    public function sendPasswordResetNotification($token)
+    public function sendPasswordResetNotification($token): void
     {
-        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+        $this->notify(
+            new \App\Notifications\ResetPasswordNotification($token)
+        );
     }
 
     public function sendOtpNotification(): void
@@ -167,10 +176,12 @@ class User extends Authenticatable implements MustVerifyEmail
         $expiresAt = now()->addMinutes(5);
 
         $this->forceFill([
-            "otp_code" => $otp,
-            "otp_expires_at" => $expiresAt,
+            'otp_code' => $otp,
+            'otp_expires_at' => $expiresAt,
         ])->save();
 
-        Mail::to($this->email)->send(new OtpMail($this, (string) $otp, 5));
+        Mail::to($this->email)->send(
+            new OtpMail($this, (string) $otp, 5)
+        );
     }
 }

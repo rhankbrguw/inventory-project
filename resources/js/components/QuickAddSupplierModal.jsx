@@ -1,5 +1,5 @@
-import { useForm, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useForm, router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -9,30 +9,30 @@ import {
     DialogFooter,
     DialogClose,
     DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import InputError from "@/components/InputError";
-import { InputWithPrefix } from "@/components/InputWithPrefix";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import InputError from '@/components/InputError';
+import { InputWithPrefix } from '@/components/InputWithPrefix';
 
 export default function QuickAddSupplierModal({ children, onSuccess }) {
     const { data, setData, post, processing, errors, isDirty, reset } = useForm(
         {
-            name: "",
-            email: "",
-            phone: "",
-            address: "",
-            contact_person: "",
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            contact_person: '',
             _from_modal: true,
-        },
+        }
     );
 
     const [open, setOpen] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("suppliers.store"), {
+        post(route('suppliers.store'), {
             preserveScroll: true,
             onSuccess: (page) => {
                 const newSupplier = page.props.flash.newSupplier;
@@ -42,7 +42,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                 reset();
 
                 router.reload({
-                    only: ["suppliers"],
+                    only: ['suppliers'],
                     preserveScroll: true,
                 });
             },
@@ -80,7 +80,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             id="supplierName"
                             placeholder="Nama Perusahaan Supplier"
                             value={data.name}
-                            onChange={(e) => setData("name", e.target.value)}
+                            onChange={(e) => setData('name', e.target.value)}
                             className="h-8 text-sm"
                         />
                         <InputError message={errors.name} />
@@ -98,7 +98,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             placeholder="Nama PIC / Sales"
                             value={data.contact_person}
                             onChange={(e) =>
-                                setData("contact_person", e.target.value)
+                                setData('contact_person', e.target.value)
                             }
                             className="h-8 text-sm"
                         />
@@ -117,7 +117,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             type="email"
                             placeholder="email@supplier.com"
                             value={data.email}
-                            onChange={(e) => setData("email", e.target.value)}
+                            onChange={(e) => setData('email', e.target.value)}
                             className="h-8 text-sm"
                         />
                         <InputError message={errors.email} />
@@ -137,8 +137,8 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             value={data.phone}
                             onChange={(e) =>
                                 setData(
-                                    "phone",
-                                    e.target.value.replace(/\D/g, ""),
+                                    'phone',
+                                    e.target.value.replace(/\D/g, '')
                                 )
                             }
                             className="h-8 text-sm"
@@ -157,7 +157,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             id="supplierAddress"
                             placeholder="Alamat kantor/gudang supplier..."
                             value={data.address}
-                            onChange={(e) => setData("address", e.target.value)}
+                            onChange={(e) => setData('address', e.target.value)}
                             className="h-8 text-sm"
                         />
                         <InputError message={errors.address} />
@@ -177,7 +177,7 @@ export default function QuickAddSupplierModal({ children, onSuccess }) {
                             disabled={processing || !isDirty}
                             className="h-8 text-xs"
                         >
-                            {processing ? "Menyimpan..." : "Simpan"}
+                            {processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </form>

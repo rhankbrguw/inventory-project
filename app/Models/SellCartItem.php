@@ -10,13 +10,20 @@ class SellCartItem extends Model
 {
     use HasFactory;
 
-    protected $table = "sell_cart_items";
+    protected $table = 'sell_cart_items';
 
-    protected $fillable = ["user_id", "location_id", "product_id", "quantity", "sell_price"];
+    protected $fillable = [
+        'user_id',
+        'location_id',
+        'product_id',
+        'sales_channel_type_id',
+        'quantity',
+        'sell_price',
+    ];
 
     protected $casts = [
-        "quantity" => "decimal:4",
-        "sell_price" => "decimal:2",
+        'quantity' => 'decimal:4',
+        'sell_price' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
@@ -32,5 +39,10 @@ class SellCartItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function salesChannel()
+    {
+        return $this->belongsTo(Type::class, 'sales_channel_type_id');
     }
 }

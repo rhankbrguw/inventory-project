@@ -1,9 +1,9 @@
-import * as React from "react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import * as React from 'react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Eye, EyeOff } from 'lucide-react';
 
 const PasswordInput = React.forwardRef(({ className, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -11,8 +11,8 @@ const PasswordInput = React.forwardRef(({ className, ...props }, ref) => {
     return (
         <div className="relative">
             <Input
-                type={showPassword ? "text" : "password"}
-                className={cn("pr-10", className)}
+                type={showPassword ? 'text' : 'password'}
+                className={cn('pr-10', className)}
                 ref={ref}
                 {...props}
             />
@@ -30,13 +30,13 @@ const PasswordInput = React.forwardRef(({ className, ...props }, ref) => {
                 )}
                 <span className="sr-only">
                     {showPassword
-                        ? "Sembunyikan password"
-                        : "Tampilkan password"}
+                        ? 'Sembunyikan password'
+                        : 'Tampilkan password'}
                 </span>
             </Button>
         </div>
     );
 });
-PasswordInput.displayName = "PasswordInput";
+PasswordInput.displayName = 'PasswordInput';
 
 export { PasswordInput };

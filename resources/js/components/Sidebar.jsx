@@ -1,6 +1,6 @@
-import { Link } from "@inertiajs/react";
-import useTranslation from "@/hooks/useTranslation";
-import { usePermission } from "@/hooks/usePermission";
+import { Link } from '@inertiajs/react';
+import useTranslation from '@/hooks/useTranslation';
+import { usePermission } from '@/hooks/usePermission';
 import {
     LayoutDashboard,
     Package,
@@ -13,7 +13,7 @@ import {
     MapPin,
     Contact,
     ArrowRightLeft,
-} from "lucide-react";
+} from 'lucide-react';
 
 const NavLink = ({ href, active, children, onClick }) => (
     <Link
@@ -21,8 +21,8 @@ const NavLink = ({ href, active, children, onClick }) => (
         onClick={onClick}
         className={`flex items-center px-3 py-2.5 rounded-lg transition-colors duration-200 text-sm font-medium ${
             active
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
         }`}
     >
         {children}
@@ -37,82 +37,82 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
     const navLinks = [
         {
-            name: t("ui.dashboard"),
-            href: route("dashboard"),
+            name: t('ui.dashboard'),
+            href: route('dashboard'),
             icon: LayoutDashboard,
-            current: route().current("dashboard"),
+            current: route().current('dashboard'),
             show: true,
         },
         {
-            name: t("ui.product"),
-            href: route("products.index"),
+            name: t('ui.product'),
+            href: route('products.index'),
             icon: Package,
-            current: route().current("products.*"),
+            current: route().current('products.*'),
             show: isOperational,
         },
         {
-            name: t("ui.locations"),
-            href: route("locations.index"),
+            name: t('ui.locations'),
+            href: route('locations.index'),
             icon: MapPin,
-            current: route().current("locations.*"),
+            current: route().current('locations.*'),
             show: isManager,
         },
         {
-            name: t("ui.stock"),
-            href: route("stock.index"),
+            name: t('ui.stock'),
+            href: route('stock.index'),
             icon: Warehouse,
             current:
-                route().current("stock.*") &&
-                !route().current("stock-movements.*"),
+                route().current('stock.*') &&
+                !route().current('stock-movements.*'),
             show: isOperational,
         },
         {
-            name: t("ui.stock_movements"),
-            href: route("stock-movements.index"),
+            name: t('ui.stock_movements'),
+            href: route('stock-movements.index'),
             icon: ArrowRightLeft,
-            current: route().current("stock-movements.*"),
+            current: route().current('stock-movements.*'),
             show: isManager,
         },
         {
-            name: t("ui.transactions"),
-            href: route("transactions.index"),
+            name: t('ui.transactions'),
+            href: route('transactions.index'),
             icon: ClipboardList,
-            current: route().current("transactions.*"),
+            current: route().current('transactions.*'),
             show: isOperational,
         },
         {
-            name: t("ui.suppliers"),
-            href: route("suppliers.index"),
+            name: t('ui.suppliers'),
+            href: route('suppliers.index'),
             icon: Truck,
-            current: route().current("suppliers.*"),
+            current: route().current('suppliers.*'),
             show: isManager,
         },
         {
-            name: t("ui.customers"),
-            href: route("customers.index"),
+            name: t('ui.customers'),
+            href: route('customers.index'),
             icon: Contact,
-            current: route().current("customers.*"),
+            current: route().current('customers.*'),
             show: isOperational,
         },
         {
-            name: t("ui.reports"),
-            href: route("reports.index"),
+            name: t('ui.reports'),
+            href: route('reports.index'),
             icon: BarChart2,
-            current: route().current("reports.*"),
+            current: route().current('reports.*'),
             show: isManager,
         },
         {
-            name: t("ui.users"),
-            href: route("users.index"),
+            name: t('ui.users'),
+            href: route('users.index'),
             icon: Users,
-            current: route().current("users.*"),
+            current: route().current('users.*'),
             show: isSuperAdmin,
         },
         {
-            name: t("ui.types"),
-            href: route("types.index"),
+            name: t('ui.types'),
+            href: route('types.index'),
             icon: Settings,
-            current: route().current("types.*"),
+            current: route().current('types.*'),
             show: isSuperAdmin,
         },
     ];
@@ -120,12 +120,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     return (
         <aside
             className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ease-in-out ${
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             } lg:translate-x-0`}
         >
             <div className="h-16 flex items-center justify-center px-4 border-b">
                 <h1 className="text-xl font-bold text-foreground">
-                    {t("ui.welcome")}
+                    {t('ui.welcome')}
                 </h1>
             </div>
             <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">

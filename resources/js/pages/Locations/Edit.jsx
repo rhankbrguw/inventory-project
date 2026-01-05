@@ -1,19 +1,19 @@
-import { Link, useForm } from "@inertiajs/react";
-import { useMemo, useEffect, useState } from "react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Link, useForm } from '@inertiajs/react';
+import { useMemo, useEffect, useState } from 'react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import AssignmentManager from "./Partials/AssignmentManager";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import AssignmentManager from './Partials/AssignmentManager';
 
 export default function Edit({
     auth,
@@ -30,13 +30,13 @@ export default function Edit({
                 user_id: user.id.toString(),
                 role_id: user.pivot.role_id.toString(),
             })) || [],
-        [location.users],
+        [location.users]
     );
 
     const { data, setData, patch, processing, errors, isDirty } = useForm({
-        name: location.name || "",
-        type_id: location.type?.id?.toString() || "",
-        address: location.address || "",
+        name: location.name || '',
+        type_id: location.type?.id?.toString() || '',
+        address: location.address || '',
         assignments: initialAssignments,
     });
 
@@ -51,13 +51,13 @@ export default function Edit({
 
     const selectedLocationType = useMemo(() => {
         return locationTypes.find(
-            (type) => type.id.toString() === data.type_id,
+            (type) => type.id.toString() === data.type_id
         );
     }, [data.type_id, locationTypes]);
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("locations.update", location.id));
+        patch(route('locations.update', location.id));
     };
 
     return (
@@ -82,7 +82,7 @@ export default function Edit({
                                 placeholder="Contoh: Gudang Pusat A"
                                 value={data.name}
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData('name', e.target.value)
                                 }
                             />
                         </FormField>
@@ -95,7 +95,7 @@ export default function Edit({
                             <Select
                                 value={data.type_id}
                                 onValueChange={(value) => {
-                                    setData("type_id", value);
+                                    setData('type_id', value);
                                 }}
                             >
                                 <SelectTrigger>
@@ -124,7 +124,7 @@ export default function Edit({
                                 placeholder="Masukkan alamat lengkap lokasi..."
                                 value={data.address}
                                 onChange={(e) =>
-                                    setData("address", e.target.value)
+                                    setData('address', e.target.value)
                                 }
                             />
                         </FormField>
@@ -141,7 +141,7 @@ export default function Edit({
                 />
 
                 <div className="flex items-center justify-end gap-4">
-                    <Link href={route("locations.index")}>
+                    <Link href={route('locations.index')}>
                         <Button type="button" variant="outline">
                             Batal
                         </Button>

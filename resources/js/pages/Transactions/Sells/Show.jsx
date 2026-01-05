@@ -1,20 +1,24 @@
-import React from "react";
-import { router } from "@inertiajs/react";
-import { Truck, CheckCircle } from "lucide-react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import PrintButton from "@/components/PrintButton";
-import InstallmentSchedule from "@/components/InstallmentSchedule";
+import React from 'react';
+import { router } from '@inertiajs/react';
+import { Truck, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import PrintButton from '@/components/PrintButton';
+import InstallmentSchedule from '@/components/InstallmentSchedule';
+import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
+import TransactionPaymentBadge from '@/components/Transaction/TransactionPaymentBadge';
+import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { TableFooter, TableRow, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -24,173 +28,152 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import UnifiedBadge from '@/components/UnifiedBadge';
+import { formatDate } from '@/lib/utils';
+import { sellDetailColumns } from '@/constants/tableColumns';
 
-import { formatCurrency, formatDate, formatNumber, cn } from "@/lib/utils";
-import DataTable from "@/components/DataTable";
-import { sellDetailColumns } from "@/constants/tableColumns";
-
-export default function Show({ auth, sell, canShip, canReceive }) {
+export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
     const { data } = sell;
 
     const [isShipDialogOpen, setIsShipDialogOpen] = React.useState(false);
     const [isReceiveDialogOpen, setIsReceiveDialogOpen] = React.useState(false);
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = React.useState(false);
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
+    const [rejectionReason, setRejectionReason] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
 
     const handleShipConfirm = () => {
         setIsProcessing(true);
         router.post(
-            route("transactions.sells.ship", data.id),
+            route('transactions.sells.ship', data.id),
             {},
             {
                 onFinish: () => {
                     setIsProcessing(false);
                     setIsShipDialogOpen(false);
                 },
-            },
+            }
         );
     };
 
     const handleReceiveConfirm = () => {
         setIsProcessing(true);
         router.post(
-            route("transactions.sells.receive", data.id),
+            route('transactions.sells.receive', data.id),
             {},
             {
                 onFinish: () => {
                     setIsProcessing(false);
                     setIsReceiveDialogOpen(false);
                 },
-            },
+            }
         );
     };
 
-    const totals = React.useMemo(() => {
-        let totalSell = 0;
-        let totalCost = 0;
-
-        data.items.forEach((item) => {
-            const quantity = Math.abs(item.quantity || 0);
-            const sellPrice = item.cost_per_unit || 0;
-            const avgCost = item.average_cost_per_unit || 0;
-
-            totalSell += quantity * sellPrice;
-            totalCost += quantity * avgCost;
-        });
-
-        return {
-            totalSell,
-            totalCost,
-            totalMargin: totalSell - totalCost,
-        };
-    }, [data.items]);
-
-    const renderMobileItem = (item) => {
-        const quantity = Math.abs(item.quantity || 0);
-        const sellPrice = item.cost_per_unit || 0;
-        const avgCost = item.average_cost_per_unit || 0;
-        const total = quantity * sellPrice;
-        const margin = (sellPrice - avgCost) * quantity;
-
-        return (
-            <Card
-                key={item.id}
-                className={cn(
-                    "p-3",
-                    item.product?.deleted_at && "opacity-60 bg-muted/50",
-                )}
-            >
-                <div className="space-y-2">
-                    <div>
-                        <p className="font-medium text-sm">
-                            {item.product?.name || "Produk Telah Dihapus"}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                            {item.product?.sku || "-"}
-                        </p>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                        <span>
-                            {formatNumber(quantity)} {item.product?.unit} ×{" "}
-                            {formatCurrency(sellPrice)}
-                        </span>
-                        <span className="font-semibold">
-                            {formatCurrency(total)}
-                        </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs border-t pt-2 mt-2">
-                        <span className="text-muted-foreground">
-                            Harga Modal
-                        </span>
-                        <span className="text-muted-foreground">
-                            {formatCurrency(avgCost)}
-                        </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs">
-                        <span className="text-muted-foreground">Margin</span>
-                        <span
-                            className={cn(
-                                "font-semibold",
-                                margin > 0
-                                    ? "text-success"
-                                    : "text-destructive",
-                            )}
-                        >
-                            {formatCurrency(margin)}
-                        </span>
-                    </div>
-                </div>
-            </Card>
+    const handleApproveConfirm = () => {
+        setIsProcessing(true);
+        router.post(
+            route('transactions.sells.approve', data.id),
+            {},
+            {
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setIsApproveDialogOpen(false);
+                },
+            }
         );
     };
 
-    const renderDesktopFooter = () => (
-        <TableFooter>
-            <TableRow>
-                <TableCell
-                    colSpan={6}
-                    className="text-right font-bold text-base"
-                >
-                    Total Penjualan
-                </TableCell>
-                <TableCell className="text-right font-bold text-base">
-                    {formatCurrency(totals.totalSell)}
-                </TableCell>
-            </TableRow>
-            <TableRow>
-                <TableCell
-                    colSpan={6}
-                    className="text-right font-medium text-muted-foreground"
-                >
-                    Total Modal (HPP)
-                </TableCell>
-                <TableCell className="text-right font-medium text-muted-foreground">
-                    {formatCurrency(totals.totalCost)}
-                </TableCell>
-            </TableRow>
-            <TableRow>
-                <TableCell
-                    colSpan={6}
-                    className="text-right font-bold text-base"
-                >
-                    Total Margin
-                </TableCell>
-                <TableCell
-                    className={cn(
-                        "text-right font-bold text-base",
-                        totals.totalMargin > 0
-                            ? "text-success"
-                            : "text-destructive",
-                    )}
-                >
-                    {formatCurrency(totals.totalMargin)}
-                </TableCell>
-            </TableRow>
-        </TableFooter>
-    );
+    const handleRejectConfirm = () => {
+        if (!rejectionReason.trim()) return;
+        setIsProcessing(true);
+        router.post(
+            route('transactions.sells.reject', data.id),
+            { rejection_reason: rejectionReason },
+            {
+                onFinish: () => {
+                    setIsProcessing(false);
+                    setIsRejectDialogOpen(false);
+                    setRejectionReason('');
+                },
+            }
+        );
+    };
+
+    const infoFields = [
+        {
+            label: 'Lokasi Penjualan',
+            value: data.location?.name,
+        },
+        {
+            label: 'Pelanggan',
+            value: data.customer?.name || 'Pelanggan Umum',
+        },
+        {
+            label: 'Tanggal Transaksi',
+            value: formatDate(data.transaction_date),
+        },
+        {
+            label: 'Channel Penjualan',
+            value: data.sales_channel ? (
+                <span className="flex items-center gap-2">
+                    <span className="font-semibold">
+                        {data.sales_channel.name}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] font-mono">
+                        {data.sales_channel.code}
+                    </Badge>
+                </span>
+            ) : null,
+            hidden: !data.sales_channel,
+        },
+        {
+            label: 'Status',
+            value: <UnifiedBadge text={data.status} code={data.status} />,
+        },
+        {
+            label: 'Pembayaran',
+            value: null,
+            badge: (
+                <TransactionPaymentBadge
+                    installmentTerms={data.installment_terms}
+                    paymentStatus={data.payment_status}
+                    hasInstallments={data.has_installments}
+                />
+            ),
+        },
+        {
+            label: 'PIC',
+            value: data.user?.name,
+        },
+        {
+            label: 'Disetujui Oleh',
+            value: data.approved_by?.name,
+            hidden: !data.approved_by,
+        },
+        {
+            label: 'Ditolak Oleh',
+            value: data.rejected_by?.name,
+            hidden: !data.rejected_by,
+        },
+        {
+            label: 'Alasan Penolakan',
+            value: (
+                <span className="text-destructive font-medium">
+                    {data.rejection_reason}
+                </span>
+            ),
+            hidden: !data.rejection_reason,
+            span: 'full',
+        },
+        {
+            label: 'Catatan',
+            value: data.notes,
+            span: 'full',
+            hidden: !data.notes,
+        },
+    ];
 
     return (
         <ContentPageLayout
@@ -202,131 +185,112 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                     <PrintButton>
                         <span className="hidden sm:inline">Cetak</span>
                     </PrintButton>
-
-                    {canShip && (
-                        <Button
-                            onClick={() => setIsShipDialogOpen(true)}
-                            className="btn-transfer flex items-center gap-2"
-                        >
-                            <Truck className="w-4 h-4" />
-                            Kirim Barang
-                        </Button>
-                    )}
-
-                    {/* Button terima barang */}
-                    {canReceive && (
-                        <Button
-                            onClick={() => setIsReceiveDialogOpen(true)}
-                            className="btn-sell flex items-center gap-2"
-                        >
-                            <CheckCircle className="w-4 h-4" />
-                            Terima Barang
-                        </Button>
-                    )}
                 </div>
             }
         >
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informasi Umum</CardTitle>
-                    <CardDescription>{data.reference_code}</CardDescription>
-                </CardHeader>
-
-                <CardContent className="grid sm:grid-cols-3 gap-x-8 gap-y-4 text-sm">
-                    <div>
-                        <p className="text-muted-foreground">
-                            Lokasi Penjualan
-                        </p>
-                        <p className="font-semibold">{data.location?.name}</p>
-                    </div>
-
-                    <div>
-                        <p className="text-muted-foreground">Pelanggan</p>
-                        <p className="font-semibold">
-                            {data.customer?.name || "Pelanggan Umum"}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-muted-foreground">
-                            Tanggal Transaksi
-                        </p>
-                        <p className="font-semibold">
-                            {formatDate(data.transaction_date)}
-                        </p>
-                    </div>
-
-                    {data.sales_channel && (
-                        <div>
-                            <p className="text-muted-foreground">
-                                Channel Penjualan
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <p className="font-semibold">
-                                    {data.sales_channel.name}
-                                </p>
-                                <Badge
+            {data.status === 'Pending Approval' && canApprove && (
+                <Card className="mb-6 border-warning/50 bg-warning/5">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="h-5 w-5 text-warning" />
+                                <div>
+                                    <h3 className="font-semibold text-warning-foreground">
+                                        Menunggu Persetujuan
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Pesanan stok masuk membutuhkan
+                                        persetujuan Anda.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <Button
                                     variant="outline"
-                                    className="text-[10px] font-mono"
+                                    className="flex-1 sm:flex-none border-destructive text-destructive hover:bg-destructive/10"
+                                    onClick={() => setIsRejectDialogOpen(true)}
+                                    disabled={isProcessing}
                                 >
-                                    {data.sales_channel.code}
-                                </Badge>
+                                    <XCircle className="h-4 w-4 mr-2" />
+                                    Tolak
+                                </Button>
+                                <Button
+                                    className="flex-1 sm:flex-none bg-success hover:bg-success/90 text-primary-foreground"
+                                    onClick={() => setIsApproveDialogOpen(true)}
+                                    disabled={isProcessing}
+                                >
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Setujui
+                                </Button>
                             </div>
                         </div>
-                    )}
+                    </CardContent>
+                </Card>
+            )}
 
-                    <div>
-                        <p className="text-muted-foreground">Status</p>
-                        <Badge variant="outline" className="capitalize">
-                            {data.status}
-                        </Badge>
-                    </div>
-
-                    <div>
-                        <p className="text-muted-foreground">Pembayaran</p>
-                        <div className="flex items-center gap-2">
-                            <span className="font-semibold">
-                                {data.installment_terms === 1
-                                    ? "Lunas"
-                                    : `Cicilan ${data.installment_terms}x`}
-                            </span>
-                            {data.has_installments && (
-                                <Badge
-                                    variant={
-                                        data.payment_status === "paid"
-                                            ? "default"
-                                            : data.payment_status === "partial"
-                                              ? "secondary"
-                                              : "outline"
-                                    }
-                                    className={cn(
-                                        data.payment_status === "paid" &&
-                                            "bg-success/10 text-success border-success/20",
-                                    )}
-                                >
-                                    {data.payment_status === "paid"
-                                        ? "Lunas"
-                                        : data.payment_status === "partial"
-                                          ? "Sebagian"
-                                          : "Belum Bayar"}
-                                </Badge>
-                            )}
+            {data.status === 'Approved' && canShip && (
+                <Card className="mb-6 border-info/50 bg-info/5">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <Truck className="h-5 w-5 text-info" />
+                                <div>
+                                    <h3 className="font-semibold text-info-foreground">
+                                        Siap Dikirim
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Pesanan telah disetujui. Segera proses
+                                        pengiriman.
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                className="bg-info hover:bg-info/90 text-primary-foreground"
+                                onClick={() => setIsShipDialogOpen(true)}
+                                disabled={isProcessing}
+                            >
+                                <Truck className="h-4 w-4 mr-2" />
+                                Kirim Barang
+                            </Button>
                         </div>
-                    </div>
+                    </CardContent>
+                </Card>
+            )}
 
-                    <div>
-                        <p className="text-muted-foreground">PIC</p>
-                        <p className="font-semibold">{data.user?.name}</p>
-                    </div>
-
-                    {data.notes && (
-                        <div className="sm:col-span-3">
-                            <p className="text-muted-foreground">Catatan</p>
-                            <p className="font-semibold">{data.notes}</p>
+            {data.status === 'Shipping' && canReceive && (
+                <Card className="mb-6 border-purple/50 bg-purple/5">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <Truck className="h-5 w-5 text-purple" />
+                                <div>
+                                    <h3 className="font-semibold text-purple-foreground">
+                                        Dalam Pengiriman
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Konfirmasi jika barang sudah sampai di
+                                        gudang Anda.
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                className="bg-success hover:bg-success/90 text-primary-foreground"
+                                onClick={() => setIsReceiveDialogOpen(true)}
+                                disabled={isProcessing}
+                            >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Terima Barang
+                            </Button>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            )}
+
+            <TransactionInfoGrid
+                title="Informasi Umum"
+                subtitle={data.reference_code}
+                fields={infoFields}
+            />
 
             {data.has_installments && (
                 <InstallmentSchedule
@@ -335,58 +299,78 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                 />
             )}
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Rincian Item</CardTitle>
-                </CardHeader>
+            <TransactionItemsSection
+                type="sell"
+                items={data.items}
+                columns={sellDetailColumns}
+                totals={data.totals}
+                totalAmount={data.total_price}
+            />
 
-                <CardContent>
-                    <div className="md:hidden space-y-3">
-                        {data.items.map(renderMobileItem)}
+            <AlertDialog
+                open={isApproveDialogOpen}
+                onOpenChange={setIsApproveDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Setujui Pesanan?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Anda menyetujui pesanan ini. Pihak pengirim akan
+                            diberitahu untuk segera mengirim barang.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isProcessing}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleApproveConfirm}
+                            disabled={isProcessing}
+                            className="bg-success text-primary-foreground hover:bg-success/90"
+                        >
+                            {isProcessing ? 'Memproses...' : 'Ya, Setujui'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
-                        <Separator className="my-4" />
-
-                        <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
-                            <div className="flex justify-between font-bold">
-                                <span>Total Penjualan</span>
-                                <span>{formatCurrency(totals.totalSell)}</span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                    Total Modal (HPP)
-                                </span>
-                                <span className="text-muted-foreground">
-                                    {formatCurrency(totals.totalCost)}
-                                </span>
-                            </div>
-
-                            <Separator />
-
-                            <div className="flex justify-between font-bold">
-                                <span>Total Margin</span>
-                                <span
-                                    className={cn(
-                                        totals.totalMargin > 0
-                                            ? "text-success"
-                                            : "text-destructive",
-                                    )}
-                                >
-                                    {formatCurrency(totals.totalMargin)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="hidden md:block">
-                        <DataTable
-                            columns={sellDetailColumns}
-                            data={data.items}
-                            footer={renderDesktopFooter()}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+            <Dialog
+                open={isRejectDialogOpen}
+                onOpenChange={setIsRejectDialogOpen}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-destructive">
+                            Tolak Pesanan
+                        </DialogTitle>
+                        <DialogDescription>
+                            Berikan alasan penolakan pesanan ini.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        placeholder="Contoh: Stok tidak mencukupi / Salah pesan"
+                        rows={3}
+                    />
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsRejectDialogOpen(false)}
+                            disabled={isProcessing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleRejectConfirm}
+                            disabled={isProcessing || !rejectionReason.trim()}
+                        >
+                            {isProcessing ? 'Memproses...' : 'Tolak Pesanan'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog
                 open={isShipDialogOpen}
@@ -411,7 +395,7 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                             disabled={isProcessing}
                             className="btn-transfer"
                         >
-                            {isProcessing ? "Memproses..." : "Kirim Barang"}
+                            {isProcessing ? 'Memproses...' : 'Kirim Barang'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -428,8 +412,7 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             Stok akan otomatis masuk ke inventory cabang Anda.
-                            Tindakan ini tidak dapat dibatalkan. Apakah Anda
-                            yakin?
+                            Tindakan ini tidak dapat dibatalkan.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -441,7 +424,7 @@ export default function Show({ auth, sell, canShip, canReceive }) {
                             disabled={isProcessing}
                             className="btn-sell"
                         >
-                            {isProcessing ? "Memproses..." : "Terima Barang"}
+                            {isProcessing ? 'Memproses...' : 'Terima Barang'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

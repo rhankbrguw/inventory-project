@@ -1,24 +1,24 @@
-import { Link, router } from "@inertiajs/react";
-import IndexPageLayout from "@/components/IndexPageLayout";
-import DataTable from "@/components/DataTable";
-import MobileCardList from "@/components/MobileCardList";
-import LocationMobileCard from "./Partials/LocationMobileCard";
-import { locationColumns } from "@/constants/tableColumns";
-import { useIndexPageFilters } from "@/hooks/useIndexPageFilters";
-import { useSoftDeletes } from "@/hooks/useSoftDeletes";
-import Pagination from "@/components/Pagination";
-import DeleteConfirmationDialog from "@/components/DeleteConfirmationDialog";
-import LocationFilterCard from "./Partials/LocationFilterCard";
-import { Button } from "@/components/ui/button";
+import { Link, router } from '@inertiajs/react';
+import IndexPageLayout from '@/components/IndexPageLayout';
+import DataTable from '@/components/DataTable';
+import MobileCardList from '@/components/MobileCardList';
+import LocationMobileCard from './Partials/LocationMobileCard';
+import { locationColumns } from '@/constants/tableColumns';
+import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
+import { useSoftDeletes } from '@/hooks/useSoftDeletes';
+import Pagination from '@/components/Pagination';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
+import LocationFilterCard from './Partials/LocationFilterCard';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Edit, MoreVertical, Archive, ArchiveRestore } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { usePermission } from "@/hooks/usePermission";
+} from '@/components/ui/dropdown-menu';
+import { Edit, MoreVertical, Archive, ArchiveRestore } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -27,8 +27,8 @@ export default function Index({
     filters,
 }) {
     const { params, setFilter } = useIndexPageFilters(
-        "locations.index",
-        filters,
+        'locations.index',
+        filters
     );
 
     const { isSuperAdmin } = usePermission();
@@ -42,7 +42,7 @@ export default function Index({
         deactivateItem,
         restoreItem,
     } = useSoftDeletes({
-        resourceName: "locations",
+        resourceName: 'locations',
         data: locationsResource.data,
     });
 
@@ -61,7 +61,7 @@ export default function Index({
                 <DropdownMenuItem
                     className="cursor-pointer"
                     onSelect={() =>
-                        router.get(route("locations.edit", location.id))
+                        router.get(route('locations.edit', location.id))
                     }
                 >
                     <Edit className="w-4 h-4 mr-2" /> Edit
@@ -89,7 +89,7 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Lokasi"
-            createRoute={canCrudLocations ? "locations.create" : null}
+            createRoute={canCrudLocations ? 'locations.create' : null}
             buttonLabel="Tambah Lokasi"
         >
             <div className="space-y-4">
@@ -104,13 +104,13 @@ export default function Index({
                         <Link
                             href={
                                 canCrudLocations
-                                    ? route("locations.edit", location.id)
-                                    : "#"
+                                    ? route('locations.edit', location.id)
+                                    : '#'
                             }
                             key={location.id}
                             className={cn(
-                                !canCrudLocations && "pointer-events-none",
-                                location.deleted_at && "opacity-50",
+                                !canCrudLocations && 'pointer-events-none',
+                                location.deleted_at && 'opacity-50'
                             )}
                         >
                             <LocationMobileCard
@@ -129,9 +129,9 @@ export default function Index({
                         columns={locationColumns}
                         data={locationsResource.data}
                         actions={canCrudLocations ? renderActionDropdown : null}
-                        showRoute={canCrudLocations ? "locations.edit" : null}
+                        showRoute={canCrudLocations ? 'locations.edit' : null}
                         rowClassName={(row) =>
-                            row.deleted_at ? "opacity-50" : ""
+                            row.deleted_at ? 'opacity-50' : ''
                         }
                     />
                 </div>

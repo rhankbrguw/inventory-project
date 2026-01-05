@@ -1,26 +1,26 @@
-import { useForm, Link } from "@inertiajs/react";
-import ContentPageLayout from "@/components/ContentPageLayout";
-import FormField from "@/components/FormField";
-import CurrencyInput from "@/components/CurrencyInput";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import Checkbox from "@/components/Checkbox";
+import { useForm, Link } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import FormField from '@/components/FormField';
+import CurrencyInput from '@/components/CurrencyInput';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import Checkbox from '@/components/Checkbox';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import { Check, Upload, Tag } from "lucide-react";
-import { useImageUpload } from "@/hooks/useImageUpload";
+} from '@/components/ui/popover';
+import { Check, Upload, Tag } from 'lucide-react';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function Create({
     auth,
@@ -31,15 +31,15 @@ export default function Create({
 }) {
     const { data, setData, post, processing, errors, isDirty, transform } =
         useForm({
-            name: "",
+            name: '',
             image: null,
-            type_id: "",
+            type_id: '',
             suppliers: [],
-            default_supplier_id: "",
-            sku: "",
-            price: "",
-            unit: "",
-            description: "",
+            default_supplier_id: '',
+            sku: '',
+            price: '',
+            unit: '',
+            description: '',
             channel_prices: {},
         });
 
@@ -56,16 +56,16 @@ export default function Create({
                 suppliers: newSuppliers,
                 default_supplier_id:
                     data.default_supplier_id == id
-                        ? ""
+                        ? ''
                         : data.default_supplier_id,
             });
         } else {
-            setData("suppliers", [...currentSuppliers, id]);
+            setData('suppliers', [...currentSuppliers, id]);
         }
     };
 
     const handleChannelPriceChange = (channelId, value) => {
-        setData("channel_prices", {
+        setData('channel_prices', {
             ...data.channel_prices,
             [channelId]: value,
         });
@@ -75,26 +75,26 @@ export default function Create({
         ...data,
         channel_prices: Object.fromEntries(
             Object.entries(data.channel_prices).filter(
-                ([_, value]) => value && Number(value) > 0,
-            ),
+                ([_, value]) => value && Number(value) > 0
+            )
         ),
     }));
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("products.store"));
+        post(route('products.store'));
     };
 
     const selectedSupplierObjects = suppliers.filter((s) =>
-        data.suppliers.includes(s.id),
+        data.suppliers.includes(s.id)
     );
 
     const getSupplierDisplayText = () => {
         if (data.suppliers.length === 0)
-            return "Pilih Supplier (Bisa lebih dari satu)";
+            return 'Pilih Supplier (Bisa lebih dari satu)';
         if (data.suppliers.length === 1) {
             const supplier = suppliers.find((s) => s.id === data.suppliers[0]);
-            return supplier?.name || "1 supplier dipilih";
+            return supplier?.name || '1 supplier dipilih';
         }
         return `${data.suppliers.length} supplier dipilih`;
     };
@@ -122,7 +122,7 @@ export default function Create({
                                     value={data.name}
                                     placeholder="Nama produk lengkap"
                                     onChange={(e) =>
-                                        setData("name", e.target.value)
+                                        setData('name', e.target.value)
                                     }
                                     required
                                 />
@@ -152,7 +152,7 @@ export default function Create({
                                         <Upload className="mr-2 h-4 w-4" />
                                         {data.image
                                             ? data.image.name
-                                            : "Pilih gambar..."}
+                                            : 'Pilih gambar...'}
                                     </Button>
                                 </div>
                             </FormField>
@@ -177,7 +177,7 @@ export default function Create({
                             >
                                 <Select
                                     onValueChange={(value) =>
-                                        setData("type_id", value)
+                                        setData('type_id', value)
                                     }
                                     required
                                 >
@@ -224,11 +224,11 @@ export default function Create({
                                                     <Checkbox
                                                         id={`supp-${supplier.id}`}
                                                         checked={data.suppliers.includes(
-                                                            supplier.id,
+                                                            supplier.id
                                                         )}
                                                         onChange={() =>
                                                             handleSupplierToggle(
-                                                                supplier.id,
+                                                                supplier.id
                                                             )
                                                         }
                                                     />
@@ -239,10 +239,10 @@ export default function Create({
                                                         {supplier.name}
                                                     </label>
                                                     {data.suppliers.includes(
-                                                        supplier.id,
+                                                        supplier.id
                                                     ) && (
-                                                            <Check className="h-4 w-4 text-primary" />
-                                                        )}
+                                                        <Check className="h-4 w-4 text-primary" />
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -260,7 +260,7 @@ export default function Create({
                             <Select
                                 value={data.default_supplier_id?.toString()}
                                 onValueChange={(value) =>
-                                    setData("default_supplier_id", value)
+                                    setData('default_supplier_id', value)
                                 }
                                 disabled={data.suppliers.length === 0}
                             >
@@ -291,7 +291,7 @@ export default function Create({
                                     value={data.sku}
                                     placeholder="Kode SKU unik"
                                     onChange={(e) =>
-                                        setData("sku", e.target.value)
+                                        setData('sku', e.target.value)
                                     }
                                     required
                                 />
@@ -304,7 +304,7 @@ export default function Create({
                                 <Select
                                     value={data.unit}
                                     onValueChange={(value) =>
-                                        setData("unit", value)
+                                        setData('unit', value)
                                     }
                                     required
                                 >
@@ -333,7 +333,7 @@ export default function Create({
                                 value={data.description}
                                 placeholder="Deskripsi detail..."
                                 onChange={(e) =>
-                                    setData("description", e.target.value)
+                                    setData('description', e.target.value)
                                 }
                                 className="h-24"
                             />
@@ -361,7 +361,7 @@ export default function Create({
                                     placeholder="Contoh: 50000"
                                     value={data.price}
                                     onValueChange={(value) =>
-                                        setData("price", value)
+                                        setData('price', value)
                                     }
                                     className="text-lg font-bold"
                                     required
@@ -376,7 +376,7 @@ export default function Create({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {salesChannels
                                     .filter(
-                                        (channel) => channel.code !== "CASH",
+                                        (channel) => channel.code !== 'CASH'
                                     )
                                     .map((channel) => (
                                         <FormField
@@ -385,7 +385,7 @@ export default function Create({
                                             htmlFor={`price-${channel.id}`}
                                             error={
                                                 errors[
-                                                `channel_prices.${channel.id}`
+                                                    `channel_prices.${channel.id}`
                                                 ]
                                             }
                                         >
@@ -394,13 +394,13 @@ export default function Create({
                                                 placeholder={`Ikut harga dasar (${data.price || 0})`}
                                                 value={
                                                     data.channel_prices[
-                                                    channel.id
+                                                        channel.id
                                                     ]
                                                 }
                                                 onValueChange={(val) =>
                                                     handleChannelPriceChange(
                                                         channel.id,
-                                                        val,
+                                                        val
                                                     )
                                                 }
                                             />
@@ -410,7 +410,7 @@ export default function Create({
                         </div>
 
                         <div className="flex items-center justify-end gap-4 pt-4 border-t">
-                            <Link href={route("products.index")}>
+                            <Link href={route('products.index')}>
                                 <Button type="button" variant="outline">
                                     Batal
                                 </Button>

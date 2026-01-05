@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 trait ManagesStock
 {
-    protected function handleStockIn(Model $product, int $locationId, float $qty, float $cost, string $type, Model $ref, ?string $notes = null)
+    protected function handleStockIn(Model $product, int $locationId, float $qty, float $cost, string $type, Model $ref, ?string $notes = null, ?int $channelId = null)
     {
         $inventory = Inventory::lockForUpdate()->firstOrCreate(
             ['product_id' => $product->id, 'location_id' => $locationId],
@@ -35,11 +35,12 @@ trait ManagesStock
             'average_cost_per_unit' => $newAvgCost,
             'reference_type' => get_class($ref),
             'reference_id' => $ref->id,
-            'notes' => $notes
+            'notes' => $notes,
+            'sales_channel_type_id' => $channelId,
         ]);
     }
 
-    protected function handleStockOut(Model $product, int $locationId, float $qty, float $sellPrice, string $type, Model $ref, ?string $notes = null)
+    protected function handleStockOut(Model $product, int $locationId, float $qty, float $sellPrice, string $type, Model $ref, ?string $notes = null, ?int $channelId = null)
     {
         $inventory = Inventory::lockForUpdate()
             ->where('product_id', $product->id)
@@ -57,11 +58,12 @@ trait ManagesStock
             'location_id' => $locationId,
             'type' => $type,
             'quantity' => -abs($qty),
-            'cost_per_unit' => $sellPrice,
+            'cost_per_unit' => $sellPrice ?? 0,
             'average_cost_per_unit' => $inventory->average_cost,
             'reference_type' => get_class($ref),
             'reference_id' => $ref->id,
-            'notes' => $notes
+            'notes' => $notes,
+            'sales_channel_type_id' => $channelId,
         ]);
     }
 }

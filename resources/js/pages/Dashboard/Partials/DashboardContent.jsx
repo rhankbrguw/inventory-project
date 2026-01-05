@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
     BarChart,
     Bar,
@@ -19,13 +19,13 @@ import {
     Line,
     Legend,
     ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
     ChartLegendContent,
-} from "@/components/ui/chart";
+} from '@/components/ui/chart';
 import {
     DollarSign,
     Package,
@@ -39,9 +39,9 @@ import {
     AlertTriangle,
     Receipt,
     Percent,
-} from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import DashboardMobileCard from "./DashboardMobileCard";
+} from 'lucide-react';
+import { formatCurrency, formatNumber } from '@/lib/utils';
+import DashboardMobileCard from './DashboardMobileCard';
 
 export default function DashboardContent({
     stats,
@@ -65,9 +65,21 @@ export default function DashboardContent({
                     value={formatCurrency(stats.net_profit)}
                     subtext={`Margin ${stats.gross_margin.toFixed(1)}%`}
                     icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
-                    iconBg={stats.net_profit >= 0 ? "bg-success/10" : "bg-destructive/10"}
-                    iconColor={stats.net_profit >= 0 ? "text-success" : "text-destructive"}
-                    valueColor={stats.net_profit >= 0 ? "text-success" : "text-destructive"}
+                    iconBg={
+                        stats.net_profit >= 0
+                            ? 'bg-success/10'
+                            : 'bg-destructive/10'
+                    }
+                    iconColor={
+                        stats.net_profit >= 0
+                            ? 'text-success'
+                            : 'text-destructive'
+                    }
+                    valueColor={
+                        stats.net_profit >= 0
+                            ? 'text-success'
+                            : 'text-destructive'
+                    }
                 />
                 <StatCard
                     title="Pembelian"
@@ -83,11 +95,17 @@ export default function DashboardContent({
                     subtext={
                         stats.low_stock_count > 0
                             ? `${formatNumber(stats.low_stock_count)} item butuh restock`
-                            : "Stok normal"
+                            : 'Stok normal'
                     }
                     icon={stats.low_stock_count > 0 ? AlertTriangle : Package}
-                    iconBg={stats.low_stock_count > 0 ? "bg-warning/10" : "bg-info/10"}
-                    iconColor={stats.low_stock_count > 0 ? "text-warning" : "text-info"}
+                    iconBg={
+                        stats.low_stock_count > 0
+                            ? 'bg-warning/10'
+                            : 'bg-info/10'
+                    }
+                    iconColor={
+                        stats.low_stock_count > 0 ? 'text-warning' : 'text-info'
+                    }
                 />
             </div>
 
@@ -106,12 +124,12 @@ export default function DashboardContent({
                             <ChartContainer
                                 config={{
                                     sales: {
-                                        label: "Penjualan",
-                                        color: "hsl(var(--success))",
+                                        label: 'Penjualan',
+                                        color: 'hsl(var(--success))',
                                     },
                                     purchases: {
-                                        label: "Pembelian",
-                                        color: "hsl(var(--destructive))",
+                                        label: 'Pembelian',
+                                        color: 'hsl(var(--destructive))',
                                     },
                                 }}
                                 className="h-[200px] sm:h-[240px] w-full"
@@ -170,9 +188,9 @@ export default function DashboardContent({
                                                                 >
                                                                     <span className="text-muted-foreground">
                                                                         {entry.name ===
-                                                                            "sales"
-                                                                            ? "Penjualan"
-                                                                            : "Pembelian"}
+                                                                        'sales'
+                                                                            ? 'Penjualan'
+                                                                            : 'Pembelian'}
                                                                         :
                                                                     </span>
                                                                     <span
@@ -180,17 +198,17 @@ export default function DashboardContent({
                                                                         style={{
                                                                             color:
                                                                                 entry.name ===
-                                                                                    "sales"
-                                                                                    ? "hsl(var(--success))"
-                                                                                    : "hsl(var(--destructive))",
+                                                                                'sales'
+                                                                                    ? 'hsl(var(--success))'
+                                                                                    : 'hsl(var(--destructive))',
                                                                         }}
                                                                     >
                                                                         {formatCurrency(
-                                                                            entry.value,
+                                                                            entry.value
                                                                         )}
                                                                     </span>
                                                                 </div>
-                                                            ),
+                                                            )
                                                         )}
                                                     </div>
                                                 );
@@ -201,8 +219,8 @@ export default function DashboardContent({
                                     <Legend
                                         content={<ChartLegendContent />}
                                         wrapperStyle={{
-                                            paddingTop: "8px",
-                                            fontSize: "12px",
+                                            paddingTop: '8px',
+                                            fontSize: '12px',
                                         }}
                                     />
                                     <Line
@@ -265,7 +283,7 @@ const StatCard = ({
         </CardHeader>
         <CardContent className="pt-0 space-y-1">
             <div
-                className={`text-xl sm:text-2xl font-bold ${valueColor || ""}`}
+                className={`text-xl sm:text-2xl font-bold ${valueColor || ''}`}
             >
                 {value}
             </div>
@@ -331,8 +349,8 @@ const TopProductsChart = ({ data }) => (
                 <ChartContainer
                     config={{
                         total_qty: {
-                            label: "Terjual",
-                            color: "hsl(var(--chart-2))",
+                            label: 'Terjual',
+                            color: 'hsl(var(--chart-2))',
                         },
                     }}
                     className="h-[220px] w-full"
@@ -372,10 +390,10 @@ const TopProductsChart = ({ data }) => (
                             radius={4}
                             barSize={18}
                             label={{
-                                position: "right",
+                                position: 'right',
                                 formatter: (value) => formatNumber(value),
                                 fontSize: 11,
-                                fill: "hsl(var(--foreground))",
+                                fill: 'hsl(var(--foreground))',
                             }}
                         />
                     </BarChart>
@@ -392,25 +410,25 @@ const TopProductsChart = ({ data }) => (
 );
 
 const CHART_COLORS = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    'hsl(var(--chart-1))',
+    'hsl(var(--chart-2))',
+    'hsl(var(--chart-3))',
+    'hsl(var(--chart-4))',
+    'hsl(var(--chart-5))',
 ];
 
 const PaymentMethodsChart = ({ data }) => {
     const pieData =
         data?.length > 0
             ? data.map((item, index) => ({
-                ...item,
-                fill: CHART_COLORS[index % CHART_COLORS.length],
-            }))
+                  ...item,
+                  fill: CHART_COLORS[index % CHART_COLORS.length],
+              }))
             : [];
 
     const totalTransactions = pieData.reduce(
         (acc, curr) => acc + curr.count,
-        0,
+        0
     );
 
     const renderCustomLabel = ({
@@ -432,7 +450,7 @@ const PaymentMethodsChart = ({ data }) => {
                 x={x}
                 y={y}
                 fill="white"
-                textAnchor={x > cx ? "start" : "end"}
+                textAnchor={x > cx ? 'start' : 'end'}
                 dominantBaseline="central"
                 className="font-bold text-xs"
             >
@@ -495,8 +513,8 @@ const PaymentMethodsChart = ({ data }) => {
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
                                                         {formatNumber(
-                                                            data.value,
-                                                        )}{" "}
+                                                            data.value
+                                                        )}{' '}
                                                         transaksi ({percentage}
                                                         %)
                                                     </p>
@@ -579,8 +597,12 @@ const QuickStatsCard = ({ stats, dateRangeLabel }) => (
                 label="Gross Margin"
                 value={`${stats.gross_margin.toFixed(1)}%`}
                 subvalue="Dari penjualan"
-                iconBg={stats.gross_margin > 20 ? "bg-success/10" : "bg-muted"}
-                iconColor={stats.gross_margin > 20 ? "text-success" : "text-muted-foreground"}
+                iconBg={stats.gross_margin > 20 ? 'bg-success/10' : 'bg-muted'}
+                iconColor={
+                    stats.gross_margin > 20
+                        ? 'text-success'
+                        : 'text-muted-foreground'
+                }
             />
             <QuickStatItem
                 icon={Package}
@@ -589,18 +611,28 @@ const QuickStatsCard = ({ stats, dateRangeLabel }) => (
                 subvalue={
                     stats.low_stock_count > 0
                         ? `${formatNumber(stats.low_stock_count)} item perlu restock`
-                        : "Semua stok normal"
+                        : 'Semua stok normal'
                 }
-                iconBg={stats.low_stock_count > 0 ? "bg-warning/10" : "bg-info/10"}
-                iconColor={stats.low_stock_count > 0 ? "text-warning" : "text-info"}
+                iconBg={
+                    stats.low_stock_count > 0 ? 'bg-warning/10' : 'bg-info/10'
+                }
+                iconColor={
+                    stats.low_stock_count > 0 ? 'text-warning' : 'text-info'
+                }
             />
             <QuickStatItem
                 icon={stats.net_profit >= 0 ? TrendingUp : TrendingDown}
                 label="Net Profit"
                 value={formatCurrency(stats.net_profit)}
                 subvalue="Setelah HPP"
-                iconBg={stats.net_profit >= 0 ? "bg-success/10" : "bg-destructive/10"}
-                iconColor={stats.net_profit >= 0 ? "text-success" : "text-destructive"}
+                iconBg={
+                    stats.net_profit >= 0
+                        ? 'bg-success/10'
+                        : 'bg-destructive/10'
+                }
+                iconColor={
+                    stats.net_profit >= 0 ? 'text-success' : 'text-destructive'
+                }
             />
         </CardContent>
     </Card>

@@ -1,12 +1,12 @@
-import { useState, useMemo, useCallback, useRef } from "react";
-import { router } from "@inertiajs/react";
-import { formatNumber } from "@/lib/utils";
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { router } from '@inertiajs/react';
+import { formatNumber } from '@/lib/utils';
 
 const cleanNumberString = (numStr) => {
-    if (typeof numStr !== "string") {
+    if (typeof numStr !== 'string') {
         return String(numStr);
     }
-    return numStr.replace(/\./g, "").replace(/,/g, ".");
+    return numStr.replace(/\./g, '').replace(/,/g, '.');
 };
 
 export default function usePurchaseCart(initialCart = []) {
@@ -38,7 +38,7 @@ export default function usePurchaseCart(initialCart = []) {
 
     const cartGroups = useMemo(() => {
         return effectiveCart.reduce((acc, item) => {
-            const supplierName = item.supplier?.name || "Supplier Umum";
+            const supplierName = item.supplier?.name || 'Supplier Umum';
             if (!acc[supplierName]) {
                 acc[supplierName] = {
                     supplier_id: item.supplier?.id || null,
@@ -52,20 +52,20 @@ export default function usePurchaseCart(initialCart = []) {
 
     const selectedProductIds = useMemo(
         () => effectiveCart.map((item) => item.product.id),
-        [effectiveCart],
+        [effectiveCart]
     );
 
     const removeItem = useCallback(
         (cartItemId) => {
             if (processingItem === cartItemId) return;
             setProcessingItem(cartItemId);
-            router.delete(route("purchase.cart.destroy.item", cartItemId), {
+            router.delete(route('purchase.cart.destroy.item', cartItemId), {
                 preserveScroll: true,
                 onFinish: () => setProcessingItem(null),
-                onError: () => { },
+                onError: () => {},
             });
         },
-        [processingItem],
+        [processingItem]
     );
 
     const addItem = useCallback(
@@ -73,7 +73,7 @@ export default function usePurchaseCart(initialCart = []) {
             if (processingItem === product.id) return;
 
             const existingItem = cart.find(
-                (item) => item.product.id === product.id,
+                (item) => item.product.id === product.id
             );
 
             setProcessingItem(product.id);
@@ -82,19 +82,19 @@ export default function usePurchaseCart(initialCart = []) {
                 const newQuantity =
                     parseFloat(String(existingItem.quantity)) + 1;
                 router.patch(
-                    route("purchase.cart.update", {
+                    route('purchase.cart.update', {
                         cartItem: existingItem.id,
                     }),
                     { quantity: newQuantity },
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                        onError: () => { },
-                    },
+                        onError: () => {},
+                    }
                 );
             } else {
                 router.post(
-                    route("purchase.cart.store"),
+                    route('purchase.cart.store'),
                     {
                         product_id: product.id,
                         supplier_id: product.default_supplier_id,
@@ -104,12 +104,12 @@ export default function usePurchaseCart(initialCart = []) {
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                        onError: () => { },
-                    },
+                        onError: () => {},
+                    }
                 );
             }
         },
-        [cart, processingItem],
+        [cart, processingItem]
     );
 
     const removeSupplierGroup = useCallback(
@@ -117,7 +117,7 @@ export default function usePurchaseCart(initialCart = []) {
             if (processingGroup === supplierId) return;
             setProcessingGroup(supplierId);
 
-            router.delete(route("purchase.cart.destroy.supplier"), {
+            router.delete(route('purchase.cart.destroy.supplier'), {
                 data: { supplier_id: supplierId },
                 preserveScroll: true,
                 onFinish: () => {
@@ -130,11 +130,11 @@ export default function usePurchaseCart(initialCart = []) {
                 onError: () => setProcessingGroup(false),
             });
         },
-        [processingGroup],
+        [processingGroup]
     );
 
     const toggleSupplierSelection = useCallback((supplierId) => {
-        const key = supplierId === null ? "null" : supplierId;
+        const key = supplierId === null ? 'null' : supplierId;
         setSelectedSuppliers((prev) => ({
             ...prev,
             [key]: !prev[key],
@@ -143,17 +143,17 @@ export default function usePurchaseCart(initialCart = []) {
 
     const isSupplierSelected = useCallback(
         (supplierId) => {
-            const key = supplierId === null ? "null" : supplierId;
+            const key = supplierId === null ? 'null' : supplierId;
             return !!selectedSuppliers[key];
         },
-        [selectedSuppliers],
+        [selectedSuppliers]
     );
 
     const removeSelectedGroups = useCallback(() => {
         const supplierIdsToRemove = Object.entries(selectedSuppliers)
             .filter(([, isSelected]) => isSelected)
             .map(([supplierId]) =>
-                supplierId === "null" ? null : parseInt(supplierId),
+                supplierId === 'null' ? null : parseInt(supplierId)
             );
 
         if (supplierIdsToRemove.length === 0) {
@@ -165,11 +165,11 @@ export default function usePurchaseCart(initialCart = []) {
 
     const hasSelectedGroups = useMemo(
         () => Object.values(selectedSuppliers).some((isSelected) => isSelected),
-        [selectedSuppliers],
+        [selectedSuppliers]
     );
 
     const updateCartItem = useCallback((item, field, value) => {
-        const isQty = field === "quantity";
+        const isQty = field === 'quantity';
         const localStateSetter = isQty ? setLocalQuantities : setLocalCosts;
         const cleanedValue = cleanNumberString(value);
 
@@ -179,7 +179,7 @@ export default function usePurchaseCart(initialCart = []) {
             clearTimeout(updateTimeoutRef.current[item.id]);
         }
 
-        if (value === "") return;
+        if (value === '') return;
 
         updateTimeoutRef.current[item.id] = setTimeout(() => {
             const newNumericValue = parseFloat(cleanedValue);
@@ -207,7 +207,7 @@ export default function usePurchaseCart(initialCart = []) {
 
             setProcessingItem(item.id);
             router.patch(
-                route("purchase.cart.update", { cartItem: item.id }),
+                route('purchase.cart.update', { cartItem: item.id }),
                 payload,
                 {
                     preserveScroll: true,
@@ -219,8 +219,8 @@ export default function usePurchaseCart(initialCart = []) {
                             return newState;
                         });
                     },
-                    onError: () => { },
-                },
+                    onError: () => {},
+                }
             );
         }, 800);
     }, []);
@@ -232,7 +232,7 @@ export default function usePurchaseCart(initialCart = []) {
             }
             return formatNumber(item.quantity);
         },
-        [localQuantities],
+        [localQuantities]
     );
 
     const getItemCost = useCallback(
@@ -240,9 +240,9 @@ export default function usePurchaseCart(initialCart = []) {
             if (localCosts[item.id] !== undefined) {
                 return localCosts[item.id];
             }
-            return item.cost_per_unit?.toString() || "0";
+            return item.cost_per_unit?.toString() || '0';
         },
-        [localCosts],
+        [localCosts]
     );
 
     const totalCartItems = cart.length;

@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
-import InputError from "@/components/InputError";
-import { useForm } from "@inertiajs/react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/PasswordInput";
+import { useRef, useState } from 'react';
+import InputError from '@/components/InputError';
+import { useForm } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/PasswordInput';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,15 +14,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
     CardDescription,
     CardHeader,
     CardTitle,
     CardContent,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
-export default function DeleteUserForm({ className = "" }) {
+export default function DeleteUserForm({ className = '' }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const passwordInput = useRef();
 
@@ -34,12 +34,12 @@ export default function DeleteUserForm({ className = "" }) {
         reset,
         errors,
     } = useForm({
-        password: "",
+        password: '',
     });
 
     const deleteUser = (e) => {
         e.preventDefault();
-        destroy(route("profile.destroy"), {
+        destroy(route('profile.destroy'), {
             preserveScroll: true,
             onSuccess: () => closeModal(),
             onError: () => passwordInput.current.focus(),
@@ -93,7 +93,7 @@ export default function DeleteUserForm({ className = "" }) {
                                     ref={passwordInput}
                                     value={data.password}
                                     onChange={(e) =>
-                                        setData("password", e.target.value)
+                                        setData('password', e.target.value)
                                     }
                                     className="mt-1 block w-full"
                                     autoFocus

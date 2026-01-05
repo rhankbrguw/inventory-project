@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,51 +8,39 @@
     :root {
         --background: 0 0% 100%;
         --foreground: 220 13% 18%;
-
         --card: 0 0% 100%;
         --card-foreground: 220 13% 18%;
-
         --popover: 0 0% 100%;
         --popover-foreground: 220 13% 18%;
-
         --primary: 220 13% 18%;
         --primary-foreground: 0 0% 98%;
-
         --secondary: 220 14% 96%;
         --secondary-foreground: 220 9% 46%;
-
         --muted: 220 14% 96%;
         --muted-foreground: 220 9% 46%;
-
         --accent: 220 14% 96%;
         --accent-foreground: 220 13% 18%;
-
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 98%;
-
         --success: 142 76% 36%;
         --success-foreground: 142 76% 36%;
-
         --info: 221 83% 53%;
         --warning: 38 92% 50%;
         --highlight: 262 83% 58%;
         --sky: 199 89% 48%;
-
         --emerald: 142 76% 36%;
         --orange: 25 95% 53%;
         --amber: 38 92% 50%;
         --blue: 221 83% 53%;
         --purple: 262 83% 58%;
         --red: 0 84% 60%;
-
+        --grab-green: 142 76% 28%;
+        --tiktok-black: 220 13% 18%;
         --status-online: 139 51% 51%;
-
         --border: 220 13% 91%;
         --input: 220 13% 91%;
         --ring: 220 13% 18%;
-
         --radius: 0.5rem;
-
         --chart-1: 221 83% 53%;
         --chart-2: 142 76% 36%;
         --chart-3: 38 92% 50%;
@@ -63,69 +51,59 @@
     .dark {
         --background: 220 13% 9%;
         --foreground: 0 0% 95%;
-
         --card: 220 13% 9%;
         --card-foreground: 0 0% 95%;
-
         --popover: 220 13% 9%;
         --popover-foreground: 0 0% 95%;
-
         --primary: 0 0% 95%;
         --primary-foreground: 220 13% 18%;
-
         --secondary: 220 13% 14%;
         --secondary-foreground: 0 0% 95%;
-
         --muted: 220 13% 14%;
         --muted-foreground: 220 9% 64%;
-
         --accent: 220 13% 14%;
         --accent-foreground: 0 0% 95%;
-
         --destructive: 0 62% 30%;
         --destructive-foreground: 0 0% 95%;
-
         --success: 142 71% 45%;
         --success-foreground: 142 71% 45%;
-
         --info: 217 91% 60%;
         --warning: 48 96% 89%;
         --highlight: 270 95% 75%;
         --sky: 199 89% 70%;
-
         --emerald: 142 71% 45%;
         --orange: 25 95% 60%;
         --amber: 48 96% 89%;
         --blue: 217 91% 60%;
         --purple: 270 95% 75%;
         --red: 0 62% 30%;
-
+        --grab-green: 142 71% 35%;
+        --tiktok-black: 0 0% 95%;
         --status-online: 139 51% 51%;
-
         --border: 220 13% 14%;
         --input: 220 13% 14%;
         --ring: 0 0% 83%;
-
         --chart-1: 217 91% 60%;
         --chart-2: 142 71% 45%;
         --chart-3: 48 96% 89%;
         --chart-4: 270 95% 75%;
         --chart-5: 199 89% 70%;
     }
-}
 
-@layer base {
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
-        font-family: "Montserrat", sans-serif;
+        font-family: 'Montserrat', sans-serif;
     }
-    [data-state="open"] > div[vaul-overlay] {
+
+    [data-state='open'] > div[vaul-overlay] {
         @apply backdrop-blur-sm bg-background/20;
     }
-    [data-state="open"] > div[vaul-overlay][vaul-snap-points] {
+
+    [data-state='open'] > div[vaul-overlay][vaul-snap-points] {
         @apply backdrop-blur-sm bg-background/20;
     }
 }
@@ -183,10 +161,94 @@
         color: hsl(var(--success));
     }
 
+    .transaction-type-pembelian {
+        @apply badge-base;
+        background-color: hsl(var(--orange) / 0.15);
+        color: hsl(var(--orange));
+    }
+
+    .transaction-type-penjualan {
+        @apply badge-base;
+        background-color: hsl(var(--success) / 0.15);
+        color: hsl(var(--success));
+    }
+
+    .transaction-type-transfer {
+        @apply badge-base;
+        background-color: hsl(var(--purple) / 0.15);
+        color: hsl(var(--purple));
+    }
+
+    .status-completed {
+        @apply badge-base;
+        background-color: hsl(var(--success) / 0.15);
+        color: hsl(var(--success));
+        border-color: hsl(var(--success) / 0.2);
+    }
+
+    .status-pending-approval {
+        @apply badge-base;
+        background-color: hsl(var(--warning) / 0.15);
+        color: hsl(var(--warning));
+        border-color: hsl(var(--warning) / 0.2);
+    }
+
+    .status-approved {
+        @apply badge-base;
+        background-color: hsl(var(--info) / 0.15);
+        color: hsl(var(--info));
+        border-color: hsl(var(--info) / 0.2);
+    }
+
+    .status-rejected {
+        @apply badge-base;
+        background-color: hsl(var(--destructive) / 0.15);
+        color: hsl(var(--destructive));
+        border-color: hsl(var(--destructive) / 0.2);
+    }
+
+    .status-shipping {
+        @apply badge-base;
+        background-color: hsl(var(--purple) / 0.15);
+        color: hsl(var(--purple));
+        border-color: hsl(var(--purple) / 0.2);
+    }
+
+    .channel-cash {
+        @apply badge-base;
+        background-color: hsl(var(--primary) / 0.15);
+        color: hsl(var(--primary));
+    }
+
+    .channel-gofood {
+        @apply badge-base;
+        background-color: hsl(var(--success) / 0.15);
+        color: hsl(var(--success));
+    }
+
+    .channel-grabfood {
+        @apply badge-base;
+        background-color: hsl(var(--grab-green) / 0.15);
+        color: hsl(var(--grab-green));
+    }
+
+    .channel-shopeefood {
+        @apply badge-base;
+        background-color: hsl(var(--orange) / 0.15);
+        color: hsl(var(--orange));
+    }
+
+    .channel-tiktokshop {
+        @apply badge-base;
+        background-color: hsl(var(--tiktok-black) / 0.15);
+        color: hsl(var(--tiktok-black));
+    }
+
     .btn-purchase {
         background-color: hsl(var(--secondary));
         color: hsl(var(--secondary-foreground));
     }
+
     .btn-purchase:hover {
         background-color: hsl(var(--secondary) / 0.8);
     }
@@ -194,6 +256,7 @@
     .btn-sell {
         @apply bg-success text-primary-foreground;
     }
+
     .btn-sell:hover {
         @apply bg-success/90;
     }
@@ -201,6 +264,7 @@
     .btn-transfer {
         @apply bg-primary text-primary-foreground;
     }
+
     .btn-transfer:hover {
         @apply bg-primary/90;
     }

@@ -1,10 +1,10 @@
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Search, ShieldAlert } from "lucide-react";
-import { cn } from "@/lib/utils";
-import ProductCard from "./ProductCard";
-import Pagination from "@/components/Pagination";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Search, ShieldAlert } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import ProductCard from './ProductCard';
+import Pagination from '@/components/Pagination';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function PurchaseProductGrid({
     products,
@@ -26,9 +26,9 @@ export default function PurchaseProductGrid({
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <Input
                             placeholder="Cari produk (Nama atau SKU)..."
-                            value={params.search || ""}
+                            value={params.search || ''}
                             onChange={(e) =>
-                                setFilter("search", e.target.value)
+                                setFilter('search', e.target.value)
                             }
                             className="pl-9 h-9 text-sm"
                             disabled={!canPurchase}
@@ -54,12 +54,12 @@ export default function PurchaseProductGrid({
                         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth -mx-1 px-1">
                             <button
                                 type="button"
-                                onClick={() => setFilter("type_id", "all")}
+                                onClick={() => setFilter('type_id', 'all')}
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border snap-start flex-shrink-0",
-                                    params.type_id === "all" || !params.type_id
-                                        ? "bg-primary text-primary-foreground border-primary"
-                                        : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
+                                    'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border snap-start flex-shrink-0',
+                                    params.type_id === 'all' || !params.type_id
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30'
                                 )}
                             >
                                 Semua
@@ -69,13 +69,13 @@ export default function PurchaseProductGrid({
                                     key={type.id}
                                     type="button"
                                     onClick={() =>
-                                        setFilter("type_id", type.id.toString())
+                                        setFilter('type_id', type.id.toString())
                                     }
                                     className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border snap-start flex-shrink-0",
+                                        'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border snap-start flex-shrink-0',
                                         params.type_id === type.id.toString()
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30",
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-muted/30'
                                     )}
                                 >
                                     {type.name}
@@ -93,7 +93,7 @@ export default function PurchaseProductGrid({
                                         product={product}
                                         onClick={() => onProductClick(product)}
                                         selected={selectedProductIds.includes(
-                                            product.id,
+                                            product.id
                                         )}
                                         processing={
                                             processingItem === product.id

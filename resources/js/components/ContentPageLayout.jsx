@@ -1,7 +1,7 @@
-import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
+import { Head, Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ContentPageLayout({
     title,

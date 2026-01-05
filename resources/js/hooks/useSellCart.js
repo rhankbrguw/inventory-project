@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, useRef } from "react";
-import { router } from "@inertiajs/react";
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { router } from '@inertiajs/react';
 
 export function useSellCart(cart = [], locationId) {
     const [processingItem, setProcessingItem] = useState(null);
@@ -10,7 +10,7 @@ export function useSellCart(cart = [], locationId) {
         if (cart.length === 0) return [];
         if (!locationId) return [];
         return cart.filter(
-            (item) => item.location?.id.toString() === locationId,
+            (item) => item.location?.id.toString() === locationId
         );
     }, [cart, locationId]);
 
@@ -26,16 +26,16 @@ export function useSellCart(cart = [], locationId) {
 
     const selectedProductIds = useMemo(
         () => effectiveCart.map((item) => item.product.id),
-        [effectiveCart],
+        [effectiveCart]
     );
 
     const totalCartItems = useMemo(
         () =>
             effectiveCart.reduce(
                 (sum, item) => sum + (parseFloat(item.quantity) || 0),
-                0,
+                0
             ),
-        [effectiveCart],
+        [effectiveCart]
     );
 
     const totalCartPrice = useMemo(
@@ -45,9 +45,9 @@ export function useSellCart(cart = [], locationId) {
                     sum +
                     (parseFloat(item.quantity) || 0) *
                     (Number(item.sell_price) || 0),
-                0,
+                0
             ),
-        [effectiveCart],
+        [effectiveCart]
     );
 
     const updateCartItem = useCallback((item, value) => {
@@ -57,11 +57,11 @@ export function useSellCart(cart = [], locationId) {
             clearTimeout(updateTimeoutRef.current[item.id]);
         }
 
-        if (value === "") return;
+        if (value === '') return;
 
         updateTimeoutRef.current[item.id] = setTimeout(() => {
             const normalizedValue =
-                typeof value === "string" ? value.replace(/,/g, ".") : value;
+                typeof value === 'string' ? value.replace(/,/g, '.') : value;
 
             const newQty = parseFloat(normalizedValue);
 
@@ -72,7 +72,7 @@ export function useSellCart(cart = [], locationId) {
             setProcessingItem(item.id);
 
             router.patch(
-                route("sell.cart.update", { cartItem: item.id }),
+                route('sell.cart.update', { cartItem: item.id }),
                 payload,
                 {
                     preserveScroll: true,
@@ -85,7 +85,7 @@ export function useSellCart(cart = [], locationId) {
                         });
                     },
                     onError: () => setProcessingItem(null),
-                },
+                }
             );
         }, 800);
     }, []);
@@ -95,23 +95,30 @@ export function useSellCart(cart = [], locationId) {
             if (!locationId || processingItem) return;
             setProcessingItem(itemId);
             router.delete(
-                route("sell.cart.destroy.item", { cartItem: itemId }),
+                route('sell.cart.destroy.item', { cartItem: itemId }),
                 {
                     preserveScroll: true,
                     onFinish: () => setProcessingItem(null),
-                },
+                }
             );
         },
-        [locationId, processingItem],
+        [locationId, processingItem]
     );
 
     const addItem = useCallback(
-        (product, sellPrice = null) => {
+        (product, sellPrice = null, channelId = null) => {
             if (!locationId || processingItem === product.id) return;
 
-            const existingItem = effectiveCart.find(
-                (item) => item.product.id === product.id,
-            );
+            const existingItem = effectiveCart.find((item) => {
+                const itemChannelId =
+                    item.sales_channel?.id?.toString() || null;
+                const targetChannelId = channelId?.toString() || null;
+
+                return (
+                    item.product.id === product.id &&
+                    itemChannelId === targetChannelId
+                );
+            });
 
             setProcessingItem(product.id);
 
@@ -120,38 +127,39 @@ export function useSellCart(cart = [], locationId) {
                 const newQuantity = currentQty + 1;
 
                 router.patch(
-                    route("sell.cart.update", {
+                    route('sell.cart.update', {
                         cartItem: existingItem.id,
                     }),
                     { quantity: newQuantity },
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                    },
+                    }
                 );
             } else {
                 router.post(
-                    route("sell.cart.store"),
+                    route('sell.cart.store'),
                     {
                         product_id: product.id,
                         location_id: locationId,
                         quantity: 1,
                         sell_price: sellPrice ?? product.price,
+                        sales_channel_id: channelId,
                     },
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                    },
+                    }
                 );
             }
         },
-        [locationId, processingItem, effectiveCart],
+        [locationId, processingItem, effectiveCart]
     );
 
     const clearCart = useCallback(() => {
         if (!locationId || effectiveCart.length === 0 || processingItem) return;
-        setProcessingItem("all");
-        router.delete(route("sell.cart.destroy.location"), {
+        setProcessingItem('all');
+        router.delete(route('sell.cart.destroy.location'), {
             data: { location_id: locationId },
             preserveScroll: true,
             onFinish: () => setProcessingItem(null),
@@ -165,7 +173,7 @@ export function useSellCart(cart = [], locationId) {
             }
             return item.quantity;
         },
-        [localQuantities],
+        [localQuantities]
     );
 
     return {
