@@ -4,6 +4,8 @@ export function usePermission() {
     const { auth } = usePage().props;
     const user = auth.user;
 
+    const can = auth.can || {};
+
     const defs = auth.role_definitions || {
         SUPER_ADMIN: 1,
         THRESHOLD_MANAGERIAL: 10,
@@ -12,10 +14,14 @@ export function usePermission() {
 
     if (!user) {
         return {
+            user: null,
+            can: {},
             isSuperAdmin: false,
             isManager: false,
             isOperational: false,
             level: 999,
+            canManage: false,
+            canOperate: false,
         };
     }
 
@@ -25,11 +31,11 @@ export function usePermission() {
 
     return {
         user,
+        can,
         level: user.level,
         isSuperAdmin,
         isManager,
         isOperational,
-
         canManage: isManager,
         canOperate: isOperational,
     };

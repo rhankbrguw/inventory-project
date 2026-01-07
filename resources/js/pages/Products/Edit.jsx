@@ -25,6 +25,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 export default function Edit({
     auth,
     product: productResource,
+    localOverride,
     types,
     suppliers,
     validUnits,
@@ -36,7 +37,7 @@ export default function Edit({
         useForm({
             name: product.name || '',
             sku: product.sku || '',
-            price: product.price || '',
+            price: localOverride?.selling_price || product.price || '',
             unit: product.unit || '',
             description: product.description || '',
             image: null,
@@ -44,7 +45,9 @@ export default function Edit({
             suppliers: product.suppliers
                 ? product.suppliers.map((s) => s.id)
                 : [],
-            default_supplier_id: product.default_supplier?.id?.toString() || '',
+            default_supplier_id: localOverride?.local_supplier_id?.toString()
+                || product.default_supplier?.id?.toString()
+                || '',
 
             channel_prices: product.channel_prices || {},
 
@@ -250,8 +253,8 @@ export default function Edit({
                                                     {data.suppliers.includes(
                                                         supplier.id
                                                     ) && (
-                                                        <Check className="h-4 w-4 text-primary" />
-                                                    )}
+                                                            <Check className="h-4 w-4 text-primary" />
+                                                        )}
                                                 </div>
                                             ))}
                                         </div>
@@ -267,20 +270,15 @@ export default function Edit({
                         >
                             <Select
                                 value={data.default_supplier_id?.toString()}
-                                onValueChange={(value) =>
-                                    setData('default_supplier_id', value)
-                                }
-                                disabled={data.suppliers.length === 0}
+                                onValueChange={(value) => setData('default_supplier_id', value)}
+                                disabled={data.suppliers.length === 0 || !suppliers || suppliers.length === 0}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih Supplier Utama" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {selectedSupplierObjects.map((supplier) => (
-                                        <SelectItem
-                                            key={supplier.id}
-                                            value={supplier.id.toString()}
-                                        >
+                                    {suppliers && selectedSupplierObjects.map((supplier) => (
+                                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
                                             {supplier.name}
                                         </SelectItem>
                                     ))}
@@ -390,7 +388,7 @@ export default function Edit({
                                             htmlFor={`price-${channel.id}`}
                                             error={
                                                 errors[
-                                                    `channel_prices.${channel.id}`
+                                                `channel_prices.${channel.id}`
                                                 ]
                                             }
                                         >
@@ -399,7 +397,7 @@ export default function Edit({
                                                 placeholder={`Ikut harga dasar (${data.price || 0})`}
                                                 value={
                                                     data.channel_prices[
-                                                        channel.id
+                                                    channel.id
                                                     ]
                                                 }
                                                 onValueChange={(val) =>

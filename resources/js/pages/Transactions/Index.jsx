@@ -17,12 +17,11 @@ import { Button } from '@/components/ui/button';
 import {
     Eye,
     MoreVertical,
-    Plus,
-    ShoppingCart,
     Truck,
+    ShoppingCart,
     ArrowRightLeft,
+    Plus,
 } from 'lucide-react';
-import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -31,23 +30,12 @@ export default function Index({
     transactionTypes,
     filters = {},
 }) {
-    const { auth: authData } = usePage().props;
-
-    const { isSuperAdmin, isManager, isOperational } = usePermission();
+    const { can } = usePage().props.auth;
 
     const { params, setFilter } = useIndexPageFilters(
         'transactions.index',
         filters
     );
-
-    const hasLocations = locations.length > 0 || isSuperAdmin;
-
-    const canCreatePurchase =
-        hasLocations && (isSuperAdmin || isManager || isOperational);
-    const canCreateSell =
-        hasLocations && (isSuperAdmin || isManager || isOperational);
-
-    const canCreateTransfer = hasLocations && (isSuperAdmin || isManager);
 
     const renderActionDropdown = (transaction) => (
         <DropdownMenu>
@@ -65,7 +53,7 @@ export default function Index({
                     className="cursor-pointer"
                     onSelect={() => router.get(transaction.url)}
                 >
-                    <Eye className="w-4 h-4 mr-2" /> Lihat
+                    <Eye className="w-4 h-4 mr-2" /> Lihat Detail
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
@@ -78,7 +66,7 @@ export default function Index({
             headerActions={
                 <div className="flex items-center gap-2">
                     <div className="hidden sm:flex items-center gap-2">
-                        {canCreatePurchase && (
+                        {can.create_purchase && (
                             <Button
                                 onClick={() =>
                                     router.get(
@@ -91,7 +79,7 @@ export default function Index({
                                 Tambah Pembelian
                             </Button>
                         )}
-                        {canCreateSell && (
+                        {can.create_sell && (
                             <Button
                                 onClick={() =>
                                     router.get(
@@ -104,7 +92,7 @@ export default function Index({
                                 Tambah Penjualan
                             </Button>
                         )}
-                        {canCreateTransfer && (
+                        {can.create_transfer && (
                             <Button
                                 onClick={() =>
                                     router.get(
@@ -118,64 +106,69 @@ export default function Index({
                             </Button>
                         )}
                     </div>
+
                     <div className="sm:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    size="icon"
-                                    className="rounded-full h-10 w-10"
-                                >
-                                    <Plus className="h-5 w-5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                {canCreatePurchase && (
-                                    <DropdownMenuItem
-                                        className="cursor-pointer"
-                                        onSelect={() =>
-                                            router.get(
-                                                route(
-                                                    'transactions.purchases.create'
-                                                )
-                                            )
-                                        }
+                        {(can.create_purchase ||
+                            can.create_sell ||
+                            can.create_transfer) && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        size="icon"
+                                        className="rounded-full h-10 w-10"
                                     >
-                                        <Truck className="w-4 h-4 mr-2" />
-                                        Pembelian
-                                    </DropdownMenuItem>
-                                )}
-                                {canCreateSell && (
-                                    <DropdownMenuItem
-                                        className="cursor-pointer"
-                                        onSelect={() =>
-                                            router.get(
-                                                route(
-                                                    'transactions.sells.create'
+                                        <Plus className="h-5 w-5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    {can.create_purchase && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer"
+                                            onSelect={() =>
+                                                router.get(
+                                                    route(
+                                                        'transactions.purchases.create'
+                                                    )
                                                 )
-                                            )
-                                        }
-                                    >
-                                        <ShoppingCart className="w-4 h-4 mr-2" />
-                                        Penjualan
-                                    </DropdownMenuItem>
-                                )}
-                                {canCreateTransfer && (
-                                    <DropdownMenuItem
-                                        className="cursor-pointer"
-                                        onSelect={() =>
-                                            router.get(
-                                                route(
-                                                    'transactions.transfers.create'
+                                            }
+                                        >
+                                            <Truck className="w-4 h-4 mr-2" />
+                                            Pembelian
+                                        </DropdownMenuItem>
+                                    )}
+                                    {can.create_sell && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer"
+                                            onSelect={() =>
+                                                router.get(
+                                                    route(
+                                                        'transactions.sells.create'
+                                                    )
                                                 )
-                                            )
-                                        }
-                                    >
-                                        <ArrowRightLeft className="w-4 h-4 mr-2" />
-                                        Transfer Stok
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                            }
+                                        >
+                                            <ShoppingCart className="w-4 h-4 mr-2" />
+                                            Penjualan
+                                        </DropdownMenuItem>
+                                    )}
+                                    {can.create_transfer && (
+                                        <DropdownMenuItem
+                                            className="cursor-pointer"
+                                            onSelect={() =>
+                                                router.get(
+                                                    route(
+                                                        'transactions.transfers.create'
+                                                    )
+                                                )
+                                            }
+                                        >
+                                            <ArrowRightLeft className="w-4 h-4 mr-2" />
+                                            Transfer Stok
+                                        </DropdownMenuItem>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
                     </div>
                 </div>
             }
@@ -203,7 +196,7 @@ export default function Index({
                 />
                 <div className="hidden md:block">
                     <DataTable
-                        columns={transactionColumns(authData)}
+                        columns={transactionColumns(auth)}
                         data={transactions.data}
                         actions={renderActionDropdown}
                         showRoute={null}

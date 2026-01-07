@@ -5,57 +5,66 @@ namespace App\Policies;
 use App\Models\StockTransfer;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Location;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Support\Facades\DB;
 
 class StockTransferPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAny(User $user): bool
+    private function hasRoleCode(User $user, int $locationId, array $allowedCodes): bool
     {
-        return Role::isManagerial($user->level);
+        $role = $user->getRoleAtLocation($locationId);
+        return $role && in_array($role->code, $allowedCodes);
+    }
+
+    public function viewAny(): bool
+    {
+        return true;
     }
 
     public function view(User $user, StockTransfer $transfer): bool
     {
-        if (Role::isSuperAdmin($user->level)) {
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
             return true;
         }
-
         $accessibleIds = $user->getAccessibleLocationIds() ?? [];
-
-        return in_array($transfer->from_location_id, $accessibleIds) ||
-            in_array($transfer->to_location_id, $accessibleIds);
+        return in_array($transfer->from_location_id, $accessibleIds) || in_array($transfer->to_location_id, $accessibleIds);
     }
 
-    public function create(User $user): bool
+    public function createAtLocation(User $user, int $fromLocationId): bool
     {
-        return Role::isManagerial($user->level);
-    }
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            return true;
+        }
+        $location = Location::with('type')->find($fromLocationId);
+        if (!$location || !$location->type) {
+            return false;
+        }
 
-    public function createAtLocation(User $user, $fromLocationId): bool
-    {
-        return $user->canTransactAtLocation($fromLocationId, 'transfer');
+        if ($location->type->code === 'WH') {
+            return $this->hasRoleCode($user, $fromLocationId, [Role::CODE_WAREHOUSE_MGR, Role::CODE_STAFF]);
+        }
+        if ($location->type->code === 'BR') {
+            return false;
+        }
+        return false;
     }
 
     public function accept(User $user, StockTransfer $transfer): bool
     {
-        return DB::table('location_user')
-            ->join('roles', 'location_user.role_id', '=', 'roles.id')
-            ->where('location_user.user_id', $user->id)
-            ->where('location_user.location_id', $transfer->to_location_id)
-            ->where('roles.level', '<=', Role::THRESHOLD_MANAGERIAL)
-            ->exists();
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            return true;
+        }
+        if (!in_array($transfer->to_location_id, $user->getAccessibleLocationIds() ?? [])) {
+            return false;
+        }
+
+        return $this->hasRoleCode($user, $transfer->to_location_id, [Role::CODE_WAREHOUSE_MGR, Role::CODE_BRANCH_MGR]);
     }
 
     public function reject(User $user, StockTransfer $transfer): bool
     {
-        return DB::table('location_user')
-            ->join('roles', 'location_user.role_id', '=', 'roles.id')
-            ->where('location_user.user_id', $user->id)
-            ->where('location_user.location_id', $transfer->to_location_id)
-            ->where('roles.level', '<=', Role::THRESHOLD_MANAGERIAL)
-            ->exists();
+        return $this->accept($user, $transfer);
     }
 }

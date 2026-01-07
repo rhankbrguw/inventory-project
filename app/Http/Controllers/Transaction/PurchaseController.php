@@ -36,9 +36,9 @@ class PurchaseController extends Controller
         }
 
         $allLocations = $locationsQuery->get();
-        $filteredLocations = $allLocations->filter(fn($location) => $user->canTransactAtLocation($location->id, 'purchase'))->values();
+        $filteredLocations = $allLocations->filter(fn ($location) => $user->can('createAtLocation', [Purchase::class, $location->id]))->values();
 
-        $locationsWithPermissions = $filteredLocations->map(fn($location) => [
+        $locationsWithPermissions = $filteredLocations->map(fn ($location) => [
             'id' => $location->id,
             'name' => $location->name,
             'role_at_location' => $user->getRoleCodeAtLocation($location->id),
@@ -47,9 +47,9 @@ class PurchaseController extends Controller
         $cartItems = $user->purchaseCartItems()->with(['product', 'supplier'])->get();
 
         $productsQuery = Product::with('defaultSupplier:id,name')
-            ->when($accessibleLocationIds, fn($query) => $query->whereHas('inventories', fn($q) => $q->whereIn('location_id', $accessibleLocationIds)))
-            ->when($request->input('search'), fn($query, $search) => $query->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"))
-            ->when($request->filled('type_id') && $request->input('type_id') !== 'all', fn($query) => $query->where('type_id', $request->input('type_id')))
+            ->when($accessibleLocationIds, fn ($query) => $query->whereHas('inventories', fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)))
+            ->when($request->input('search'), fn ($query, $search) => $query->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"))
+            ->when($request->filled('type_id') && $request->input('type_id') !== 'all', fn ($query) => $query->where('type_id', $request->input('type_id')))
             ->when($request->filled('supplier_id') && $request->input('supplier_id') !== 'all', function ($query) use ($request) {
                 $supplierId = $request->input('supplier_id');
                 return $supplierId === 'null'
@@ -72,13 +72,10 @@ class PurchaseController extends Controller
     public function store(StorePurchaseRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $user = $request->user();
 
-        if (!$user->canTransactAtLocation($validated['location_id'], 'purchase')) {
-            abort(403, 'Anda tidak memiliki akses untuk pembelian di lokasi ini.');
-        }
+        $this->authorize('createAtLocation', [Purchase::class, $validated['location_id']]);
 
-        $totalCost = collect($validated['items'])->sum(fn($item) => $item['quantity'] * $item['cost_per_unit']);
+        $totalCost = collect($validated['items'])->sum(fn ($item) => $item['quantity'] * $item['cost_per_unit']);
         $purchaseType = Type::where('group', Type::GROUP_TRANSACTION)->where('name', 'Pembelian')->firstOrFail();
 
         DB::transaction(function () use ($validated, $totalCost, $purchaseType, $request) {
@@ -132,7 +129,7 @@ class PurchaseController extends Controller
 
             $supplierId = $validated['supplier_id'];
             Auth::user()->purchaseCartItems()
-                ->where(fn($q) => is_null($supplierId) ? $q->whereNull('supplier_id') : $q->where('supplier_id', $supplierId))
+                ->where(fn ($q) => is_null($supplierId) ? $q->whereNull('supplier_id') : $q->where('supplier_id', $supplierId))
                 ->whereIn('product_id', array_column($validated['items'], 'product_id'))
                 ->delete();
         });
@@ -156,11 +153,7 @@ class PurchaseController extends Controller
 
     public function show(Purchase $purchase): Response
     {
-        $user = Auth::user();
-        $accessible = $user->getAccessibleLocationIds();
-        if ($accessible && !in_array($purchase->location_id, $accessible)) {
-            abort(403);
-        }
+        $this->authorize('view', $purchase);
 
         $purchase->load(['location', 'supplier', 'user', 'paymentMethodType', 'stockMovements.product', 'type', 'installments']);
 

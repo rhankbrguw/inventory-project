@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import ContentPageLayout from '@/components/ContentPageLayout';
 import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
 import TransactionItemsSection from '@/components/Transaction/TransactionItemsSection';
@@ -25,7 +26,6 @@ import {
 import { formatDate } from '@/lib/utils';
 import { transferDetailColumns } from '@/constants/tableColumns';
 import { router } from '@inertiajs/react';
-import React from 'react';
 import {
     CheckCircle,
     XCircle,
@@ -44,10 +44,10 @@ export default function Show({
 }) {
     const { data } = transfer;
 
-    const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
-    const [isApproveDialogOpen, setIsApproveDialogOpen] = React.useState(false);
-    const [rejectionReason, setRejectionReason] = React.useState('');
-    const [isProcessing, setIsProcessing] = React.useState(false);
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const handleApprove = () => {
         setIsProcessing(true);

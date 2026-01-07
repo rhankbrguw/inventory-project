@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Search, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';

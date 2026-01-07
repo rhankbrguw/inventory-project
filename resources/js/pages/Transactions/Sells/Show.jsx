@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Truck, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import ContentPageLayout from '@/components/ContentPageLayout';
@@ -36,12 +36,12 @@ import { sellDetailColumns } from '@/constants/tableColumns';
 export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
     const { data } = sell;
 
-    const [isShipDialogOpen, setIsShipDialogOpen] = React.useState(false);
-    const [isReceiveDialogOpen, setIsReceiveDialogOpen] = React.useState(false);
-    const [isApproveDialogOpen, setIsApproveDialogOpen] = React.useState(false);
-    const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
-    const [rejectionReason, setRejectionReason] = React.useState('');
-    const [isProcessing, setIsProcessing] = React.useState(false);
+    const [isShipDialogOpen, setIsShipDialogOpen] = useState(false);
+    const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const handleShipConfirm = () => {
         setIsProcessing(true);

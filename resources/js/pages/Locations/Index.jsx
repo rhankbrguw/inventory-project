@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import IndexPageLayout from '@/components/IndexPageLayout';
 import DataTable from '@/components/DataTable';
 import MobileCardList from '@/components/MobileCardList';
@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Edit, MoreVertical, Archive, ArchiveRestore } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -26,13 +25,13 @@ export default function Index({
     locationTypes,
     filters,
 }) {
+    const { can } = usePage().props.auth;
+    const canManageLocations = can.manage_system;
+
     const { params, setFilter } = useIndexPageFilters(
         'locations.index',
         filters
     );
-
-    const { isSuperAdmin } = usePermission();
-    const canCrudLocations = isSuperAdmin;
 
     const {
         confirmingDeletion,
@@ -89,7 +88,7 @@ export default function Index({
         <IndexPageLayout
             auth={auth}
             title="Manajemen Lokasi"
-            createRoute={canCrudLocations ? 'locations.create' : null}
+            createRoute={canManageLocations ? 'locations.create' : null}
             buttonLabel="Tambah Lokasi"
         >
             <div className="space-y-4">
@@ -103,20 +102,20 @@ export default function Index({
                     renderItem={(location) => (
                         <Link
                             href={
-                                canCrudLocations
+                                canManageLocations
                                     ? route('locations.edit', location.id)
                                     : '#'
                             }
                             key={location.id}
                             className={cn(
-                                !canCrudLocations && 'pointer-events-none',
+                                !canManageLocations && 'pointer-events-none',
                                 location.deleted_at && 'opacity-50'
                             )}
                         >
                             <LocationMobileCard
                                 location={location}
                                 renderActionDropdown={
-                                    canCrudLocations
+                                    canManageLocations
                                         ? renderActionDropdown
                                         : null
                                 }
@@ -128,8 +127,10 @@ export default function Index({
                     <DataTable
                         columns={locationColumns}
                         data={locationsResource.data}
-                        actions={canCrudLocations ? renderActionDropdown : null}
-                        showRoute={canCrudLocations ? 'locations.edit' : null}
+                        actions={
+                            canManageLocations ? renderActionDropdown : null
+                        }
+                        showRoute={canManageLocations ? 'locations.edit' : null}
                         rowClassName={(row) =>
                             row.deleted_at ? 'opacity-50' : ''
                         }
@@ -139,7 +140,7 @@ export default function Index({
                     <Pagination links={locationsResource.meta.links} />
                 )}
             </div>
-            {canCrudLocations && (
+            {canManageLocations && (
                 <DeleteConfirmationDialog
                     open={confirmingDeletion !== null}
                     onOpenChange={() => setConfirmingDeletion(null)}

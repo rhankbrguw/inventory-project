@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '@/components/ui/card';
 import { formatNumber, formatDate, cn } from '@/lib/utils';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';

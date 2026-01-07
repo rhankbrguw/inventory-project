@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Check } from 'lucide-react';
 

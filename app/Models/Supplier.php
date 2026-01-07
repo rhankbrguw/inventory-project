@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -13,8 +12,10 @@ class Supplier extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use \App\Traits\ScopedByLocation;
 
     protected $fillable = [
+        'location_id',
         'name',
         'contact_person',
         'email',
@@ -28,29 +29,16 @@ class Supplier extends Model
         return $this->belongsToMany(Product::class, 'product_supplier');
     }
 
-    public function purchases(): HasMany
-    {
-        return $this->hasMany(Purchase::class);
-    }
-
-    public function cartItems(): HasMany
-    {
-        return $this->hasMany(CartItem::class);
-    }
-
     public function setPhoneAttribute($value): void
     {
         if (empty($value)) {
             $this->attributes['phone'] = null;
             return;
         }
-
         $cleanedPhone = preg_replace("/[^\d\+]/", '', $value);
-
         if (Str::startsWith($cleanedPhone, '08')) {
             $cleanedPhone = '+628' . substr($cleanedPhone, 2);
         }
-
         $this->attributes['phone'] = $cleanedPhone;
     }
 }

@@ -22,12 +22,20 @@ class CustomerPolicy
 
     public function create(User $user): bool
     {
-        return Role::isOperational($user->level);
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            return true;
+        }
+
+        if (Role::isManagerial($user->level)) {
+            return true;
+        }
+
+        return $user->roles->contains('code', Role::CODE_CASHIER);
     }
 
     public function update(User $user): bool
     {
-        return Role::isOperational($user->level);
+        return $this->create($user);
     }
 
     public function delete(User $user): bool

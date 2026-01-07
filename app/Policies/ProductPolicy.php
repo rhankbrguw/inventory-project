@@ -22,17 +22,25 @@ class ProductPolicy
 
     public function create(User $user): bool
     {
-        return Role::isManagerial($user->level);
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            return true;
+        }
+
+        return $user->roles->contains('code', Role::CODE_BRANCH_MGR);
     }
 
     public function update(User $user): bool
     {
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            return true;
+        }
+
         return Role::isManagerial($user->level);
     }
 
     public function delete(User $user): bool
     {
-        return Role::isManagerial($user->level);
+        return $this->create($user);
     }
 
     public function restore(User $user): bool

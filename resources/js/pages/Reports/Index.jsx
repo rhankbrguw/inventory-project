@@ -1,4 +1,3 @@
-import React from 'react';
 import IndexPageLayout from '@/components/IndexPageLayout';
 import ReportContent from './Partials/ReportContent';
 import ReportFilterCard from './Partials/ReportFilterCard';

@@ -6,8 +6,10 @@ use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
+use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +18,10 @@ class SupplierController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+
         $suppliers = Supplier::query()
+            ->accessibleBy($user)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -37,9 +42,7 @@ class SupplierController extends Controller
                     'name_desc' => $query->orderBy('name', 'desc'),
                     default => $query->orderBy('name', 'asc'),
                 };
-            }, function ($query) {
-                $query->orderBy('name', 'asc');
-            })
+            }, fn ($query) => $query->orderBy('name', 'asc'))
             ->withTrashed()
             ->paginate(10)
             ->withQueryString();
@@ -57,7 +60,16 @@ class SupplierController extends Controller
 
     public function store(StoreSupplierRequest $request): RedirectResponse
     {
-        $supplier = Supplier::create($request->validated());
+        $validated = $request->validated();
+        $user = $request->user();
+
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            $validated['location_id'] = null;
+        } else {
+            $validated['location_id'] = $user->locations->first()?->id;
+        }
+
+        $supplier = Supplier::create($validated);
 
         if ($request->input('_from_modal')) {
             return Redirect::back()
@@ -65,7 +77,8 @@ class SupplierController extends Controller
                 ->with('newSupplier', SupplierResource::make($supplier));
         }
 
-        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
+        return Redirect::route('suppliers.index')
+            ->with('success', 'Supplier berhasil ditambahkan.');
     }
 
     public function edit(Supplier $supplier): Response
@@ -78,18 +91,24 @@ class SupplierController extends Controller
     public function update(UpdateSupplierRequest $request, Supplier $supplier): RedirectResponse
     {
         $supplier->update($request->validated());
-        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
+
+        return Redirect::route('suppliers.index')
+            ->with('success', 'Supplier berhasil diperbarui.');
     }
 
     public function destroy(Supplier $supplier): RedirectResponse
     {
         $supplier->delete();
-        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil dinonaktifkan.');
+
+        return Redirect::route('suppliers.index')
+            ->with('success', 'Supplier berhasil dinonaktifkan.');
     }
 
     public function restore(Supplier $supplier): RedirectResponse
     {
         $supplier->restore();
-        return Redirect::route('suppliers.index')->with('success', 'Supplier berhasil diaktifkan kembali.');
+
+        return Redirect::route('suppliers.index')
+            ->with('success', 'Supplier berhasil diaktifkan kembali.');
     }
 }

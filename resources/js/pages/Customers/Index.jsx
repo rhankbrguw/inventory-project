@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import IndexPageLayout from '@/components/IndexPageLayout';
 import DataTable from '@/components/DataTable';
 import MobileCardList from '@/components/MobileCardList';
@@ -18,19 +18,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Edit, MoreVertical, Archive, ArchiveRestore, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({ auth, customers, customerTypes, filters }) {
+    const { can } = usePage().props.auth;
+
     const { params, setFilter } = useIndexPageFilters(
         'customers.index',
         filters
     );
-
-    const { isManager, isOperational } = usePermission();
-
-    const canCrudCustomers = isManager;
-
-    const canViewCustomers = isOperational;
 
     const {
         confirmingDeletion,
@@ -53,16 +48,25 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                {canCrudCustomers ? (
-                    <>
-                        <DropdownMenuItem
-                            className="cursor-pointer"
-                            onSelect={() =>
-                                router.get(route('customers.edit', customer.id))
-                            }
-                        >
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() =>
+                        router.get(route('customers.edit', customer.id))
+                    }
+                >
+                    {can.create_customer ? (
+                        <>
                             <Edit className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
+                        </>
+                    ) : (
+                        <>
+                            <Eye className="w-4 h-4 mr-2" /> Lihat
+                        </>
+                    )}
+                </DropdownMenuItem>
+
+                {can.delete_customer && (
+                    <>
                         {customer.deleted_at ? (
                             <DropdownMenuItem
                                 className="cursor-pointer text-success focus:text-success"
@@ -82,15 +86,6 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                             </DropdownMenuItem>
                         )}
                     </>
-                ) : (
-                    <DropdownMenuItem
-                        className="cursor-pointer"
-                        onSelect={() =>
-                            router.get(route('customers.edit', customer.id))
-                        }
-                    >
-                        <Eye className="w-4 h-4 mr-2" /> Lihat
-                    </DropdownMenuItem>
                 )}
             </DropdownMenuContent>
         </DropdownMenu>
@@ -100,7 +95,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
         <IndexPageLayout
             auth={auth}
             title="Manajemen Pelanggan"
-            createRoute={canCrudCustomers ? 'customers.create' : null}
+            createRoute={can.create_customer ? 'customers.create' : null}
             buttonLabel="Tambah Pelanggan"
         >
             <div className="space-y-4">
@@ -114,23 +109,19 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     renderItem={(customer) => (
                         <Link
                             href={
-                                canViewCustomers
+                                can.create_customer
                                     ? route('customers.edit', customer.id)
                                     : '#'
                             }
                             key={customer.id}
                             className={cn(
-                                !canViewCustomers && 'pointer-events-none',
+                                !can.create_customer && 'pointer-events-none',
                                 customer.deleted_at && 'opacity-50'
                             )}
                         >
                             <CustomerMobileCard
                                 customer={customer}
-                                renderActionDropdown={
-                                    canViewCustomers
-                                        ? renderActionDropdown
-                                        : null
-                                }
+                                renderActionDropdown={renderActionDropdown}
                             />
                         </Link>
                     )}
@@ -139,8 +130,10 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     <DataTable
                         columns={customerColumns}
                         data={customers.data}
-                        actions={canViewCustomers ? renderActionDropdown : null}
-                        showRoute={canViewCustomers ? 'customers.edit' : null}
+                        actions={renderActionDropdown}
+                        showRoute={
+                            can.create_customer ? 'customers.edit' : null
+                        }
                         rowClassName={(row) =>
                             row.deleted_at ? 'opacity-50' : ''
                         }
@@ -150,7 +143,8 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     <Pagination links={customers.meta.links} />
                 )}
             </div>
-            {canCrudCustomers && (
+
+            {can.delete_customer && (
                 <DeleteConfirmationDialog
                     open={confirmingDeletion !== null}
                     onOpenChange={() => setConfirmingDeletion(null)}
@@ -158,7 +152,7 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     isDeleting={isProcessing}
                     confirmText="Nonaktifkan"
                     title={`Nonaktifkan ${itemToDeactivate?.name}?`}
-                    description="Tindakan ini akan menyembunyikan pelanggan dari daftar. Anda bisa mengaktifkannya kembali nanti."
+                    description="Tindakan ini akan menyembunyikan pelanggan dari daftar."
                 />
             )}
         </IndexPageLayout>

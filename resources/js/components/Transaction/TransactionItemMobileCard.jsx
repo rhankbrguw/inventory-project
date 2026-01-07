@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 import UnifiedBadge from '@/components/UnifiedBadge';
@@ -69,10 +68,11 @@ export default function TransactionItemMobileCard({ item, type }) {
                         <div>
                             <p className="text-muted-foreground">Margin</p>
                             <p
-                                className={`font-semibold ${margin > 0
+                                className={`font-semibold ${
+                                    margin > 0
                                         ? 'text-success'
                                         : 'text-destructive'
-                                    }`}
+                                }`}
                             >
                                 {formatCurrency(margin)}
                             </p>

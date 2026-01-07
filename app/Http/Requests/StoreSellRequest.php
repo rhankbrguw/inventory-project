@@ -32,12 +32,13 @@ class StoreSellRequest extends FormRequest
             'items.*.sales_channel_id' => ['nullable', 'integer', new ExistsInGroup('types', Type::GROUP_SALES_CHANNEL)],
         ];
 
+        $locationId = $this->input('location_id');
         foreach (array_keys($this->input('items', [])) as $index) {
             $rules["items.$index.quantity"] = [
                 'required',
                 'numeric',
                 'min:0.0001',
-                new SufficientStock(),
+                new SufficientStock($locationId),
             ];
         }
 
@@ -49,14 +50,25 @@ class StoreSellRequest extends FormRequest
         $validator->after(function ($validator) {
             $locationId = $this->input('location_id');
             $customerId = $this->input('customer_id');
-            if ($locationId && $customerId) {
+
+            if ($locationId) {
                 $location = Location::with('type')->find($locationId);
-                $customer = Customer::find($customerId);
+
                 if ($location && $location->type && $location->type->level === 1) {
+
+                    if (empty($customerId)) {
+                        $validator->errors()->add(
+                            'customer_id',
+                            'Gudang Pusat TIDAK BOLEH melayani pelanggan umum (Walk-in). Harap pilih Cabang Tujuan.'
+                        );
+                        return;
+                    }
+
+                    $customer = Customer::find($customerId);
                     if (!$customer || empty($customer->related_location_id)) {
                         $validator->errors()->add(
                             'customer_id',
-                            'Gudang Pusat hanya boleh melakukan penjualan (distribusi) ke Cabang Internal.'
+                            'Gudang Pusat HANYA BOLEH melakukan distribusi ke Cabang (Pelanggan Internal).'
                         );
                     }
                 }

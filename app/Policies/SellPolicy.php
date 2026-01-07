@@ -5,67 +5,68 @@ namespace App\Policies;
 use App\Models\Sell;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Location;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SellPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAny(User $user): bool
+    private function hasRoleCode(User $user, int $locationId, array $allowedCodes): bool
     {
-        return Role::isOperational($user->level);
+        $role = $user->getRoleAtLocation($locationId);
+        return $role && in_array($role->code, $allowedCodes);
+    }
+
+    public function viewAny(): bool
+    {
+        return true;
     }
 
     public function view(User $user, Sell $sell): bool
     {
-        if (Role::isSuperAdmin($user->level)) {
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
             return true;
         }
-
-        $accessibleLocationIds = $user->getAccessibleLocationIds() ?? [];
-
-        if (in_array($sell->location_id, $accessibleLocationIds)) {
-            return true;
-        }
-
-        if (!$sell->relationLoaded('customer')) {
-            $sell->load('customer');
-        }
-
-        $targetLocationId = $sell->customer?->related_location_id;
-
-        if ($targetLocationId && in_array($targetLocationId, $accessibleLocationIds)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function create(User $user): bool
-    {
-        return Role::isOperational($user->level);
+        $accessibleIds = $user->getAccessibleLocationIds() ?? [];
+        return in_array($sell->location_id, $accessibleIds) ||
+            ($sell->customer && in_array($sell->customer->related_location_id, $accessibleIds));
     }
 
     public function createAtLocation(User $user, int $locationId): bool
     {
-        return $user->canTransactAtLocation($locationId, 'sell');
-    }
-
-    public function update(User $user, Sell $sell): bool
-    {
-        if (strtolower($sell->status) !== 'pending') {
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            return true;
+        }
+        $location = Location::with('type')->find($locationId);
+        if (!$location || !$location->type) {
             return false;
         }
 
-        return $user->canTransactAtLocation($sell->location_id, 'sell');
+        if ($location->type->code === 'WH') {
+            return $this->hasRoleCode($user, $locationId, [Role::CODE_WAREHOUSE_MGR]);
+        }
+        if ($location->type->code === 'BR') {
+            return $this->hasRoleCode($user, $locationId, [Role::CODE_BRANCH_MGR, Role::CODE_STAFF, Role::CODE_CASHIER]);
+        }
+        return false;
     }
 
-    public function delete(User $user, Sell $sell): bool
+    public function ship(User $user, Sell $sell): bool
     {
-        if (strtolower($sell->status) !== 'pending') {
+        return $sell->status === Sell::STATUS_APPROVED && $this->createAtLocation($user, $sell->location_id);
+    }
+
+    public function receive(User $user, Sell $sell): bool
+    {
+        if ($sell->status !== Sell::STATUS_SHIPPING) {
+            return false;
+        }
+        $targetLocationId = $sell->customer?->related_location_id;
+        if (!$targetLocationId) {
             return false;
         }
 
-        return $user->canTransactAtLocation($sell->location_id, 'sell');
+        return $this->hasRoleCode($user, $targetLocationId, [Role::CODE_WAREHOUSE_MGR, Role::CODE_BRANCH_MGR, Role::CODE_STAFF]);
     }
 }

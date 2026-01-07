@@ -17,6 +17,10 @@ class Inventory extends Model
         'product_id',
         'quantity',
         'average_cost',
+        'selling_price',
+        'local_supplier_id',
+        'low_stock_threshold',
+        'bin_location',
     ];
 
     public function location(): BelongsTo
@@ -27,5 +31,10 @@ class Inventory extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function localSupplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'local_supplier_id');
     }
 }

@@ -13,8 +13,10 @@ class Product extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use \App\Traits\ScopedByLocation;
 
     protected $fillable = [
+        'location_id',
         'type_id',
         'default_supplier_id',
         'name',
@@ -46,22 +48,20 @@ class Product extends Model
         return $this->hasMany(Inventory::class);
     }
 
-    public function cartItems(): HasMany
-    {
-        return $this->hasMany(CartItem::class);
-    }
-
     public function prices(): HasMany
     {
         return $this->hasMany(ProductPrice::class);
     }
 
-    public function getPriceForChannel($channelTypeId)
+    public function getEffectivePrice(?int $locationId): float
     {
-        $specialPrice = $this->prices
-            ->where('type_id', $channelTypeId)
-            ->first();
-
-        return $specialPrice ? $specialPrice->price : $this->price;
+        if (!$locationId) {
+            return (float) $this->price;
+        }
+        $inventory = $this->inventories->where('location_id', $locationId)->first();
+        if ($inventory && $inventory->selling_price !== null && $inventory->selling_price > 0) {
+            return (float) $inventory->selling_price;
+        }
+        return (float) $this->price;
     }
 }

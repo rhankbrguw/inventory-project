@@ -40,8 +40,8 @@ class StockTransferController extends Controller
         }
 
         $sourceLocations = $sourceLocationsQuery->get()
-            ->filter(fn ($loc) => $user->canTransactAtLocation($loc->id, 'transfer'))
-            ->map(fn ($loc) => [
+            ->filter(fn($loc) => $user->can('createAtLocation', [StockTransfer::class, $loc->id]))
+            ->map(fn($loc) => [
                 'id' => $loc->id,
                 'name' => $loc->name,
             ])
@@ -50,20 +50,20 @@ class StockTransferController extends Controller
         $destinationLocations = Location::orderBy('name')->get(['id', 'name']);
 
         $productsQuery = Product::with([
-            'inventories' => fn ($q) => $q->where('quantity', '>', 0),
+            'inventories' => fn($q) => $q->where('quantity', '>', 0),
             'inventories.location:id,name',
         ])->orderBy('name');
 
         if ($accessibleLocationIds) {
             $productsQuery->whereHas(
                 'inventories',
-                fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)
+                fn($q) => $q->whereIn('location_id', $accessibleLocationIds)
                     ->where('quantity', '>', 0)
             );
         }
 
         $products = $productsQuery->get()->map(function ($product) {
-            $product->locations = $product->inventories->map(fn ($inv) => [
+            $product->locations = $product->inventories->map(fn($inv) => [
                 'id' => $inv->location->id,
                 'name' => $inv->location->name,
                 'quantity' => $inv->quantity,
@@ -81,15 +81,10 @@ class StockTransferController extends Controller
     public function store(StoreStockTransferRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $this->authorize('createAtLocation', [StockTransfer::class, $validated['from_location_id']]);
+
         $user = Auth::user();
-
-        if (! $user->canTransactAtLocation($validated['from_location_id'], 'transfer')) {
-            abort(403);
-        }
-
-        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
-            return back()->with('error', 'Hanya Manager yang dapat membuat permintaan transfer.');
-        }
 
         DB::transaction(function () use ($validated, $user) {
             $transfer = StockTransfer::create([
@@ -143,19 +138,13 @@ class StockTransferController extends Controller
 
     public function approve(StockTransfer $stockTransfer): RedirectResponse
     {
-        $user = Auth::user();
-
-        if (! $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase')) {
-            abort(403);
-        }
-
-        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
-            return back()->with('error', 'Hanya Manager yang dapat menyetujui transfer.');
-        }
+        $this->authorize('accept', $stockTransfer);
 
         if ($stockTransfer->status !== StockTransfer::STATUS_PENDING_APPROVAL) {
             return back()->with('error', 'Status tidak valid.');
         }
+
+        $user = Auth::user();
 
         $stockTransfer->update([
             'status' => StockTransfer::STATUS_APPROVED,
@@ -173,16 +162,9 @@ class StockTransferController extends Controller
 
     public function reject(Request $request, StockTransfer $stockTransfer): RedirectResponse
     {
+        $this->authorize('reject', $stockTransfer);
+
         $user = Auth::user();
-
-        if (! $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase')) {
-            abort(403);
-        }
-
-        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
-            return back()->with('error', 'Akses ditolak.');
-        }
-
         $reason = $request->input('rejection_reason');
 
         $stockTransfer->update([
@@ -204,17 +186,15 @@ class StockTransferController extends Controller
 
     public function ship(StockTransfer $stockTransfer): RedirectResponse
     {
+        $this->authorize('createAtLocation', [StockTransfer::class, $stockTransfer->from_location_id]);
+
         $stockTransfer->load(['items.product']);
-
-        $user = Auth::user();
-
-        if (! $user->canTransactAtLocation($stockTransfer->from_location_id, 'transfer')) {
-            abort(403);
-        }
 
         if ($stockTransfer->status !== StockTransfer::STATUS_APPROVED) {
             return back()->with('error', 'Belum disetujui.');
         }
+
+        $user = Auth::user();
 
         DB::transaction(function () use ($stockTransfer, $user) {
             $stockTransfer->update([
@@ -266,15 +246,13 @@ class StockTransferController extends Controller
 
     public function receive(Request $request, StockTransfer $stockTransfer): RedirectResponse
     {
-        $user = $request->user();
-
-        if (! $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase')) {
-            abort(403);
-        }
+        $this->authorize('accept', $stockTransfer);
 
         if ($stockTransfer->status !== StockTransfer::STATUS_SHIPPING) {
             return back()->with('error', 'Belum dikirim.');
         }
+
+        $user = $request->user();
 
         DB::transaction(function () use ($stockTransfer, $user) {
             $stockTransfer->update([
@@ -307,6 +285,8 @@ class StockTransferController extends Controller
 
     public function show(StockTransfer $stockTransfer): Response
     {
+        $this->authorize('view', $stockTransfer);
+
         $user = Auth::user();
 
         $stockTransfer->load([
@@ -321,11 +301,11 @@ class StockTransferController extends Controller
         return Inertia::render('Transactions/Transfers/Show', [
             'transfer' => new TransferResource($stockTransfer),
             'canApprove' => $stockTransfer->status === StockTransfer::STATUS_PENDING_APPROVAL
-                && $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase'),
+                && $user->can('accept', $stockTransfer),
             'canShip' => $stockTransfer->status === StockTransfer::STATUS_APPROVED
-                && $user->canTransactAtLocation($stockTransfer->from_location_id, 'transfer'),
+                && $user->can('createAtLocation', [StockTransfer::class, $stockTransfer->from_location_id]),
             'canReceive' => $stockTransfer->status === StockTransfer::STATUS_SHIPPING
-                && $user->canTransactAtLocation($stockTransfer->to_location_id, 'purchase'),
+                && $user->can('accept', $stockTransfer),
         ]);
     }
 }

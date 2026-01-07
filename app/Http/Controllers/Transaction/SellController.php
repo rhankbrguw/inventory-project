@@ -47,9 +47,9 @@ class SellController extends Controller
         $allLocations = $locationsQuery->get();
 
         $filteredLocations = $allLocations
-            ->filter(fn($location) => $user->canTransactAtLocation($location->id, 'sell'));
+            ->filter(fn ($location) => $user->can('createAtLocation', [Sell::class, $location->id]));
 
-        $locationsWithPermissions = $filteredLocations->values()->map(fn($location) => [
+        $locationsWithPermissions = $filteredLocations->values()->map(fn ($location) => [
             'id' => $location->id,
             'name' => $location->name,
             'role_at_location' => $user->getRoleCodeAtLocation($location->id),
@@ -72,14 +72,14 @@ class SellController extends Controller
             ->get();
 
         $productsQuery = Product::with(['defaultSupplier:id,name', 'prices'])
-            ->when($search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
-            ->when($typeId && $typeId !== 'all', fn($q) => $q->where('type_id', $typeId))
+            ->when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
+            ->when($typeId && $typeId !== 'all', fn ($q) => $q->where('type_id', $typeId))
             ->orderBy('name');
 
         if ($locationId) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) =>
+                fn ($q) =>
                 $q->where('location_id', $locationId)->where('quantity', '>', 0)
             );
         } else {
@@ -92,7 +92,7 @@ class SellController extends Controller
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
-                ->through(fn($product) => array_merge(
+                ->through(fn ($product) => array_merge(
                     $product->toArray(),
                     ['channel_prices' => $product->prices->pluck('price', 'type_id')]
                 )),
@@ -108,52 +108,44 @@ class SellController extends Controller
     public function store(StoreSellRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $user = $request->user();
 
-        if (!$user->canTransactAtLocation($validated['location_id'], 'sell')) {
-            abort(403, 'Lokasi ini tidak memiliki izin untuk Penjualan.');
-        }
+        $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
 
         $itemsData = $validated['items'];
-        $totalPrice = collect($itemsData)->sum(fn($item) => $item['quantity'] * $item['sell_price']);
+        $totalPrice = collect($itemsData)->sum(fn ($item) => $item['quantity'] * $item['sell_price']);
 
         $sellTypeId = Type::where('name', 'Penjualan')
             ->where('group', Type::GROUP_TRANSACTION)
             ->value('id');
 
-        $customerId = $validated['customer_id'] ?? null;
-        $targetLocationId = null;
         $initialStatus = 'Completed';
+        $targetLocationId = null;
 
-        if ($customerId) {
-            $customer = Customer::find($customerId);
+        if (!empty($validated['customer_id'])) {
+            $customer = Customer::find($validated['customer_id']);
             if ($customer && $customer->related_location_id) {
                 $initialStatus = Sell::STATUS_PENDING_APPROVAL;
                 $targetLocationId = $customer->related_location_id;
             }
         }
 
-        $headerChannelId = $validated['sales_channel_id'] ?? $validated['sales_channel_type_id'] ?? null;
-
+        $headerChannelId = $validated['sales_channel_id'] ?? null;
         $installmentTerms = (int) ($validated['installment_terms'] ?? 1);
-
         $paymentStatus = $installmentTerms > 1 ? 'pending' : 'paid';
 
         DB::transaction(function () use ($request, $itemsData, $totalPrice, $validated, $initialStatus, $targetLocationId, $sellTypeId, $headerChannelId, $installmentTerms, $paymentStatus) {
 
             $sell = Sell::create([
                 'type_id' => $sellTypeId,
-                'location_id' => $request->location_id,
-                'customer_id' => $request->customer_id,
+                'location_id' => $validated['location_id'],
+                'customer_id' => $validated['customer_id'] ?? null,
                 'user_id' => $request->user()->id,
                 'reference_code' => 'SL-' . now()->format('YmdHis'),
-                'transaction_date' => now(),
+                'transaction_date' => $validated['transaction_date'],
                 'total_price' => $totalPrice,
                 'status' => $initialStatus,
-                'notes' => $request->notes,
-
+                'notes' => $validated['notes'],
                 'sales_channel_type_id' => $headerChannelId,
-
                 'payment_method_type_id' => $validated['payment_method_type_id'] ?? null,
                 'installment_terms' => $installmentTerms,
                 'payment_status' => $paymentStatus,
@@ -164,14 +156,14 @@ class SellController extends Controller
                     $sell,
                     $totalPrice,
                     $installmentTerms,
-                    $validated['transaction_date'] ?? now()
+                    $validated['transaction_date']
                 );
             }
 
             foreach ($itemsData as $item) {
-                $itemChannelId = $item['sales_channel_id'] ?? $item['sales_channel_type_id'] ?? null;
+                $itemChannelId = $item['sales_channel_id'] ?? null;
+                $product = Product::withTrashed()->findOrFail($item['product_id']);
 
-                $product = Product::findOrFail($item['product_id']);
                 $currentCost = $product->average_cost ?? 0;
 
                 SellItem::create([
@@ -183,21 +175,7 @@ class SellController extends Controller
                     'cost_per_unit' => $currentCost,
                 ]);
 
-                if ($initialStatus === Sell::STATUS_PENDING_APPROVAL) {
-                    StockMovement::create([
-                        'product_id' => $item['product_id'],
-                        'location_id' => $validated['location_id'],
-                        'quantity' => -abs($item['quantity']),
-                        'cost_per_unit' => $item['sell_price'],
-                        'type' => 'sell',
-                        'reference_type' => Sell::class,
-                        'reference_id' => $sell->id,
-                        'user_id' => $request->user()->id,
-                        'date' => now(),
-                        'notes' => 'Pending Approval',
-                        'sales_channel_type_id' => $itemChannelId,
-                    ]);
-                } else {
+                if ($initialStatus !== Sell::STATUS_PENDING_APPROVAL) {
                     $this->handleStockOut(
                         product: $product,
                         locationId: $validated['location_id'],
@@ -217,10 +195,7 @@ class SellController extends Controller
                 ->delete();
 
             if ($initialStatus === Sell::STATUS_PENDING_APPROVAL && $targetLocationId) {
-                $managerRoleIds = Role::whereIn('code', [
-                    Role::CODE_BRANCH_MGR,
-                    Role::CODE_WAREHOUSE_MGR,
-                ])->pluck('id');
+                $managerRoleIds = Role::whereIn('code', [Role::CODE_BRANCH_MGR, Role::CODE_WAREHOUSE_MGR])->pluck('id');
 
                 if ($managerRoleIds->isNotEmpty()) {
                     $targets = User::whereHas('locations', function ($q) use ($targetLocationId, $managerRoleIds) {
@@ -232,15 +207,13 @@ class SellController extends Controller
                         try {
                             $target->notify(new SellCreatedNotification($sell, $request->user()->name));
                         } catch (\Throwable) {
-                            // Ignore notification errors
                         }
                     }
                 }
             }
         });
 
-        return Redirect::route('transactions.index')
-            ->with('success', 'Penjualan berhasil disimpan.');
+        return Redirect::route('transactions.index')->with('success', 'Penjualan berhasil disimpan.');
     }
 
     private function createInstallments($transaction, $totalAmount, $terms, $startDate)
@@ -260,25 +233,19 @@ class SellController extends Controller
 
     public function approve(Sell $sell): RedirectResponse
     {
-        $user = Auth::user();
-
         $targetLocationId = $sell->customer?->related_location_id;
+
         if (!$targetLocationId) {
             abort(404, 'Transaksi ini bukan penjualan antar-cabang.');
-        }
-
-        if (!$user->canTransactAtLocation($targetLocationId, 'purchase')) {
-            abort(403);
-        }
-
-        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
-            return back()->with('error', 'Hanya Manager yang dapat menyetujui pesanan.');
         }
 
         if ($sell->status !== Sell::STATUS_PENDING_APPROVAL) {
             return back()->with('error', 'Status tidak valid.');
         }
 
+        $this->authorize('createAtLocation', [Purchase::class, $targetLocationId]);
+
+        $user = Auth::user();
         $sell->update([
             'status' => Sell::STATUS_APPROVED,
             'approved_by' => $user->id,
@@ -295,21 +262,15 @@ class SellController extends Controller
 
     public function reject(Request $request, Sell $sell): RedirectResponse
     {
-        $user = Auth::user();
-
         $targetLocationId = $sell->customer?->related_location_id;
+
         if (!$targetLocationId) {
             abort(404, 'Transaksi ini bukan penjualan antar-cabang.');
         }
 
-        if (!$user->canTransactAtLocation($targetLocationId, 'purchase')) {
-            abort(403);
-        }
+        $this->authorize('createAtLocation', [Purchase::class, $targetLocationId]);
 
-        if ($user->level > Role::THRESHOLD_MANAGERIAL) {
-            return back()->with('error', 'Akses ditolak.');
-        }
-
+        $user = Auth::user();
         $reason = $request->input('rejection_reason');
 
         $sell->update([
@@ -344,9 +305,9 @@ class SellController extends Controller
             'type',
             'installments',
             'salesChannel',
-            'items.product' => fn($q) => $q->withTrashed(),
+            'items.product' => fn ($q) => $q->withTrashed(),
             'items.salesChannel',
-            'stockMovements.product' => fn($q) => $q->withTrashed(),
+            'stockMovements.product' => fn ($q) => $q->withTrashed(),
             'stockMovements.salesChannel',
         ]);
 
@@ -356,28 +317,21 @@ class SellController extends Controller
             'sell' => SellResource::make($sell),
             'canApprove' => $sell->status === Sell::STATUS_PENDING_APPROVAL
                 && $targetLocationId
-                && $user->canTransactAtLocation($targetLocationId, 'purchase'),
+                && $user->can('createAtLocation', [Purchase::class, $targetLocationId]),
             'canShip' => $sell->status === Sell::STATUS_APPROVED
-                && $user->canTransactAtLocation($sell->location_id, 'sell'),
+                && $user->can('createAtLocation', [Sell::class, $sell->location_id]),
             'canReceive' => $sell->status === Sell::STATUS_SHIPPING
                 && $targetLocationId
-                && $user->canTransactAtLocation($targetLocationId, 'purchase'),
+                && $user->can('createAtLocation', [Purchase::class, $targetLocationId]),
         ]);
     }
 
     public function ship(Sell $sell): RedirectResponse
     {
-        $sell->load(['stockMovements.product']);
+        $this->authorize('ship', $sell);
 
+        $sell->load(['items.product']);
         $user = Auth::user();
-
-        if (!$user->canTransactAtLocation($sell->location_id, 'sell')) {
-            abort(403);
-        }
-
-        if ($sell->status !== Sell::STATUS_APPROVED) {
-            return back()->with('error', 'Pesanan belum disetujui.');
-        }
 
         DB::transaction(function () use ($sell, $user) {
             $sell->update(['status' => Sell::STATUS_SHIPPING]);
@@ -405,15 +359,16 @@ class SellController extends Controller
                 }
             }
 
-            foreach ($sell->stockMovements as $movement) {
+            foreach ($sell->items as $item) {
                 $this->handleStockOut(
-                    $movement->product,
-                    $sell->location_id,
-                    abs($movement->quantity),
-                    $movement->cost_per_unit,
-                    'sell',
-                    $sell,
-                    'Shipped'
+                    product: $item->product,
+                    locationId: $sell->location_id,
+                    qty: $item->quantity,
+                    sellPrice: $item->cost_per_unit,
+                    type: 'sell',
+                    ref: $sell,
+                    notes: 'Shipped to ' . ($sell->customer->name ?? 'Branch'),
+                    channelId: $item->sales_channel_type_id
                 );
             }
         });
@@ -423,19 +378,13 @@ class SellController extends Controller
 
     public function receive(Request $request, Sell $sell): RedirectResponse
     {
+        $this->authorize('receive', $sell);
+
         $user = $request->user();
         $targetLocationId = $sell->customer->related_location_id;
 
         if (!$targetLocationId) {
             abort(400, 'Transaksi ini bukan penjualan antar-cabang.');
-        }
-
-        if (!$user->canTransactAtLocation($targetLocationId, 'purchase')) {
-            abort(403);
-        }
-
-        if ($sell->status !== Sell::STATUS_SHIPPING) {
-            return back()->with('error', 'Barang belum dikirim.');
         }
 
         DB::transaction(function () use ($sell, $user, $targetLocationId) {

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '@/components/ui/card';
 import { formatCurrency, formatNumber, cn } from '@/lib/utils';
 import { Package, TrendingUp } from 'lucide-react';

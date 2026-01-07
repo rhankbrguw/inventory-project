@@ -83,7 +83,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('locations.id', $locationId)
             ->first();
 
-        if (!$pivot) {
+        if (!$pivot || !$pivot->pivot->role_id) {
             return null;
         }
 
@@ -93,7 +93,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleCodeAtLocation($locationId): ?string
     {
         $role = $this->getRoleAtLocation($locationId);
-
         return $role ? $role->code : null;
     }
 
@@ -112,55 +111,6 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $ids;
-    }
-
-    public function canTransactAtLocation($locationId, $transactionType): bool
-    {
-        if ($this->level === Role::LEVEL_SUPER_ADMIN) {
-            return true;
-        }
-
-        $role = $this->getRoleAtLocation($locationId);
-        if (!$role) {
-            return false;
-        }
-
-        $location = Location::with('type')->find($locationId);
-        if (!$location) {
-            return false;
-        }
-
-        $roleLevel = $role->level;
-        $roleCode = $role->code;
-        $locationLevel = $location->type->level;
-
-        if ($transactionType === 'purchase') {
-            if ($roleLevel > Role::THRESHOLD_STAFF) {
-                return false;
-            }
-
-            if ($locationLevel === 1 && $roleCode === Role::CODE_BRANCH_MGR) {
-                return false;
-            }
-
-            if ($locationLevel === 2 && $roleCode === Role::CODE_WAREHOUSE_MGR) {
-                return false;
-            }
-
-            return true;
-        }
-
-        if ($transactionType === 'sell') {
-            if ($locationLevel <= 2) {
-                return true;
-            }
-        }
-
-        if ($transactionType === 'transfer') {
-            return $roleLevel <= Role::THRESHOLD_STAFF;
-        }
-
-        return false;
     }
 
     public function sendPasswordResetNotification($token): void

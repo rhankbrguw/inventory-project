@@ -7,10 +7,13 @@ use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\TypeResource;
 use App\Models\Customer;
+use App\Models\Role;
 use App\Models\Type;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class CustomerController extends Controller
 {
@@ -19,15 +22,17 @@ class CustomerController extends Controller
         return Type::where('group', Type::GROUP_CUSTOMER)->get();
     }
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
+        $user = $request->user();
+
         $customers = Customer::query()
             ->withTrashed()
             ->with(['type'])
+            ->accessibleBy($user)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q
-                        ->where('name', 'like', "%{$search}%")
+                    $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
                 });
@@ -44,9 +49,7 @@ class CustomerController extends Controller
                     'oldest' => $query->orderBy('created_at', 'asc'),
                     default => $query->latest('created_at'),
                 };
-            }, function ($query) {
-                $query->latest('created_at');
-            })
+            }, fn ($query) => $query->latest('created_at'))
             ->paginate(10)
             ->withQueryString();
 
@@ -57,52 +60,65 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Customers/Create', [
             'customerTypes' => TypeResource::collection($this->getCustomerTypes()),
         ]);
     }
 
-    public function store(StoreCustomerRequest $request)
+    public function store(StoreCustomerRequest $request): RedirectResponse
     {
-        $customer = Customer::create($request->validated());
+        $validated = $request->validated();
+        $user = $request->user();
+
+        if ($user->level === Role::LEVEL_SUPER_ADMIN) {
+            $validated['location_id'] = null;
+        } else {
+            $validated['location_id'] = $user->locations->first()?->id;
+        }
+
+        $customer = Customer::create($validated);
 
         if ($request->boolean('_from_modal')) {
-            return Redirect::back()->with('newCustomer', $customer)
+            return Redirect::back()
+                ->with('newCustomer', $customer)
                 ->with('success', 'Pelanggan baru berhasil ditambahkan.');
         }
 
-        return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
+        return Redirect::route('customers.index')
+            ->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
-    public function edit(Customer $customer)
+    public function edit(Customer $customer): Response
     {
         $customer->load('type');
+
         return Inertia::render('Customers/Edit', [
             'customer' => CustomerResource::make($customer),
             'customerTypes' => TypeResource::collection($this->getCustomerTypes()),
         ]);
     }
 
-    public function update(UpdateCustomerRequest $request, Customer $customer)
+    public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
         $customer->update($request->validated());
 
-        return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil diperbarui.');
+        return Redirect::route('customers.index')
+            ->with('success', 'Pelanggan berhasil diperbarui.');
     }
 
-    public function destroy(Customer $customer)
+    public function destroy(Customer $customer): RedirectResponse
     {
         $customer->delete();
 
-        return Redirect::route('customers.index')->with('success', 'Pelanggan berhasil dinonaktifkan.');
+        return Redirect::route('customers.index')
+            ->with('success', 'Pelanggan berhasil dinonaktifkan.');
     }
 
-    public function restore($id)
+    public function restore($id): RedirectResponse
     {
         $customer = Customer::withTrashed()->findOrFail($id);
-
         $customer->restore();
 
         return Redirect::route('customers.index')
