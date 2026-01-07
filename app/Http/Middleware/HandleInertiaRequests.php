@@ -105,6 +105,7 @@ class HandleInertiaRequests extends Middleware
                     'manage_system' => $userLevel === Role::LEVEL_SUPER_ADMIN,
 
                     'create_product' => $user->can('create', Product::class),
+
                     'create_customer' => $user->can('create', Customer::class),
 
                     'manage_types' => $userLevel === Role::LEVEL_SUPER_ADMIN,

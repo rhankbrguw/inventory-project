@@ -34,10 +34,14 @@ class UserController extends Controller
                 });
             })
             ->when($request->input('role'), function ($query, $role) {
-                $query->whereHas(
-                    'roles',
-                    fn($q) => $q->where('name', 'like', "%{$role}%"),
-                );
+                $query->whereHas('roles', fn($q) => $q->where('name', 'like', "%{$role}%"));
+            })
+            ->when($request->input('status'), function ($query, $status) {
+                if ($status === 'active') {
+                    $query->whereNull('deleted_at');
+                } elseif ($status === 'inactive') {
+                    $query->whereNotNull('deleted_at');
+                }
             })
             ->when(
                 $request->input('sort'),
@@ -50,8 +54,9 @@ class UserController extends Controller
                 },
                 function ($query) {
                     $query->orderBy('name', 'asc');
-                },
+                }
             )
+            ->withTrashed()
             ->paginate(10)
             ->withQueryString();
 
@@ -176,7 +181,15 @@ class UserController extends Controller
 
         return Redirect::route('users.index')->with(
             'success',
-            'Pengguna berhasil dihapus.',
+            'Pengguna berhasil dinonaktifkan.',
         );
+    }
+
+    public function restore($id): RedirectResponse
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        $user->restore();
+
+        return Redirect::route('users.index')->with('success', 'Pengguna berhasil diaktifkan.');
     }
 }

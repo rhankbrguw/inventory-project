@@ -90,9 +90,10 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
 
     Route::middleware(['can:viewAny,' . User::class])->group(function () {
         Route::post('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
-        Route::resource('users', UserController::class)->except(['destroy']);
-        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-        Route::resource('types', TypeController::class)->except(['store']);
+        Route::resource('users', UserController::class)->withTrashed();
+
+        Route::post('types/{type}/restore', [TypeController::class, 'restore'])->name('types.restore')->withTrashed();
+        Route::resource('types', TypeController::class)->except(['store'])->withTrashed();
     });
 
     Route::post('/types', [TypeController::class, 'store'])->name('types.store');

@@ -7,14 +7,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-
 const sortOptions = [
     { value: 'newest', label: 'Pelanggan Terbaru' },
     { value: 'oldest', label: 'Pelanggan Terlama' },
     { value: 'name_asc', label: 'Nama (A-Z)' },
     { value: 'name_desc', label: 'Nama (Z-A)' },
 ];
-
+const statusOptions = [
+    { value: 'all', label: 'Semua Status' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'inactive', label: 'Nonaktif' },
+];
 export default function CustomerFilterCard({
     params,
     setFilter,
@@ -30,6 +33,21 @@ export default function CustomerFilterCard({
                     onChange={(e) => setFilter('search', e.target.value)}
                     className="w-full sm:w-auto sm:flex-grow"
                 />
+                <Select
+                    value={params.status || 'all'}
+                    onValueChange={(value) => setFilter('status', value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                        <SelectValue placeholder="Semua Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {statusOptions.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
                 <Select
                     value={params.type_id || 'all'}
                     onValueChange={(value) => setFilter('type_id', value)}

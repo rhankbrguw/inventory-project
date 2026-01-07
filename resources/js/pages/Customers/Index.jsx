@@ -18,14 +18,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Edit, MoreVertical, Archive, ArchiveRestore, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({ auth, customers, customerTypes, filters }) {
     const { can } = usePage().props.auth;
+    const { isManager } = usePermission();
 
-    const { params, setFilter } = useIndexPageFilters(
-        'customers.index',
-        filters
-    );
+    const canEditCustomer = can.create_customer;
+    const canDeleteCustomer = isManager;
+
+    const { params, setFilter } = useIndexPageFilters('customers.index', filters);
 
     const {
         confirmingDeletion,
@@ -50,11 +52,9 @@ export default function Index({ auth, customers, customerTypes, filters }) {
             <DropdownMenuContent align="end">
                 <DropdownMenuItem
                     className="cursor-pointer"
-                    onSelect={() =>
-                        router.get(route('customers.edit', customer.id))
-                    }
+                    onSelect={() => router.get(route('customers.edit', customer.id))}
                 >
-                    {can.create_customer ? (
+                    {canEditCustomer ? (
                         <>
                             <Edit className="w-4 h-4 mr-2" /> Edit
                         </>
@@ -65,22 +65,19 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     )}
                 </DropdownMenuItem>
 
-                {can.delete_customer && (
+                {canDeleteCustomer && (
                     <>
                         {customer.deleted_at ? (
                             <DropdownMenuItem
                                 className="cursor-pointer text-success focus:text-success"
                                 onSelect={() => restoreItem(customer.id)}
                             >
-                                <ArchiveRestore className="w-4 h-4 mr-2" />{' '}
-                                Aktifkan
+                                <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
                             </DropdownMenuItem>
                         ) : (
                             <DropdownMenuItem
                                 className="text-destructive focus:text-destructive cursor-pointer"
-                                onSelect={() =>
-                                    setConfirmingDeletion(customer.id)
-                                }
+                                onSelect={() => setConfirmingDeletion(customer.id)}
                             >
                                 <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
                             </DropdownMenuItem>
@@ -104,18 +101,20 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                     setFilter={setFilter}
                     customerTypes={customerTypes}
                 />
+
                 <MobileCardList
                     data={customers.data}
                     renderItem={(customer) => (
                         <Link
                             href={
-                                can.create_customer
+                                canEditCustomer
                                     ? route('customers.edit', customer.id)
                                     : '#'
                             }
                             key={customer.id}
                             className={cn(
-                                !can.create_customer && 'pointer-events-none',
+                                'block',
+                                !canEditCustomer && 'pointer-events-none',
                                 customer.deleted_at && 'opacity-50'
                             )}
                         >
@@ -126,25 +125,21 @@ export default function Index({ auth, customers, customerTypes, filters }) {
                         </Link>
                     )}
                 />
+
                 <div className="hidden md:block">
                     <DataTable
                         columns={customerColumns}
                         data={customers.data}
                         actions={renderActionDropdown}
-                        showRoute={
-                            can.create_customer ? 'customers.edit' : null
-                        }
-                        rowClassName={(row) =>
-                            row.deleted_at ? 'opacity-50' : ''
-                        }
+                        showRoute={canEditCustomer ? 'customers.edit' : null}
+                        rowClassName={(row) => (row.deleted_at ? 'opacity-50' : '')}
                     />
                 </div>
-                {customers.data.length > 0 && (
-                    <Pagination links={customers.meta.links} />
-                )}
+
+                {customers.data.length > 0 && <Pagination links={customers.meta.links} />}
             </div>
 
-            {can.delete_customer && (
+            {canDeleteCustomer && (
                 <DeleteConfirmationDialog
                     open={confirmingDeletion !== null}
                     onOpenChange={() => setConfirmingDeletion(null)}

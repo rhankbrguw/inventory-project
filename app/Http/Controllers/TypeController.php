@@ -25,6 +25,13 @@ class TypeController extends Controller
             ->when($request->input('group'), function ($query, $group) {
                 $query->where('group', $group);
             })
+            ->when($request->input('status'), function ($query, $status) {
+                if ($status === 'active') {
+                    $query->whereNull('deleted_at');
+                } elseif ($status === 'inactive') {
+                    $query->whereNotNull('deleted_at');
+                }
+            })
             ->when($request->input('sort'), function ($query, $sort) {
                 $direction = str_ends_with($sort, '_desc') ? 'desc' : 'asc';
                 $column = str_replace(['_asc', '_desc'], '', $sort);
@@ -32,6 +39,7 @@ class TypeController extends Controller
             }, function ($query) {
                 $query->orderBy('group')->orderBy('name');
             })
+            ->withTrashed()
             ->paginate(15)
             ->withQueryString();
 
@@ -84,12 +92,19 @@ class TypeController extends Controller
     public function destroy(Type $type): RedirectResponse
     {
         if ($type->products()->exists()) {
-            return Redirect::back()->with('error', 'Tipe ini tidak dapat dihapus karena masih digunakan oleh produk.');
+            return Redirect::back()->with('error', 'Tipe ini tidak dapat dinonaktifkan karena masih digunakan oleh produk.');
         }
 
         $type->delete();
 
-        return Redirect::route('types.index')
-            ->with('success', 'Tipe berhasil dihapus.');
+        return Redirect::route('types.index')->with('success', 'Tipe berhasil dinonaktifkan.');
+    }
+
+    public function restore($id): RedirectResponse
+    {
+        $type = Type::withTrashed()->findOrFail($id);
+        $type->restore();
+
+        return Redirect::route('types.index')->with('success', 'Tipe berhasil diaktifkan.');
     }
 }

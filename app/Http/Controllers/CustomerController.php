@@ -37,6 +37,13 @@ class CustomerController extends Controller
                         ->orWhere('phone', 'like', "%{$search}%");
                 });
             })
+            ->when($request->input('status'), function ($query, $status) {
+                if ($status === 'active') {
+                    $query->whereNull('deleted_at');
+                } elseif ($status === 'inactive') {
+                    $query->whereNotNull('deleted_at');
+                }
+            })
             ->when($request->input('type_id'), function ($query, $typeId) {
                 if ($typeId !== 'all') {
                     $query->where('type_id', $typeId);
@@ -49,7 +56,7 @@ class CustomerController extends Controller
                     'oldest' => $query->orderBy('created_at', 'asc'),
                     default => $query->latest('created_at'),
                 };
-            }, fn ($query) => $query->latest('created_at'))
+            }, fn($query) => $query->latest('created_at'))
             ->paginate(10)
             ->withQueryString();
 

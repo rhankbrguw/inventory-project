@@ -26,6 +26,7 @@ import {
     Tags,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Index({
     auth,
@@ -36,11 +37,10 @@ export default function Index({
     filters = {},
 }) {
     const { can } = usePage().props.auth;
+    const { isManager } = usePermission();
+    const canCrudProducts = isManager;
 
-    const { params, setFilter } = useIndexPageFilters(
-        'products.index',
-        filters
-    );
+    const { params, setFilter } = useIndexPageFilters('products.index', filters);
 
     const {
         confirmingDeletion,
@@ -51,59 +51,42 @@ export default function Index({
         restoreItem,
     } = useSoftDeletes({ resourceName: 'products', data: products.data });
 
-    const renderActionDropdown = (product) => {
-        if (!can.edit_product && !can.delete_product) return null;
-
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => e.stopPropagation()}
+    const renderActionDropdown = (product) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MoreVertical className="w-4 h-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => router.get(route('products.edit', product.id))}
+                >
+                    <Edit className="w-4 h-4 mr-2" /> Edit
+                </DropdownMenuItem>
+                {product.deleted_at ? (
+                    <DropdownMenuItem
+                        className="cursor-pointer text-success focus:text-success"
+                        onSelect={() => restoreItem(product.id)}
                     >
-                        <MoreVertical className="w-4 h-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    {can.edit_product && (
-                        <DropdownMenuItem
-                            className="cursor-pointer"
-                            onSelect={() =>
-                                router.get(route('products.edit', product.id))
-                            }
-                        >
-                            <Edit className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                    )}
-
-                    {can.delete_product && (
-                        <>
-                            {product.deleted_at ? (
-                                <DropdownMenuItem
-                                    className="cursor-pointer text-success focus:text-success"
-                                    onSelect={() => restoreItem(product.id)}
-                                >
-                                    <ArchiveRestore className="w-4 h-4 mr-2" />{' '}
-                                    Aktifkan
-                                </DropdownMenuItem>
-                            ) : (
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive cursor-pointer"
-                                    onSelect={() =>
-                                        setConfirmingDeletion(product.id)
-                                    }
-                                >
-                                    <Archive className="w-4 h-4 mr-2" />{' '}
-                                    Nonaktifkan
-                                </DropdownMenuItem>
-                            )}
-                        </>
-                    )}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
-    };
+                        <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
+                    </DropdownMenuItem>
+                ) : (
+                    <DropdownMenuItem
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onSelect={() => setConfirmingDeletion(product.id)}
+                    >
+                        <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
+                    </DropdownMenuItem>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     return (
         <IndexPageLayout
@@ -125,9 +108,7 @@ export default function Index({
                                     className="flex items-center gap-2 px-2 sm:px-4"
                                 >
                                     <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4" />
-                                    <span className="hidden sm:inline">
-                                        Tipe Produk
-                                    </span>
+                                    <span className="hidden sm:inline">Tipe Produk</span>
                                 </Button>
                             }
                         />
@@ -166,21 +147,22 @@ export default function Index({
                     renderItem={(product) => (
                         <Link
                             href={
-                                can.edit_product
+                                canCrudProducts
                                     ? route('products.edit', product.id)
                                     : '#'
                             }
                             key={product.id}
                             className={cn(
                                 'block',
-                                !can.edit_product &&
-                                'pointer-events-none cursor-default',
+                                !canCrudProducts && 'pointer-events-none',
                                 product.deleted_at && 'opacity-50'
                             )}
                         >
                             <ProductMobileCard
                                 product={product}
-                                renderActionDropdown={renderActionDropdown}
+                                renderActionDropdown={
+                                    canCrudProducts ? renderActionDropdown : null
+                                }
                             />
                         </Link>
                     )}
@@ -190,21 +172,16 @@ export default function Index({
                     <DataTable
                         columns={productColumns}
                         data={products.data}
-                        actions={renderActionDropdown}
-                        showRoute={
-                            can.edit_product ? 'products.edit' : null
-                        }
-                        rowClassName={(row) =>
-                            row.deleted_at ? 'opacity-50' : ''
-                        }
+                        actions={canCrudProducts ? renderActionDropdown : null}
+                        showRoute={canCrudProducts ? 'products.edit' : null}
+                        rowClassName={(row) => (row.deleted_at ? 'opacity-50' : '')}
                     />
                 </div>
-                {products.data.length > 0 && (
-                    <Pagination links={products.meta.links} />
-                )}
+
+                {products.data.length > 0 && <Pagination links={products.meta.links} />}
             </div>
 
-            {can.delete_product && (
+            {canCrudProducts && (
                 <DeleteConfirmationDialog
                     open={confirmingDeletion !== null}
                     onOpenChange={() => setConfirmingDeletion(null)}
