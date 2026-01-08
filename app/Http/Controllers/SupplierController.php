@@ -85,19 +85,23 @@ class SupplierController extends Controller
     {
         return Inertia::render('Suppliers/Edit', [
             'supplier' => SupplierResource::make($supplier),
+            'canEdit' => Auth::user()->can('update', $supplier),
         ]);
     }
 
-    public function update(UpdateSupplierRequest $request, Supplier $supplier): RedirectResponse
+    public function update(UpdateSupplierRequest $request, Supplier $supplier)
     {
-        $supplier->update($request->validated());
+        $this->authorize('update', $supplier);
 
+        $supplier->update($request->validated());
         return Redirect::route('suppliers.index')
             ->with('success', 'Supplier berhasil diperbarui.');
     }
 
     public function destroy(Supplier $supplier): RedirectResponse
     {
+        $this->authorize('delete', $supplier);
+
         $supplier->delete();
 
         return Redirect::route('suppliers.index')
@@ -106,6 +110,8 @@ class SupplierController extends Controller
 
     public function restore(Supplier $supplier): RedirectResponse
     {
+        $this->authorize('restore', $supplier);
+
         $supplier->restore();
 
         return Redirect::route('suppliers.index')

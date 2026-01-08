@@ -21,6 +21,11 @@ class Inventory extends Model
         'local_supplier_id',
         'low_stock_threshold',
         'bin_location',
+        'channel_prices_override',
+    ];
+
+    protected $casts = [
+        'channel_prices_override' => 'array',
     ];
 
     public function location(): BelongsTo

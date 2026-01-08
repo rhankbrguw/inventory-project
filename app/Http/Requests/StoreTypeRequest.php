@@ -30,7 +30,7 @@ class StoreTypeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:50', (new UniqueRule('types'))->where('group', $this->group)],
             'group' => ['required', Rule::in(array_keys(Type::getAvailableGroups()))],
-            'code' => ['nullable', 'string', 'max:50', (new UniqueRule('types'))->where('deleted_at', null)],
+            'code' => ['nullable', 'string', 'max:50', (new UniqueRule('types'))->where('group', $this->group)->where('deleted_at', null)],
             'level' => [
                 'nullable',
                 'integer',

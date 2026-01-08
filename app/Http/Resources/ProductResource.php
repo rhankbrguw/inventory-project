@@ -5,17 +5,32 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ProductResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $user = Auth::user();
+        $effectivePrice = $this->price;
+
+        if ($user && $user->level !== 1 && $this->relationLoaded('inventories')) {
+            $locationId = $user->locations->first()?->id;
+            if ($locationId) {
+                $inventory = $this->inventories->where('location_id', $locationId)->first();
+                if ($inventory && $inventory->selling_price !== null && $inventory->selling_price > 0) {
+                    $effectivePrice = $inventory->selling_price;
+                }
+            }
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'sku' => $this->sku,
             'description' => $this->description,
-            'price' => $this->price,
+            'price' => $effectivePrice,
+            'global_price' => $this->price,
             'unit' => $this->unit,
             'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
             'channel_prices' => $this->whenLoaded('prices', function () {

@@ -16,9 +16,10 @@ class CustomerResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'type_id' => $this->type_id,
-            'type' => $this->whenLoaded('type', fn() => [
+            'type' => $this->whenLoaded('type', fn () => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,
+                'code' => $this->type->code,
             ]),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

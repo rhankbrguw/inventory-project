@@ -16,7 +16,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Edit, MoreVertical, Archive, ArchiveRestore } from 'lucide-react';
+import { Edit, MoreVertical, Archive, ArchiveRestore, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermission } from '@/hooks/usePermission';
 
@@ -26,7 +26,7 @@ export default function Index({ auth, suppliers, filters }) {
         filters
     );
 
-    const { isManager } = usePermission();
+    const { isManager, isSuperAdmin } = usePermission();
     const canCrudSuppliers = isManager;
 
     const {
@@ -38,44 +38,63 @@ export default function Index({ auth, suppliers, filters }) {
         restoreItem,
     } = useSoftDeletes({ resourceName: 'suppliers', data: suppliers.data });
 
-    const renderActionDropdown = (supplier) => (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <MoreVertical className="w-4 h-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                    className="cursor-pointer"
-                    onSelect={() =>
-                        router.get(route('suppliers.edit', supplier.id))
-                    }
-                >
-                    <Edit className="w-4 h-4 mr-2" /> Edit
-                </DropdownMenuItem>
-                {supplier.deleted_at ? (
-                    <DropdownMenuItem
-                        className="cursor-pointer text-success focus:text-success"
-                        onSelect={() => restoreItem(supplier.id)}
+    const canEditSupplier = (supplier) => {
+        if (isSuperAdmin) return true;
+        if (!isManager) return false;
+        return !supplier.is_global;
+    };
+
+    const renderActionDropdown = (supplier) => {
+        const canEdit = canEditSupplier(supplier);
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
-                    </DropdownMenuItem>
-                ) : (
-                    <DropdownMenuItem
-                        className="text-destructive focus:text-destructive cursor-pointer"
-                        onSelect={() => setConfirmingDeletion(supplier.id)}
-                    >
-                        <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
-                    </DropdownMenuItem>
-                )}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
+                        <MoreVertical className="w-4 h-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {canEdit ? (
+                        <>
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onSelect={() =>
+                                    router.get(route('suppliers.edit', supplier.id))
+                                }
+                            >
+                                <Edit className="w-4 h-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            {supplier.deleted_at ? (
+                                <DropdownMenuItem
+                                    className="cursor-pointer text-success focus:text-success"
+                                    onSelect={() => restoreItem(supplier.id)}
+                                >
+                                    <ArchiveRestore className="w-4 h-4 mr-2" /> Aktifkan
+                                </DropdownMenuItem>
+                            ) : (
+                                <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive cursor-pointer"
+                                    onSelect={() => setConfirmingDeletion(supplier.id)}
+                                >
+                                    <Archive className="w-4 h-4 mr-2" /> Nonaktifkan
+                                </DropdownMenuItem>
+                            )}
+                        </>
+                    ) : (
+                        <DropdownMenuItem disabled>
+                            <Lock className="w-4 h-4 mr-2" />
+                            Supplier Global (Hanya Super Admin)
+                        </DropdownMenuItem>
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
 
     return (
         <IndexPageLayout
@@ -90,37 +109,25 @@ export default function Index({ auth, suppliers, filters }) {
                     data={suppliers.data}
                     renderItem={(supplier) => (
                         <Link
-                            href={
-                                canCrudSuppliers
-                                    ? route('suppliers.edit', supplier.id)
-                                    : '#'
-                            }
+                            href={route('suppliers.edit', supplier.id)}
                             key={supplier.id}
-                            className={cn(
-                                !canCrudSuppliers && 'pointer-events-none',
-                                supplier.deleted_at && 'opacity-50'
-                            )}
+                            className={cn('block', supplier.deleted_at && 'opacity-50')}
                         >
                             <SupplierMobileCard
                                 supplier={supplier}
-                                renderActionDropdown={
-                                    canCrudSuppliers
-                                        ? renderActionDropdown
-                                        : null
-                                }
+                                renderActionDropdown={canCrudSuppliers ? renderActionDropdown : null}
                             />
                         </Link>
                     )}
                 />
+
                 <div className="hidden md:block">
                     <DataTable
                         columns={supplierColumns}
                         data={suppliers.data}
                         actions={canCrudSuppliers ? renderActionDropdown : null}
-                        showRoute={canCrudSuppliers ? 'suppliers.edit' : null}
-                        rowClassName={(row) =>
-                            row.deleted_at ? 'opacity-50' : ''
-                        }
+                        showRoute="suppliers.edit"
+                        rowClassName={(row) => row.deleted_at ? 'opacity-50' : ''}
                     />
                 </div>
                 {suppliers.data.length > 0 && (

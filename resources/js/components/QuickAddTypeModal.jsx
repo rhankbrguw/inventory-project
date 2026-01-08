@@ -74,7 +74,7 @@ export default function QuickAddTypeModal({
                             placeholder="Masukkan nama tipe"
                             className="h-8 text-sm"
                         />
-                        <InputError message={errors.name} />
+                        <InputError message={errors.code} className="text-xs" />
                     </div>
 
                     <div className="space-y-1.5">

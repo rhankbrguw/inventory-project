@@ -180,13 +180,6 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
             auth={auth}
             title="Detail Transaksi"
             backRoute="transactions.index"
-            action={
-                <div className="flex gap-2 print-hidden">
-                    <PrintButton>
-                        <span className="hidden sm:inline">Cetak</span>
-                    </PrintButton>
-                </div>
-            }
         >
             {data.status === 'Pending Approval' && canApprove && (
                 <Card className="mb-6 border-warning/50 bg-warning/5">

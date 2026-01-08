@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Traits\FormatsPhoneNumber;
 use App\Models\Type;
+use App\Models\Customer;
 use App\Rules\ExistsInGroup;
 use App\Rules\UniqueRule;
 use App\Rules\ValidPhoneNumber;
@@ -22,8 +23,32 @@ class StoreCustomerRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'type_id' => ['required', 'integer', new ExistsInGroup('types', Type::GROUP_CUSTOMER)],
-            'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:50', new UniqueRule('customers', null, 'email')],
+            'type_id' => [
+                'required',
+                'integer',
+                new ExistsInGroup('types', Type::GROUP_CUSTOMER),
+                function ($value, $fail) {
+                    $type = Type::find($value);
+                    if ($type && $type->code === Customer::CODE_BRANCH_CUSTOMER) {
+                        $fail('Pelanggan tipe Cabang tidak boleh dibuat manual.');
+                    }
+                }
+            ],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'max:50',
+                function ($value, $fail) {
+                    if (!str_ends_with($value, '.system')) {
+                        $validator = validator(['email' => $value], ['email' => 'email:rfc,dns']);
+                        if ($validator->fails()) {
+                            $fail('Format email tidak valid.');
+                        }
+                    }
+                },
+                new UniqueRule('customers', $this->customer->id ?? null)
+            ],
             'phone' => ['nullable', 'string', new ValidPhoneNumber(), new UniqueRule('customers', null, 'phone')],
             'address' => ['nullable', 'string', 'max:255'],
         ];

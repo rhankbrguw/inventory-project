@@ -17,6 +17,7 @@ class SupplierResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'notes' => $this->notes,
+            'is_global' => $this->location_id === null,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
             'deleted_at' => $this->deleted_at?->toISOString(),

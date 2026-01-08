@@ -32,6 +32,14 @@ class ProductController extends Controller
 
         $products = Product::query()
             ->with(['type', 'defaultSupplier'])
+            ->when($user->level !== Role::LEVEL_SUPER_ADMIN, function ($query) use ($user) {
+                $locationId = $user->locations->first()?->id;
+                if ($locationId) {
+                    $query->with(['inventories' => function ($q) use ($locationId) {
+                        $q->where('location_id', $locationId);
+                    }]);
+                }
+            })
             ->accessibleBy($user)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
@@ -170,13 +178,14 @@ class ProductController extends Controller
             abort(403);
         }
 
-        $product->load(['type', 'defaultSupplier', 'suppliers', 'prices']);
+        $product->load(['type', 'defaultSupplier', 'suppliers', 'prices', 'inventories']);
 
         $localOverride = null;
         if ($user->level !== Role::LEVEL_SUPER_ADMIN) {
             $locationId = $user->locations->first()?->id;
             if ($locationId) {
-                $localOverride = Inventory::where('product_id', $product->id)
+                $localOverride = Inventory::with('localSupplier')
+                    ->where('product_id', $product->id)
                     ->where('location_id', $locationId)
                     ->first();
             }
@@ -187,6 +196,11 @@ class ProductController extends Controller
             'localOverride' => $localOverride ? [
                 'selling_price' => $localOverride->selling_price,
                 'local_supplier_id' => $localOverride->local_supplier_id,
+                'local_supplier' => $localOverride->localSupplier ? [
+                    'id' => $localOverride->localSupplier->id,
+                    'name' => $localOverride->localSupplier->name,
+                ] : null,
+                'channel_prices_override' => $localOverride->channel_prices_override ?? [],
             ] : null,
             'types' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(),
             'suppliers' => Supplier::accessibleBy($user)->orderBy('name')->get(['id', 'name']),
@@ -252,8 +266,14 @@ class ProductController extends Controller
                         $inventory->selling_price = $validated['price'];
                     }
 
-                    if (isset($validated['default_supplier_id'])) {
+                    if (isset($validated['default_supplier_id']) && $validated['default_supplier_id'] !== '') {
                         $inventory->local_supplier_id = $validated['default_supplier_id'];
+                    } elseif (array_key_exists('default_supplier_id', $validated) && $validated['default_supplier_id'] === '') {
+                        $inventory->local_supplier_id = null;
+                    }
+
+                    if (isset($validated['channel_prices'])) {
+                        $inventory->channel_prices_override = $validated['channel_prices'];
                     }
 
                     $inventory->save();

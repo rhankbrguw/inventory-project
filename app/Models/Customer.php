@@ -15,6 +15,8 @@ class Customer extends Model
     use SoftDeletes;
     use \App\Traits\ScopedByLocation;
 
+    public const CODE_BRANCH_CUSTOMER = 'CBG';
+
     protected $fillable = [
         'location_id',
         'name',
@@ -38,6 +40,11 @@ class Customer extends Model
     public function sells(): HasMany
     {
         return $this->hasMany(Sell::class);
+    }
+
+    public function isBranchCustomer(): bool
+    {
+        return $this->type && $this->type->code === self::CODE_BRANCH_CUSTOMER;
     }
 
     public function setPhoneAttribute($value)

@@ -78,10 +78,20 @@ class StockMovementController extends Controller
             $locationsQuery->whereIn('id', $accessibleLocationIds);
         }
 
+        $productsQuery = Product::orderBy('name');
+        if ($user->level !== Role::LEVEL_SUPER_ADMIN) {
+            $locationId = $user->locations->first()?->id;
+            if ($locationId) {
+                $productsQuery->with(['inventories' => function ($q) use ($locationId) {
+                    $q->where('location_id', $locationId);
+                }]);
+            }
+        }
+
         return Inertia::render('StockMovements/Index', [
             'stockMovements' => StockMovementResource::collection($stockMovements),
             'locations' => $locationsQuery->get(['id', 'name']),
-            'products' => ProductResource::collection(Product::orderBy('name')->get()),
+            'products' => ProductResource::collection($productsQuery->get()),
             'movementTypes' => StockMovement::getMovementTypes(),
             'filters' => (object) $request->only(['search', 'location_id', 'product_id', 'type']),
         ]);

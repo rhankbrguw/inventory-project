@@ -8,6 +8,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
+    SelectGroup,
+    SelectLabel,
 } from '@/components/ui/select';
 import QuickAddCustomerModal from '@/components/QuickAddCustomerModal';
 import SellItemManager from './SellItemManager';
@@ -41,6 +43,9 @@ export default function SellCart({
         return total + qty * parseFloat(price);
     }, 0);
 
+    const internalCustomers = customers.filter(c => c.type?.code === 'CBG');
+    const generalCustomers = customers.filter(c => c.type?.code !== 'CBG');
+
     return (
         <div className="flex flex-col h-full">
             <div className="p-3 border-b flex-shrink-0">
@@ -71,14 +76,38 @@ export default function SellCart({
                                 <SelectItem value="null">
                                     Pelanggan Umum
                                 </SelectItem>
-                                {customers.map((cust) => (
-                                    <SelectItem
-                                        key={cust.id}
-                                        value={cust.id.toString()}
-                                    >
-                                        {cust.name}
-                                    </SelectItem>
-                                ))}
+
+                                {generalCustomers.length > 0 && (
+                                    <SelectGroup>
+                                        <SelectLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                                            Pelanggan Terdaftar
+                                        </SelectLabel>
+                                        {generalCustomers.map((cust) => (
+                                            <SelectItem
+                                                key={cust.id}
+                                                value={cust.id.toString()}
+                                            >
+                                                {cust.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                )}
+
+                                {internalCustomers.length > 0 && (
+                                    <SelectGroup>
+                                        <SelectLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                                            Internal Cabang
+                                        </SelectLabel>
+                                        {internalCustomers.map((cust) => (
+                                            <SelectItem
+                                                key={cust.id}
+                                                value={cust.id.toString()}
+                                            >
+                                                {cust.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                )}
                             </SelectContent>
                         </Select>
                         <QuickAddCustomerModal

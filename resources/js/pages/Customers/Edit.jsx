@@ -42,6 +42,8 @@ export default function Edit({
         });
     };
 
+    const isInternal = customer.type?.code === 'CBG';
+
     return (
         <ContentPageLayout
             auth={auth}
@@ -78,26 +80,48 @@ export default function Edit({
                             htmlFor="type_id"
                             error={errors.type_id}
                         >
-                            <Select
-                                value={data.type_id?.toString() ?? ''}
-                                onValueChange={(value) =>
-                                    setData('type_id', value)
-                                }
-                            >
-                                <SelectTrigger id="type_id">
-                                    <SelectValue placeholder="Pilih Tipe Pelanggan" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {customerTypes.data.map((type) => (
-                                        <SelectItem
-                                            key={type.id}
-                                            value={type.id.toString()}
-                                        >
-                                            {type.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            {isInternal ? (
+                                <div className="space-y-1">
+                                    <Input
+                                        value={
+                                            customer.type?.name ||
+                                            'Cabang (Internal)'
+                                        }
+                                        disabled
+                                        className="bg-muted text-muted-foreground font-medium opacity-100"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">
+                                        * Tipe ini dikelola otomatis oleh sistem
+                                        (Lokasi). Tidak dapat diubah.
+                                    </p>
+                                    <input
+                                        type="hidden"
+                                        name="type_id"
+                                        value={data.type_id}
+                                    />
+                                </div>
+                            ) : (
+                                <Select
+                                    value={data.type_id?.toString() ?? ''}
+                                    onValueChange={(value) =>
+                                        setData('type_id', value)
+                                    }
+                                >
+                                    <SelectTrigger id="type_id">
+                                        <SelectValue placeholder="Pilih Tipe Pelanggan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {customerTypes.data.map((type) => (
+                                            <SelectItem
+                                                key={type.id}
+                                                value={type.id.toString()}
+                                            >
+                                                {type.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </FormField>
 
                         <FormField

@@ -17,7 +17,14 @@ use Inertia\Response;
 
 class CustomerController extends Controller
 {
-    private function getCustomerTypes()
+    private function getCustomerTypesForForm()
+    {
+        return Type::where('group', Type::GROUP_CUSTOMER)
+            ->where('code', '!=', Customer::CODE_BRANCH_CUSTOMER)
+            ->get();
+    }
+
+    private function getAllCustomerTypes()
     {
         return Type::where('group', Type::GROUP_CUSTOMER)->get();
     }
@@ -56,21 +63,21 @@ class CustomerController extends Controller
                     'oldest' => $query->orderBy('created_at', 'asc'),
                     default => $query->latest('created_at'),
                 };
-            }, fn($query) => $query->latest('created_at'))
+            }, fn ($query) => $query->latest('created_at'))
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Customers/Index', [
             'customers' => CustomerResource::collection($customers),
             'filters' => (object) $request->only(['search', 'sort', 'type_id']),
-            'customerTypes' => TypeResource::collection($this->getCustomerTypes()),
+            'customerTypes' => TypeResource::collection($this->getAllCustomerTypes()),
         ]);
     }
 
     public function create(): Response
     {
         return Inertia::render('Customers/Create', [
-            'customerTypes' => TypeResource::collection($this->getCustomerTypes()),
+            'customerTypes' => TypeResource::collection($this->getCustomerTypesForForm()),
         ]);
     }
 
@@ -103,7 +110,7 @@ class CustomerController extends Controller
 
         return Inertia::render('Customers/Edit', [
             'customer' => CustomerResource::make($customer),
-            'customerTypes' => TypeResource::collection($this->getCustomerTypes()),
+            'customerTypes' => TypeResource::collection($this->getCustomerTypesForForm()),
         ]);
     }
 

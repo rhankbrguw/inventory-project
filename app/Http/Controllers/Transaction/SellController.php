@@ -86,9 +86,18 @@ class SellController extends Controller
             $productsQuery->whereRaw('1 = 0');
         }
 
+        $customerTypesForQuickAdd = Type::where('group', Type::GROUP_CUSTOMER)
+            ->where('code', '!=', Customer::CODE_BRANCH_CUSTOMER)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $customers = Customer::with('type')
+            ->orderBy('name')
+            ->get(['id', 'name', 'type_id']);
+
         return Inertia::render('Transactions/Sells/Create', [
             'locations' => $locationsWithPermissions,
-            'customers' => Customer::orderBy('name')->get(['id', 'name']),
+            'customers' => $customers,
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
@@ -98,7 +107,7 @@ class SellController extends Controller
                 )),
             'paymentMethods' => Type::where('group', Type::GROUP_PAYMENT)->orderBy('name')->get(['id', 'name']),
             'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(['id', 'name']),
-            'customerTypes' => Type::where('group', Type::GROUP_CUSTOMER)->orderBy('name')->get(['id', 'name']),
+            'customerTypes' => $customerTypesForQuickAdd,
             'salesChannels' => Type::where('group', Type::GROUP_SALES_CHANNEL)->orderBy('name')->get(['id', 'name', 'code']),
             'cart' => SellCartItemResource::collection($cartItems),
             'filters' => (object) $request->only(['location_id', 'search', 'type_id']),

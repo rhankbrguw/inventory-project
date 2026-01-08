@@ -5,36 +5,37 @@ use App\Models\Location;
 use App\Models\Customer;
 use App\Models\Type;
 
-return new class () extends Migration {
+return new class() extends Migration {
     public function up(): void
     {
-        $typeCabang = Type::where('group', 'customer_type')
-            ->where('code', 'CBG')
+        $customerTypeCabang = Type::where('group', Type::GROUP_CUSTOMER)
+            ->where('code', Customer::CODE_BRANCH_CUSTOMER)
             ->first();
 
-        $typeId = $typeCabang ? $typeCabang->id : null;
+        $locationTypeBranch = Type::where('group', Type::GROUP_LOCATION)
+            ->where('code', Location::CODE_BRANCH)
+            ->first();
 
-        $locations = Location::all();
-
-        foreach ($locations as $loc) {
-            $exists = Customer::where('related_location_id', $loc->id)->exists();
-
-            if (!$exists) {
-                $locType = Type::find($loc->type_id);
-                if ($locType && $locType->code === 'WH') {
-                    continue;
-                }
-
-                Customer::create([
-                    'name'                => $loc->name . ' (Internal)',
-                    'type_id'             => $typeId,
-                    'related_location_id' => $loc->id,
-                    'email'               => 'branch.' . $loc->id . '@internal.system',
-                    'phone'               => null,
-                    'address'             => $loc->address ?? 'Internal Location',
-                ]);
-            }
+        if (!$customerTypeCabang || !$locationTypeBranch) {
+            return;
         }
+
+        $branches = Location::where('type_id', $locationTypeBranch->id)->get();
+
+        Customer::withoutEvents(function () use ($branches, $customerTypeCabang) {
+            foreach ($branches as $branch) {
+                Customer::updateOrCreate(
+                    ['related_location_id' => $branch->id],
+                    [
+                        'name' => $branch->name . ' (Internal)',
+                        'type_id' => $customerTypeCabang->id,
+                        'email' => 'branch.' . $branch->id . '@internal.system',
+                        'phone' => null,
+                        'address' => $branch->address,
+                    ]
+                );
+            }
+        });
     }
 
     public function down(): void

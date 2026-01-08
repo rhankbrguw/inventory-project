@@ -21,7 +21,7 @@ class LocationObserver
     private function syncCustomer(Location $location)
     {
         $branchType = Type::where('group', Type::GROUP_LOCATION)
-            ->where('code', 'BR')
+            ->where('code', Location::CODE_BRANCH)
             ->first();
 
         if (!$branchType || $location->type_id != $branchType->id) {
@@ -29,14 +29,18 @@ class LocationObserver
         }
 
         $customerType = Type::where('group', Type::GROUP_CUSTOMER)
-            ->where('code', 'CBG')
+            ->where('code', Customer::CODE_BRANCH_CUSTOMER)
             ->first();
+
+        if (!$customerType) {
+            return;
+        }
 
         Customer::updateOrCreate(
             ['related_location_id' => $location->id],
             [
                 'name' => $location->name . ' (Internal)',
-                'type_id' => $customerType ? $customerType->id : null,
+                'type_id' => $customerType->id,
                 'email' => 'branch.' . $location->id . '@internal.system',
                 'phone' => null,
                 'address' => $location->address,

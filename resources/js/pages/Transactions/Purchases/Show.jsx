@@ -20,7 +20,7 @@ export default function Show({ auth, purchase }) {
             value: data.supplier ? (
                 data.supplier.name
             ) : data.notes && data.notes.includes('Internal Transfer') ? (
-                <span className="font-semibold text-blue-600">
+                <span className="font-semibold text-info">
                     Internal Transfer (Pusat)
                 </span>
             ) : (
