@@ -24,7 +24,7 @@ class LocationObserver
             ->where('code', 'BR')
             ->first();
 
-        if (!$branchType || $location->type_id !== $branchType->id) {
+        if (!$branchType || $location->type_id != $branchType->id) {
             return;
         }
 
