@@ -1,12 +1,18 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
 use App\Models\Location;
 use App\Models\Customer;
 use App\Models\Type;
 
-return new class() extends Migration {
-    public function up(): void
+class SyncInternalCustomers extends Command
+{
+    protected $signature = 'customers:sync-internal';
+    protected $description = 'Sync internal customers for all branches';
+
+    public function handle()
     {
         $customerTypeCabang = Type::where('group', Type::GROUP_CUSTOMER)
             ->where('code', Customer::CODE_BRANCH_CUSTOMER)
@@ -17,12 +23,14 @@ return new class() extends Migration {
             ->first();
 
         if (!$customerTypeCabang || !$locationTypeBranch) {
-            return;
+            $this->error('Required types not found!');
+            return 1;
         }
 
         $branches = Location::where('type_id', $locationTypeBranch->id)->get();
+        $count = 0;
 
-        Customer::withoutEvents(function () use ($branches, $customerTypeCabang) {
+        Customer::withoutEvents(function () use ($branches, $customerTypeCabang, &$count) {
             foreach ($branches as $branch) {
                 Customer::updateOrCreate(
                     ['related_location_id' => $branch->id],
@@ -34,12 +42,11 @@ return new class() extends Migration {
                         'address' => $branch->address,
                     ]
                 );
+                $count++;
             }
         });
-    }
 
-    public function down(): void
-    {
-        //
+        $this->info("✓ Synced {$count} internal customers");
+        return 0;
     }
-};
+}

@@ -253,16 +253,17 @@ MAIL_ENCRYPTION=tls
 
 ## 🔍 Troubleshooting
 
-| Issue                                | Solution                                                            |
-| ------------------------------------ | ------------------------------------------------------------------- |
-| Setup wizard not appearing           | Check database: `SystemSetting::get('setup_completed')`             |
-| Database initializing slowly         | `docker compose logs mysql`                                         |
-| APP_KEY missing                      | `docker compose exec app php artisan key:generate`                  |
-| Emails not appearing (development)   | Check Mailpit at [http://localhost:8025](http://localhost:8025)     |
-| Emails not sending (production)      | Verify SMTP credentials in `.env`, test with `php artisan tinker`   |
-| Frontend not updating                | `docker compose exec node npm install && npm run build`             |
-| Permission denied errors             | `chmod -R 775 storage bootstrap/cache`                              |
-| Cannot access /setup after first run | Setup wizard disables after Super Admin creation (security feature) |
+| Issue                                 | Solution                                                            |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| Setup wizard not appearing            | Check database: `SystemSetting::get('setup_completed')`             |
+| Database initializing slowly          | `docker compose logs mysql`                                         |
+| APP_KEY missing                       | `docker compose exec app php artisan key:generate`                  |
+| Emails not appearing (development)    | Check Mailpit at [http://localhost:8025](http://localhost:8025)     |
+| Emails not sending (production)       | Verify SMTP credentials in `.env`, test with `php artisan tinker`   |
+| Frontend not updating                 | `docker compose exec node npm install && npm run build`             |
+| Permission denied errors              | `chmod -R 775 storage bootstrap/cache`                              |
+| Cannot access /setup after first run  | Setup wizard disables after Super Admin creation (security feature) |
+| Internal(branch) customers isn't sync | `docker compose exec app php artisan customers:sync-internal`       |
 
 ### Resetting Setup (Development Only)
 
