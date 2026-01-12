@@ -69,11 +69,18 @@ class AuthServiceProvider extends ServiceProvider
                 $modelClass = is_object($first) ? get_class($first) : $first;
             }
 
-            /**
-             * This ensures audit trail and prevents fraud even for super admin
-             */
             if ($modelClass === StockTransfer::class) {
                 $restrictedAbilities = ['accept', 'reject', 'receive'];
+
+                if (in_array($ability, $restrictedAbilities)) {
+                    return null;
+                }
+
+                return true;
+            }
+
+            if ($modelClass === Sell::class) {
+                $restrictedAbilities = ['approve', 'reject', 'receive'];
 
                 if (in_array($ability, $restrictedAbilities)) {
                     return null;
