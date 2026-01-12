@@ -29,6 +29,11 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 
 class AuthServiceProvider extends ServiceProvider
 {
+    /**
+     * The policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
     protected $policies = [
         Customer::class => CustomerPolicy::class,
         Location::class => LocationPolicy::class,
@@ -43,14 +48,41 @@ class AuthServiceProvider extends ServiceProvider
         Inventory::class => StockPolicy::class,
     ];
 
+    /**
+     * Register any authentication / authorization services.
+     */
     public function boot(): void
     {
         $this->registerPolicies();
 
-        Gate::before(function ($user) {
-            if ($user->level === 1) {
+        /**
+         * Super Admin Gate Bypass (with exceptions for workflow enforcement)
+         */
+        Gate::before(function ($user, $ability, $models) {
+            if ($user->level !== 1) {
+                return null;
+            }
+
+            $modelClass = null;
+            if (is_array($models) && count($models) > 0) {
+                $first = $models[0];
+                $modelClass = is_object($first) ? get_class($first) : $first;
+            }
+
+            /**
+             * This ensures audit trail and prevents fraud even for super admin
+             */
+            if ($modelClass === StockTransfer::class) {
+                $restrictedAbilities = ['accept', 'reject', 'receive'];
+
+                if (in_array($ability, $restrictedAbilities)) {
+                    return null;
+                }
+
                 return true;
             }
+
+            return true;
         });
     }
 }

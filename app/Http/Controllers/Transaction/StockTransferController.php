@@ -40,8 +40,8 @@ class StockTransferController extends Controller
         }
 
         $sourceLocations = $sourceLocationsQuery->get()
-            ->filter(fn($loc) => $user->can('createAtLocation', [StockTransfer::class, $loc->id]))
-            ->map(fn($loc) => [
+            ->filter(fn ($loc) => $user->can('createAtLocation', [StockTransfer::class, $loc->id]))
+            ->map(fn ($loc) => [
                 'id' => $loc->id,
                 'name' => $loc->name,
             ])
@@ -50,20 +50,20 @@ class StockTransferController extends Controller
         $destinationLocations = Location::orderBy('name')->get(['id', 'name']);
 
         $productsQuery = Product::with([
-            'inventories' => fn($q) => $q->where('quantity', '>', 0),
+            'inventories' => fn ($q) => $q->where('quantity', '>', 0),
             'inventories.location:id,name',
         ])->orderBy('name');
 
         if ($accessibleLocationIds) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) => $q->whereIn('location_id', $accessibleLocationIds)
+                fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)
                     ->where('quantity', '>', 0)
             );
         }
 
         $products = $productsQuery->get()->map(function ($product) {
-            $product->locations = $product->inventories->map(fn($inv) => [
+            $product->locations = $product->inventories->map(fn ($inv) => [
                 'id' => $inv->location->id,
                 'name' => $inv->location->name,
                 'quantity' => $inv->quantity,
@@ -133,7 +133,7 @@ class StockTransferController extends Controller
         });
 
         return Redirect::route('transactions.index')
-            ->with('success', 'Permintaan transfer dibuat.');
+            ->with('success', __('messages.transfer.created'));
     }
 
     public function approve(StockTransfer $stockTransfer): RedirectResponse
@@ -141,7 +141,7 @@ class StockTransferController extends Controller
         $this->authorize('accept', $stockTransfer);
 
         if ($stockTransfer->status !== StockTransfer::STATUS_PENDING_APPROVAL) {
-            return back()->with('error', 'Status tidak valid.');
+            return back()->with('error', __('messages.transfer.invalid_status'));
         }
 
         $user = Auth::user();
@@ -157,12 +157,16 @@ class StockTransferController extends Controller
         } catch (\Throwable) {
         }
 
-        return back()->with('success', 'Transfer disetujui. Menunggu pengiriman.');
+        return back()->with('success', __('messages.transfer.approved'));
     }
 
     public function reject(Request $request, StockTransfer $stockTransfer): RedirectResponse
     {
         $this->authorize('reject', $stockTransfer);
+
+        if ($stockTransfer->status !== StockTransfer::STATUS_PENDING_APPROVAL) {
+            return back()->with('error', __('messages.transfer.invalid_status'));
+        }
 
         $user = Auth::user();
         $reason = $request->input('rejection_reason');
@@ -181,22 +185,22 @@ class StockTransferController extends Controller
         } catch (\Throwable) {
         }
 
-        return back()->with('success', 'Transfer ditolak.');
+        return back()->with('success', __('messages.transfer.rejected'));
     }
 
     public function ship(StockTransfer $stockTransfer): RedirectResponse
     {
-        $this->authorize('createAtLocation', [StockTransfer::class, $stockTransfer->from_location_id]);
-
-        $stockTransfer->load(['items.product']);
+        $this->authorize('ship', $stockTransfer);
 
         if ($stockTransfer->status !== StockTransfer::STATUS_APPROVED) {
-            return back()->with('error', 'Belum disetujui.');
+            return back()->with('error', __('messages.transfer.not_approved'));
         }
 
         $user = Auth::user();
 
         DB::transaction(function () use ($stockTransfer, $user) {
+            $stockTransfer->load(['items.product']);
+
             $stockTransfer->update([
                 'status' => StockTransfer::STATUS_SHIPPING,
             ]);
@@ -241,15 +245,15 @@ class StockTransferController extends Controller
             }
         });
 
-        return back()->with('success', 'Barang dikirim.');
+        return back()->with('success', __('messages.transfer.shipped'));
     }
 
     public function receive(Request $request, StockTransfer $stockTransfer): RedirectResponse
     {
-        $this->authorize('accept', $stockTransfer);
+        $this->authorize('receive', $stockTransfer);
 
         if ($stockTransfer->status !== StockTransfer::STATUS_SHIPPING) {
-            return back()->with('error', 'Belum dikirim.');
+            return back()->with('error', __('messages.transfer.not_shipped'));
         }
 
         $user = $request->user();
@@ -280,7 +284,7 @@ class StockTransferController extends Controller
             }
         });
 
-        return back()->with('success', 'Barang diterima.');
+        return back()->with('success', __('messages.transfer.received'));
     }
 
     public function show(StockTransfer $stockTransfer): Response
@@ -303,9 +307,9 @@ class StockTransferController extends Controller
             'canApprove' => $stockTransfer->status === StockTransfer::STATUS_PENDING_APPROVAL
                 && $user->can('accept', $stockTransfer),
             'canShip' => $stockTransfer->status === StockTransfer::STATUS_APPROVED
-                && $user->can('createAtLocation', [StockTransfer::class, $stockTransfer->from_location_id]),
+                && $user->can('ship', $stockTransfer),
             'canReceive' => $stockTransfer->status === StockTransfer::STATUS_SHIPPING
-                && $user->can('accept', $stockTransfer),
+                && $user->can('receive', $stockTransfer),
         ]);
     }
 }
