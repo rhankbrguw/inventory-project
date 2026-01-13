@@ -21,18 +21,21 @@ return [
 
     // Purchase Messages
     'purchase' => [
-        'created' => 'Pembelian berhasil dibuat.',
+        'created' => 'Transaksi pembelian berhasil disimpan.',
         'updated' => 'Pembelian berhasil diperbarui.',
         'deleted' => 'Pembelian berhasil dihapus.',
     ],
 
     // Sell Messages
     'sell' => [
-        'created' => 'Penjualan berhasil dibuat.',
-        'approved' => 'Penjualan disetujui.',
-        'rejected' => 'Penjualan ditolak.',
+        'created' => 'Penjualan berhasil disimpan.',
+        'approved' => 'Pesanan disetujui. Menunggu pengiriman.',
+        'rejected' => 'Pesanan ditolak.',
         'shipped' => 'Barang dikirim.',
         'received' => 'Barang diterima.',
+        'not_approved' => 'Pesanan belum disetujui.',
+        'not_shipped' => 'Barang belum dikirim.',
+        'invalid_status' => 'Status tidak valid.',
     ],
 
     // Product Messages
@@ -73,6 +76,14 @@ return [
         'updated' => 'Pengguna berhasil diperbarui.',
         'deleted' => 'Pengguna berhasil dihapus.',
         'restored' => 'Pengguna berhasil dipulihkan.',
+    ],
+
+    // Type Messages
+    'type' => [
+        'created' => 'Tipe berhasil ditambahkan.',
+        'updated' => 'Tipe berhasil diperbarui.',
+        'deleted' => 'Tipe berhasil dihapus.',
+        'restored' => 'Tipe berhasil dipulihkan.',
     ],
 
     // Stock Messages

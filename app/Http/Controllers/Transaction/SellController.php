@@ -92,12 +92,31 @@ class SellController extends Controller
             ->get(['id', 'name']);
 
         $customers = Customer::with('type')
+            ->where(function ($q) {
+                $q->where('type_id', '!=', function ($sub) {
+                    $sub->select('id')
+                        ->from('types')
+                        ->where('group', Type::GROUP_CUSTOMER)
+                        ->where('code', Customer::CODE_BRANCH_CUSTOMER)
+                        ->limit(1);
+                })
+                    ->orWhereNull('type_id');
+            })
             ->orderBy('name')
             ->get(['id', 'name', 'type_id']);
+
+        $branchTypeId = Type::where('group', Type::GROUP_LOCATION)
+            ->where('code', Location::CODE_BRANCH)
+            ->value('id');
+
+        $branches = Location::where('type_id', $branchTypeId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('Transactions/Sells/Create', [
             'locations' => $locationsWithPermissions,
             'customers' => $customers,
+            'branches' => $branches,
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
@@ -128,9 +147,11 @@ class SellController extends Controller
             ->value('id');
 
         $initialStatus = 'Completed';
-        $targetLocationId = null;
+        $targetLocationId = $validated['target_location_id'] ?? null;
 
-        if (!empty($validated['customer_id'])) {
+        if ($targetLocationId) {
+            $initialStatus = Sell::STATUS_PENDING_APPROVAL;
+        } elseif (!empty($validated['customer_id'])) {
             $customer = Customer::find($validated['customer_id']);
             if ($customer && $customer->related_location_id) {
                 $initialStatus = Sell::STATUS_PENDING_APPROVAL;
@@ -148,6 +169,7 @@ class SellController extends Controller
                 'type_id' => $sellTypeId,
                 'location_id' => $validated['location_id'],
                 'customer_id' => $validated['customer_id'] ?? null,
+                'target_location_id' => $targetLocationId,
                 'user_id' => $request->user()->id,
                 'reference_code' => 'SL-' . now()->format('YmdHis'),
                 'transaction_date' => $validated['transaction_date'],
@@ -211,7 +233,7 @@ class SellController extends Controller
                         $q->where('locations.id', $targetLocationId)
                             ->whereIn('location_user.role_id', $managerRoleIds);
                     })
-                        ->where('id', '!=', $request->user()->id) // Don't notify self
+                        ->where('id', '!=', $request->user()->id)
                         ->get();
 
                     foreach ($targets as $target) {
@@ -302,6 +324,7 @@ class SellController extends Controller
         $sell->load([
             'location',
             'customer',
+            'targetLocation',
             'salesChannel',
             'user',
             'approver',
@@ -316,17 +339,17 @@ class SellController extends Controller
             'stockMovements.salesChannel',
         ]);
 
-        $targetLocationId = $sell->customer?->related_location_id;
+        $destinationLocationId = $sell->getDestinationLocationId();
 
         return Inertia::render('Transactions/Sells/Show', [
             'sell' => SellResource::make($sell),
             'canApprove' => $sell->status === Sell::STATUS_PENDING_APPROVAL
-                && $targetLocationId
+                && $destinationLocationId
                 && $user->can('approve', $sell),
             'canShip' => $sell->status === Sell::STATUS_APPROVED
                 && $user->can('ship', $sell),
             'canReceive' => $sell->status === Sell::STATUS_SHIPPING
-                && $targetLocationId
+                && $destinationLocationId
                 && $user->can('receive', $sell),
         ]);
     }
@@ -345,17 +368,17 @@ class SellController extends Controller
         DB::transaction(function () use ($sell, $user) {
             $sell->update(['status' => Sell::STATUS_SHIPPING]);
 
-            $targetLocationId = $sell->customer?->related_location_id;
+            $destinationLocationId = $sell->getDestinationLocationId();
 
-            if ($targetLocationId) {
+            if ($destinationLocationId) {
                 $targetRoleIds = Role::whereIn('code', [
                     Role::CODE_BRANCH_MGR,
                     Role::CODE_WAREHOUSE_MGR,
                 ])->pluck('id');
 
                 if ($targetRoleIds->isNotEmpty()) {
-                    $receivers = User::whereHas('locations', function ($q) use ($targetLocationId, $targetRoleIds) {
-                        $q->where('locations.id', $targetLocationId)
+                    $receivers = User::whereHas('locations', function ($q) use ($destinationLocationId, $targetRoleIds) {
+                        $q->where('locations.id', $destinationLocationId)
                             ->whereIn('location_user.role_id', $targetRoleIds);
                     })->get();
 
@@ -376,7 +399,7 @@ class SellController extends Controller
                     sellPrice: $item->cost_per_unit,
                     type: 'sell',
                     ref: $sell,
-                    notes: 'Shipped to ' . ($sell->customer->name ?? 'Branch'),
+                    notes: 'Shipped to ' . ($sell->targetLocation?->name ?? $sell->customer?->name ?? 'Branch'),
                     channelId: $item->sales_channel_type_id
                 );
             }
@@ -394,13 +417,13 @@ class SellController extends Controller
         }
 
         $user = $request->user();
-        $targetLocationId = $sell->customer->related_location_id;
+        $destinationLocationId = $sell->getDestinationLocationId();
 
-        if (!$targetLocationId) {
+        if (!$destinationLocationId) {
             abort(400, 'Not an inter-branch sale.');
         }
 
-        DB::transaction(function () use ($sell, $user, $targetLocationId) {
+        DB::transaction(function () use ($sell, $user, $destinationLocationId) {
             $sell->update(['status' => Sell::STATUS_COMPLETED]);
 
             $purchaseType = Type::where('group', Type::GROUP_TRANSACTION)
@@ -409,7 +432,7 @@ class SellController extends Controller
 
             $purchase = Purchase::create([
                 'type_id' => $purchaseType,
-                'location_id' => $targetLocationId,
+                'location_id' => $destinationLocationId,
                 'supplier_id' => null,
                 'user_id' => $user->id,
                 'reference_code' => 'PO-AUTO-' . now()->format('Ymd-His'),
@@ -440,7 +463,7 @@ class SellController extends Controller
             foreach ($outboundMovements as $movementOut) {
                 $this->handleStockIn(
                     product: $movementOut->product,
-                    locationId: $targetLocationId,
+                    locationId: $destinationLocationId,
                     qty: abs($movementOut->quantity),
                     cost: $movementOut->cost_per_unit,
                     type: 'purchase',

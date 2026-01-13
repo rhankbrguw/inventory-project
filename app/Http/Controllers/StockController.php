@@ -224,11 +224,10 @@ class StockController extends Controller
                 ]);
             });
         } catch (\Exception $e) {
-            return Redirect::back()->with('error', 'Gagal menyesuaikan stok: ' . $e->getMessage());
+            return Redirect::back()->with('error', __('messages.stock.adjustment_failed', ['error' => $e->getMessage()]));
         }
 
-        return Redirect::route('stock.index')
-            ->with('success', 'Stok berhasil disesuaikan dengan jumlah fisik.');
+        return Redirect::route('stock.index')->with('success', __('messages.stock.adjusted'));
     }
 
     public function getQuantity(Request $request): JsonResponse

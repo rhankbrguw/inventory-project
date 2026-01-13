@@ -2,9 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\Location;
 use App\Models\Type;
-use App\Observers\LocationObserver;
 use App\Observers\TypeObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -30,7 +28,6 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Type::observe(TypeObserver::class);
-        Location::observe(LocationObserver::class);
     }
 
     /**

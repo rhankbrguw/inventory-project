@@ -57,19 +57,8 @@ class UpdateCustomerRequest extends FormRequest
                 'required',
                 'string',
                 'lowercase',
+                'email:rfc',
                 'max:50',
-                function ($value, $fail) {
-                    if (!str_ends_with($value, '.system')) {
-                        $validator = validator(
-                            ['email' => $value],
-                            ['email' => 'email:rfc,dns']
-                        );
-
-                        if ($validator->fails()) {
-                            $fail('Format email tidak valid.');
-                        }
-                    }
-                },
                 new UniqueRule('customers', $customer->id),
             ],
 

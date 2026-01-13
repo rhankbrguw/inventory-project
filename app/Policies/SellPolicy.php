@@ -33,7 +33,7 @@ class SellPolicy
         $accessibleIds = $user->getAccessibleLocationIds() ?? [];
 
         return in_array($sell->location_id, $accessibleIds) ||
-            ($sell->customer && in_array($sell->customer->related_location_id, $accessibleIds));
+            in_array($sell->getDestinationLocationId(), $accessibleIds);
     }
 
     public function createAtLocation(User $user, int $locationId): bool
@@ -65,15 +65,14 @@ class SellPolicy
 
     public function approve(User $user, Sell $sell): bool
     {
+        $destinationLocationId = $sell->getDestinationLocationId();
 
-        $targetLocationId = $sell->customer?->related_location_id;
-
-        if (!$targetLocationId) {
+        if (!$destinationLocationId) {
             return false;
         }
 
         $accessibleIds = $user->getAccessibleLocationIds() ?? [];
-        if (!in_array($targetLocationId, $accessibleIds)) {
+        if (!in_array($destinationLocationId, $accessibleIds)) {
             return false;
         }
 
@@ -81,7 +80,7 @@ class SellPolicy
             return false;
         }
 
-        return $user->can('createAtLocation', [Purchase::class, $targetLocationId]);
+        return $user->can('createAtLocation', [Purchase::class, $destinationLocationId]);
     }
 
     public function reject(User $user, Sell $sell): bool
@@ -108,18 +107,18 @@ class SellPolicy
             return false;
         }
 
-        $targetLocationId = $sell->customer?->related_location_id;
+        $destinationLocationId = $sell->getDestinationLocationId();
 
-        if (!$targetLocationId) {
+        if (!$destinationLocationId) {
             return false;
         }
 
         $accessibleIds = $user->getAccessibleLocationIds() ?? [];
-        if (!in_array($targetLocationId, $accessibleIds)) {
+        if (!in_array($destinationLocationId, $accessibleIds)) {
             return false;
         }
 
-        return $this->hasRoleCode($user, $targetLocationId, [
+        return $this->hasRoleCode($user, $destinationLocationId, [
             Role::CODE_WAREHOUSE_MGR,
             Role::CODE_BRANCH_MGR,
             Role::CODE_STAFF

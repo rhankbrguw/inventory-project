@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Truck, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import ContentPageLayout from '@/components/ContentPageLayout';
-import PrintButton from '@/components/PrintButton';
 import InstallmentSchedule from '@/components/InstallmentSchedule';
 import TransactionInfoGrid from '@/components/Transaction/TransactionInfoGrid';
 import TransactionPaymentBadge from '@/components/Transaction/TransactionPaymentBadge';
@@ -101,14 +100,24 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
         );
     };
 
+    const getBuyerDisplay = () => {
+        if (data.target_location) {
+            return `${data.target_location.name} (Cabang)`;
+        }
+        if (data.customer) {
+            return data.customer.name;
+        }
+        return 'Pelanggan Umum';
+    };
+
     const infoFields = [
         {
             label: 'Lokasi Penjualan',
             value: data.location?.name,
         },
         {
-            label: 'Pelanggan',
-            value: data.customer?.name || 'Pelanggan Umum',
+            label: 'Pembeli',
+            value: getBuyerDisplay(),
         },
         {
             label: 'Tanggal Transaksi',

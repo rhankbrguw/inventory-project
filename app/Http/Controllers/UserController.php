@@ -103,7 +103,7 @@ class UserController extends Controller
 
         return Redirect::route('users.index')->with(
             'success',
-            'Pengguna berhasil ditambahkan.',
+            __('messages.user.created')
         );
     }
 
@@ -158,13 +158,13 @@ class UserController extends Controller
 
             return Redirect::route('users.index')->with(
                 'success',
-                "Pengguna berhasil diperbarui. Role di {$locationCount} lokasi telah disinkronkan otomatis ke {$newRole->name}."
+                __('messages.user.updated_with_sync', ['count' => $locationCount, 'role' => $newRole->name])
             );
         }
 
         return Redirect::route('users.index')->with(
             'success',
-            'Pengguna berhasil diperbarui.',
+            __('messages.user.updated')
         );
     }
 
@@ -173,7 +173,7 @@ class UserController extends Controller
         if ($user->id === $request->user()->id) {
             return Redirect::route('users.index')->with(
                 'error',
-                'Anda tidak bisa menghapus akun sendiri.',
+                __('messages.user.cannot_delete_self')
             );
         }
 
@@ -181,7 +181,7 @@ class UserController extends Controller
 
         return Redirect::route('users.index')->with(
             'success',
-            'Pengguna berhasil dinonaktifkan.',
+            __('messages.user.deleted')
         );
     }
 
@@ -190,6 +190,6 @@ class UserController extends Controller
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
 
-        return Redirect::route('users.index')->with('success', 'Pengguna berhasil diaktifkan.');
+        return Redirect::route('users.index')->with('success', __('messages.user.restored'));
     }
 }

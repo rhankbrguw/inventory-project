@@ -1,13 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
+import ContentPageLayout from '@/components/ContentPageLayout';
 import { useSellCart } from '@/hooks/useSellCart';
 import SellProductGrid from './Partials/SellProductGrid';
 import SellCart from './Partials/SellCart';
 import SellCheckoutDialog from './Partials/SellCheckoutDialog';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { formatNumber } from '@/lib/utils';
@@ -16,6 +15,7 @@ export default function Create({
     auth,
     locations,
     customers,
+    branches,
     allProducts,
     paymentMethods,
     productTypes = [],
@@ -32,6 +32,7 @@ export default function Create({
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+    const [selectedBranchId, setSelectedBranchId] = useState(null);
     const [pendingLocationId, setPendingLocationId] = useState(null);
 
     const selectedLocationId = useMemo(
@@ -93,12 +94,23 @@ export default function Create({
         setPendingLocationId(null);
     };
 
+    const handleCustomerChange = (customerId) => {
+        setSelectedCustomerId(customerId);
+    };
+
+    const handleBranchChange = (branchId) => {
+        setSelectedBranchId(branchId);
+    };
+
     const cartProps = {
         cart,
         customers,
+        branches,
         customerTypes,
         selectedCustomerId,
-        onCustomerChange: setSelectedCustomerId,
+        selectedBranchId,
+        onCustomerChange: handleCustomerChange,
+        onBranchChange: handleBranchChange,
         removeItem,
         updateItem: updateCartItem,
         clearCart,
@@ -119,26 +131,12 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout user={auth.user}>
-            <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-4">
-                    <Link href={route('transactions.index')}>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <h1 className="text-2xl font-bold tracking-tight">
-                        Buat Penjualan
-                    </h1>
-                </div>
-            </div>
-
-            <Head title="Buat Penjualan" />
-
+        <ContentPageLayout
+            user={auth.user}
+            title="Buat Penjualan"
+            backRoute="transactions.index"
+            isFullWidth={true}
+        >
             <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
                 <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
                     <SellProductGrid
@@ -196,6 +194,7 @@ export default function Create({
                 totalPrice={totalCartPrice}
                 locationId={selectedLocationId}
                 customerId={selectedCustomerId}
+                targetLocationId={selectedBranchId}
                 salesChannelId={selectedChannelId}
                 paymentMethods={paymentMethods}
             />
@@ -208,6 +207,6 @@ export default function Create({
                 description="Mengganti lokasi akan mengosongkan keranjang Anda saat ini. Lanjutkan?"
                 confirmText="Lanjutkan"
             />
-        </AuthenticatedLayout>
+        </ContentPageLayout>
     );
 }

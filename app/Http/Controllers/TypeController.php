@@ -64,11 +64,11 @@ class TypeController extends Controller
         Type::create($request->validated());
 
         if ($request->input('_from_modal')) {
-            return Redirect::back()->with('success', 'Tipe baru berhasil ditambahkan.');
+            return Redirect::back()->with('success', __('messages.type.created'));
         }
 
         return Redirect::route('types.index')
-            ->with('success', 'Tipe baru berhasil ditambahkan.');
+            ->with('success', __('messages.type.created'));
     }
 
     public function edit(Type $type): Response
@@ -86,18 +86,18 @@ class TypeController extends Controller
         $type->update($request->validated());
 
         return Redirect::route('types.index')
-            ->with('success', 'Tipe berhasil diperbarui.');
+            ->with('success', __('messages.type.updated'));
     }
 
     public function destroy(Type $type): RedirectResponse
     {
         if ($type->products()->exists()) {
-            return Redirect::back()->with('error', 'Tipe ini tidak dapat dinonaktifkan karena masih digunakan oleh produk.');
+            return Redirect::back()->with('error', __('messages.type.cannot_delete_in_use'));
         }
 
         $type->delete();
 
-        return Redirect::route('types.index')->with('success', 'Tipe berhasil dinonaktifkan.');
+        return Redirect::route('types.index')->with('success', __('messages.type.deleted'));
     }
 
     public function restore($id): RedirectResponse
@@ -105,6 +105,6 @@ class TypeController extends Controller
         $type = Type::withTrashed()->findOrFail($id);
         $type->restore();
 
-        return Redirect::route('types.index')->with('success', 'Tipe berhasil diaktifkan.');
+        return Redirect::route('types.index')->with('success', __('messages.type.restored'));
     }
 }

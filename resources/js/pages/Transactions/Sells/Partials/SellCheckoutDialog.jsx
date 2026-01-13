@@ -32,6 +32,7 @@ export default function SellCheckoutDialog({
     totalPrice,
     locationId,
     customerId,
+    targetLocationId,
     salesChannelId,
     paymentMethods,
 }) {
@@ -39,6 +40,7 @@ export default function SellCheckoutDialog({
         useForm({
             location_id: locationId || '',
             customer_id: customerId || null,
+            target_location_id: targetLocationId || null,
             sales_channel_id: salesChannelId || null,
             transaction_date: getNormalizedDate(),
             notes: '',
@@ -54,6 +56,7 @@ export default function SellCheckoutDialog({
                 ...data,
                 location_id: locationId,
                 customer_id: customerId,
+                target_location_id: targetLocationId,
                 sales_channel_id: salesChannelId,
                 transaction_date: data.transaction_date || getNormalizedDate(),
                 payment_method_type_id: paymentMethods[0]?.id.toString() || '',
@@ -66,7 +69,14 @@ export default function SellCheckoutDialog({
                 })),
             });
         }
-    }, [isOpen, cartItems, locationId, customerId, salesChannelId]);
+    }, [
+        isOpen,
+        cartItems,
+        locationId,
+        customerId,
+        targetLocationId,
+        salesChannelId,
+    ]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -216,6 +226,12 @@ export default function SellCheckoutDialog({
 
                         {errors.items && (
                             <InputError message="Error pada data item, cek keranjang Anda." />
+                        )}
+                        {errors.customer_id && (
+                            <InputError message={errors.customer_id} />
+                        )}
+                        {errors.target_location_id && (
+                            <InputError message={errors.target_location_id} />
                         )}
                     </div>
 

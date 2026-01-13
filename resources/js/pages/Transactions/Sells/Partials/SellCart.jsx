@@ -1,25 +1,36 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ShoppingBag, UserPlus } from 'lucide-react';
+import { ShoppingBag, UserPlus, User, Building2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-    SelectGroup,
-    SelectLabel,
-} from '@/components/ui/select';
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import QuickAddCustomerModal from '@/components/QuickAddCustomerModal';
 import SellItemManager from './SellItemManager';
+import { useState } from 'react';
 
 export default function SellCart({
     cart,
     customers,
+    branches,
     customerTypes,
     selectedCustomerId,
+    selectedBranchId,
     onCustomerChange,
+    onBranchChange,
     removeItem,
     updateItem,
     processingItem,
@@ -33,8 +44,14 @@ export default function SellCart({
     const isCartDisabled =
         !locationId || processingItem !== null || !canCheckout;
 
+    const [buyerTab, setBuyerTab] = useState('general');
+    const [customerOpen, setCustomerOpen] = useState(false);
+    const [branchOpen, setBranchOpen] = useState(false);
+
     const handleNewCustomer = (newCustomer) => {
         onCustomerChange(newCustomer.id.toString());
+        onBranchChange(null);
+        setBuyerTab('customer');
     };
 
     const dynamicTotalCartPrice = cart.reduce((total, item) => {
@@ -43,88 +60,179 @@ export default function SellCart({
         return total + qty * parseFloat(price);
     }, 0);
 
-    const internalCustomers = customers.filter(c => c.type?.code === 'CBG');
-    const generalCustomers = customers.filter(c => c.type?.code !== 'CBG');
+    const handleTabChange = (value) => {
+        setBuyerTab(value);
+        if (value === 'general') {
+            onCustomerChange(null);
+            onBranchChange(null);
+        } else if (value === 'customer') {
+            onBranchChange(null);
+        } else if (value === 'branch') {
+            onCustomerChange(null);
+        }
+    };
+
+    const getDisplayValue = () => {
+        if (buyerTab === 'general') return 'Pelanggan Umum';
+        if (buyerTab === 'customer' && selectedCustomerId) {
+            const customer = customers.find(c => c.id.toString() === selectedCustomerId);
+            return customer?.name || 'Pilih Pelanggan';
+        }
+        if (buyerTab === 'branch' && selectedBranchId) {
+            const branch = branches.find(b => b.id.toString() === selectedBranchId);
+            return branch?.name || 'Pilih Cabang';
+        }
+        return buyerTab === 'customer' ? 'Pilih Pelanggan' : 'Pilih Cabang';
+    };
 
     return (
         <div className="flex flex-col h-full">
             <div className="p-3 border-b flex-shrink-0">
-                <h3 className="text-base font-semibold">Keranjang Penjualan</h3>
-                <div className="mt-2 space-y-2">
-                    <Label
-                        htmlFor="customer_id"
-                        className="text-xs font-medium text-muted-foreground"
-                    >
-                        Pelanggan
-                    </Label>
-                    <div className="flex gap-2">
-                        <Select
-                            value={selectedCustomerId || ''}
-                            onValueChange={(value) =>
-                                onCustomerChange(
-                                    value === 'null' ? null : value
-                                )
-                            }
-                        >
-                            <SelectTrigger
-                                id="customer_id"
-                                className="h-9 text-xs"
-                            >
-                                <SelectValue placeholder="Pelanggan Umum" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="null">
-                                    Pelanggan Umum
-                                </SelectItem>
+                <h3 className="text-base font-semibold mb-3">Keranjang Penjualan</h3>
 
-                                {generalCustomers.length > 0 && (
-                                    <SelectGroup>
-                                        <SelectLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                                            Pelanggan Terdaftar
-                                        </SelectLabel>
-                                        {generalCustomers.map((cust) => (
-                                            <SelectItem
-                                                key={cust.id}
-                                                value={cust.id.toString()}
-                                            >
-                                                {cust.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                )}
+                <Tabs value={buyerTab} onValueChange={handleTabChange} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 h-9">
+                        <TabsTrigger value="general" className="text-xs">
+                            <User className="h-3 w-3 mr-1" />
+                            Umum
+                        </TabsTrigger>
+                        <TabsTrigger value="customer" className="text-xs">
+                            <User className="h-3 w-3 mr-1" />
+                            Pelanggan
+                        </TabsTrigger>
+                        <TabsTrigger value="branch" className="text-xs">
+                            <Building2 className="h-3 w-3 mr-1" />
+                            Cabang
+                        </TabsTrigger>
+                    </TabsList>
 
-                                {internalCustomers.length > 0 && (
-                                    <SelectGroup>
-                                        <SelectLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
-                                            Internal Cabang
-                                        </SelectLabel>
-                                        {internalCustomers.map((cust) => (
-                                            <SelectItem
-                                                key={cust.id}
-                                                value={cust.id.toString()}
-                                            >
-                                                {cust.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        <QuickAddCustomerModal
-                            customerTypes={customerTypes}
-                            onSuccess={handleNewCustomer}
-                        >
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className="h-9 w-9 flex-shrink-0"
+                    <TabsContent value="general" className="mt-3">
+                        <div className="p-3 rounded-lg border bg-muted/30 text-center">
+                            <p className="text-xs text-muted-foreground">
+                                Penjualan Walk-in (Tanpa identitas)
+                            </p>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="customer" className="mt-3 space-y-2">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                            Pilih Pelanggan Terdaftar
+                        </Label>
+                        <div className="flex gap-2">
+                            <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={customerOpen}
+                                        className="w-full justify-between h-9 text-xs"
+                                    >
+                                        {selectedCustomerId
+                                            ? customers.find((c) => c.id.toString() === selectedCustomerId)?.name
+                                            : "Cari pelanggan..."}
+                                        <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0" align="start">
+                                    <Command>
+                                        <CommandInput placeholder="Ketik nama pelanggan..." className="h-9 text-xs" />
+                                        <CommandList>
+                                            <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
+                                            <CommandGroup>
+                                                {customers.map((customer) => (
+                                                    <CommandItem
+                                                        key={customer.id}
+                                                        value={customer.name}
+                                                        onSelect={() => {
+                                                            onCustomerChange(customer.id.toString());
+                                                            setCustomerOpen(false);
+                                                        }}
+                                                        className="text-xs"
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-3 w-3",
+                                                                selectedCustomerId === customer.id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {customer.name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <QuickAddCustomerModal
+                                customerTypes={customerTypes}
+                                onSuccess={handleNewCustomer}
                             >
-                                <UserPlus className="h-4 w-4" />
-                            </Button>
-                        </QuickAddCustomerModal>
-                    </div>
-                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 flex-shrink-0"
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                </Button>
+                            </QuickAddCustomerModal>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="branch" className="mt-3 space-y-2">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                            Pilih Cabang Tujuan
+                        </Label>
+                        <Popover open={branchOpen} onOpenChange={setBranchOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={branchOpen}
+                                    className="w-full justify-between h-9 text-xs"
+                                >
+                                    {selectedBranchId
+                                        ? branches.find((b) => b.id.toString() === selectedBranchId)?.name
+                                        : "Cari cabang..."}
+                                    <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Ketik nama cabang..." className="h-9 text-xs" />
+                                    <CommandList>
+                                        <CommandEmpty>Cabang tidak ditemukan.</CommandEmpty>
+                                        <CommandGroup>
+                                            {branches.map((branch) => (
+                                                <CommandItem
+                                                    key={branch.id}
+                                                    value={branch.name}
+                                                    onSelect={() => {
+                                                        onBranchChange(branch.id.toString());
+                                                        setBranchOpen(false);
+                                                    }}
+                                                    className="text-xs"
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-3 w-3",
+                                                            selectedBranchId === branch.id.toString()
+                                                                ? "opacity-100"
+                                                                : "opacity-0"
+                                                        )}
+                                                    />
+                                                    {branch.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </TabsContent>
+                </Tabs>
             </div>
 
             <div className="flex-1 overflow-y-auto">

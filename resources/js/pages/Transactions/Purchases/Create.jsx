@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/AuthenticatedLayout';
+import ContentPageLayout from '@/components/ContentPageLayout';
 import PurchaseDetailsManager from './Partials/PurchaseDetailsManager';
 import PurchaseProductGrid from './Partials/PurchaseProductGrid';
 import PurchaseCart from './Partials/PurchaseCart';
 import usePurchaseCart from '@/hooks/usePurchaseCart';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -134,26 +133,12 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout user={auth.user}>
-            <div className="print-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-4">
-                    <Link href={route('transactions.index')}>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <h1 className="text-2xl font-bold tracking-tight">
-                        Buat Pembelian
-                    </h1>
-                </div>
-            </div>
-
-            <Head title="Buat Pembelian" />
-
+        <ContentPageLayout
+            user={auth.user}
+            title="Buat Pembelian"
+            backRoute="transactions.index"
+            isFullWidth={true} // <--- PENTING: Agar tampilan melebar (Full Width)
+        >
             <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
                 <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
                     <PurchaseProductGrid
@@ -226,6 +211,6 @@ export default function Create({
                     ) : null}
                 </DialogContent>
             </Dialog>
-        </AuthenticatedLayout>
+        </ContentPageLayout>
     );
 }

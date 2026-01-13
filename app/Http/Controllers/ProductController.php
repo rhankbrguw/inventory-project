@@ -42,7 +42,7 @@ class ProductController extends Controller
             })
             ->accessibleBy($user)
             ->when($request->input('search'), function ($query, $search) {
-                $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
+                $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%"));
             })
             ->when($request->input('type_id') && $request->input('type_id') !== 'all', function ($query) use ($request) {
@@ -63,7 +63,7 @@ class ProductController extends Controller
                     'price_asc' => $query->orderBy('price', 'asc'),
                     default => $query->latest(),
                 };
-            }, fn ($query) => $query->latest())
+            }, fn($query) => $query->latest())
             ->withTrashed()
             ->paginate(15)
             ->withQueryString();
@@ -91,7 +91,7 @@ class ProductController extends Controller
             ->select('id', 'name', 'sku', 'unit', 'price', 'image_path')
             ->accessibleBy($user)
             ->whereNull('deleted_at')
-            ->where(fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('sku', 'like', "%{$query}%"))
+            ->where(fn($q) => $q->where('name', 'like', "%{$query}%")->orWhere('sku', 'like', "%{$query}%"))
             ->limit(20)
             ->get();
     }
@@ -167,7 +167,7 @@ class ProductController extends Controller
         });
 
         return Redirect::route('products.index')
-            ->with('success', 'Produk baru berhasil ditambahkan.');
+            ->with('success', __('messages.product.created'));
     }
 
     public function edit(Product $product): Response
@@ -221,9 +221,7 @@ class ProductController extends Controller
         }
 
         DB::transaction(function () use ($product, $validated, $request, $user) {
-
             if ($user->level === Role::LEVEL_SUPER_ADMIN) {
-
                 $channelPrices = $validated['channel_prices'] ?? [];
                 unset($validated['channel_prices']);
 
@@ -241,19 +239,22 @@ class ProductController extends Controller
                 $product->update($validated);
 
                 $product->suppliers()->sync($supplierIds);
+
                 if ($product->default_supplier_id && !in_array($product->default_supplier_id, $supplierIds)) {
                     $product->suppliers()->attach($product->default_supplier_id);
                 }
 
                 foreach ($channelPrices as $channelId => $price) {
                     if ($price !== null && $price !== '') {
-                        $product->prices()->updateOrCreate(['type_id' => $channelId], ['price' => $price]);
+                        $product->prices()->updateOrCreate(
+                            ['type_id' => $channelId],
+                            ['price' => $price]
+                        );
                     } else {
                         $product->prices()->where('type_id', $channelId)->delete();
                     }
                 }
             } else {
-
                 $locationId = $user->locations->first()?->id;
 
                 if ($locationId) {
@@ -266,10 +267,8 @@ class ProductController extends Controller
                         $inventory->selling_price = $validated['price'];
                     }
 
-                    if (isset($validated['default_supplier_id']) && $validated['default_supplier_id'] !== '') {
-                        $inventory->local_supplier_id = $validated['default_supplier_id'];
-                    } elseif (array_key_exists('default_supplier_id', $validated) && $validated['default_supplier_id'] === '') {
-                        $inventory->local_supplier_id = null;
+                    if (array_key_exists('default_supplier_id', $validated)) {
+                        $inventory->local_supplier_id = $validated['default_supplier_id'] ?: null;
                     }
 
                     if (isset($validated['channel_prices'])) {
@@ -282,20 +281,20 @@ class ProductController extends Controller
         });
 
         return Redirect::route('products.index')
-            ->with('success', 'Produk berhasil diperbarui.');
+            ->with('success', __('messages.product.updated'));
     }
 
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->inventories()->where('quantity', '>', 0)->exists()) {
             return Redirect::back()
-                ->with('error', 'Produk ini tidak dapat dinonaktifkan karena masih memiliki stok.');
+                ->with('error', __('messages.product.cannot_delete_has_stock'));
         }
 
         $product->delete();
 
         return Redirect::route('products.index')
-            ->with('success', 'Produk berhasil dinonaktifkan.');
+            ->with('success', __('messages.product.deleted'));
     }
 
     public function restore(Product $product): RedirectResponse
@@ -303,6 +302,6 @@ class ProductController extends Controller
         $product->restore();
 
         return Redirect::route('products.index')
-            ->with('success', 'Produk berhasil diaktifkan kembali.');
+            ->with('success', __('messages.product.restored'));
     }
 }

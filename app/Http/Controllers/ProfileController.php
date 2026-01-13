@@ -45,8 +45,8 @@ class ProfileController extends Controller
         $user->save();
 
         $message = empty($changes)
-            ? 'Tidak ada perubahan data.'
-            : ucfirst(implode(', ', $changes)) . ' berhasil diperbarui.';
+            ? __('messages.profile.no_changes')
+            : __('messages.profile.updated', ['changes' => ucfirst(implode(', ', $changes))]);
 
         return Redirect::route('profile.edit')->with('success', $message);
     }
@@ -60,7 +60,7 @@ class ProfileController extends Controller
             $minutes = ceil($seconds / 60);
 
             return Redirect::back()->withErrors([
-                'current_password' => "Terlalu banyak percobaan. Silakan coba lagi dalam {$minutes} menit."
+                'current_password' => __('messages.profile.too_many_attempts_password', ['minutes' => $minutes])
             ]);
         }
 
@@ -73,7 +73,7 @@ class ProfileController extends Controller
         RateLimiter::clear($key);
 
         return Redirect::back()
-            ->with('success', 'Password berhasil diperbarui. Gunakan password baru Anda untuk login selanjutnya.');
+            ->with('success', __('messages.profile.password_updated'));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -85,14 +85,14 @@ class ProfileController extends Controller
             $minutes = ceil($seconds / 60);
 
             return Redirect::back()->withErrors([
-                'password' => "Terlalu banyak percobaan penghapusan akun. Silakan coba lagi dalam {$minutes} menit."
+                'password' => __('messages.profile.too_many_attempts_delete', ['minutes' => $minutes])
             ]);
         }
 
         $request->validate([
             'password' => ['required', 'current_password'],
         ], [
-            'password.current_password' => 'Password tidak sesuai. Penghapusan akun dibatalkan.',
+            'password.current_password' => __('messages.profile.password_mismatch'),
         ]);
 
         $user = $request->user();
@@ -109,6 +109,6 @@ class ProfileController extends Controller
         RateLimiter::clear($key);
 
         return Redirect::to('/')
-            ->with('success', 'Akun Anda telah berhasil dihapus.');
+            ->with('success', __('messages.profile.account_deleted'));
     }
 }

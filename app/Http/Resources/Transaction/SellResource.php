@@ -54,6 +54,10 @@ class SellResource extends JsonResource
                 'name' => $this->customer->name,
                 'related_location_id' => $this->customer->related_location_id,
             ]),
+            'target_location' => $this->whenLoaded('targetLocation', fn() => [
+                'id' => $this->targetLocation->id,
+                'name' => $this->targetLocation->name,
+            ]),
             'sales_channel' => $this->whenLoaded('salesChannel', fn() => [
                 'id' => $this->salesChannel->id,
                 'name' => $this->salesChannel->name,

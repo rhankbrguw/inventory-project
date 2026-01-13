@@ -42,7 +42,7 @@ class SupplierController extends Controller
                     'name_desc' => $query->orderBy('name', 'desc'),
                     default => $query->orderBy('name', 'asc'),
                 };
-            }, fn ($query) => $query->orderBy('name', 'asc'))
+            }, fn($query) => $query->orderBy('name', 'asc'))
             ->withTrashed()
             ->paginate(10)
             ->withQueryString();
@@ -73,12 +73,12 @@ class SupplierController extends Controller
 
         if ($request->input('_from_modal')) {
             return Redirect::back()
-                ->with('success', 'Supplier berhasil ditambahkan.')
+                ->with('success', __('messages.supplier.created'))
                 ->with('newSupplier', SupplierResource::make($supplier));
         }
 
         return Redirect::route('suppliers.index')
-            ->with('success', 'Supplier berhasil ditambahkan.');
+            ->with('success', __('messages.supplier.created'));
     }
 
     public function edit(Supplier $supplier): Response
@@ -95,7 +95,7 @@ class SupplierController extends Controller
 
         $supplier->update($request->validated());
         return Redirect::route('suppliers.index')
-            ->with('success', 'Supplier berhasil diperbarui.');
+            ->with('success', __('messages.supplier.updated'));
     }
 
     public function destroy(Supplier $supplier): RedirectResponse
@@ -105,7 +105,7 @@ class SupplierController extends Controller
         $supplier->delete();
 
         return Redirect::route('suppliers.index')
-            ->with('success', 'Supplier berhasil dinonaktifkan.');
+            ->with('success', __('messages.supplier.deleted'));
     }
 
     public function restore(Supplier $supplier): RedirectResponse
@@ -115,6 +115,6 @@ class SupplierController extends Controller
         $supplier->restore();
 
         return Redirect::route('suppliers.index')
-            ->with('success', 'Supplier berhasil diaktifkan kembali.');
+            ->with('success', __('messages.supplier.restored'));
     }
 }

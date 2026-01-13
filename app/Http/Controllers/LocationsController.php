@@ -25,8 +25,8 @@ class LocationsController extends Controller
 
         $locations = Location::query()
             ->with(['type', 'users'])
-            ->when($accessibleLocationIds, fn ($q) => $q->whereIn('id', $accessibleLocationIds))
-            ->when($request->input('search'), fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($accessibleLocationIds, fn($q) => $q->whereIn('id', $accessibleLocationIds))
+            ->when($request->input('search'), fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
             ->when($request->input('status'), function ($query, $status) {
                 if ($status === 'active') {
                     $query->whereNull('deleted_at');
@@ -34,7 +34,7 @@ class LocationsController extends Controller
                     $query->whereNotNull('deleted_at');
                 }
             })
-            ->when($request->input('type_id'), fn ($q, $id) => $q->where('type_id', $id))
+            ->when($request->input('type_id'), fn($q, $id) => $q->where('type_id', $id))
             ->withTrashed()
             ->orderBy('name')
             ->paginate(10)
@@ -59,14 +59,16 @@ class LocationsController extends Controller
     public function store(StoreLocationRequest $request): RedirectResponse
     {
         Location::create($request->validated());
-        return Redirect::route('locations.index')->with('success', 'Lokasi baru berhasil ditambahkan.');
+
+        return Redirect::route('locations.index')
+            ->with('success', __('messages.location.created'));
     }
 
     public function edit(Location $location): Response
     {
-        $location->load(['type', 'users' => fn ($q) => $q->with('roles')]);
+        $location->load(['type', 'users' => fn($q) => $q->with('roles')]);
 
-        $users = User::with('roles')->orderBy('name')->get()->map(fn ($u) => [
+        $users = User::with('roles')->orderBy('name')->get()->map(fn($u) => [
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
@@ -74,7 +76,7 @@ class LocationsController extends Controller
             'global_level' => $u->level,
         ]);
 
-        $roles = Role::orderBy('level', 'asc')->get()->map(fn ($r) => [
+        $roles = Role::orderBy('level', 'asc')->get()->map(fn($r) => [
             'id' => $r->id,
             'name' => $r->name,
             'code' => $r->code,
@@ -110,27 +112,39 @@ class LocationsController extends Controller
             if ($user && $targetRole) {
                 if ($user->level > $targetRole->level) {
                     return Redirect::back()->withErrors([
-                        'assignments' => "Error: User {$user->name} (Level {$user->level}) tidak memenuhi syarat untuk jabatan {$targetRole->name} (Level {$targetRole->level}). Naikkan role global user terlebih dahulu."
+                        'assignments' => __('messages.location.role_level_mismatch', [
+                            'user' => $user->name,
+                            'user_level' => $user->level,
+                            'role' => $targetRole->name,
+                            'role_level' => $targetRole->level,
+                        ]),
                     ]);
                 }
             }
         }
 
-        $assignments = collect($assignmentsInput)->mapWithKeys(fn ($a) => [$a['user_id'] => ['role_id' => $a['role_id']]]);
+        $assignments = collect($assignmentsInput)
+            ->mapWithKeys(fn($a) => [$a['user_id'] => ['role_id' => $a['role_id']]]);
+
         $location->users()->sync($assignments);
 
-        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diperbarui.');
+        return Redirect::route('locations.index')
+            ->with('success', __('messages.location.updated'));
     }
 
     public function destroy(Location $location): RedirectResponse
     {
         $location->delete();
-        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil dinonaktifkan.');
+
+        return Redirect::route('locations.index')
+            ->with('success', __('messages.location.deleted'));
     }
 
     public function restore(Location $location): RedirectResponse
     {
         $location->restore();
-        return Redirect::route('locations.index')->with('success', 'Lokasi berhasil diaktifkan kembali.');
+
+        return Redirect::route('locations.index')
+            ->with('success', __('messages.location.restored'));
     }
 }

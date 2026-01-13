@@ -21,18 +21,21 @@ return [
 
     // Purchase Messages
     'purchase' => [
-        'created' => 'Purchase created successfully.',
+        'created' => 'Purchase transaction saved successfully.',
         'updated' => 'Purchase updated successfully.',
         'deleted' => 'Purchase deleted successfully.',
     ],
 
     // Sell Messages
     'sell' => [
-        'created' => 'Sale created successfully.',
-        'approved' => 'Sale approved.',
-        'rejected' => 'Sale rejected.',
+        'created' => 'Sale saved successfully.',
+        'approved' => 'Order approved. Awaiting shipment.',
+        'rejected' => 'Order rejected.',
         'shipped' => 'Goods shipped.',
         'received' => 'Goods received.',
+        'not_approved' => 'Order not yet approved.',
+        'not_shipped' => 'Goods not yet shipped.',
+        'invalid_status' => 'Invalid status.',
     ],
 
     // Product Messages
@@ -73,6 +76,14 @@ return [
         'updated' => 'User updated successfully.',
         'deleted' => 'User deleted successfully.',
         'restored' => 'User restored successfully.',
+    ],
+
+    // Type Messages
+    'type' => [
+        'created' => 'Type added successfully.',
+        'updated' => 'Type updated successfully.',
+        'deleted' => 'Type deleted successfully.',
+        'restored' => 'Type restored successfully.',
     ],
 
     // Stock Messages

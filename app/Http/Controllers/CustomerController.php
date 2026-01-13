@@ -63,7 +63,7 @@ class CustomerController extends Controller
                     'oldest' => $query->orderBy('created_at', 'asc'),
                     default => $query->latest('created_at'),
                 };
-            }, fn ($query) => $query->latest('created_at'))
+            }, fn($query) => $query->latest('created_at'))
             ->paginate(10)
             ->withQueryString();
 
@@ -97,11 +97,11 @@ class CustomerController extends Controller
         if ($request->boolean('_from_modal')) {
             return Redirect::back()
                 ->with('newCustomer', $customer)
-                ->with('success', 'Pelanggan baru berhasil ditambahkan.');
+                ->with('success', __('messages.customer.created_from_modal'));
         }
 
         return Redirect::route('customers.index')
-            ->with('success', 'Pelanggan berhasil ditambahkan.');
+            ->with('success', __('messages.customer.created'));
     }
 
     public function edit(Customer $customer): Response
@@ -119,7 +119,7 @@ class CustomerController extends Controller
         $customer->update($request->validated());
 
         return Redirect::route('customers.index')
-            ->with('success', 'Pelanggan berhasil diperbarui.');
+            ->with('success', __('messages.customer.updated'));
     }
 
     public function destroy(Customer $customer): RedirectResponse
@@ -127,7 +127,7 @@ class CustomerController extends Controller
         $customer->delete();
 
         return Redirect::route('customers.index')
-            ->with('success', 'Pelanggan berhasil dinonaktifkan.');
+            ->with('success', __('messages.customer.deleted'));
     }
 
     public function restore($id): RedirectResponse
@@ -136,6 +136,6 @@ class CustomerController extends Controller
         $customer->restore();
 
         return Redirect::route('customers.index')
-            ->with('success', 'Pelanggan berhasil diaktifkan kembali.');
+            ->with('success', __('messages.customer.restored'));
     }
 }

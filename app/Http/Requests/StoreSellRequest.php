@@ -21,6 +21,7 @@ class StoreSellRequest extends FormRequest
         $rules = [
             'location_id' => ['required', 'integer', 'exists:locations,id'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
+            'target_location_id' => ['nullable', 'integer', 'exists:locations,id'],
             'sales_channel_id' => ['nullable', 'integer', new ExistsInGroup('types', Type::GROUP_SALES_CHANNEL)],
             'transaction_date' => ['required', 'date'],
             'payment_method_type_id' => ['nullable', 'integer', new ExistsInGroup('types', Type::GROUP_PAYMENT)],
@@ -50,27 +51,44 @@ class StoreSellRequest extends FormRequest
         $validator->after(function ($validator) {
             $locationId = $this->input('location_id');
             $customerId = $this->input('customer_id');
+            $targetLocationId = $this->input('target_location_id');
+
+            if ($customerId && $targetLocationId) {
+                $validator->errors()->add(
+                    'customer_id',
+                    'Tidak boleh memilih Pelanggan dan Cabang sekaligus. Pilih salah satu.'
+                );
+                return;
+            }
 
             if ($locationId) {
                 $location = Location::with('type')->find($locationId);
 
                 if ($location && $location->type && $location->type->level === 1) {
-
-                    if (empty($customerId)) {
+                    if (empty($customerId) && empty($targetLocationId)) {
                         $validator->errors()->add(
-                            'customer_id',
-                            'Gudang Pusat TIDAK BOLEH melayani pelanggan umum (Walk-in). Harap pilih Cabang Tujuan.'
+                            'target_location_id',
+                            'Gudang Pusat WAJIB memilih Cabang Tujuan. Tidak boleh melayani pelanggan umum (Walk-in).'
                         );
                         return;
                     }
 
-                    $customer = Customer::find($customerId);
-                    if (!$customer || empty($customer->related_location_id)) {
-                        $validator->errors()->add(
-                            'customer_id',
-                            'Gudang Pusat HANYA BOLEH melakukan distribusi ke Cabang (Pelanggan Internal).'
-                        );
+                    if ($customerId) {
+                        $customer = Customer::find($customerId);
+                        if (!$customer || !$customer->type || $customer->type->code !== Customer::CODE_BRANCH_CUSTOMER) {
+                            $validator->errors()->add(
+                                'customer_id',
+                                'Gudang Pusat hanya boleh melayani Pelanggan Internal (tipe Cabang). Gunakan dropdown "Cabang Tujuan" untuk lebih mudah.'
+                            );
+                        }
                     }
+                }
+
+                if ($targetLocationId && $targetLocationId == $locationId) {
+                    $validator->errors()->add(
+                        'target_location_id',
+                        'Lokasi tujuan tidak boleh sama dengan lokasi penjualan.'
+                    );
                 }
             }
         });

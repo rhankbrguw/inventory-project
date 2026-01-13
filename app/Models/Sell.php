@@ -24,6 +24,7 @@ class Sell extends Model
         'type_id',
         'location_id',
         'customer_id',
+        'target_location_id',
         'sales_channel_type_id',
         'user_id',
         'reference_code',
@@ -59,6 +60,11 @@ class Sell extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function targetLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'target_location_id');
     }
 
     public function salesChannel(): BelongsTo
@@ -119,5 +125,15 @@ class Sell extends Model
     public function rejector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function isInterBranchSale(): bool
+    {
+        return !empty($this->target_location_id);
+    }
+
+    public function getDestinationLocationId(): ?int
+    {
+        return $this->target_location_id ?? $this->customer?->related_location_id;
     }
 }
