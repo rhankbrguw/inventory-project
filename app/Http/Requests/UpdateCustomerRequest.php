@@ -57,7 +57,7 @@ class UpdateCustomerRequest extends FormRequest
                 'required',
                 'string',
                 'lowercase',
-                'email:rfc',
+                'email:rfc,dns',
                 'max:50',
                 new UniqueRule('customers', $customer->id),
             ],

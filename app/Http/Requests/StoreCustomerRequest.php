@@ -38,7 +38,7 @@ class StoreCustomerRequest extends FormRequest
                 'required',
                 'string',
                 'lowercase',
-                'email:rfc',
+                'email:rfc,dns',
                 'max:50',
                 new UniqueRule('customers', $this->customer->id ?? null)
             ],

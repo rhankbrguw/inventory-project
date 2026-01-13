@@ -38,7 +38,7 @@ class StockMovementController extends Controller
             'reference' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
                     Purchase::class => ['supplier'],
-                    Sell::class => ['customer'],
+                    Sell::class => ['customer', 'targetLocation'],
                     StockTransfer::class => ['fromLocation', 'toLocation'],
                     User::class => [],
                 ]);

@@ -15,7 +15,8 @@ class SellCreatedNotification extends Notification implements ShouldQueue
     public function __construct(
         public $sell,
         public $creatorName
-    ) {}
+    ) {
+    }
 
     public function via(object $notifiable): array
     {
@@ -63,12 +64,9 @@ class SellCreatedNotification extends Notification implements ShouldQueue
         $isIndonesian = $this->getUserLocale($notifiable) === 'id';
         $date = now()->format('d/m/Y H:i');
 
-        $items = $this->sell->stockMovements()
-            ->where('type', 'sell')
-            ->with('product')
-            ->get();
+        $items = $this->sell->items()->get();
 
-        $totalQty = $items->sum(fn($i) => abs($i->quantity));
+        $totalQty = $items->sum('quantity');
 
         if ($isIndonesian) {
             $labelRef = str_pad('Ref', 9);

@@ -77,19 +77,25 @@ class StockMovementResource extends JsonResource
         return match ($this->type) {
             'purchase' => [
                 'label' => 'Diterima dari',
-                'name' => $this->reference?->supplier?->name ?? 'Supplier Umum',
+                'name' => ($this->reference->relationLoaded('supplier') && $this->reference->supplier)
+                    ? $this->reference->supplier->name
+                    : 'Supplier Umum',
             ],
             'sell' => [
                 'label' => 'Dijual ke',
-                'name' => $this->reference?->customer?->name ?? 'Pelanggan Umum',
+                'name' => ($this->reference->relationLoaded('targetLocation') && $this->reference->targetLocation)
+                    ? $this->reference->targetLocation->name . ' (Cabang)'
+                    : ($this->reference->relationLoaded('customer') && $this->reference->customer
+                        ? $this->reference->customer->name
+                        : 'Pelanggan Umum'),
             ],
             'transfer_in' => [
                 'label' => 'Diterima dari',
-                'name' => $this->reference?->fromLocation?->name,
+                'name' => $this->reference->relationLoaded('fromLocation') ? $this->reference->fromLocation?->name : '-',
             ],
             'transfer_out' => [
                 'label' => 'Dikirim ke',
-                'name' => $this->reference?->toLocation?->name,
+                'name' => $this->reference->relationLoaded('toLocation') ? $this->reference->toLocation?->name : '-',
             ],
             default => ['label' => 'Catatan', 'name' => $this->notes ?? '-'],
         };
