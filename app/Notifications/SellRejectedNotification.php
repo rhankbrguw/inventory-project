@@ -16,7 +16,8 @@ class SellRejectedNotification extends Notification implements ShouldQueue
         public $sell,
         public $rejectorName,
         public $reason
-    ) {}
+    ) {
+    }
 
     public function via(object $notifiable): array
     {

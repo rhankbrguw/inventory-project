@@ -63,7 +63,7 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
         $date = now()->format('d/m/Y H:i');
 
         $items = $this->transfer->stockMovements()
-            ->where('type', 'transfer_in')
+            ->where('type', 'transfer_out')
             ->with('product')
             ->get();
 

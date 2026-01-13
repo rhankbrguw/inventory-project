@@ -40,8 +40,8 @@ class StockTransferController extends Controller
         }
 
         $sourceLocations = $sourceLocationsQuery->get()
-            ->filter(fn ($loc) => $user->can('createAtLocation', [StockTransfer::class, $loc->id]))
-            ->map(fn ($loc) => [
+            ->filter(fn($loc) => $user->can('createAtLocation', [StockTransfer::class, $loc->id]))
+            ->map(fn($loc) => [
                 'id' => $loc->id,
                 'name' => $loc->name,
             ])
@@ -50,20 +50,20 @@ class StockTransferController extends Controller
         $destinationLocations = Location::orderBy('name')->get(['id', 'name']);
 
         $productsQuery = Product::with([
-            'inventories' => fn ($q) => $q->where('quantity', '>', 0),
+            'inventories' => fn($q) => $q->where('quantity', '>', 0),
             'inventories.location:id,name',
         ])->orderBy('name');
 
         if ($accessibleLocationIds) {
             $productsQuery->whereHas(
                 'inventories',
-                fn ($q) => $q->whereIn('location_id', $accessibleLocationIds)
+                fn($q) => $q->whereIn('location_id', $accessibleLocationIds)
                     ->where('quantity', '>', 0)
             );
         }
 
         $products = $productsQuery->get()->map(function ($product) {
-            $product->locations = $product->inventories->map(fn ($inv) => [
+            $product->locations = $product->inventories->map(fn($inv) => [
                 'id' => $inv->location->id,
                 'name' => $inv->location->name,
                 'quantity' => $inv->quantity,
@@ -168,22 +168,31 @@ class StockTransferController extends Controller
             return back()->with('error', __('messages.transfer.invalid_status'));
         }
 
+        $request->validate([
+            'rejection_reason' => ['required', 'string', 'min:3'],
+        ]);
+
         $user = Auth::user();
         $reason = $request->input('rejection_reason');
 
-        $stockTransfer->update([
-            'status' => StockTransfer::STATUS_REJECTED,
-            'rejected_by' => $user->id,
-            'rejected_at' => now(),
-            'rejection_reason' => $reason,
-        ]);
+        DB::transaction(function () use ($stockTransfer, $user, $reason) {
+            $stockTransfer->update([
+                'status' => StockTransfer::STATUS_REJECTED,
+                'rejected_by' => $user->id,
+                'rejected_at' => now(),
+                'rejection_reason' => $reason,
+            ]);
 
-        try {
-            $stockTransfer->user->notify(
-                new TransferRejectedNotification($stockTransfer, $user->name, $reason)
-            );
-        } catch (\Throwable) {
-        }
+            try {
+                if ($stockTransfer->user && $stockTransfer->user->id !== $user->id) {
+                    $stockTransfer->user->notify(
+                        new TransferRejectedNotification($stockTransfer, $user->name, $reason)
+                    );
+                }
+            } catch (\Throwable $e) {
+                //
+            }
+        });
 
         return back()->with('success', __('messages.transfer.rejected'));
     }

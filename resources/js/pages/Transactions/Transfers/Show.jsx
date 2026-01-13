@@ -68,7 +68,7 @@ export default function Show({
         setIsProcessing(true);
         router.post(
             route('transactions.transfers.reject', data.id),
-            { reason: rejectionReason },
+            { rejection_reason: rejectionReason },
             {
                 onFinish: () => {
                     setIsProcessing(false);

@@ -47,9 +47,9 @@ class SellController extends Controller
         $allLocations = $locationsQuery->get();
 
         $filteredLocations = $allLocations
-            ->filter(fn($location) => $user->can('createAtLocation', [Sell::class, $location->id]));
+            ->filter(fn ($location) => $user->can('createAtLocation', [Sell::class, $location->id]));
 
-        $locationsWithPermissions = $filteredLocations->values()->map(fn($location) => [
+        $locationsWithPermissions = $filteredLocations->values()->map(fn ($location) => [
             'id' => $location->id,
             'name' => $location->name,
             'role_at_location' => $user->getRoleCodeAtLocation($location->id),
@@ -72,14 +72,14 @@ class SellController extends Controller
             ->get();
 
         $productsQuery = Product::with(['defaultSupplier:id,name', 'prices'])
-            ->when($search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
-            ->when($typeId && $typeId !== 'all', fn($q) => $q->where('type_id', $typeId))
+            ->when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
+            ->when($typeId && $typeId !== 'all', fn ($q) => $q->where('type_id', $typeId))
             ->orderBy('name');
 
         if ($locationId) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) =>
+                fn ($q) =>
                 $q->where('location_id', $locationId)->where('quantity', '>', 0)
             );
         } else {
@@ -120,7 +120,7 @@ class SellController extends Controller
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
-                ->through(fn($product) => array_merge(
+                ->through(fn ($product) => array_merge(
                     $product->toArray(),
                     ['channel_prices' => $product->prices->pluck('price', 'type_id')]
                 )),
@@ -140,7 +140,7 @@ class SellController extends Controller
         $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
 
         $itemsData = $validated['items'];
-        $totalPrice = collect($itemsData)->sum(fn($item) => $item['quantity'] * $item['sell_price']);
+        $totalPrice = collect($itemsData)->sum(fn ($item) => $item['quantity'] * $item['sell_price']);
 
         $sellTypeId = Type::where('name', 'Penjualan')
             ->where('group', Type::GROUP_TRANSACTION)
@@ -275,16 +275,19 @@ class SellController extends Controller
 
         $user = Auth::user();
 
-        $sell->update([
-            'status' => Sell::STATUS_APPROVED,
-            'approved_by' => $user->id,
-            'approved_at' => now(),
-        ]);
+        DB::transaction(function () use ($sell, $user) {
+            $sell->update([
+                'status' => Sell::STATUS_APPROVED,
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
 
-        try {
-            $sell->user->notify(new SellAcceptedNotification($sell, $user->name));
-        } catch (\Throwable) {
-        }
+            $sell->load('user');
+
+            if ($sell->user && $sell->user->id !== $user->id) {
+                $sell->user->notify(new SellAcceptedNotification($sell, $user->name));
+            }
+        });
 
         return back()->with('success', __('messages.sell.approved'));
     }
@@ -300,17 +303,20 @@ class SellController extends Controller
         $user = Auth::user();
         $reason = $request->input('rejection_reason');
 
-        $sell->update([
-            'status' => Sell::STATUS_REJECTED,
-            'rejected_by' => $user->id,
-            'rejected_at' => now(),
-            'rejection_reason' => $reason,
-        ]);
+        DB::transaction(function () use ($sell, $user, $reason) {
+            $sell->update([
+                'status' => Sell::STATUS_REJECTED,
+                'rejected_by' => $user->id,
+                'rejected_at' => now(),
+                'rejection_reason' => $reason,
+            ]);
 
-        try {
-            $sell->user->notify(new SellRejectedNotification($sell, $user->name, $reason));
-        } catch (\Throwable) {
-        }
+            $sell->load('user');
+
+            if ($sell->user && $sell->user->id !== $user->id) {
+                $sell->user->notify(new SellRejectedNotification($sell, $user->name, $reason));
+            }
+        });
 
         return back()->with('success', __('messages.sell.rejected'));
     }
@@ -333,9 +339,9 @@ class SellController extends Controller
             'type',
             'installments',
             'salesChannel',
-            'items.product' => fn($q) => $q->withTrashed(),
+            'items.product' => fn ($q) => $q->withTrashed(),
             'items.salesChannel',
-            'stockMovements.product' => fn($q) => $q->withTrashed(),
+            'stockMovements.product' => fn ($q) => $q->withTrashed(),
             'stockMovements.salesChannel',
         ]);
 
@@ -377,16 +383,23 @@ class SellController extends Controller
                 ])->pluck('id');
 
                 if ($targetRoleIds->isNotEmpty()) {
-                    $receivers = User::whereHas('locations', function ($q) use ($destinationLocationId, $targetRoleIds) {
+                    $branchManagers = User::whereHas('locations', function ($q) use ($destinationLocationId, $targetRoleIds) {
                         $q->where('locations.id', $destinationLocationId)
                             ->whereIn('location_user.role_id', $targetRoleIds);
                     })->get();
 
-                    foreach ($receivers as $receiver) {
+                    foreach ($branchManagers as $manager) {
                         try {
-                            $receiver->notify(new SellShipmentNotification($sell, $user->name));
+                            $manager->notify(new SellShipmentNotification($sell, $user->name));
                         } catch (\Throwable) {
                         }
+                    }
+                }
+
+                if ($sell->user_id !== $user->id) {
+                    try {
+                        $sell->user->notify(new SellShipmentNotification($sell, $user->name));
+                    } catch (\Throwable) {
                     }
                 }
             }

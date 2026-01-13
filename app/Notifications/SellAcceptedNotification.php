@@ -15,7 +15,8 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
     public function __construct(
         public $sell,
         public $approverName
-    ) {}
+    ) {
+    }
 
     public function via(object $notifiable): array
     {
@@ -62,12 +63,11 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
         $isIndonesian = $this->getUserLocale($notifiable) === 'id';
         $date = now()->format('d/m/Y H:i');
 
-        $items = $this->sell->stockMovements()
-            ->where('type', 'sell')
+        $items = $this->sell->items()
             ->with('product')
             ->get();
 
-        $totalQty = $items->sum(fn($i) => abs($i->quantity));
+        $totalQty = $items->sum('quantity');
 
         if ($isIndonesian) {
             $labelRef = str_pad('Ref', 9);
@@ -77,6 +77,8 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
             $labelTotal = str_pad('Total', 9);
             $labelTanggal = str_pad('Tanggal', 9);
 
+            $destName = $this->sell->targetLocation ? $this->sell->targetLocation->name : ($this->sell->customer ? $this->sell->customer->name : '-');
+
             return "*PESANAN DISETUJUI* ✅\n\n"
                 . "Halo {$notifiable->name},\n\n"
                 . "Pesanan penjualan telah *disetujui*:\n"
@@ -84,7 +86,7 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
                 . "{$labelRef}: {$this->sell->reference_code}\n"
                 . "{$labelStatus}: DISETUJUI\n"
                 . "{$labelApproved}: {$this->approverName}\n"
-                . "{$labelTujuan}: {$this->sell->customer->name}\n"
+                . "{$labelTujuan}: {$destName}\n"
                 . "{$labelTotal}: {$totalQty} Unit\n"
                 . "{$labelTanggal}: {$date}"
                 . "```\n\n"
@@ -100,6 +102,8 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
         $labelTotal = str_pad('Total', 9);
         $labelDate = str_pad('Date', 9);
 
+        $destName = $this->sell->targetLocation ? $this->sell->targetLocation->name : ($this->sell->customer ? $this->sell->customer->name : '-');
+
         return "*ORDER APPROVED* ✅\n\n"
             . "Hello {$notifiable->name},\n\n"
             . "Sales order has been *approved*:\n"
@@ -107,7 +111,7 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
             . "{$labelRef}: {$this->sell->reference_code}\n"
             . "{$labelStatus}: APPROVED\n"
             . "{$labelApproved}: {$this->approverName}\n"
-            . "{$labelDest}: {$this->sell->customer->name}\n"
+            . "{$labelDest}: {$destName}\n"
             . "{$labelTotal}: {$totalQty} Units\n"
             . "{$labelDate}: {$date}"
             . "```\n\n"

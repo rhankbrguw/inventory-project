@@ -231,7 +231,7 @@ export const stockMovementPreviewColumns = [
         header: 'Tipe',
         cell: ({ row }) => (
             <Badge variant="outline" className="capitalize">
-                {row.type}
+                {row.type.replace('_', ' ')}
             </Badge>
         ),
         className: 'text-center whitespace-nowrap',
@@ -239,23 +239,46 @@ export const stockMovementPreviewColumns = [
     {
         accessorKey: 'reference',
         header: 'Referensi',
-        cell: ({ row }) =>
-            row.reference ? (
-                <Link
-                    href={row.reference.url}
-                    className="text-primary hover:underline"
-                >
-                    {row.reference.code}
-                </Link>
-            ) : (
-                '-'
-            ),
+        cell: ({ row }) => {
+            const ref = row.reference;
+
+            if (!ref || !ref.code) {
+                return <span className="text-muted-foreground">-</span>;
+            }
+
+            if (ref.url && ref.url !== '#') {
+                return (
+                    <Link
+                        href={ref.url}
+                        className="text-foreground hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {ref.code}
+                    </Link>
+                );
+            }
+
+            return <span>{ref.code}</span>;
+        },
         className: 'text-center font-mono text-xs whitespace-nowrap',
     },
     {
         accessorKey: 'notes',
         header: 'Catatan',
-        cell: ({ row }) => row.notes || '-',
+        cell: ({ row }) => {
+            const od = row.origin_destination;
+            if (od && od.name && od.name !== '-') {
+                return (
+                    <div className="flex flex-col items-center">
+                        <span className="text-[10px] text-muted-foreground">
+                            {od.label}
+                        </span>
+                        <span>{od.name}</span>
+                    </div>
+                );
+            }
+            return row.notes || '-';
+        },
         className: 'text-center text-xs whitespace-nowrap',
     },
     {

@@ -21,7 +21,7 @@ class StockMovementResource extends JsonResource
             'average_cost_per_unit' => $this->average_cost_per_unit,
             'notes' => $this->notes,
             'origin_destination' => $this->getOriginDestination(),
-            'sales_channel' => $this->whenLoaded('salesChannel', fn () => [
+            'sales_channel' => $this->whenLoaded('salesChannel', fn() => [
                 'id' => $this->salesChannel->id,
                 'name' => $this->salesChannel->name,
                 'code' => $this->salesChannel->code,
@@ -37,6 +37,7 @@ class StockMovementResource extends JsonResource
                 } elseif ($this->reference instanceof Sell) {
                     $url = route('transactions.sells.show', $this->reference->id);
                 } elseif ($this->reference instanceof StockTransfer) {
+                    $url = route('transactions.transfers.show', $this->reference->id);
                 }
                 return [
                     'id' => $this->reference->id,
@@ -51,7 +52,7 @@ class StockMovementResource extends JsonResource
                 'unit' => $this->product->unit ?? 'unit',
                 'deleted_at' => $this->product->deleted_at?->toISOString(),
             ],
-            'location' => $this->whenLoaded('location', fn () => [
+            'location' => $this->whenLoaded('location', fn() => [
                 'id' => $this->location->id,
                 'name' => $this->location->name,
             ]),
