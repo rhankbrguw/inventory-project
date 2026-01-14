@@ -44,6 +44,7 @@ return [
         'updated' => 'Produk berhasil diperbarui.',
         'deleted' => 'Produk berhasil dihapus.',
         'restored' => 'Produk berhasil dipulihkan.',
+        'cannot_delete_has_stock' => 'Produk tidak dapat dihapus karena masih memiliki stok.',
     ],
 
     // Location Messages
@@ -76,6 +77,7 @@ return [
         'updated' => 'Pengguna berhasil diperbarui.',
         'deleted' => 'Pengguna berhasil dihapus.',
         'restored' => 'Pengguna berhasil dipulihkan.',
+        'cannot_delete_in_use' => 'Tipe tidak dapat dihapus karena sedang digunakan.',
     ],
 
     // Type Messages
@@ -84,6 +86,7 @@ return [
         'updated' => 'Tipe berhasil diperbarui.',
         'deleted' => 'Tipe berhasil dihapus.',
         'restored' => 'Tipe berhasil dipulihkan.',
+        'cannot_delete_in_use' => 'Tipe tidak dapat dihapus karena sedang digunakan.',
     ],
 
     // Stock Messages

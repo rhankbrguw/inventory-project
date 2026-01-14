@@ -44,6 +44,7 @@ return [
         'updated' => 'Product updated successfully.',
         'deleted' => 'Product deleted successfully.',
         'restored' => 'Product restored successfully.',
+        'cannot_delete_has_stock' => 'Product cannot be deleted because it still has stock.',
     ],
 
     // Location Messages
@@ -76,6 +77,7 @@ return [
         'updated' => 'User updated successfully.',
         'deleted' => 'User deleted successfully.',
         'restored' => 'User restored successfully.',
+        'cannot_delete_self' => 'You cannot delete your own account.'
     ],
 
     // Type Messages
@@ -84,6 +86,7 @@ return [
         'updated' => 'Type updated successfully.',
         'deleted' => 'Type deleted successfully.',
         'restored' => 'Type restored successfully.',
+        'cannot_delete_in_use' => 'Type cannot be deleted because it is currently in use.',
     ],
 
     // Stock Messages

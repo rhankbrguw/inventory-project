@@ -41,11 +41,11 @@ class StockController extends Controller
         $inventories = Inventory::with(['product.type', 'location.type'])
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->select('inventories.*')
-            ->whereHas('location', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('product', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('location', fn ($q) => $q->whereNull('deleted_at'))
+            ->whereHas('product', fn ($q) => $q->whereNull('deleted_at'))
             ->when(
                 $accessibleLocationIds,
-                fn($q) =>
+                fn ($q) =>
                 $q->whereIn('inventories.location_id', $accessibleLocationIds)
             )
             ->when($request->input('search'), function ($query, $search) {
@@ -56,18 +56,18 @@ class StockController extends Controller
             })
             ->when(
                 $request->input('location_id'),
-                fn($q, $id) =>
+                fn ($q, $id) =>
                 $q->where('inventories.location_id', $id)
             )
             ->when(
                 $request->input('product_id'),
-                fn($q, $id) =>
+                fn ($q, $id) =>
                 $q->where('inventories.product_id', $id)
             )
             ->when(
                 $request->input('type_id'),
-                fn($q, $id) =>
-                $q->whereHas('product', fn($sq) => $sq->where('type_id', $id))
+                fn ($q, $id) =>
+                $q->whereHas('product', fn ($sq) => $sq->where('type_id', $id))
             )
             ->when($request->input('sort'), function ($query, $sort) {
                 match ($sort) {
@@ -81,7 +81,7 @@ class StockController extends Controller
                     'price_asc'       => $query->orderBy('products.price', 'asc'),
                     default           => $query->orderBy('products.name', 'asc'),
                 };
-            }, fn($q) => $q->orderBy('products.name', 'asc'))
+            }, fn ($q) => $q->orderBy('products.name', 'asc'))
             ->paginate(15)
             ->withQueryString();
 
@@ -130,7 +130,7 @@ class StockController extends Controller
                 'location',
                 'reference' => function (MorphTo $morphTo) {
                     $morphTo->morphWith([
-                        Purchase::class      => ['supplier'],
+                        Purchase::class      => ['supplier', 'fromLocation'],
                         Sell::class          => ['customer', 'targetLocation'],
                         StockTransfer::class => ['fromLocation', 'toLocation'],
                         User::class          => [],
@@ -155,7 +155,7 @@ class StockController extends Controller
         if ($accessibleLocationIds) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) =>
+                fn ($q) =>
                 $q->whereIn('location_id', $accessibleLocationIds)
             );
         }

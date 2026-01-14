@@ -82,6 +82,7 @@ class PurchaseController extends Controller
             $purchase = Purchase::create([
                 'type_id' => $purchaseType->id,
                 'location_id' => $validated['location_id'],
+                'from_location_id' => $validated['from_location_id'] ?? null,
                 'supplier_id' => $validated['supplier_id'],
                 'user_id' => $request->user()->id,
                 'reference_code' => 'PO-' . now()->format('Ymd-His'),
@@ -155,7 +156,7 @@ class PurchaseController extends Controller
     {
         $this->authorize('view', $purchase);
 
-        $purchase->load(['location', 'supplier', 'user', 'paymentMethodType', 'stockMovements.product', 'type', 'installments']);
+        $purchase->load(['location', 'fromLocation', 'supplier', 'user', 'paymentMethodType', 'stockMovements.product', 'type', 'installments']);
 
         return Inertia::render('Transactions/Purchases/Show', [
             'purchase' => PurchaseResource::make($purchase)

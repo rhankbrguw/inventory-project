@@ -77,9 +77,11 @@ class StockMovementResource extends JsonResource
         return match ($this->type) {
             'purchase' => [
                 'label' => 'Diterima dari',
-                'name' => ($this->reference->relationLoaded('supplier') && $this->reference->supplier)
-                    ? $this->reference->supplier->name
-                    : 'Supplier Umum',
+                'name' => ($this->reference->relationLoaded('fromLocation') && $this->reference->fromLocation)
+                    ? $this->reference->fromLocation->name . ' (Internal)'
+                    : ($this->reference->relationLoaded('supplier') && $this->reference->supplier
+                        ? $this->reference->supplier->name
+                        : 'Supplier Umum'),
             ],
             'sell' => [
                 'label' => 'Dijual ke',

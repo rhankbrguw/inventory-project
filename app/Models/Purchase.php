@@ -16,6 +16,7 @@ class Purchase extends Model
     protected $fillable = [
         'type_id',
         'location_id',
+        'from_location_id',
         'supplier_id',
         'user_id',
         'reference_code',
@@ -41,6 +42,11 @@ class Purchase extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function fromLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'from_location_id');
     }
 
     public function supplier(): BelongsTo

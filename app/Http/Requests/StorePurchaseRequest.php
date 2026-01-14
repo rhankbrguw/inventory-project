@@ -17,6 +17,7 @@ class StorePurchaseRequest extends FormRequest
     {
         return [
             'location_id' => ['required', 'exists:locations,id'],
+            'from_location_id' => ['nullable', 'exists:locations,id'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'transaction_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:100'],
