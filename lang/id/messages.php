@@ -58,6 +58,7 @@ return [
     // Customer Messages
     'customer' => [
         'created' => 'Pelanggan berhasil ditambahkan.',
+        'created_from_modal' => 'Pelanggan berhasil ditambahkan dan siap digunakan.',
         'updated' => 'Pelanggan berhasil diperbarui.',
         'deleted' => 'Pelanggan berhasil dihapus.',
         'restored' => 'Pelanggan berhasil dipulihkan.',
@@ -75,6 +76,7 @@ return [
     'user' => [
         'created' => 'Pengguna berhasil ditambahkan.',
         'updated' => 'Pengguna berhasil diperbarui.',
+        'updated_with_sync' => 'Pengguna berhasil diperbarui. Role disinkronkan ke :count lokasi sebagai :role.',
         'deleted' => 'Pengguna berhasil dihapus.',
         'restored' => 'Pengguna berhasil dipulihkan.',
         'cannot_delete_in_use' => 'Tipe tidak dapat dihapus karena sedang digunakan.',

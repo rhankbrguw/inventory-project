@@ -58,6 +58,7 @@ return [
     // Customer Messages
     'customer' => [
         'created' => 'Customer added successfully.',
+        'created_from_modal' => 'Customer added successfully and ready to use.',
         'updated' => 'Customer updated successfully.',
         'deleted' => 'Customer deleted successfully.',
         'restored' => 'Customer restored successfully.',
@@ -75,6 +76,7 @@ return [
     'user' => [
         'created' => 'User added successfully.',
         'updated' => 'User updated successfully.',
+        'updated_with_sync' => 'User updated successfully. Role synchronized to :count location(s) as :role.',
         'deleted' => 'User deleted successfully.',
         'restored' => 'User restored successfully.',
         'cannot_delete_self' => 'You cannot delete your own account.'
