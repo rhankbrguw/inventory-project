@@ -87,11 +87,12 @@ export default function Create({
     };
 
     const confirmLocationChange = () => {
-        clearCart();
-        setFilter('search', '');
-        setFilter('type_id', 'all');
-        setFilter('location_id', pendingLocationId);
-        setPendingLocationId(null);
+        clearCart(() => {
+            setFilter('search', '');
+            setFilter('type_id', 'all');
+            setFilter('location_id', pendingLocationId);
+            setPendingLocationId(null);
+        });
     };
 
     const handleCustomerChange = (customerId) => {

@@ -223,16 +223,6 @@ export default function SellCheckoutDialog({
                             />
                             <InputError message={errors.notes} />
                         </FormField>
-
-                        {errors.items && (
-                            <InputError message="Error pada data item, cek keranjang Anda." />
-                        )}
-                        {errors.customer_id && (
-                            <InputError message={errors.customer_id} />
-                        )}
-                        {errors.target_location_id && (
-                            <InputError message={errors.target_location_id} />
-                        )}
                     </div>
 
                     <DialogFooter className="gap-2 sm:gap-0">

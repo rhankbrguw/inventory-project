@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Traits\FormatsPhoneNumber;
 use App\Models\Type;
-use App\Models\Customer;
 use App\Rules\ExistsInGroup;
 use App\Rules\UniqueRule;
 use App\Rules\ValidPhoneNumber;
@@ -27,12 +26,6 @@ class StoreCustomerRequest extends FormRequest
                 'required',
                 'integer',
                 new ExistsInGroup('types', Type::GROUP_CUSTOMER),
-                function ($value, $fail) {
-                    $type = Type::find($value);
-                    if ($type && $type->code === Customer::CODE_BRANCH_CUSTOMER) {
-                        $fail('Pelanggan tipe Cabang tidak boleh dibuat manual.');
-                    }
-                }
             ],
             'email' => [
                 'required',

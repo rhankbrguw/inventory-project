@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Models\Type;
 use App\Models\Location;
-use App\Models\Customer;
 use App\Rules\ExistsInGroup;
 use App\Rules\SufficientStock;
 use Illuminate\Foundation\Http\FormRequest;
@@ -53,43 +52,46 @@ class StoreSellRequest extends FormRequest
             $customerId = $this->input('customer_id');
             $targetLocationId = $this->input('target_location_id');
 
+            $sourceLocation = Location::with('type')->find($locationId);
+
+            if ($sourceLocation && $sourceLocation->type) {
+                if ($sourceLocation->type->code === Location::CODE_WAREHOUSE) {
+                    if ($customerId) {
+                        $validator->errors()->add(
+                            'customer_id',
+                            'Gudang Pusat tidak boleh melayani Pelanggan Perorangan.'
+                        );
+                    }
+                    if (!$targetLocationId) {
+                        $validator->errors()->add(
+                            'target_location_id',
+                            'Gudang Pusat wajib memilih Cabang Tujuan.'
+                        );
+                    }
+                }
+
+                if ($sourceLocation->type->code === Location::CODE_BRANCH) {
+                    if ($targetLocationId) {
+                        $validator->errors()->add(
+                            'target_location_id',
+                            'Cabang tidak boleh melakukan penjualan ke Cabang lain.'
+                        );
+                    }
+                }
+            }
+
             if ($customerId && $targetLocationId) {
                 $validator->errors()->add(
                     'customer_id',
-                    'Tidak boleh memilih Pelanggan dan Cabang sekaligus. Pilih salah satu.'
+                    'Pilih salah satu: Pelanggan atau Cabang Tujuan.'
                 );
-                return;
             }
 
-            if ($locationId) {
-                $location = Location::with('type')->find($locationId);
-
-                if ($location && $location->type && $location->type->level === 1) {
-                    if (empty($customerId) && empty($targetLocationId)) {
-                        $validator->errors()->add(
-                            'target_location_id',
-                            'Gudang Pusat WAJIB memilih Cabang Tujuan. Tidak boleh melayani pelanggan umum (Walk-in).'
-                        );
-                        return;
-                    }
-
-                    if ($customerId) {
-                        $customer = Customer::find($customerId);
-                        if (!$customer || !$customer->type || $customer->type->code !== Customer::CODE_BRANCH_CUSTOMER) {
-                            $validator->errors()->add(
-                                'customer_id',
-                                'Gudang Pusat hanya boleh melayani Pelanggan Internal (tipe Cabang). Gunakan dropdown "Cabang Tujuan" untuk lebih mudah.'
-                            );
-                        }
-                    }
-                }
-
-                if ($targetLocationId && $targetLocationId == $locationId) {
-                    $validator->errors()->add(
-                        'target_location_id',
-                        'Lokasi tujuan tidak boleh sama dengan lokasi penjualan.'
-                    );
-                }
+            if ($targetLocationId && $targetLocationId == $locationId) {
+                $validator->errors()->add(
+                    'target_location_id',
+                    'Lokasi tujuan tidak boleh sama dengan lokasi asal.'
+                );
             }
         });
     }

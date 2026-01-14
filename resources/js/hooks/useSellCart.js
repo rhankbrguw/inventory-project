@@ -156,15 +156,27 @@ export function useSellCart(cart = [], locationId) {
         [locationId, processingItem, effectiveCart]
     );
 
-    const clearCart = useCallback(() => {
-        if (!locationId || effectiveCart.length === 0 || processingItem) return;
-        setProcessingItem('all');
-        router.delete(route('sell.cart.destroy.location'), {
-            data: { location_id: locationId },
-            preserveScroll: true,
-            onFinish: () => setProcessingItem(null),
-        });
-    }, [locationId, effectiveCart, processingItem]);
+    const clearCart = useCallback(
+        (onSuccessCallback) => {
+            if (!locationId || effectiveCart.length === 0) {
+                if (onSuccessCallback) onSuccessCallback();
+                return;
+            }
+
+            if (processingItem) return;
+
+            setProcessingItem('all');
+            router.delete(route('sell.cart.destroy.location'), {
+                data: { location_id: locationId },
+                preserveScroll: true,
+                onSuccess: () => {
+                    if (onSuccessCallback) onSuccessCallback();
+                },
+                onFinish: () => setProcessingItem(null),
+            });
+        },
+        [locationId, effectiveCart, processingItem]
+    );
 
     const getItemQuantity = useCallback(
         (item) => {

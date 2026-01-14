@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\ScopedByLocation;
-use App\Models\SellItem;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -134,6 +133,6 @@ class Sell extends Model
 
     public function getDestinationLocationId(): ?int
     {
-        return $this->target_location_id ?? $this->customer?->related_location_id;
+        return $this->target_location_id;
     }
 }

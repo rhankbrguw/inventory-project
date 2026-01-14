@@ -47,9 +47,9 @@ class SellController extends Controller
         $allLocations = $locationsQuery->get();
 
         $filteredLocations = $allLocations
-            ->filter(fn ($location) => $user->can('createAtLocation', [Sell::class, $location->id]));
+            ->filter(fn($location) => $user->can('createAtLocation', [Sell::class, $location->id]));
 
-        $locationsWithPermissions = $filteredLocations->values()->map(fn ($location) => [
+        $locationsWithPermissions = $filteredLocations->values()->map(fn($location) => [
             'id' => $location->id,
             'name' => $location->name,
             'role_at_location' => $user->getRoleCodeAtLocation($location->id),
@@ -72,14 +72,14 @@ class SellController extends Controller
             ->get();
 
         $productsQuery = Product::with(['defaultSupplier:id,name', 'prices'])
-            ->when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
-            ->when($typeId && $typeId !== 'all', fn ($q) => $q->where('type_id', $typeId))
+            ->when($search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
+            ->when($typeId && $typeId !== 'all', fn($q) => $q->where('type_id', $typeId))
             ->orderBy('name');
 
         if ($locationId) {
             $productsQuery->whereHas(
                 'inventories',
-                fn ($q) =>
+                fn($q) =>
                 $q->where('location_id', $locationId)->where('quantity', '>', 0)
             );
         } else {
@@ -87,21 +87,10 @@ class SellController extends Controller
         }
 
         $customerTypesForQuickAdd = Type::where('group', Type::GROUP_CUSTOMER)
-            ->where('code', '!=', Customer::CODE_BRANCH_CUSTOMER)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $customers = Customer::with('type')
-            ->where(function ($q) {
-                $q->where('type_id', '!=', function ($sub) {
-                    $sub->select('id')
-                        ->from('types')
-                        ->where('group', Type::GROUP_CUSTOMER)
-                        ->where('code', Customer::CODE_BRANCH_CUSTOMER)
-                        ->limit(1);
-                })
-                    ->orWhereNull('type_id');
-            })
             ->orderBy('name')
             ->get(['id', 'name', 'type_id']);
 
@@ -120,7 +109,7 @@ class SellController extends Controller
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
-                ->through(fn ($product) => array_merge(
+                ->through(fn($product) => array_merge(
                     $product->toArray(),
                     ['channel_prices' => $product->prices->pluck('price', 'type_id')]
                 )),
@@ -140,23 +129,18 @@ class SellController extends Controller
         $this->authorize('createAtLocation', [Sell::class, $validated['location_id']]);
 
         $itemsData = $validated['items'];
-        $totalPrice = collect($itemsData)->sum(fn ($item) => $item['quantity'] * $item['sell_price']);
+        $totalPrice = collect($itemsData)->sum(fn($item) => $item['quantity'] * $item['sell_price']);
 
         $sellTypeId = Type::where('name', 'Penjualan')
             ->where('group', Type::GROUP_TRANSACTION)
             ->value('id');
 
         $initialStatus = 'Completed';
+
         $targetLocationId = $validated['target_location_id'] ?? null;
 
         if ($targetLocationId) {
             $initialStatus = Sell::STATUS_PENDING_APPROVAL;
-        } elseif (!empty($validated['customer_id'])) {
-            $customer = Customer::find($validated['customer_id']);
-            if ($customer && $customer->related_location_id) {
-                $initialStatus = Sell::STATUS_PENDING_APPROVAL;
-                $targetLocationId = $customer->related_location_id;
-            }
         }
 
         $headerChannelId = $validated['sales_channel_id'] ?? null;
@@ -339,9 +323,9 @@ class SellController extends Controller
             'type',
             'installments',
             'salesChannel',
-            'items.product' => fn ($q) => $q->withTrashed(),
+            'items.product' => fn($q) => $q->withTrashed(),
             'items.salesChannel',
-            'stockMovements.product' => fn ($q) => $q->withTrashed(),
+            'stockMovements.product' => fn($q) => $q->withTrashed(),
             'stockMovements.salesChannel',
         ]);
 
@@ -446,6 +430,7 @@ class SellController extends Controller
             $purchase = Purchase::create([
                 'type_id' => $purchaseType,
                 'location_id' => $destinationLocationId,
+                'from_location_id' => $sell->location_id,
                 'supplier_id' => null,
                 'user_id' => $user->id,
                 'reference_code' => 'PO-AUTO-' . now()->format('Ymd-His'),

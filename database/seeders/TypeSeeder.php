@@ -30,7 +30,6 @@ class TypeSeeder extends Seeder
             ['group' => Type::GROUP_LOCATION, 'name' => 'Branch', 'code' => 'BR', 'level' => 2],
 
             ['group' => Type::GROUP_CUSTOMER, 'name' => 'Individu', 'code' => 'IND', 'level' => null],
-            ['group' => Type::GROUP_CUSTOMER, 'name' => 'Cabang', 'code' => 'CBG', 'level' => null],
             ['group' => Type::GROUP_CUSTOMER, 'name' => 'Mitra', 'code' => 'MTR', 'level' => null],
             ['group' => Type::GROUP_CUSTOMER, 'name' => 'Organisasi', 'code' => 'OGN', 'level' => null],
 
