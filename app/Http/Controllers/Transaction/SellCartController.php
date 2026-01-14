@@ -24,6 +24,24 @@ class SellCartController extends Controller
 
         $user = $request->user();
 
+        $product = \App\Models\Product::with('inventories')->findOrFail($validated['product_id']);
+        $locationId = $validated['location_id'];
+        $channelId = $validated['sales_channel_id'];
+
+        $effectivePrice = $product->getEffectivePrice($locationId);
+
+        if ($channelId) {
+            $inventory = $product->inventories->where('location_id', $locationId)->first();
+            if ($inventory && isset($inventory->channel_prices_override[$channelId])) {
+                $effectivePrice = $inventory->channel_prices_override[$channelId];
+            } else {
+                $channelPrice = $product->prices->where('type_id', $channelId)->first();
+                if ($channelPrice) {
+                    $effectivePrice = $channelPrice->price;
+                }
+            }
+        }
+
         $cartItem = SellCartItem::where('user_id', $user->id)
             ->where('location_id', $validated['location_id'])
             ->where('product_id', $validated['product_id'])
@@ -32,13 +50,14 @@ class SellCartController extends Controller
 
         if ($cartItem) {
             $cartItem->increment('quantity', $validated['quantity']);
+            $cartItem->update(['sell_price' => $effectivePrice]);
         } else {
             SellCartItem::create([
                 'user_id' => $user->id,
                 'location_id' => $validated['location_id'],
                 'product_id' => $validated['product_id'],
                 'quantity' => $validated['quantity'],
-                'sell_price' => $validated['sell_price'],
+                'sell_price' => $effectivePrice,
                 'sales_channel_type_id' => $validated['sales_channel_id'] ?? null,
             ]);
         }

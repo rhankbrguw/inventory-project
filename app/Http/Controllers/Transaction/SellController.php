@@ -68,10 +68,10 @@ class SellController extends Controller
         }
 
         $cartItems = $user->sellCartItems()
-            ->with(['product.prices', 'location', 'salesChannel'])
+            ->with(['product.prices', 'product.inventories', 'location', 'salesChannel'])
             ->get();
 
-        $productsQuery = Product::with(['defaultSupplier:id,name', 'prices'])
+        $productsQuery = Product::with(['defaultSupplier:id,name', 'prices', 'inventories'])
             ->when($search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
             ->when($typeId && $typeId !== 'all', fn($q) => $q->where('type_id', $typeId))
             ->orderBy('name');
@@ -102,6 +102,10 @@ class SellController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $cashChannelId = Type::where('code', 'CASH')
+            ->where('group', Type::GROUP_SALES_CHANNEL)
+            ->value('id');
+
         return Inertia::render('Transactions/Sells/Create', [
             'locations' => $locationsWithPermissions,
             'customers' => $customers,
@@ -109,10 +113,40 @@ class SellController extends Controller
             'allProducts' => $productsQuery
                 ->paginate(12)
                 ->withQueryString()
-                ->through(fn($product) => array_merge(
-                    $product->toArray(),
-                    ['channel_prices' => $product->prices->pluck('price', 'type_id')]
-                )),
+                ->through(function ($product) use ($user, $locationId, $cashChannelId) {
+                    $effectivePrice = $product->price;
+                    if ($user && $user->level !== 1 && $locationId) {
+                        $inventory = $product->inventories->where('location_id', $locationId)->first();
+                        if ($inventory && $inventory->selling_price !== null && $inventory->selling_price > 0) {
+                            $effectivePrice = $inventory->selling_price;
+                        }
+                    }
+
+                    $channelPrices = $product->prices->pluck('price', 'type_id')->toArray();
+
+                    if ($user && $user->level !== 1 && $locationId) {
+                        $inventory = $product->inventories->where('location_id', $locationId)->first();
+                        if ($inventory && $inventory->channel_prices_override) {
+                            foreach ($inventory->channel_prices_override as $channelId => $price) {
+                                if ($price !== null && $price !== '') {
+                                    $channelPrices[$channelId] = $price;
+                                }
+                            }
+                        }
+                    }
+
+                    if ($cashChannelId) {
+                        $channelPrices[$cashChannelId] = $effectivePrice;
+                    }
+
+                    return array_merge(
+                        $product->toArray(),
+                        [
+                            'price' => $effectivePrice,
+                            'channel_prices' => $channelPrices,
+                        ]
+                    );
+                }),
             'paymentMethods' => Type::where('group', Type::GROUP_PAYMENT)->orderBy('name')->get(['id', 'name']),
             'productTypes' => Type::where('group', Type::GROUP_PRODUCT)->orderBy('name')->get(['id', 'name']),
             'customerTypes' => $customerTypesForQuickAdd,

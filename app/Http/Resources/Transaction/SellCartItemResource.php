@@ -10,17 +10,28 @@ class SellCartItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $user = $request->user();
+        $effectivePrice = $this->product->price;
+
+        if ($user && $user->level !== 1 && $this->product->relationLoaded('inventories')) {
+            $locationId = $this->location_id;
+            $inventory = $this->product->inventories->where('location_id', $locationId)->first();
+            if ($inventory && $inventory->selling_price !== null && $inventory->selling_price > 0) {
+                $effectivePrice = $inventory->selling_price;
+            }
+        }
+
         return [
             'id' => $this->id,
             'quantity' => $this->quantity,
             'sell_price' => $this->sell_price,
             'product' => $this->whenLoaded(
                 'product',
-                fn () => [
+                fn() => [
                     'id' => $this->product->id,
                     'name' => $this->product->name,
                     'sku' => $this->product->sku,
-                    'price' => $this->product->price,
+                    'price' => $effectivePrice,
                     'unit' => $this->product->unit,
                     'image_url' => $this->product->image_path
                         ? Storage::url($this->product->image_path)
@@ -33,7 +44,7 @@ class SellCartItemResource extends JsonResource
             ),
             'sales_channel' => $this->whenLoaded(
                 'salesChannel',
-                fn () => [
+                fn() => [
                     'id' => $this->salesChannel->id,
                     'name' => $this->salesChannel->name,
                     'code' => $this->salesChannel->code,
@@ -41,7 +52,7 @@ class SellCartItemResource extends JsonResource
             ),
             'location' => $this->whenLoaded(
                 "location",
-                fn () => [
+                fn() => [
                     "id" => $this->location->id,
                     "name" => $this->location->name,
                 ],
