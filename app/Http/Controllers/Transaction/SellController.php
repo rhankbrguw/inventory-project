@@ -71,7 +71,15 @@ class SellController extends Controller
             ->with(['product.prices', 'product.inventories', 'location', 'salesChannel'])
             ->get();
 
-        $productsQuery = Product::with(['defaultSupplier:id,name', 'prices', 'inventories'])
+        $productsQuery = Product::with([
+            'defaultSupplier:id,name',
+            'prices',
+            'inventories' => function ($q) use ($locationId) {
+                if ($locationId) {
+                    $q->where('location_id', $locationId);
+                }
+            }
+        ])
             ->when($search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))
             ->when($typeId && $typeId !== 'all', fn($q) => $q->where('type_id', $typeId))
             ->orderBy('name');
@@ -124,19 +132,19 @@ class SellController extends Controller
 
                     $channelPrices = $product->prices->pluck('price', 'type_id')->toArray();
 
+                    if ($cashChannelId) {
+                        $channelPrices[$cashChannelId] = $effectivePrice;
+                    }
+
                     if ($user && $user->level !== 1 && $locationId) {
                         $inventory = $product->inventories->where('location_id', $locationId)->first();
                         if ($inventory && $inventory->channel_prices_override) {
                             foreach ($inventory->channel_prices_override as $channelId => $price) {
                                 if ($price !== null && $price !== '') {
-                                    $channelPrices[$channelId] = $price;
+                                    $channelPrices[$channelId] = (float) $price;
                                 }
                             }
                         }
-                    }
-
-                    if ($cashChannelId) {
-                        $channelPrices[$cashChannelId] = $effectivePrice;
                     }
 
                     return array_merge(
