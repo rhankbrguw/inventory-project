@@ -201,8 +201,8 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                                         Menunggu Persetujuan
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Pesanan stok masuk membutuhkan
-                                        persetujuan Anda.
+                                        Ada pesanan Pembelian baru yang
+                                        membutuhkan konfirmasi Anda.
                                     </p>
                                 </div>
                             </div>
@@ -241,8 +241,8 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                                         Siap Dikirim
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Pesanan telah disetujui. Segera proses
-                                        pengiriman.
+                                        Pesanan telah disetujui. Segera lakukan
+                                        proses pengiriman.
                                     </p>
                                 </div>
                             </div>

@@ -155,7 +155,8 @@ export default function Show({
                                         Menunggu Persetujuan
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Transfer membutuhkan konfirmasi Anda
+                                        Ada Transfer baru yang membutuhkan
+                                        konfirmasi Anda
                                     </p>
                                 </div>
                             </div>
@@ -194,7 +195,8 @@ export default function Show({
                                         Siap Dikirim
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Transfer telah disetujui
+                                        Transfer telah disetujui. Segera lakukan
+                                        proses pengiriman.
                                     </p>
                                 </div>
                             </div>

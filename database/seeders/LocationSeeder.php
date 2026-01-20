@@ -20,7 +20,10 @@ class LocationSeeder extends Seeder
         ];
 
         foreach ($warehouses as $warehouse) {
-            Location::firstOrCreate(['name' => $warehouse['name']], $warehouse);
+            Location::updateOrCreate(
+                ['name' => $warehouse['name'], 'type_id' => $warehouse['type_id']],
+                $warehouse
+            );
         }
 
         $branches = [

@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -14,25 +15,22 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 /**
- * Exception Handler
+ * Class Handler
  *
- * Handles exception reporting and rendering for the application.
- * Provides custom error responses for different exception types,
- * with enhanced logging and JSON response formatting for API requests.
- *
- * @package App\Exceptions
+ * Global exception handler for the application.
+ * Responsible for reporting exceptions and formatting HTTP / API responses.
  */
 class Handler extends ExceptionHandler
 {
     /**
-     * A list of exception types with their corresponding custom log levels.
+     * Custom log levels for exception types.
      *
-     * @var array<class-string<\Throwable>, \Psr\Log\LogLevel::*>
+     * @var array<class-string<Throwable>, \Psr\Log\LogLevel::*>
      */
     protected $levels = [];
 
     /**
-     * A list of the inputs that are never flashed to the session on validation exceptions.
+     * Inputs that are never flashed to the session on validation exceptions.
      *
      * @var array<int, string>
      */
@@ -43,67 +41,134 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Register the exception handling callbacks for the application.
-     *
-     * Configures custom reporting and rendering logic for exceptions.
-     * Logs detailed error information and provides structured JSON
-     * responses for API requests.
+     * Register exception handling callbacks.
      *
      * @return void
      */
     public function register(): void
     {
+        /**
+         * Report exceptions to log storage.
+         */
         $this->reportable(function (Throwable $e) {
             if ($this->shouldReport($e)) {
                 Log::error('Exception occurred', [
                     'exception' => get_class($e),
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'url' => request()->fullUrl(),
-                    'user_id' => auth()->id(),
+                    'message'   => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                    'url'       => request()->fullUrl(),
+                    'user_id'   => auth()->id(),
                 ]);
             }
         });
 
+        /**
+         * Render JSON responses for API requests.
+         */
         $this->renderable(function (Throwable $e, $request) {
+            // Let Laravel handle validation errors by default
             if ($e instanceof ValidationException) {
                 return null;
             }
 
+            // Custom JSON response for API requests
             if ($request->is('api/*') && $request->wantsJson()) {
                 return $this->handleJsonResponse($e);
             }
 
             return null;
         });
+
+        /**
+         * Handle database duplicate entry errors (unique constraint).
+         */
+        $this->renderable(function (QueryException $e, $request) {
+            if ($e->errorInfo[0] === '23000') {
+                $message = $this->getDuplicateEntryMessage($e);
+
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message'     => $message,
+                        'status_code' => 422,
+                    ], 422);
+                }
+
+                return back()
+                    ->withInput()
+                    ->with('error', $message);
+            }
+        });
     }
 
     /**
-     * Handle JSON response for API exceptions.
+     * Generate a human-readable message for duplicate entry errors.
      *
-     * Formats exception data into a structured JSON response
-     * with appropriate status codes and error messages.
-     * Includes debug information when application is in debug mode.
+     * @param  QueryException  $e
+     * @return string
+     */
+    private function getDuplicateEntryMessage(QueryException $e): string
+    {
+        $errorMessage = $e->getMessage();
+
+        if (preg_match("/Duplicate entry '(.+?)' for key '(.+?)'/", $errorMessage, $matches)) {
+            $value = $matches[1];
+            $key   = $matches[2] ?? '';
+
+            if (preg_match('/\.(\w+)_unique/', $key, $fieldMatches)) {
+                $field = $fieldMatches[1];
+                $fieldName = $this->getFieldLabel($field);
+
+                return __('validation.unique', ['attribute' => $fieldName]);
+            }
+
+            return "Data '{$value}' sudah digunakan.";
+        }
+
+        return 'Data yang Anda masukkan sudah ada. Gunakan data yang berbeda.';
+    }
+
+    /**
+     * Map database field names to user-friendly labels.
      *
-     * @param \Throwable $e The exception to handle
-     * @return \Illuminate\Http\JsonResponse
+     * @param  string  $field
+     * @return string
+     */
+    private function getFieldLabel(string $field): string
+    {
+        $labels = [
+            'name'  => __('validation.attributes.name'),
+            'code'  => 'Kode',
+            'email' => __('validation.attributes.email'),
+            'phone' => __('validation.attributes.phone'),
+            'sku'   => 'SKU',
+        ];
+
+        return $labels[$field] ?? $field;
+    }
+
+    /**
+     * Build standardized JSON error response.
+     *
+     * @param  Throwable  $e
+     * @return JsonResponse
      */
     protected function handleJsonResponse(Throwable $e): JsonResponse
     {
         $statusCode = $this->getStatusCode($e);
-        $message = $this->getErrorMessage($e, $statusCode);
+        $message    = $this->getErrorMessage($e, $statusCode);
 
         $response = [
-            'message' => $message,
+            'message'     => $message,
             'status_code' => $statusCode,
         ];
 
+        // Include debug info in development mode
         if (config('app.debug')) {
             $response['debug'] = [
                 'exception' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
             ];
         }
 
@@ -111,13 +176,10 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Get the HTTP status code for an exception.
+     * Determine appropriate HTTP status code for an exception.
      *
-     * Determines the appropriate HTTP status code based on
-     * the exception type. Defaults to 500 for unknown exceptions.
-     *
-     * @param \Throwable $e The exception to evaluate
-     * @return int HTTP status code
+     * @param  Throwable  $e
+     * @return int
      */
     protected function getStatusCode(Throwable $e): int
     {
@@ -145,15 +207,11 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Get user-friendly error message for an exception.
+     * Resolve user-facing error message based on status code.
      *
-     * Returns the exception message if available and appropriate,
-     * otherwise provides a default message based on the status code.
-     * Server errors (5xx) always return generic messages for security.
-     *
-     * @param \Throwable $e The exception to get message from
-     * @param int $statusCode The HTTP status code
-     * @return string User-friendly error message
+     * @param  Throwable  $e
+     * @param  int        $statusCode
+     * @return string
      */
     protected function getErrorMessage(Throwable $e, int $statusCode): string
     {
