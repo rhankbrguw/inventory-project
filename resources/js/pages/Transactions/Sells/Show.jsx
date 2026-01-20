@@ -230,7 +230,7 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                 </Card>
             )}
 
-            {data.status === 'Approved' && canShip && (
+            {data.status === 'On Process' && canShip && (
                 <Card className="mb-6 border-info/50 bg-info/5">
                     <CardContent className="pt-6">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -241,7 +241,7 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                                         Siap Dikirim
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Pesanan telah disetujui. Segera lakukan
+                                        Pesanan sedang diproses. Segera lakukan
                                         proses pengiriman.
                                     </p>
                                 </div>
@@ -317,8 +317,8 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Setujui Pesanan?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Anda menyetujui pesanan ini. Pihak pengirim akan
-                            diberitahu untuk segera mengirim barang.
+                            Anda menyetujui pesanan ini. Status akan berubah
+                            menjadi On Process.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

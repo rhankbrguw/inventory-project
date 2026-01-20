@@ -10,7 +10,7 @@ return [
     // Stock Transfer Messages
     'transfer' => [
         'created' => 'Transfer request created. Awaiting approval from destination location.',
-        'approved' => 'Transfer approved. Awaiting shipment from source location.',
+        'approved' => 'Transfer is on process. Awaiting shipment from source location.',
         'rejected' => 'Transfer rejected.',
         'shipped' => 'Goods shipped. Awaiting receipt confirmation.',
         'received' => 'Goods received. Transfer completed.',
@@ -29,7 +29,7 @@ return [
     // Sell Messages
     'sell' => [
         'created' => 'Sale saved successfully.',
-        'approved' => 'Order approved. Awaiting shipment.',
+        'approved' => 'Order is on process. Awaiting shipment.',
         'rejected' => 'Order rejected.',
         'shipped' => 'Goods shipped.',
         'received' => 'Goods received.',

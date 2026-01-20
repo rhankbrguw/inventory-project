@@ -200,6 +200,13 @@
         border-color: hsl(var(--info) / 0.2);
     }
 
+    .status-on-process {
+        @apply badge-base;
+        background-color: hsl(var(--info) / 0.15);
+        color: hsl(var(--info));
+        border-color: hsl(var(--info) / 0.2);
+    }
+
     .status-rejected {
         @apply badge-base;
         background-color: hsl(var(--destructive) / 0.15);

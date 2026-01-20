@@ -31,6 +31,7 @@ export default function UnifiedBadge({ text, code }) {
 
         'Pending approval': 'status-pending-approval',
         Approved: 'status-approved',
+        'On process': 'status-on-process',
         Shipping: 'status-shipping',
         Completed: 'status-completed',
         Rejected: 'status-rejected',

@@ -14,7 +14,7 @@ class Sell extends Model
     use ScopedByLocation;
 
     public const STATUS_PENDING_APPROVAL = 'Pending Approval';
-    public const STATUS_APPROVED = 'Approved';
+    public const STATUS_APPROVED = 'On Process';
     public const STATUS_SHIPPING = 'Shipping';
     public const STATUS_COMPLETED = 'Completed';
     public const STATUS_REJECTED = 'Rejected';

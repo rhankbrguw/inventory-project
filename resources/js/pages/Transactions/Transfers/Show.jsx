@@ -184,7 +184,7 @@ export default function Show({
                 </Card>
             )}
 
-            {data.status === 'Approved' && canShip && (
+            {data.status === 'On Process' && canShip && (
                 <Card className="mb-6">
                     <CardContent className="pt-6">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -261,7 +261,7 @@ export default function Show({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Setujui Transfer?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Stok belum berpindah sampai barang diterima
+                            Status akan berubah menjadi On Process.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

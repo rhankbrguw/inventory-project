@@ -15,7 +15,8 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
     public function __construct(
         public $transfer,
         public $acceptedByName
-    ) {}
+    ) {
+    }
 
     public function via(object $notifiable): array
     {
@@ -34,11 +35,11 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
 
         return [
             'title' => $isIndonesian
-                ? '✅ Transfer Disetujui'
-                : '✅ Transfer Approved',
+                ? '✅ Transfer Diproses'
+                : '✅ Transfer On Process',
             'message' => $isIndonesian
-                ? "Transfer {$this->transfer->reference_code} telah disetujui. Silakan proses pengiriman."
-                : "Transfer {$this->transfer->reference_code} approved. Please proceed to shipping.",
+                ? "Transfer {$this->transfer->reference_code} telah disetujui dan sedang diproses."
+                : "Transfer {$this->transfer->reference_code} approved and is on process.",
             'action_url' => route('transactions.transfers.show', $this->transfer->id),
             'icon' => 'CheckCircle',
             'type' => 'success',
@@ -67,22 +68,22 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
             ->with('product')
             ->get();
 
-        $totalQty = $items->sum(fn($i) => abs($i->quantity));
+        $totalQty = $items->sum(fn ($i) => abs($i->quantity));
 
         if ($isIndonesian) {
-            $labelRef      = str_pad('Ref', 9);
-            $labelStatus   = str_pad('Status', 9);
+            $labelRef       = str_pad('Ref', 9);
+            $labelStatus    = str_pad('Status', 9);
             $labelApproved = str_pad('Disetujui', 9);
-            $labelLokasi   = str_pad('Tujuan', 9);
-            $labelTotal    = str_pad('Total', 9);
-            $labelTanggal  = str_pad('Tanggal', 9);
+            $labelLokasi    = str_pad('Tujuan', 9);
+            $labelTotal     = str_pad('Total', 9);
+            $labelTanggal   = str_pad('Tanggal', 9);
 
-            return "*TRANSFER DISETUJUI* ✅\n\n"
+            return "*TRANSFER DIPROSES* ✅\n\n"
                 . "Halo {$notifiable->name},\n\n"
                 . "Permintaan transfer stok telah *disetujui*:\n"
                 . "```"
                 . "{$labelRef}: {$this->transfer->reference_code}\n"
-                . "{$labelStatus}: DISETUJUI\n"
+                . "{$labelStatus}: ON PROCESS\n"
                 . "{$labelApproved}: {$this->acceptedByName}\n"
                 . "{$labelLokasi}: {$this->transfer->toLocation->name}\n"
                 . "{$labelTotal}: {$totalQty} Unit\n"
@@ -93,19 +94,19 @@ class TransferAcceptedNotification extends Notification implements ShouldQueue
                 . route('transactions.transfers.show', $this->transfer->id);
         }
 
-        $labelRef      = str_pad('Ref', 9);
-        $labelStatus   = str_pad('Status', 9);
+        $labelRef       = str_pad('Ref', 9);
+        $labelStatus    = str_pad('Status', 9);
         $labelApproved = str_pad('Approved', 9);
         $labelLocation = str_pad('Dest', 9);
-        $labelTotal    = str_pad('Total', 9);
-        $labelDate     = str_pad('Date', 9);
+        $labelTotal     = str_pad('Total', 9);
+        $labelDate      = str_pad('Date', 9);
 
-        return "*TRANSFER APPROVED* ✅\n\n"
+        return "*TRANSFER ON PROCESS* ✅\n\n"
             . "Hello {$notifiable->name},\n\n"
             . "Stock transfer request has been *approved*:\n"
             . "```"
             . "{$labelRef}: {$this->transfer->reference_code}\n"
-            . "{$labelStatus}: APPROVED\n"
+            . "{$labelStatus}: ON PROCESS\n"
             . "{$labelApproved}: {$this->acceptedByName}\n"
             . "{$labelLocation}: {$this->transfer->toLocation->name}\n"
             . "{$labelTotal}: {$totalQty} Units\n"

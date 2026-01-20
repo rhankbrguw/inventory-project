@@ -35,11 +35,11 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
 
         return [
             'title' => $isIndonesian
-                ? '✅ Pesanan Disetujui'
-                : '✅ Order Approved',
+                ? '✅ Pesanan Diproses'
+                : '✅ Order On Process',
             'message' => $isIndonesian
-                ? "Pesanan {$this->sell->reference_code} telah disetujui. Silakan proses pengiriman."
-                : "Order {$this->sell->reference_code} approved. Please proceed to shipping.",
+                ? "Pesanan {$this->sell->reference_code} telah disetujui dan sedang diproses."
+                : "Order {$this->sell->reference_code} approved and is on process.",
             'action_url' => route('transactions.sells.show', $this->sell->id),
             'icon' => 'CheckCircle',
             'type' => 'success',
@@ -79,12 +79,12 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
 
             $destName = $this->sell->targetLocation ? $this->sell->targetLocation->name : ($this->sell->customer ? $this->sell->customer->name : '-');
 
-            return "*PESANAN DISETUJUI* ✅\n\n"
+            return "*PESANAN DIPROSES* ✅\n\n"
                 . "Halo {$notifiable->name},\n\n"
                 . "Pesanan penjualan telah *disetujui*:\n"
                 . "```"
                 . "{$labelRef}: {$this->sell->reference_code}\n"
-                . "{$labelStatus}: DISETUJUI\n"
+                . "{$labelStatus}: ON PROCESS\n"
                 . "{$labelApproved}: {$this->approverName}\n"
                 . "{$labelTujuan}: {$destName}\n"
                 . "{$labelTotal}: {$totalQty} Unit\n"
@@ -104,12 +104,12 @@ class SellAcceptedNotification extends Notification implements ShouldQueue
 
         $destName = $this->sell->targetLocation ? $this->sell->targetLocation->name : ($this->sell->customer ? $this->sell->customer->name : '-');
 
-        return "*ORDER APPROVED* ✅\n\n"
+        return "*ORDER ON PROCESS* ✅\n\n"
             . "Hello {$notifiable->name},\n\n"
             . "Sales order has been *approved*:\n"
             . "```"
             . "{$labelRef}: {$this->sell->reference_code}\n"
-            . "{$labelStatus}: APPROVED\n"
+            . "{$labelStatus}: ON PROCESS\n"
             . "{$labelApproved}: {$this->approverName}\n"
             . "{$labelDest}: {$destName}\n"
             . "{$labelTotal}: {$totalQty} Units\n"

@@ -10,7 +10,7 @@ return [
     // Stock Transfer Messages
     'transfer' => [
         'created' => 'Permintaan transfer dibuat. Menunggu persetujuan dari lokasi tujuan.',
-        'approved' => 'Transfer disetujui. Menunggu pengiriman dari lokasi asal.',
+        'approved' => 'Transfer diproses. Menunggu pengiriman dari lokasi asal.',
         'rejected' => 'Transfer ditolak.',
         'shipped' => 'Barang dikirim. Menunggu konfirmasi penerimaan.',
         'received' => 'Barang diterima. Transfer selesai.',
@@ -29,7 +29,7 @@ return [
     // Sell Messages
     'sell' => [
         'created' => 'Penjualan berhasil disimpan.',
-        'approved' => 'Pesanan disetujui. Menunggu pengiriman.',
+        'approved' => 'Pesanan diproses. Menunggu pengiriman.',
         'rejected' => 'Pesanan ditolak.',
         'shipped' => 'Barang dikirim.',
         'received' => 'Barang diterima.',
