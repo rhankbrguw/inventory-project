@@ -34,10 +34,15 @@ export default function Edit({
 }) {
     const { data: product } = productResource;
     const isSuperAdmin = auth.user.level === auth.role_definitions.SUPER_ADMIN;
+    const isLocalProduct = product.location_id !== null;
+    const canFullEdit = isSuperAdmin || isLocalProduct;
     const isLocalUser = !isSuperAdmin;
 
     const initialChannelPrices = isLocalUser
-        ? { ...product.channel_prices, ...(localOverride?.channel_prices_override || {}) }
+        ? {
+            ...product.channel_prices,
+            ...(localOverride?.channel_prices_override || {}),
+        }
         : product.channel_prices || {};
 
     const { data, setData, post, errors, processing, isDirty, transform } =
@@ -118,9 +123,7 @@ export default function Edit({
         return `${data.suppliers.length} supplier dipilih`;
     };
 
-    const availableSuppliers = isLocalUser
-        ? suppliers
-        : selectedSupplierObjects;
+    const availableSuppliers = selectedSupplierObjects;
 
     return (
         <ContentPageLayout
@@ -132,7 +135,9 @@ export default function Edit({
                 <Alert className="mb-6">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                        Perubahan hanya berlaku untuk lokasi Anda
+                        {isLocalProduct
+                            ? 'Produk Lokal: Anda memiliki akses penuh untuk mengedit produk ini.'
+                            : 'Produk Global: Anda hanya dapat mengubah harga dan supplier untuk lokasi Anda.'}
                     </AlertDescription>
                 </Alert>
             )}
@@ -143,19 +148,29 @@ export default function Edit({
                         <CardTitle>Informasi Produk</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        {isSuperAdmin ? (
+                        {canFullEdit ? (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                                    <FormField label="Nama Produk" htmlFor="name" error={errors.name}>
+                                    <FormField
+                                        label="Nama Produk"
+                                        htmlFor="name"
+                                        error={errors.name}
+                                    >
                                         <Input
                                             id="name"
                                             value={data.name}
                                             placeholder="Nama produk lengkap"
-                                            onChange={(e) => setData('name', e.target.value)}
+                                            onChange={(e) =>
+                                                setData('name', e.target.value)
+                                            }
                                             required
                                         />
                                     </FormField>
-                                    <FormField label="Gambar Produk" htmlFor="image" error={errors.image}>
+                                    <FormField
+                                        label="Gambar Produk"
+                                        htmlFor="image"
+                                        error={errors.image}
+                                    >
                                         <div className="flex gap-2 items-center">
                                             <input
                                                 id="image"
@@ -163,7 +178,9 @@ export default function Edit({
                                                 ref={fileInputRef}
                                                 className="hidden"
                                                 accept="image/*"
-                                                onChange={(e) => handleChange(e, setData)}
+                                                onChange={(e) =>
+                                                    handleChange(e, setData)
+                                                }
                                             />
                                             <Button
                                                 type="button"
@@ -172,7 +189,9 @@ export default function Edit({
                                                 onClick={triggerInput}
                                             >
                                                 <Upload className="mr-2 h-4 w-4" />
-                                                {data.image ? data.image.name : 'Pilih gambar...'}
+                                                {data.image
+                                                    ? data.image.name
+                                                    : 'Pilih gambar...'}
                                             </Button>
                                         </div>
                                     </FormField>
@@ -190,10 +209,16 @@ export default function Edit({
                                 )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField label="Tipe Produk" htmlFor="type_id" error={errors.type_id}>
+                                    <FormField
+                                        label="Tipe Produk"
+                                        htmlFor="type_id"
+                                        error={errors.type_id}
+                                    >
                                         <Select
                                             value={data.type_id}
-                                            onValueChange={(value) => setData('type_id', value)}
+                                            onValueChange={(value) =>
+                                                setData('type_id', value)
+                                            }
                                             required
                                         >
                                             <SelectTrigger>
@@ -201,37 +226,71 @@ export default function Edit({
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {types.map((type) => (
-                                                    <SelectItem key={type.id} value={type.id.toString()}>
+                                                    <SelectItem
+                                                        key={type.id}
+                                                        value={type.id.toString()}
+                                                    >
                                                         {type.name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </FormField>
-                                    <FormField label="Supplier (Pilih Satu atau Lebih)" htmlFor="suppliers" error={errors.suppliers}>
+                                    <FormField
+                                        label="Supplier (Pilih Satu atau Lebih)"
+                                        htmlFor="suppliers"
+                                        error={errors.suppliers}
+                                    >
                                         <Popover>
                                             <PopoverTrigger asChild>
-                                                <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    className="w-full justify-between font-normal"
+                                                >
                                                     {getSupplierDisplayText()}
                                                 </Button>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                                            <PopoverContent
+                                                className="w-[var(--radix-popover-trigger-width)] p-0"
+                                                align="start"
+                                            >
                                                 <div className="max-h-[300px] overflow-y-auto p-4 space-y-3">
-                                                    {suppliers.map((supplier) => (
-                                                        <div key={supplier.id} className="flex items-center space-x-2">
-                                                            <Checkbox
-                                                                id={`supp-${supplier.id}`}
-                                                                checked={data.suppliers.includes(supplier.id)}
-                                                                onChange={() => handleSupplierToggle(supplier.id)}
-                                                            />
-                                                            <label htmlFor={`supp-${supplier.id}`} className="text-sm cursor-pointer flex-1">
-                                                                {supplier.name}
-                                                            </label>
-                                                            {data.suppliers.includes(supplier.id) && (
-                                                                <Check className="h-4 w-4 text-primary" />
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                                    {suppliers.map(
+                                                        (supplier) => (
+                                                            <div
+                                                                key={
+                                                                    supplier.id
+                                                                }
+                                                                className="flex items-center space-x-2"
+                                                            >
+                                                                <Checkbox
+                                                                    id={`supp-${supplier.id}`}
+                                                                    checked={data.suppliers.includes(
+                                                                        supplier.id
+                                                                    )}
+                                                                    onChange={() =>
+                                                                        handleSupplierToggle(
+                                                                            supplier.id
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <label
+                                                                    htmlFor={`supp-${supplier.id}`}
+                                                                    className="text-sm cursor-pointer flex-1"
+                                                                >
+                                                                    {
+                                                                        supplier.name
+                                                                    }
+                                                                </label>
+                                                                {data.suppliers.includes(
+                                                                    supplier.id
+                                                                ) && (
+                                                                        <Check className="h-4 w-4 text-primary" />
+                                                                    )}
+                                                            </div>
+                                                        )
+                                                    )}
                                                 </div>
                                             </PopoverContent>
                                         </Popover>
@@ -246,36 +305,58 @@ export default function Edit({
                                 >
                                     <Select
                                         value={data.default_supplier_id?.toString()}
-                                        onValueChange={(value) => setData('default_supplier_id', value)}
+                                        onValueChange={(value) =>
+                                            setData(
+                                                'default_supplier_id',
+                                                value
+                                            )
+                                        }
                                         disabled={data.suppliers.length === 0}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Pilih Supplier Utama" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {availableSuppliers.map((supplier) => (
-                                                <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                                                    {supplier.name}
-                                                </SelectItem>
-                                            ))}
+                                            {availableSuppliers.map(
+                                                (supplier) => (
+                                                    <SelectItem
+                                                        key={supplier.id}
+                                                        value={supplier.id.toString()}
+                                                    >
+                                                        {supplier.name}
+                                                    </SelectItem>
+                                                )
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </FormField>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField label="SKU" htmlFor="sku" error={errors.sku}>
+                                    <FormField
+                                        label="SKU"
+                                        htmlFor="sku"
+                                        error={errors.sku}
+                                    >
                                         <Input
                                             id="sku"
                                             value={data.sku}
                                             placeholder="Kode SKU unik"
-                                            onChange={(e) => setData('sku', e.target.value)}
+                                            onChange={(e) =>
+                                                setData('sku', e.target.value)
+                                            }
                                             required
                                         />
                                     </FormField>
-                                    <FormField label="Satuan" htmlFor="unit" error={errors.unit}>
+                                    <FormField
+                                        label="Satuan"
+                                        htmlFor="unit"
+                                        error={errors.unit}
+                                    >
                                         <Select
                                             value={data.unit}
-                                            onValueChange={(value) => setData('unit', value)}
+                                            onValueChange={(value) =>
+                                                setData('unit', value)
+                                            }
                                             required
                                         >
                                             <SelectTrigger>
@@ -283,8 +364,14 @@ export default function Edit({
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {validUnits.map((unit) => (
-                                                    <SelectItem key={unit} value={unit}>
-                                                        {unit.charAt(0).toUpperCase() + unit.slice(1)}
+                                                    <SelectItem
+                                                        key={unit}
+                                                        value={unit}
+                                                    >
+                                                        {unit
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                            unit.slice(1)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -292,12 +379,21 @@ export default function Edit({
                                     </FormField>
                                 </div>
 
-                                <FormField label="Deskripsi (Opsional)" htmlFor="description" error={errors.description}>
+                                <FormField
+                                    label="Deskripsi (Opsional)"
+                                    htmlFor="description"
+                                    error={errors.description}
+                                >
                                     <Textarea
                                         id="description"
                                         value={data.description}
                                         placeholder="Deskripsi detail..."
-                                        onChange={(e) => setData('description', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'description',
+                                                e.target.value
+                                            )
+                                        }
                                         className="h-24"
                                     />
                                 </FormField>
@@ -310,28 +406,57 @@ export default function Edit({
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                                         <div>
-                                            <p className="text-muted-foreground text-xs mb-1">Nama</p>
-                                            <p className="font-medium">{product.name}</p>
+                                            <p className="text-muted-foreground text-xs mb-1">
+                                                Nama
+                                            </p>
+                                            <p className="font-medium">
+                                                {product.name}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-muted-foreground text-xs mb-1">SKU</p>
-                                            <p className="font-medium">{product.sku}</p>
+                                            <p className="text-muted-foreground text-xs mb-1">
+                                                SKU
+                                            </p>
+                                            <p className="font-medium">
+                                                {product.sku}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-muted-foreground text-xs mb-1">Tipe</p>
-                                            <p className="font-medium">{product.type?.name || '-'}</p>
+                                            <p className="text-muted-foreground text-xs mb-1">
+                                                Tipe
+                                            </p>
+                                            <p className="font-medium">
+                                                {product.type?.name || '-'}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-muted-foreground text-xs mb-1">Satuan</p>
-                                            <p className="font-medium">{product.unit}</p>
+                                            <p className="text-muted-foreground text-xs mb-1">
+                                                Satuan
+                                            </p>
+                                            <p className="font-medium">
+                                                {product.unit}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-muted-foreground text-xs mb-1">Harga Global</p>
-                                            <p className="font-medium">Rp {Number(product.price).toLocaleString('id-ID')}</p>
+                                            <p className="text-muted-foreground text-xs mb-1">
+                                                Harga Global
+                                            </p>
+                                            <p className="font-medium">
+                                                Rp{' '}
+                                                {Number(
+                                                    product.global_price ||
+                                                    product.price
+                                                ).toLocaleString('id-ID')}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-muted-foreground text-xs mb-1">Supplier Global</p>
-                                            <p className="font-medium">{product.default_supplier?.name || '-'}</p>
+                                            <p className="text-muted-foreground text-xs mb-1">
+                                                Supplier Global
+                                            </p>
+                                            <p className="font-medium">
+                                                {product.default_supplier
+                                                    ?.name || '-'}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -343,8 +468,18 @@ export default function Edit({
                                     description="Kosongkan untuk ikut supplier global"
                                 >
                                     <Select
-                                        value={data.default_supplier_id?.toString() || 'FOLLOW_GLOBAL'}
-                                        onValueChange={(value) => setData('default_supplier_id', value === 'FOLLOW_GLOBAL' ? '' : value)}
+                                        value={
+                                            data.default_supplier_id?.toString() ||
+                                            'FOLLOW_GLOBAL'
+                                        }
+                                        onValueChange={(value) =>
+                                            setData(
+                                                'default_supplier_id',
+                                                value === 'FOLLOW_GLOBAL'
+                                                    ? ''
+                                                    : value
+                                            )
+                                        }
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Pilih Supplier Lokal" />
@@ -352,14 +487,22 @@ export default function Edit({
                                         <SelectContent>
                                             <SelectItem value="FOLLOW_GLOBAL">
                                                 <span className="text-muted-foreground italic">
-                                                    Ikut Global ({product.default_supplier?.name || 'Tidak ada'})
+                                                    Ikut Global (
+                                                    {product.default_supplier
+                                                        ?.name || 'Tidak ada'}
+                                                    )
                                                 </span>
                                             </SelectItem>
-                                            {availableSuppliers.map((supplier) => (
-                                                <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                                                    {supplier.name}
-                                                </SelectItem>
-                                            ))}
+                                            {availableSuppliers.map(
+                                                (supplier) => (
+                                                    <SelectItem
+                                                        key={supplier.id}
+                                                        value={supplier.id.toString()}
+                                                    >
+                                                        {supplier.name}
+                                                    </SelectItem>
+                                                )
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </FormField>
@@ -378,16 +521,26 @@ export default function Edit({
                     <CardContent className="space-y-6">
                         <div className="p-4 bg-muted/30 rounded-lg border">
                             <FormField
-                                label={isLocalUser ? "Harga Lokal (Cash/Counter)" : "Harga Jual Dasar (Cash/Counter)"}
+                                label={
+                                    isLocalUser
+                                        ? 'Harga Lokal (Cash/Counter)'
+                                        : 'Harga Jual Dasar (Cash/Counter)'
+                                }
                                 htmlFor="price"
                                 error={errors.price}
-                                description={isLocalUser ? `Global: Rp ${Number(product.price).toLocaleString('id-ID')}` : "Harga default jika tidak ada harga khusus channel."}
+                                description={
+                                    isLocalUser
+                                        ? `Global: Rp ${Number(product.global_price || product.price).toLocaleString('id-ID')}`
+                                        : 'Harga default jika tidak ada harga khusus channel.'
+                                }
                             >
                                 <CurrencyInput
                                     id="price"
                                     placeholder="Contoh: 50000"
                                     value={data.price}
-                                    onValueChange={(value) => setData('price', value)}
+                                    onValueChange={(value) =>
+                                        setData('price', value)
+                                    }
                                     className="text-lg font-bold"
                                     required
                                 />
@@ -396,19 +549,27 @@ export default function Edit({
 
                         <div className="space-y-4">
                             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                                Harga Khusus Aplikasi {isLocalUser && "(Override)"} (Opsional)
+                                Harga Khusus Aplikasi{' '}
+                                {isLocalUser && '(Override)'} (Opsional)
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {salesChannels
                                     .filter((ch) => ch.code !== 'CASH')
                                     .map((channel) => {
-                                        const globalPrice = product.channel_prices?.[channel.id];
+                                        const globalPrice =
+                                            product.channel_prices?.[
+                                            channel.id
+                                            ];
                                         return (
                                             <FormField
                                                 key={channel.id}
                                                 label={`Harga ${channel.name}`}
                                                 htmlFor={`price-${channel.id}`}
-                                                error={errors[`channel_prices.${channel.id}`]}
+                                                error={
+                                                    errors[
+                                                    `channel_prices.${channel.id}`
+                                                    ]
+                                                }
                                                 description={
                                                     isLocalUser && globalPrice
                                                         ? `Global: Rp ${Number(globalPrice).toLocaleString('id-ID')}`
@@ -418,8 +579,17 @@ export default function Edit({
                                                 <CurrencyInput
                                                     id={`price-${channel.id}`}
                                                     placeholder={`Ikut harga dasar (${data.price || 0})`}
-                                                    value={data.channel_prices[channel.id]}
-                                                    onValueChange={(val) => handleChannelPriceChange(channel.id, val)}
+                                                    value={
+                                                        data.channel_prices[
+                                                        channel.id
+                                                        ]
+                                                    }
+                                                    onValueChange={(val) =>
+                                                        handleChannelPriceChange(
+                                                            channel.id,
+                                                            val
+                                                        )
+                                                    }
                                                 />
                                             </FormField>
                                         );

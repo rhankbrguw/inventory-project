@@ -29,12 +29,11 @@ class UserController extends Controller
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->when($request->input('role'), function ($query, $role) {
-                $query->whereHas('roles', fn($q) => $q->where('name', 'like', "%{$role}%"));
+                $query->whereHas('roles', fn ($q) => $q->where('name', 'like', "%{$role}%"));
             })
             ->when($request->input('status'), function ($query, $status) {
                 if ($status === 'active') {

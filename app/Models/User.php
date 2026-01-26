@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Mail\OtpMail;
-use App\Models\Role;
-use App\Models\Location;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -40,14 +38,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'otp_expires_at',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'otp_expires_at' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'otp_expires_at' => 'datetime',
+        'phone' => 'encrypted',
+    ];
 
     public function purchaseCartItems(): HasMany
     {

@@ -6,6 +6,16 @@ import { Package } from 'lucide-react';
 export default function ProductMobileCard({ product, renderActionDropdown }) {
     const isInactive = !!product.deleted_at;
 
+    const getClassificationClass = (status) => {
+        if (status === 'FAST MOVING') return 'status-completed';
+        if (status === 'SLOW MOVING') return 'status-pending-approval';
+        if (status === 'DEAD STOCK') return 'status-rejected';
+        return 'role-default';
+    };
+
+    const classification = product.classification || 'PENDING';
+    const classificationClass = getClassificationClass(classification);
+
     return (
         <Card
             key={product.id}
@@ -42,13 +52,21 @@ export default function ProductMobileCard({ product, renderActionDropdown }) {
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
                     <span>Ditambahkan: {formatDate(product.created_at)}</span>
                 </div>
+
                 <div className="flex flex-wrap gap-2 items-center">
                     <Badge variant={isInactive ? 'destructive' : 'success'}>
                         {isInactive ? 'Nonaktif' : 'Aktif'}
                     </Badge>
+
                     <Badge variant="outline">
                         {product.type?.name || 'Tanpa Tipe'}
                     </Badge>
+
+                    <span
+                        className={`badge-base text-[10px] px-2 py-0.5 ${classificationClass}`}
+                    >
+                        {classification}
+                    </span>
                 </div>
             </CardContent>
         </Card>

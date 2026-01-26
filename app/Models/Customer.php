@@ -24,6 +24,10 @@ class Customer extends Model
         'address',
     ];
 
+    protected $casts = [
+        'address' => 'encrypted',
+    ];
+
     public function type(): BelongsTo
     {
         return $this->belongsTo(Type::class, 'type_id');

@@ -15,8 +15,7 @@ class LowStockAlertNotification extends Notification implements ShouldQueue
     public function __construct(
         public $lowStockItems,
         public $locationName
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -62,7 +61,8 @@ class LowStockAlertNotification extends Notification implements ShouldQueue
         $limit = 10;
 
         $items = $this->lowStockItems->take($limit)->map(function ($item) {
-            return "• {$item->product->name} ({$item->product->sku}): *{$item->quantity} {$item->product->unit}*";
+            $quantity = rtrim(rtrim(number_format($item->quantity, 2, '.', ''), '0'), '.');
+            return "• {$item->product->name} ({$item->product->sku}): *{$quantity} {$item->product->unit}*";
         })->join("\n");
 
         $remaining = $this->lowStockItems->count() - $limit;

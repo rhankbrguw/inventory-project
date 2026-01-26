@@ -40,6 +40,27 @@ export const productColumns = [
         className: 'text-center whitespace-nowrap',
     },
     {
+        accessorKey: 'classification',
+        header: 'Klasifikasi',
+        cell: ({ row }) => {
+            const status = row.classification || 'PENDING';
+
+            let badgeClass = 'role-default';
+
+            if (status === 'FAST MOVING') badgeClass = 'status-completed';
+            if (status === 'SLOW MOVING')
+                badgeClass = 'status-pending-approval';
+            if (status === 'DEAD STOCK') badgeClass = 'status-rejected';
+
+            return (
+                <div className="flex justify-center">
+                    <span className={`badge-base ${badgeClass}`}>{status}</span>
+                </div>
+            );
+        },
+        className: 'text-center whitespace-nowrap',
+    },
+    {
         accessorKey: 'sku',
         header: 'SKU',
         className: 'text-center font-mono text-xs whitespace-nowrap',

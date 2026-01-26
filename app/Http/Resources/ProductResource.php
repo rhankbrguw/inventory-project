@@ -26,6 +26,7 @@ class ProductResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'location_id' => $this->location_id,
             'name' => $this->name,
             'sku' => $this->sku,
             'description' => $this->description,
@@ -33,6 +34,7 @@ class ProductResource extends JsonResource
             'global_price' => $this->price,
             'unit' => $this->unit,
             'image_url' => $this->image_path ? Storage::url($this->image_path) : null,
+            'classification' => $this->classification,
             'channel_prices' => $this->whenLoaded('prices', function () {
                 return $this->prices->pluck('price', 'type_id');
             }),

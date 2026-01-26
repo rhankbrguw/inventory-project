@@ -28,6 +28,8 @@ class Product extends Model
         'average_cost',
     ];
 
+    protected $appends = ['classification'];
+
     public function type(): BelongsTo
     {
         return $this->belongsTo(Type::class);
@@ -53,6 +55,11 @@ class Product extends Model
         return $this->hasMany(ProductPrice::class);
     }
 
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
     public function getEffectivePrice(?int $locationId): float
     {
         if (!$locationId) {
@@ -63,5 +70,23 @@ class Product extends Model
             return (float) $inventory->selling_price;
         }
         return (float) $this->price;
+    }
+
+    public function getClassificationAttribute()
+    {
+        $totalSold = $this->stockMovements()
+            ->where('type', 'sell')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->sum('quantity');
+
+        $totalSold = abs($totalSold);
+
+        if ($totalSold >= 50) {
+            return 'FAST MOVING';
+        } elseif ($totalSold >= 10) {
+            return 'SLOW MOVING';
+        } else {
+            return 'DEAD STOCK';
+        }
     }
 }

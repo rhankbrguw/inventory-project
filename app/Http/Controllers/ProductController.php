@@ -42,7 +42,7 @@ class ProductController extends Controller
             })
             ->accessibleBy($user)
             ->when($request->input('search'), function ($query, $search) {
-                $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")
+                $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%"));
             })
             ->when($request->input('type_id') && $request->input('type_id') !== 'all', function ($query) use ($request) {
@@ -63,7 +63,7 @@ class ProductController extends Controller
                     'price_asc' => $query->orderBy('price', 'asc'),
                     default => $query->latest(),
                 };
-            }, fn($query) => $query->latest())
+            }, fn ($query) => $query->latest())
             ->withTrashed()
             ->paginate(15)
             ->withQueryString();
@@ -91,7 +91,7 @@ class ProductController extends Controller
             ->select('id', 'name', 'sku', 'unit', 'price', 'image_path')
             ->accessibleBy($user)
             ->whereNull('deleted_at')
-            ->where(fn($q) => $q->where('name', 'like', "%{$query}%")->orWhere('sku', 'like', "%{$query}%"))
+            ->where(fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('sku', 'like', "%{$query}%"))
             ->limit(20)
             ->get();
     }
@@ -256,6 +256,39 @@ class ProductController extends Controller
                 }
             } else {
                 $locationId = $user->locations->first()?->id;
+
+                if ($product->location_id === $locationId) {
+                    $supplierIds = $validated['suppliers'] ?? [];
+                    $channelPrices = $validated['channel_prices'] ?? [];
+
+                    unset($validated['suppliers']);
+                    unset($validated['channel_prices']);
+
+                    if ($request->hasFile('image')) {
+                        if ($product->image_path) {
+                            Storage::disk('public')->delete($product->image_path);
+                        }
+                        $validated['image_path'] = $request->file('image')->store('products', 'public');
+                    }
+                    unset($validated['image']);
+
+                    $product->update($validated);
+
+                    if (!empty($supplierIds)) {
+                        $product->suppliers()->sync($supplierIds);
+                    }
+
+                    foreach ($channelPrices as $channelId => $price) {
+                        if ($price !== null && $price !== '') {
+                            $product->prices()->updateOrCreate(
+                                ['type_id' => $channelId],
+                                ['price' => $price]
+                            );
+                        } else {
+                            $product->prices()->where('type_id', $channelId)->delete();
+                        }
+                    }
+                }
 
                 if ($locationId) {
                     $inventory = Inventory::firstOrCreate(
