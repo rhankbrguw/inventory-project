@@ -241,8 +241,8 @@ export default function Show({ auth, sell, canShip, canReceive, canApprove }) {
                                         Siap Dikirim
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Pesanan sedang diproses. Segera lakukan
-                                        proses pengiriman.
+                                        Pesanan disetujui. Segera lakukan proses
+                                        pengiriman.
                                     </p>
                                 </div>
                             </div>

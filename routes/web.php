@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
     Route::prefix('purchase-cart')->name('purchase.cart.')->controller(PurchaseCartController::class)->group(function () {
         Route::post('/', 'store')->name('store');
         Route::patch('/{cartItem}', 'update')->name('update');
+        Route::delete('/destroy-all', 'destroyAll')->name('destroy.all');
         Route::delete('/', 'destroySupplier')->name('destroy.supplier');
         Route::delete('/{cartItem}', 'destroyItem')->name('destroy.item');
     });
@@ -120,9 +121,15 @@ Route::middleware(['auth', 'verified', 'ensure.setup'])->group(function () {
 
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
 
-    Route::get('/transactions/purchases/create', [PurchaseController::class, 'create'])->name('transactions.purchases.create');
-    Route::post('/transactions/purchases', [PurchaseController::class, 'store'])->name('transactions.purchases.store');
-    Route::get('/transactions/purchases/{purchase}', [PurchaseController::class, 'show'])->name('transactions.purchases.show');
+    Route::prefix('transactions/purchases')->name('transactions.purchases.')->controller(PurchaseController::class)->group(function () {
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{purchase}', 'show')->name('show');
+        Route::post('/{purchase}/approve', 'approve')->name('approve');
+        Route::post('/{purchase}/reject', 'reject')->name('reject');
+        Route::post('/{purchase}/ship', 'ship')->name('ship');
+        Route::post('/{purchase}/receive', 'receive')->name('receive');
+    });
 
     Route::get('/transactions/transfers/create', [StockTransferController::class, 'create'])->name('transactions.transfers.create');
     Route::post('/transactions/transfers', [StockTransferController::class, 'store'])->name('transactions.transfers.store');

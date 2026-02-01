@@ -9,8 +9,8 @@ class SellResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $totalSell = $this->items->sum(fn ($i) => $i->quantity * $i->sell_price);
-        $totalCost = $this->items->sum(fn ($i) => $i->quantity * ($i->cost_per_unit ?? 0));
+        $totalSell = $this->items->sum(fn($i) => $i->quantity * $i->sell_price);
+        $totalCost = $this->items->sum(fn($i) => $i->quantity * ($i->cost_per_unit ?? 0));
         $totalMargin = $totalSell - $totalCost;
 
         return [
@@ -41,37 +41,37 @@ class SellResource extends JsonResource
             'has_installments' => $this->hasInstallments(),
             'is_fully_paid' => $this->isFullyPaid(),
 
-            'type' => $this->whenLoaded('type', fn () => [
+            'type' => $this->whenLoaded('type', fn() => [
                 'id' => $this->type->id,
                 'name' => $this->type->name,
             ]),
-            'location' => $this->whenLoaded('location', fn () => [
+            'location' => $this->whenLoaded('location', fn() => [
                 'id' => $this->location->id,
                 'name' => $this->location->name,
             ]),
-            'customer' => $this->whenLoaded('customer', fn () => [
+            'customer' => $this->whenLoaded('customer', fn() => [
                 'id' => $this->customer->id,
                 'name' => $this->customer->name,
             ]),
-            'target_location' => $this->whenLoaded('targetLocation', fn () => [
+            'target_location' => $this->whenLoaded('targetLocation', fn() => [
                 'id' => $this->targetLocation->id,
                 'name' => $this->targetLocation->name,
             ]),
-            'sales_channel' => $this->whenLoaded('salesChannel', fn () => [
+            'sales_channel' => $this->whenLoaded('salesChannel', fn() => [
                 'id' => $this->salesChannel->id,
                 'name' => $this->salesChannel->name,
                 'code' => $this->salesChannel->code,
             ]),
-            'user' => $this->whenLoaded('user', fn () => [
+            'user' => $this->whenLoaded('user', fn() => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ]),
-            'payment_method' => $this->whenLoaded('paymentMethod', fn () => [
+            'payment_method' => $this->whenLoaded('paymentMethod', fn() => [
                 'id' => $this->paymentMethod->id,
                 'name' => $this->paymentMethod->name,
             ]),
             'installments' => $this->whenLoaded('installments', function () {
-                return $this->installments->map(fn ($inst) => [
+                return $this->installments->map(fn($inst) => [
                     'id' => $inst->id,
                     'installment_number' => $inst->installment_number,
                     'amount' => (float) $inst->amount,
@@ -102,11 +102,9 @@ class SellResource extends JsonResource
                         'product_name' => $item->product->name ?? 'Item Terhapus',
                         'unit' => $item->product->unit ?? '',
                         'quantity' => (float) $item->quantity,
-
                         'price' => (float) $item->sell_price,
                         'sell_price' => (float) $item->sell_price,
                         'average_cost_per_unit' => (float) ($item->cost_per_unit ?? 0),
-
                         'total' => (float) ($item->quantity * $item->sell_price),
                     ];
                 });

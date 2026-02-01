@@ -33,4 +33,19 @@ class StorePurchaseRequest extends FormRequest
             'items.*.cost_per_unit' => ['required', 'numeric', 'min:0.01'],
         ];
     }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $locationId = $this->input('location_id');
+            $fromLocationId = $this->input('from_location_id');
+
+            if ($locationId && $fromLocationId && $locationId == $fromLocationId) {
+                $validator->errors()->add(
+                    'from_location_id',
+                    'Lokasi asal tidak boleh sama dengan lokasi tujuan.'
+                );
+            }
+        });
+    }
 }

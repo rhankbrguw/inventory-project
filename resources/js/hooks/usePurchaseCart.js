@@ -3,9 +3,7 @@ import { router } from '@inertiajs/react';
 import { formatNumber } from '@/lib/utils';
 
 const cleanNumberString = (numStr) => {
-    if (typeof numStr !== 'string') {
-        return String(numStr);
-    }
+    if (typeof numStr !== 'string') return String(numStr);
     return numStr.replace(/\./g, '').replace(/,/g, '.');
 };
 
@@ -26,7 +24,6 @@ export default function usePurchaseCart(initialCart = []) {
         return cart.map((item) => {
             const localQty = localQuantities[item.id];
             const localCost = localCosts[item.id];
-
             return {
                 ...item,
                 quantity: localQty !== undefined ? localQty : item.quantity,
@@ -55,6 +52,11 @@ export default function usePurchaseCart(initialCart = []) {
         [effectiveCart]
     );
 
+    const clearCart = useCallback((onSuccessCallback) => {
+        setCart([]);
+        if (onSuccessCallback) onSuccessCallback();
+    }, []);
+
     const removeItem = useCallback(
         (cartItemId) => {
             if (processingItem === cartItemId) return;
@@ -62,18 +64,24 @@ export default function usePurchaseCart(initialCart = []) {
             router.delete(route('purchase.cart.destroy.item', cartItemId), {
                 preserveScroll: true,
                 onFinish: () => setProcessingItem(null),
-                onError: () => {},
             });
         },
         [processingItem]
     );
 
     const addItem = useCallback(
-        (product) => {
+        (product, customSupplierId = undefined, initialCost = 0) => {
             if (processingItem === product.id) return;
 
+            const targetSupplierId =
+                customSupplierId !== undefined
+                    ? customSupplierId
+                    : product.default_supplier_id;
+
             const existingItem = cart.find(
-                (item) => item.product.id === product.id
+                (item) =>
+                    item.product.id === product.id &&
+                    (item.supplier_id || null) === (targetSupplierId || null)
             );
 
             setProcessingItem(product.id);
@@ -89,7 +97,7 @@ export default function usePurchaseCart(initialCart = []) {
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                        onError: () => {},
+                        onError: () => { },
                     }
                 );
             } else {
@@ -97,14 +105,14 @@ export default function usePurchaseCart(initialCart = []) {
                     route('purchase.cart.store'),
                     {
                         product_id: product.id,
-                        supplier_id: product.default_supplier_id,
+                        supplier_id: targetSupplierId,
                         quantity: 1,
-                        cost_per_unit: 0,
+                        cost_per_unit: initialCost,
                     },
                     {
                         preserveScroll: true,
                         onFinish: () => setProcessingItem(null),
-                        onError: () => {},
+                        onError: () => { },
                     }
                 );
             }
@@ -116,7 +124,6 @@ export default function usePurchaseCart(initialCart = []) {
         (supplierId) => {
             if (processingGroup === supplierId) return;
             setProcessingGroup(supplierId);
-
             router.delete(route('purchase.cart.destroy.supplier'), {
                 data: { supplier_id: supplierId },
                 preserveScroll: true,
@@ -133,77 +140,29 @@ export default function usePurchaseCart(initialCart = []) {
         [processingGroup]
     );
 
-    const toggleSupplierSelection = useCallback((supplierId) => {
-        const key = supplierId === null ? 'null' : supplierId;
-        setSelectedSuppliers((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
-    }, []);
-
-    const isSupplierSelected = useCallback(
-        (supplierId) => {
-            const key = supplierId === null ? 'null' : supplierId;
-            return !!selectedSuppliers[key];
-        },
-        [selectedSuppliers]
-    );
-
-    const removeSelectedGroups = useCallback(() => {
-        const supplierIdsToRemove = Object.entries(selectedSuppliers)
-            .filter(([, isSelected]) => isSelected)
-            .map(([supplierId]) =>
-                supplierId === 'null' ? null : parseInt(supplierId)
-            );
-
-        if (supplierIdsToRemove.length === 0) {
-            return;
-        }
-
-        supplierIdsToRemove.forEach((id) => removeSupplierGroup(id));
-    }, [selectedSuppliers, removeSupplierGroup]);
-
-    const hasSelectedGroups = useMemo(
-        () => Object.values(selectedSuppliers).some((isSelected) => isSelected),
-        [selectedSuppliers]
-    );
-
     const updateCartItem = useCallback((item, field, value) => {
         const isQty = field === 'quantity';
         const localStateSetter = isQty ? setLocalQuantities : setLocalCosts;
         const cleanedValue = cleanNumberString(value);
 
         localStateSetter((prev) => ({ ...prev, [item.id]: value }));
-
-        if (updateTimeoutRef.current[item.id]) {
+        if (updateTimeoutRef.current[item.id])
             clearTimeout(updateTimeoutRef.current[item.id]);
-        }
-
         if (value === '') return;
 
         updateTimeoutRef.current[item.id] = setTimeout(() => {
             const newNumericValue = parseFloat(cleanedValue);
             const payload = {};
-
-            if (isQty) {
+            if (isQty)
                 payload.quantity =
                     isNaN(newNumericValue) || newNumericValue <= 0
                         ? 1
                         : newNumericValue;
-            } else {
+            else
                 payload.cost_per_unit =
                     isNaN(newNumericValue) || newNumericValue < 0
                         ? 0
                         : newNumericValue;
-            }
-
-            if (
-                (isQty &&
-                    payload.quantity === 1 &&
-                    (isNaN(newNumericValue) || newNumericValue <= 0)) ||
-                !isQty
-            ) {
-            }
 
             setProcessingItem(item.id);
             router.patch(
@@ -219,7 +178,6 @@ export default function usePurchaseCart(initialCart = []) {
                             return newState;
                         });
                     },
-                    onError: () => {},
                 }
             );
         }, 800);
@@ -227,9 +185,8 @@ export default function usePurchaseCart(initialCart = []) {
 
     const getItemQuantity = useCallback(
         (item) => {
-            if (localQuantities[item.id] !== undefined) {
+            if (localQuantities[item.id] !== undefined)
                 return localQuantities[item.id];
-            }
             return formatNumber(item.quantity);
         },
         [localQuantities]
@@ -237,18 +194,13 @@ export default function usePurchaseCart(initialCart = []) {
 
     const getItemCost = useCallback(
         (item) => {
-            if (localCosts[item.id] !== undefined) {
-                return localCosts[item.id];
-            }
+            if (localCosts[item.id] !== undefined) return localCosts[item.id];
             return item.cost_per_unit?.toString() || '0';
         },
         [localCosts]
     );
 
-    const totalCartItems = cart.length;
-
     return {
-        cart: effectiveCart,
         cartGroups,
         selectedProductIds,
         processingItem,
@@ -257,13 +209,10 @@ export default function usePurchaseCart(initialCart = []) {
         addItem,
         removeItem,
         removeSupplierGroup,
-        toggleSupplierSelection,
-        isSupplierSelected,
-        removeSelectedGroups,
-        hasSelectedGroups,
         updateCartItem,
         getItemQuantity,
         getItemCost,
-        totalCartItems,
+        totalCartItems: cart.length,
+        clearCart,
     };
 }

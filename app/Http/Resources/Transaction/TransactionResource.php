@@ -27,21 +27,19 @@ class TransactionResource extends JsonResource
         $partyName = null;
 
         if ($isPurchase) {
-            $supplierName = $this->whenLoaded('supplier', fn() => $this->supplier?->name);
 
-            if ($supplierName && !($supplierName instanceof \Illuminate\Http\Resources\MissingValue)) {
-                $partyName = $supplierName;
+            if ($this->resource->relationLoaded('fromLocation') && $this->fromLocation) {
+                $partyName = $this->fromLocation->name . ' (Internal)';
+            } elseif ($this->resource->relationLoaded('supplier') && $this->supplier) {
+                $partyName = $this->supplier->name;
             } else {
-                if (str_contains($this->notes, 'Internal Transfer dari:')) {
-                    preg_match('/dari: (.*?) \(/', $this->notes, $matches);
-                    $partyName = isset($matches[1]) ? $matches[1] . ' (Internal)' : 'Internal Transfer';
-                } else {
-                    $partyName = 'Supplier Umum';
-                }
+                $partyName = 'Supplier Umum';
             }
         } elseif ($isTransfer) {
+
             $partyName = $this->whenLoaded('toLocation', fn() => $this->toLocation?->name);
         } else {
+
             if ($this->resource->relationLoaded('targetLocation') && $this->targetLocation) {
                 $partyName = $this->targetLocation->name . ' (Internal)';
             } elseif ($this->resource->relationLoaded('customer') && $this->customer) {
@@ -51,7 +49,9 @@ class TransactionResource extends JsonResource
             }
         }
 
-        $partyType = $isPurchase ? 'Supplier' : ($isTransfer ? 'Lokasi Tujuan' : 'Customer');
+        $partyType = $isPurchase
+            ? 'Supplier'
+            : ($isTransfer ? 'Lokasi Tujuan' : 'Customer');
 
         $type = $isTransfer
             ? 'Transfer'
@@ -68,14 +68,22 @@ class TransactionResource extends JsonResource
             'transaction_date' => $date?->format('Y-m-d'),
             'type' => $type,
             'status' => $this->status,
-            'total_amount' => $isPurchase ? $this->total_cost : ($isTransfer ? 0 : $this->total_price),
+            'total_amount' => $isPurchase
+                ? $this->total_cost
+                : ($isTransfer ? 0 : $this->total_price),
             'notes' => $this->notes,
-            'location' => $this->whenLoaded('location', fn() => $this->location?->name) ?? $this->whenLoaded('fromLocation', fn() => $this->fromLocation?->name),
+            'location' =>
+            $this->whenLoaded('location', fn() => $this->location?->name)
+                ?? $this->whenLoaded('fromLocation', fn() => $this->fromLocation?->name),
             'party_name' => $partyName,
             'party_type' => $partyType,
             'user' => $this->whenLoaded('user', fn() => $this->user?->name),
             'items_preview' => $this->whenLoaded('stockMovements', function () {
-                return $this->stockMovements->take(2)->map(fn($item) => $item->product?->name)->filter()->join(', ');
+                return $this->stockMovements
+                    ->take(2)
+                    ->map(fn($item) => $item->product?->name)
+                    ->filter()
+                    ->join(', ');
             }),
             'url' => $url,
             'created_at' => $this->created_at?->toISOString(),

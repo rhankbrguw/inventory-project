@@ -3,31 +3,27 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
 import CurrencyInput from '@/components/CurrencyInput';
 import InputError from '@/components/InputError';
 import { usePage } from '@inertiajs/react';
 
 const cleanNumberString = (numStr) => {
-    if (typeof numStr !== 'string') {
-        return String(numStr);
-    }
+    if (typeof numStr !== 'string') return String(numStr);
     return numStr.replace(/\./g, '').replace(/,/g, '.');
 };
 
 export default function PurchaseItemManager({
-    cartGroups,
+    cartGroups = {},
     onRemoveItem,
     onRemoveSupplierGroup,
     onUpdateItem,
     getItemQuantity,
     getItemCost,
-    onCheckout,
     processingItem,
     processingGroup,
-    toggleSupplierSelection,
-    isSupplierSelected,
-    canCheckout = true,
+    onCheckoutGroup,
+    canCheckout,
+    selectedSourceType,
 }) {
     const { errors } = usePage().props;
 
@@ -35,9 +31,15 @@ export default function PurchaseItemManager({
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
     );
 
+    if (!cartGroups || typeof cartGroups !== 'object') {
+        return null;
+    }
+
     return (
         <div className="space-y-3">
             {Object.entries(cartGroups).map(([supplierName, groupData]) => {
+                if (!groupData || !groupData.items) return null;
+
                 const totalGroupCost = groupData.items.reduce((sum, item) => {
                     const quantity =
                         parseFloat(cleanNumberString(getItemQuantity(item))) ||
@@ -47,54 +49,35 @@ export default function PurchaseItemManager({
                 }, 0);
                 const isGroupProcessing =
                     processingGroup === groupData.supplier_id;
-                const isSelected = isSupplierSelected(groupData.supplier_id);
 
                 return (
                     <div
-                        key={groupData.supplier_id}
+                        key={groupData.supplier_id || 'general'}
                         className="rounded-lg border bg-card shadow-sm overflow-hidden"
                     >
-                        <div className="flex items-center gap-2 p-2.5 bg-muted/50 border-b">
-                            <Checkbox
-                                id={`supplier-${groupData.supplier_id}`}
-                                checked={isSelected}
-                                onCheckedChange={() =>
-                                    toggleSupplierSelection(
-                                        groupData.supplier_id
-                                    )
-                                }
-                                disabled={isGroupProcessing}
-                                className="flex-shrink-0"
-                            />
-                            <Label
-                                htmlFor={`supplier-${groupData.supplier_id}`}
-                                className="text-sm font-semibold text-foreground truncate cursor-pointer flex-1 min-w-0 flex items-center gap-1.5"
-                            >
+                        <div className="flex items-center justify-between p-2.5 bg-muted/50 border-b">
+                            <Label className="text-sm font-semibold text-foreground truncate flex-1 min-w-0">
                                 {supplierName}
                             </Label>
-                            {isSelected && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                        onRemoveSupplierGroup(
-                                            groupData.supplier_id
-                                        )
-                                    }
-                                    disabled={
-                                        isGroupProcessing ||
-                                        processingItem !== null
-                                    }
-                                    className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                                >
-                                    {isGroupProcessing ? (
-                                        <LoadingSpinner />
-                                    ) : (
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                    )}
-                                </Button>
-                            )}
+
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                    onRemoveSupplierGroup(groupData.supplier_id)
+                                }
+                                disabled={
+                                    isGroupProcessing || processingItem !== null
+                                }
+                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 -mr-2"
+                            >
+                                {isGroupProcessing ? (
+                                    <LoadingSpinner />
+                                ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                            </Button>
                         </div>
 
                         <div className="p-2.5 space-y-2">
@@ -106,7 +89,6 @@ export default function PurchaseItemManager({
                                         cleanNumberString(getItemQuantity(item))
                                     ) || 0) *
                                     (parseFloat(getItemCost(item)) || 0);
-
                                 const qtyError =
                                     errors[`items.${index}.quantity`];
                                 const costError =
@@ -137,7 +119,7 @@ export default function PurchaseItemManager({
                                                     isItemProcessing ||
                                                     isGroupProcessing
                                                 }
-                                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 -mr-2 -mt-2"
                                             >
                                                 {isItemProcessing ? (
                                                     <LoadingSpinner />
@@ -174,9 +156,9 @@ export default function PurchaseItemManager({
                                                             rawValue
                                                         );
                                                     }}
-                                                    onFocus={(e) => {
-                                                        e.target.select();
-                                                    }}
+                                                    onFocus={(e) =>
+                                                        e.target.select()
+                                                    }
                                                     disabled={
                                                         isItemProcessing ||
                                                         isGroupProcessing
@@ -207,7 +189,9 @@ export default function PurchaseItemManager({
                                                     }
                                                     disabled={
                                                         isItemProcessing ||
-                                                        isGroupProcessing
+                                                        isGroupProcessing ||
+                                                        selectedSourceType ===
+                                                        'internal'
                                                     }
                                                     className="h-8 text-xs"
                                                 />
@@ -228,26 +212,28 @@ export default function PurchaseItemManager({
 
                         <div className="p-2.5 border-t bg-muted/30 space-y-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] text-muted-foreground font-semibold">
+                                <span className="text-xs text-muted-foreground font-semibold">
                                     Subtotal
                                 </span>
                                 <span className="text-sm font-bold text-primary">
                                     {formatCurrency(totalGroupCost)}
                                 </span>
                             </div>
+
                             <Button
                                 type="button"
-                                onClick={() =>
-                                    onCheckout(groupData.supplier_id)
-                                }
+                                className="w-full h-9 text-xs font-semibold"
+                                onClick={() => onCheckoutGroup(groupData)}
                                 disabled={
+                                    !canCheckout ||
                                     isGroupProcessing ||
-                                    processingItem !== null ||
-                                    !canCheckout
+                                    processingItem !== null
                                 }
-                                className="w-full h-8 text-xs font-semibold"
                             >
-                                Checkout
+                                Proses{' '}
+                                {selectedSourceType === 'internal'
+                                    ? 'Permintaan'
+                                    : 'Pembelian'}
                             </Button>
                         </div>
                     </div>

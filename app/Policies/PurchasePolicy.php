@@ -29,7 +29,9 @@ class PurchasePolicy
             return true;
         }
 
-        return in_array($purchase->location_id, $user->getAccessibleLocationIds() ?? []);
+        $accessibleIds = $user->getAccessibleLocationIds() ?? [];
+        return in_array($purchase->location_id, $accessibleIds) ||
+            in_array($purchase->from_location_id, $accessibleIds);
     }
 
     public function createAtLocation(User $user, int $locationId): bool
@@ -52,27 +54,47 @@ class PurchasePolicy
 
         if ($location->type->code === 'BR') {
             return $this->hasRoleCode($user, $locationId, [
-                Role::CODE_BRANCH_MGR
+                Role::CODE_BRANCH_MGR,
+                Role::CODE_STAFF,
+                Role::CODE_CASHIER
             ]);
         }
 
         return false;
     }
 
-    public function update(User $user, Purchase $purchase): bool
+    public function approve(User $user, Purchase $purchase): bool
     {
-        if ($purchase->status !== 'Pending') {
+        if (!$purchase->isInternal()) {
             return false;
         }
 
-        return $this->createAtLocation($user, $purchase->location_id);
+        return $this->hasRoleCode($user, $purchase->from_location_id, [
+            Role::CODE_WAREHOUSE_MGR,
+            Role::CODE_SUPER_ADMIN
+        ]);
     }
 
-    public function delete(User $user, Purchase $purchase): bool
+    public function reject(User $user, Purchase $purchase): bool
     {
-        if ($purchase->status !== 'Pending') {
+        return $this->approve($user, $purchase);
+    }
+
+    public function ship(User $user, Purchase $purchase): bool
+    {
+        return $this->approve($user, $purchase);
+    }
+
+    public function receive(User $user, Purchase $purchase): bool
+    {
+        if (!$purchase->isInternal()) {
             return false;
         }
-        return $this->createAtLocation($user, $purchase->location_id);
+
+        return $this->hasRoleCode($user, $purchase->location_id, [
+            Role::CODE_BRANCH_MGR,
+            Role::CODE_STAFF,
+            Role::CODE_CASHIER
+        ]);
     }
 }

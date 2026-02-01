@@ -36,19 +36,17 @@ export default function SellCheckoutDialog({
     salesChannelId,
     paymentMethods,
 }) {
-    const { data, setData, post, processing, errors, isDirty, transform } =
-        useForm({
-            location_id: locationId || '',
-            customer_id: customerId || null,
-            target_location_id: targetLocationId || null,
-            sales_channel_id: salesChannelId || null,
-            transaction_date: getNormalizedDate(),
-            notes: '',
-            payment_method_type_id: '',
-            installment_terms: '1',
-            status: '',
-            items: [],
-        });
+    const { data, setData, post, processing, errors, transform } = useForm({
+        location_id: locationId || '',
+        customer_id: customerId || null,
+        target_location_id: targetLocationId || null,
+        sales_channel_id: salesChannelId || null,
+        transaction_date: getNormalizedDate(),
+        notes: '',
+        payment_method_type_id: '',
+        installment_terms: '1',
+        items: [],
+    });
 
     useEffect(() => {
         if (isOpen) {
@@ -104,12 +102,24 @@ export default function SellCheckoutDialog({
                         </span>
                     </DialogDescription>
                 </DialogHeader>
+
                 <form onSubmit={submit} className="space-y-4">
                     <div className="space-y-3 max-h-[60vh] overflow-y-auto px-1">
+                        <div className="p-3 rounded-lg border bg-muted/30">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                    Total Transaksi
+                                </span>
+                                <span className="text-sm font-bold text-foreground">
+                                    {formatCurrency(totalPrice)}
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
                             <FormField
                                 label="Tanggal"
-                                labelClassName="text-xs font-semibold text-foreground"
+                                error={errors.transaction_date}
                             >
                                 <DatePicker
                                     value={data.transaction_date}
@@ -118,13 +128,11 @@ export default function SellCheckoutDialog({
                                     }
                                     className="h-9 text-xs [&>button]:h-9"
                                 />
-                                <InputError message={errors.transaction_date} />
                             </FormField>
 
                             <FormField
                                 label="Pembayaran"
-                                htmlFor="payment_method_type_id"
-                                labelClassName="text-xs font-semibold text-foreground"
+                                error={errors.payment_method_type_id}
                             >
                                 <Select
                                     value={data.payment_method_type_id}
@@ -132,11 +140,8 @@ export default function SellCheckoutDialog({
                                         setData('payment_method_type_id', value)
                                     }
                                 >
-                                    <SelectTrigger
-                                        id="payment_method_type_id"
-                                        className="h-9 text-xs"
-                                    >
-                                        <SelectValue placeholder="Pilih Metode Pembayaran" />
+                                    <SelectTrigger className="h-9 text-xs">
+                                        <SelectValue placeholder="Metode Bayar" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {paymentMethods.map((method) => (
@@ -149,68 +154,55 @@ export default function SellCheckoutDialog({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError
-                                    message={errors.payment_method_type_id}
-                                />
                             </FormField>
                         </div>
 
                         <FormField
                             label="Cara Bayar"
-                            labelClassName="text-xs font-semibold text-foreground"
+                            error={errors.installment_terms}
                         >
                             <RadioGroup
                                 value={data.installment_terms}
                                 onValueChange={(value) =>
                                     setData('installment_terms', value)
                                 }
-                                className="flex flex-col space-y-2"
+                                className="grid grid-cols-3 gap-2"
                             >
-                                <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
-                                    <RadioGroupItem
-                                        value="1"
-                                        id="sell-installment-1"
-                                    />
+                                <div className="flex items-center justify-center space-x-2 border p-2.5 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem value="1" id="inst-1" />
                                     <Label
-                                        htmlFor="sell-installment-1"
-                                        className="flex-1 cursor-pointer text-xs font-medium"
+                                        htmlFor="inst-1"
+                                        className="text-xs cursor-pointer font-medium"
                                     >
-                                        Lunas (Bayar Penuh)
+                                        Lunas (Full)
                                     </Label>
                                 </div>
-                                <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
-                                    <RadioGroupItem
-                                        value="2"
-                                        id="sell-installment-2"
-                                    />
+                                <div className="flex items-center justify-center space-x-2 border p-2.5 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem value="2" id="inst-2" />
                                     <Label
-                                        htmlFor="sell-installment-2"
-                                        className="flex-1 cursor-pointer text-xs font-medium"
+                                        htmlFor="inst-2"
+                                        className="text-xs cursor-pointer font-medium"
                                     >
-                                        Cicilan 2x (Bulanan)
+                                        Cicilan 2x
                                     </Label>
                                 </div>
-                                <div className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
-                                    <RadioGroupItem
-                                        value="3"
-                                        id="sell-installment-3"
-                                    />
+                                <div className="flex items-center justify-center space-x-2 border p-2.5 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem value="3" id="inst-3" />
                                     <Label
-                                        htmlFor="sell-installment-3"
-                                        className="flex-1 cursor-pointer text-xs font-medium"
+                                        htmlFor="inst-3"
+                                        className="text-xs cursor-pointer font-medium"
                                     >
-                                        Cicilan 3x (Bulanan)
+                                        Cicilan 3x
                                     </Label>
                                 </div>
                             </RadioGroup>
-                            <InputError message={errors.installment_terms} />
                         </FormField>
 
                         <FormField
                             label="Catatan"
                             htmlFor="notes"
                             optional
-                            labelClassName="text-xs font-semibold text-foreground"
+                            error={errors.notes}
                         >
                             <Input
                                 id="notes"
@@ -221,8 +213,11 @@ export default function SellCheckoutDialog({
                                 placeholder="Catatan transaksi..."
                                 className="h-9 text-xs"
                             />
-                            <InputError message={errors.notes} />
                         </FormField>
+
+                        {errors.items && (
+                            <InputError message="Terdapat kesalahan pada item keranjang." />
+                        )}
                     </div>
 
                     <DialogFooter className="gap-2 sm:gap-0">
@@ -231,14 +226,14 @@ export default function SellCheckoutDialog({
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                             disabled={processing}
-                            className="h-9 text-xs font-semibold"
+                            className="h-9 text-xs"
                         >
                             Batal
                         </Button>
                         <Button
                             type="submit"
-                            disabled={processing || !isDirty}
-                            className="h-9 text-xs font-semibold"
+                            disabled={processing}
+                            className="h-9 text-xs"
                         >
                             {processing ? 'Memproses...' : 'Selesaikan'}
                         </Button>

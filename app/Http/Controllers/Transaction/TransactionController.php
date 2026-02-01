@@ -160,6 +160,7 @@ class TransactionController extends Controller
         $purchases = Purchase::with([
             'type:id,name',
             'location:id,name',
+            'fromLocation:id,name',
             'user:id,name',
             'supplier:id,name',
             'paymentMethodType:id,name',

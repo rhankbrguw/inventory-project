@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Role;
 use App\Models\Sell;
 use App\Models\SellItem;
@@ -87,8 +88,7 @@ class SellController extends Controller
         if ($locationId) {
             $productsQuery->whereHas(
                 'inventories',
-                fn($q) =>
-                $q->where('location_id', $locationId)->where('quantity', '>', 0)
+                fn($q) => $q->where('location_id', $locationId)->where('quantity', '>', 0)
             );
         } else {
             $productsQuery->whereRaw('1 = 0');
@@ -190,7 +190,6 @@ class SellController extends Controller
         $paymentStatus = $installmentTerms > 1 ? 'pending' : 'paid';
 
         DB::transaction(function () use ($request, $itemsData, $totalPrice, $validated, $initialStatus, $targetLocationId, $sellTypeId, $headerChannelId, $installmentTerms, $paymentStatus) {
-
             $sell = Sell::create([
                 'type_id' => $sellTypeId,
                 'location_id' => $validated['location_id'],
@@ -220,7 +219,6 @@ class SellController extends Controller
             foreach ($itemsData as $item) {
                 $itemChannelId = $item['sales_channel_id'] ?? null;
                 $product = Product::withTrashed()->findOrFail($item['product_id']);
-
                 $currentCost = $product->average_cost ?? 0;
 
                 SellItem::create([
@@ -291,6 +289,44 @@ class SellController extends Controller
         }
     }
 
+    public function show(Sell $sell): Response
+    {
+        $this->authorize('view', $sell);
+
+        $user = Auth::user();
+
+        $sell->load([
+            'location',
+            'customer',
+            'targetLocation',
+            'salesChannel',
+            'user',
+            'approver',
+            'rejector',
+            'paymentMethod',
+            'type',
+            'installments',
+            'items.product' => fn($q) => $q->withTrashed()->withoutGlobalScopes(),
+            'items.salesChannel',
+            'stockMovements.product' => fn($q) => $q->withTrashed()->withoutGlobalScopes(),
+            'stockMovements.salesChannel',
+        ]);
+
+        $destinationLocationId = $sell->getDestinationLocationId();
+
+        return Inertia::render('Transactions/Sells/Show', [
+            'sell' => SellResource::make($sell),
+            'canApprove' => $sell->status === Sell::STATUS_PENDING_APPROVAL
+                && $destinationLocationId
+                && $user->can('approve', $sell),
+            'canShip' => $sell->status === Sell::STATUS_APPROVED
+                && $user->can('ship', $sell),
+            'canReceive' => $sell->status === Sell::STATUS_SHIPPING
+                && $destinationLocationId
+                && $user->can('receive', $sell),
+        ]);
+    }
+
     public function approve(Sell $sell): RedirectResponse
     {
         $this->authorize('approve', $sell);
@@ -347,45 +383,6 @@ class SellController extends Controller
         return back()->with('success', __('messages.sell.rejected'));
     }
 
-    public function show(Sell $sell): Response
-    {
-        $this->authorize('view', $sell);
-
-        $user = Auth::user();
-
-        $sell->load([
-            'location',
-            'customer',
-            'targetLocation',
-            'salesChannel',
-            'user',
-            'approver',
-            'rejector',
-            'paymentMethod',
-            'type',
-            'installments',
-            'salesChannel',
-            'items.product' => fn($q) => $q->withTrashed(),
-            'items.salesChannel',
-            'stockMovements.product' => fn($q) => $q->withTrashed(),
-            'stockMovements.salesChannel',
-        ]);
-
-        $destinationLocationId = $sell->getDestinationLocationId();
-
-        return Inertia::render('Transactions/Sells/Show', [
-            'sell' => SellResource::make($sell),
-            'canApprove' => $sell->status === Sell::STATUS_PENDING_APPROVAL
-                && $destinationLocationId
-                && $user->can('approve', $sell),
-            'canShip' => $sell->status === Sell::STATUS_APPROVED
-                && $user->can('ship', $sell),
-            'canReceive' => $sell->status === Sell::STATUS_SHIPPING
-                && $destinationLocationId
-                && $user->can('receive', $sell),
-        ]);
-    }
-
     public function ship(Sell $sell): RedirectResponse
     {
         $this->authorize('ship', $sell);
@@ -435,7 +432,7 @@ class SellController extends Controller
                     product: $item->product,
                     locationId: $sell->location_id,
                     qty: $item->quantity,
-                    sellPrice: $item->cost_per_unit,
+                    sellPrice: $item->sell_price,
                     type: 'sell',
                     ref: $sell,
                     notes: 'Shipped to ' . ($sell->targetLocation?->name ?? $sell->customer?->name ?? 'Branch'),
@@ -479,7 +476,7 @@ class SellController extends Controller
                 'transaction_date' => now(),
                 'total_cost' => $sell->total_price,
                 'status' => 'Completed',
-                'notes' => "Internal Transfer dari: {$sell->location->name} (Ref: {$sell->reference_code})",
+                'notes' => "Internal Purchase dari: {$sell->location->name} (Ref: {$sell->reference_code})",
                 'payment_method_type_id' => $sell->payment_method_type_id,
                 'payment_status' => $sell->payment_status,
                 'installment_terms' => $sell->installment_terms,
@@ -501,6 +498,13 @@ class SellController extends Controller
                 ->get();
 
             foreach ($outboundMovements as $movementOut) {
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $movementOut->product_id,
+                    'quantity' => abs($movementOut->quantity),
+                    'cost_per_unit' => $movementOut->cost_per_unit,
+                ]);
+
                 $this->handleStockIn(
                     product: $movementOut->product,
                     locationId: $destinationLocationId,

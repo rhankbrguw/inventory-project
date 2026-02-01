@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { router } from '@inertiajs/react';
 import ContentPageLayout from '@/components/ContentPageLayout';
 import PurchaseDetailsManager from './Partials/PurchaseDetailsManager';
 import PurchaseProductGrid from './Partials/PurchaseProductGrid';
@@ -15,7 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIndexPageFilters } from '@/hooks/useIndexPageFilters';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber, formatCurrency } from '@/lib/utils';
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog';
 
 export default function Create({
     auth,
@@ -23,13 +25,17 @@ export default function Create({
     suppliers,
     products,
     paymentMethods,
+    warehouses,
     productTypes = [],
     cart: { data: initialCart = [] },
     filters,
 }) {
-    const [checkoutSupplierId, setCheckoutSupplierId] = useState(null);
     const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
+    const [selectedGroup, setSelectedGroup] = useState(null);
+    const [selectedSourceType, setSelectedSourceType] = useState('supplier');
+    const [selectedSourceId, setSelectedSourceId] = useState(null);
+    const [pendingSource, setPendingSource] = useState(null);
 
     const canPurchaseAnywhere = locations.length > 0;
 
@@ -38,18 +44,14 @@ export default function Create({
         selectedProductIds,
         processingItem,
         processingGroup,
-        selectedSuppliers,
         addItem,
         removeItem,
         removeSupplierGroup,
-        toggleSupplierSelection,
-        isSupplierSelected,
-        removeSelectedGroups,
-        hasSelectedGroups,
         updateCartItem,
         getItemQuantity,
         getItemCost,
         totalCartItems,
+        clearCart,
     } = usePurchaseCart(initialCart);
 
     const { params, setFilter } = useIndexPageFilters(
@@ -57,79 +59,105 @@ export default function Create({
         filters
     );
 
-    const currentSupplierFilter = params.supplier_id || 'all';
+    const dynamicTotal = useMemo(() => {
+        return Object.values(cartGroups).reduce((acc, group) => {
+            return (
+                acc +
+                group.items.reduce((sum, item) => {
+                    const qty = parseFloat(getItemQuantity(item)) || 0;
+                    const cost = parseFloat(getItemCost(item)) || 0;
+                    return sum + qty * cost;
+                }, 0)
+            );
+        }, 0);
+    }, [cartGroups, getItemQuantity, getItemCost]);
 
-    const supplierOptions = useMemo(() => suppliers, [suppliers]);
+    const handleAddItem = (product) => {
+        let targetSupplierId = product.default_supplier_id;
+        let initialCost = 0;
 
-    const filteredCartGroups = useMemo(() => {
-        if (currentSupplierFilter === 'all') {
-            return cartGroups;
+        if (selectedSourceType === 'internal') {
+            targetSupplierId = null;
+            initialCost = product.price || 0;
+        } else if (
+            selectedSourceType === 'supplier' &&
+            selectedSourceId &&
+            selectedSourceId !== 'all' &&
+            selectedSourceId !== 'null'
+        ) {
+            targetSupplierId = selectedSourceId;
         }
-
-        if (currentSupplierFilter === 'null') {
-            return cartGroups['Supplier Umum']
-                ? { 'Supplier Umum': cartGroups['Supplier Umum'] }
-                : {};
-        }
-
-        const supplierName = suppliers.find(
-            (s) => s.id.toString() === currentSupplierFilter
-        )?.name;
-
-        const group = cartGroups[supplierName];
-        return group ? { [supplierName]: group } : {};
-    }, [cartGroups, currentSupplierFilter, suppliers]);
-
-    const handleSupplierFilterChange = (value) => {
-        setFilter('supplier_id', value);
+        addItem(product, targetSupplierId, initialCost);
     };
 
-    const handleOpenCheckout = (supplierId) => {
-        if (!canPurchaseAnywhere) {
-            return;
+    const handleSourceChange = (id, type) => {
+        if (totalCartItems > 0) {
+            if (type !== selectedSourceType) {
+                setPendingSource({ id, type });
+                return;
+            }
         }
-        setCheckoutSupplierId(supplierId);
+
+        setSelectedSourceId(id);
+        setSelectedSourceType(type);
+
+        if (type === 'internal') {
+            setFilter('supplier_id', null);
+            setFilter('from_location_id', id);
+        } else {
+            setFilter('from_location_id', null);
+            setFilter('supplier_id', id === 'all' ? 'all' : id);
+        }
+    };
+
+    const handleClearCart = () => {
+        router.delete(route('purchase.cart.destroy.all'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                clearCart(() => {
+                    setSelectedSourceId(pendingSource.id);
+                    setSelectedSourceType(pendingSource.type);
+                    setPendingSource(null);
+
+                    if (pendingSource.type === 'internal') {
+                        setFilter('supplier_id', null);
+                        setFilter('from_location_id', pendingSource.id);
+                    } else {
+                        setFilter('from_location_id', null);
+                        setFilter('supplier_id', 'all');
+                    }
+                });
+            },
+        });
+    };
+
+    const handleOpenCheckout = (groupData) => {
+        setSelectedGroup(groupData);
         setIsCheckoutModalOpen(true);
         setCartOpen(false);
     };
 
-    const handleCloseCheckout = () => {
-        setIsCheckoutModalOpen(false);
-        setCheckoutSupplierId(null);
-    };
-
-    const getCartItemsForCheckout = () => {
-        if (checkoutSupplierId === null) {
-            return cartGroups['Supplier Umum']?.items || [];
-        }
-        const supplierName = suppliers.find(
-            (s) => s.id === checkoutSupplierId
-        )?.name;
-        return cartGroups[supplierName]?.items || [];
-    };
-
     const cartProps = {
         cartGroups,
-        hasSelectedGroups,
-        removeSelectedGroups,
         processingGroup,
         removeItem,
         removeSupplierGroup,
         updateItem: updateCartItem,
         getItemQuantity,
         getItemCost,
-        setCheckoutSupplierId: handleOpenCheckout,
+        onCheckout: handleOpenCheckout,
         processingItem,
-        toggleSupplierSelection,
-        isSupplierSelected,
         totalCartItems,
-        selectedSuppliers,
         suppliers,
-        supplierFilter: currentSupplierFilter,
-        setSupplierFilter: handleSupplierFilterChange,
-        supplierOptions,
-        filteredCartGroups,
+        warehouses,
+        locations,
         canCheckout: canPurchaseAnywhere,
+        onInternalSourceChange: handleSourceChange,
+        selectedSourceId,
+        selectedSourceType,
+        dynamicTotal,
+        params,
+        setFilter,
     };
 
     return (
@@ -137,7 +165,7 @@ export default function Create({
             user={auth.user}
             title="Buat Pembelian"
             backRoute="transactions.index"
-            isFullWidth={true} // <--- PENTING: Agar tampilan melebar (Full Width)
+            isFullWidth={true}
         >
             <div className="flex flex-1 gap-4 min-h-[calc(100vh-13rem)] max-h-[calc(100vh-13rem)]">
                 <div className="flex-1 lg:flex-[3] flex flex-col overflow-hidden rounded-lg border bg-card">
@@ -146,11 +174,13 @@ export default function Create({
                         productTypes={productTypes}
                         params={params}
                         setFilter={setFilter}
-                        onProductClick={addItem}
+                        onProductClick={handleAddItem}
                         selectedProductIds={selectedProductIds}
                         processingItem={processingItem}
                         paginationLinks={products.links}
                         canPurchase={canPurchaseAnywhere}
+                        selectedSourceType={selectedSourceType}
+                        selectedSourceId={selectedSourceId}
                     />
                 </div>
 
@@ -177,40 +207,62 @@ export default function Create({
                     side="right"
                     className="w-full sm:max-w-md p-0 flex flex-col"
                 >
-                    <PurchaseCart {...cartProps} />
+                    <PurchaseCart
+                        {...cartProps}
+                        onClose={() => setCartOpen(false)}
+                    />
                 </SheetContent>
             </Sheet>
 
             <Dialog
                 open={isCheckoutModalOpen}
-                onOpenChange={handleCloseCheckout}
+                onOpenChange={setIsCheckoutModalOpen}
             >
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Detail Pembelian</DialogTitle>
+                        <DialogTitle>Konfirmasi Pembelian</DialogTitle>
                         <DialogDescription>
-                            Lengkapi informasi untuk menyelesaikan pembelian
-                            dari supplier ini
+                            Selesaikan transaksi dengan total{' '}
+                            <span className="font-bold text-primary">
+                                {formatCurrency(
+                                    selectedGroup?.items.reduce(
+                                        (sum, item) =>
+                                            sum +
+                                            item.quantity * item.cost_per_unit,
+                                        0
+                                    ) || 0
+                                )}
+                            </span>
                         </DialogDescription>
                     </DialogHeader>
-                    {checkoutSupplierId !== null ||
-                    cartGroups['Supplier Umum'] ? (
-                        <PurchaseDetailsManager
-                            key={
-                                checkoutSupplierId === null
-                                    ? 'null'
-                                    : checkoutSupplierId
-                            }
-                            supplierId={checkoutSupplierId}
-                            locations={locations}
-                            suppliers={suppliers}
-                            paymentMethods={paymentMethods}
-                            cartItems={getCartItemsForCheckout()}
-                            onClose={handleCloseCheckout}
-                        />
-                    ) : null}
+
+                    <PurchaseDetailsManager
+                        supplierId={selectedGroup?.supplier_id}
+                        fromLocationId={
+                            selectedSourceType === 'internal'
+                                ? selectedSourceId
+                                : null
+                        }
+                        locations={locations}
+                        suppliers={suppliers}
+                        paymentMethods={paymentMethods}
+                        cartItems={selectedGroup?.items || []}
+                        onClose={() => {
+                            setIsCheckoutModalOpen(false);
+                            setSelectedGroup(null);
+                        }}
+                    />
                 </DialogContent>
             </Dialog>
+
+            <DeleteConfirmationDialog
+                open={!!pendingSource}
+                onOpenChange={() => setPendingSource(null)}
+                onConfirm={handleClearCart}
+                title="Ganti Sumber?"
+                description="Pindah dari Supplier ke Internal (atau sebaliknya) harus mengosongkan keranjang. Lanjutkan?"
+                confirmText="Ganti & Kosongkan"
+            />
         </ContentPageLayout>
     );
 }

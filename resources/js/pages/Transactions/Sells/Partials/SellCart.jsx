@@ -72,14 +72,18 @@ export default function SellCart({
         }
     };
 
-    const getDisplayValue = () => {
+    () => {
         if (buyerTab === 'general') return 'Pelanggan Umum';
         if (buyerTab === 'customer' && selectedCustomerId) {
-            const customer = customers.find(c => c.id.toString() === selectedCustomerId);
+            const customer = customers.find(
+                (c) => c.id.toString() === selectedCustomerId
+            );
             return customer?.name || 'Pilih Pelanggan';
         }
         if (buyerTab === 'branch' && selectedBranchId) {
-            const branch = branches.find(b => b.id.toString() === selectedBranchId);
+            const branch = branches.find(
+                (b) => b.id.toString() === selectedBranchId
+            );
             return branch?.name || 'Pilih Cabang';
         }
         return buyerTab === 'customer' ? 'Pilih Pelanggan' : 'Pilih Cabang';
@@ -88,9 +92,15 @@ export default function SellCart({
     return (
         <div className="flex flex-col h-full">
             <div className="p-3 border-b flex-shrink-0">
-                <h3 className="text-base font-semibold mb-3">Keranjang Penjualan</h3>
+                <h3 className="text-base font-semibold mb-3">
+                    Keranjang Penjualan
+                </h3>
 
-                <Tabs value={buyerTab} onValueChange={handleTabChange} className="w-full">
+                <Tabs
+                    value={buyerTab}
+                    onValueChange={handleTabChange}
+                    className="w-full"
+                >
                     <TabsList className="grid w-full grid-cols-3 h-9">
                         <TabsTrigger value="general" className="text-xs">
                             <User className="h-3 w-3 mr-1" />
@@ -119,7 +129,10 @@ export default function SellCart({
                             Pilih Pelanggan Terdaftar
                         </Label>
                         <div className="flex gap-2">
-                            <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                            <Popover
+                                open={customerOpen}
+                                onOpenChange={setCustomerOpen}
+                            >
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
@@ -128,33 +141,50 @@ export default function SellCart({
                                         className="w-full justify-between h-9 text-xs"
                                     >
                                         {selectedCustomerId
-                                            ? customers.find((c) => c.id.toString() === selectedCustomerId)?.name
-                                            : "Cari pelanggan..."}
+                                            ? customers.find(
+                                                  (c) =>
+                                                      c.id.toString() ===
+                                                      selectedCustomerId
+                                              )?.name
+                                            : 'Cari pelanggan...'}
                                         <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" align="start">
+                                <PopoverContent
+                                    className="w-full p-0"
+                                    align="start"
+                                >
                                     <Command>
-                                        <CommandInput placeholder="Ketik nama pelanggan..." className="h-9 text-xs" />
+                                        <CommandInput
+                                            placeholder="Ketik nama pelanggan..."
+                                            className="h-9 text-xs"
+                                        />
                                         <CommandList>
-                                            <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
+                                            <CommandEmpty>
+                                                Pelanggan tidak ditemukan.
+                                            </CommandEmpty>
                                             <CommandGroup>
                                                 {customers.map((customer) => (
                                                     <CommandItem
                                                         key={customer.id}
                                                         value={customer.name}
                                                         onSelect={() => {
-                                                            onCustomerChange(customer.id.toString());
-                                                            setCustomerOpen(false);
+                                                            onCustomerChange(
+                                                                customer.id.toString()
+                                                            );
+                                                            setCustomerOpen(
+                                                                false
+                                                            );
                                                         }}
                                                         className="text-xs"
                                                     >
                                                         <Check
                                                             className={cn(
-                                                                "mr-2 h-3 w-3",
-                                                                selectedCustomerId === customer.id.toString()
-                                                                    ? "opacity-100"
-                                                                    : "opacity-0"
+                                                                'mr-2 h-3 w-3',
+                                                                selectedCustomerId ===
+                                                                    customer.id.toString()
+                                                                    ? 'opacity-100'
+                                                                    : 'opacity-0'
                                                             )}
                                                         />
                                                         {customer.name}
@@ -194,33 +224,48 @@ export default function SellCart({
                                     className="w-full justify-between h-9 text-xs"
                                 >
                                     {selectedBranchId
-                                        ? branches.find((b) => b.id.toString() === selectedBranchId)?.name
-                                        : "Cari cabang..."}
+                                        ? branches.find(
+                                              (b) =>
+                                                  b.id.toString() ===
+                                                  selectedBranchId
+                                          )?.name
+                                        : 'Cari cabang...'}
                                     <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-full p-0" align="start">
+                            <PopoverContent
+                                className="w-full p-0"
+                                align="start"
+                            >
                                 <Command>
-                                    <CommandInput placeholder="Ketik nama cabang..." className="h-9 text-xs" />
+                                    <CommandInput
+                                        placeholder="Ketik nama cabang..."
+                                        className="h-9 text-xs"
+                                    />
                                     <CommandList>
-                                        <CommandEmpty>Cabang tidak ditemukan.</CommandEmpty>
+                                        <CommandEmpty>
+                                            Cabang tidak ditemukan.
+                                        </CommandEmpty>
                                         <CommandGroup>
                                             {branches.map((branch) => (
                                                 <CommandItem
                                                     key={branch.id}
                                                     value={branch.name}
                                                     onSelect={() => {
-                                                        onBranchChange(branch.id.toString());
+                                                        onBranchChange(
+                                                            branch.id.toString()
+                                                        );
                                                         setBranchOpen(false);
                                                     }}
                                                     className="text-xs"
                                                 >
                                                     <Check
                                                         className={cn(
-                                                            "mr-2 h-3 w-3",
-                                                            selectedBranchId === branch.id.toString()
-                                                                ? "opacity-100"
-                                                                : "opacity-0"
+                                                            'mr-2 h-3 w-3',
+                                                            selectedBranchId ===
+                                                                branch.id.toString()
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0'
                                                         )}
                                                     />
                                                     {branch.name}

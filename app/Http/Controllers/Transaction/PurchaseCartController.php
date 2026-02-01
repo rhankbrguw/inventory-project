@@ -14,25 +14,29 @@ use Illuminate\Support\Facades\Redirect;
 
 class PurchaseCartController extends Controller
 {
-    public function store(
-        StorePurchaseCartItemRequest $request,
-    ): RedirectResponse {
+    public function store(StorePurchaseCartItemRequest $request): RedirectResponse
+    {
         $validated = $request->validated();
         $user = $request->user();
-
         $product = Product::findOrFail($validated['product_id']);
-        $validated['quantity'] = $validated['quantity'] ?? 1.0;
-        $validated['cost_per_unit'] =
-            $validated['cost_per_unit'] ?? ($product->price ?? 0);
-
-        PurchaseCartItem::create([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'supplier_id' => $validated['supplier_id'],
-            'quantity' => $validated['quantity'],
-            'cost_per_unit' => $validated['cost_per_unit'],
-        ]);
-
+        $quantity = $validated['quantity'] ?? 1.0;
+        $cost = $validated['cost_per_unit'] ?? ($product->price ?? 0);
+        $supplierId = $validated['supplier_id'] ?? null;
+        $existingItem = PurchaseCartItem::where('user_id', $user->id)
+            ->where('product_id', $product->id)
+            ->where('supplier_id', $supplierId)
+            ->first();
+        if ($existingItem) {
+            $existingItem->increment('quantity', $quantity);
+        } else {
+            PurchaseCartItem::create([
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'supplier_id' => $supplierId,
+                'quantity' => $quantity,
+                'cost_per_unit' => $cost,
+            ]);
+        }
         return Redirect::back();
     }
 
@@ -42,7 +46,6 @@ class PurchaseCartController extends Controller
     ): RedirectResponse {
         $validated = $request->validated();
         $cartItem->update($validated);
-
         return Redirect::back();
     }
 
@@ -50,7 +53,6 @@ class PurchaseCartController extends Controller
     {
         $this->authorize('delete', $cartItem);
         $cartItem->delete();
-
         return Redirect::back();
     }
 
@@ -63,12 +65,16 @@ class PurchaseCartController extends Controller
                 'exists:suppliers,id',
             ],
         ]);
-
         Auth::user()
             ->purchaseCartItems()
             ->where('supplier_id', $validated['supplier_id'])
             ->delete();
+        return Redirect::back();
+    }
 
+    public function destroyAll(): RedirectResponse
+    {
+        Auth::user()->purchaseCartItems()->delete();
         return Redirect::back();
     }
 }
