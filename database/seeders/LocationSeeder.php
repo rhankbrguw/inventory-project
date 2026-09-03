@@ -1,0 +1,45 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Location;
+use App\Models\Type;
+use Illuminate\Database\Seeder;
+
+class LocationSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $warehouseType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Warehouse')->firstOrFail();
+        $branchType = Type::where('group', Type::GROUP_LOCATION)->where('name', 'Branch')->firstOrFail();
+
+        $warehouses = [
+            ['name' => 'Gudang Pusat A', 'type_id' => $warehouseType->id],
+            ['name' => 'Gudang Pusat B', 'type_id' => $warehouseType->id],
+            ['name' => 'Gudang Pusat C', 'type_id' => $warehouseType->id],
+        ];
+
+        foreach ($warehouses as $warehouse) {
+            Location::updateOrCreate(
+                ['name' => $warehouse['name'], 'type_id' => $warehouse['type_id']],
+                $warehouse
+            );
+        }
+
+        $branches = [
+            ['name' => 'ABSR', 'type_id' => $branchType->id],
+            ['name' => 'MEDANG', 'type_id' => $branchType->id],
+            ['name' => 'ALSUT', 'type_id' => $branchType->id],
+            ['name' => 'PARIGI', 'type_id' => $branchType->id],
+            ['name' => 'BINONG', 'type_id' => $branchType->id],
+            ['name' => 'PAKOJAN', 'type_id' => $branchType->id],
+            ['name' => 'CISAUK', 'type_id' => $branchType->id],
+            ['name' => 'BSD PLAZA', 'type_id' => $branchType->id],
+            ['name' => 'VIKTOR', 'type_id' => $branchType->id],
+        ];
+
+        foreach ($branches as $branch) {
+            Location::firstOrCreate(['name' => $branch['name']], $branch);
+        }
+    }
+}

@@ -1,0 +1,72 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production_deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Fast Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Build Frontend Assets
+        env:
+          VITE_PUSHER_APP_KEY: "6294ab76c614916010ac"
+          VITE_PUSHER_APP_CLUSTER: "ap1"
+        run: |
+          npm ci
+          npm run build
+
+      - name: Sync Code & Compiled Assets
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.AZURE_SSH_KEY }}
+          REMOTE_HOST: 65.52.172.44
+          REMOTE_USER: rhankbrguw
+          TARGET: /var/www/inventory-project
+          EXCLUDE: "/.git/, /storage/, /.env, /node_modules/"
+
+      - name: Activate & Cache on Azure VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 65.52.172.44
+          username: rhankbrguw
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            cd /var/www/inventory-project
+            sudo apt-get update -qq && sudo apt-get install -y -qq redis-server php8.3-redis
+            sudo systemctl enable --now redis-server
+            sudo docker compose up -d openwa || true
+            composer install --no-dev --optimize-autoloader --no-interaction
+            php artisan migrate:fresh --seed --force
+            php artisan storage:link || true
+            php artisan permission:cache-reset
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+            sudo chown -R rhankbrguw:www-data storage bootstrap/cache public
+            sudo chmod -R 775 storage bootstrap/cache public
+            sudo chmod -R 777 storage/logs storage/framework storage/openwa
+            (crontab -l 2>/dev/null | grep -F "schedule:run") || (crontab -l 2>/dev/null; echo "* * * * * cd /var/www/inventory-project && php artisan schedule:run >> /dev/null 2>&1") | crontab -
+            echo -e "upload_max_filesize = 25M\npost_max_size = 30M\nmemory_limit = 256M" | sudo tee /etc/php/8.3/mods-available/custom-uploads.ini
+            sudo phpenmod custom-uploads
+            sudo systemctl restart inventory-worker.service
+            sudo systemctl reload php8.3-fpm
