@@ -1,0 +1,46 @@
+# IDE and Editor Directories
+/.fleet
+/.idea
+/.vscode
+
+# Dependencies
+/node_modules
+/vendor
+
+# Laravel Framework Files
+/.env
+/.env.*
+!/.env.example
+# Laravel Framework Storage & User Uploads (Ignored from git)
+/storage/*.key
+/storage/app/public/
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/storage/openwa/
+/.phpunit.cache
+/.phpunit.result.cache
+
+# Build Artifacts & Assets
+/public/build
+/public/build.old
+/public/hot
+/public/storage
+
+# Miscellaneous & Local Dumps
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+*.sql
+*.log
+used*.txt
+
+# OS & AI Generated Files
+.DS_Store
+Thumbs.db
+*_backup/
+.null-ls_*
+.agents/skills/

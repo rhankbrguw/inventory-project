@@ -1,0 +1,176 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                WWWUSER: '${WWWUSER:-1000}'
+                WWWGROUP: '${WWWGROUP:-1000}'
+        image: inventory-app
+        container_name: inventory_app
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        environment:
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
+        env_file:
+            - .env
+        networks:
+            - inventory_network
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+    scheduler:
+        image: inventory-app
+        container_name: inventory_scheduler
+        restart: unless-stopped
+        working_dir: /var/www
+        command: php artisan schedule:work
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        environment:
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
+        env_file:
+            - .env
+        networks:
+            - inventory_network
+        depends_on:
+            - app
+            - mysql
+
+    worker:
+        image: inventory-app
+        container_name: inventory_worker
+        restart: unless-stopped
+        working_dir: /var/www
+        command: php artisan queue:work --tries=3 --timeout=90
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        environment:
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
+        env_file:
+            - .env
+        networks:
+            - inventory_network
+        depends_on:
+            - app
+
+    nginx:
+        image: nginx:alpine
+        container_name: inventory_nginx
+        restart: unless-stopped
+        ports:
+            - '8000:80'
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/conf.d:/etc/nginx/conf.d
+        networks:
+            - inventory_network
+        depends_on:
+            - app
+
+    mysql:
+        image: mysql:8.0
+        container_name: inventory_mysql
+        restart: unless-stopped
+        ports:
+            - '3308:3306'
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
+        volumes:
+            - mysql_data:/var/lib/mysql
+            - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+        networks:
+            - inventory_network
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'mysqladmin',
+                    'ping',
+                    '-h',
+                    'localhost',
+                    '-u',
+                    'root',
+                    '-p${DB_ROOT_PASSWORD}',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+    node:
+        image: node:20-alpine
+        container_name: inventory_node
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        command: sh -c "npm install && npm run dev"
+        ports:
+            - '5173:5173'
+        networks:
+            - inventory_network
+        stdin_open: true
+        tty: true
+
+    openwa:
+        image: ghcr.io/rmyndharis/openwa:latest
+        container_name: inventory_openwa
+        restart: unless-stopped
+        ports:
+            - '2785:2785'
+        environment:
+            PORT: 2785
+            DEFAULT_SESSION: default
+            WA_ENGINE: baileys
+            DB_TYPE: sqlite
+            DB_STORAGE: /app/data/openwa.sqlite
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
+        volumes:
+            - ./storage/openwa:/app/data
+        networks:
+            - inventory_network
+
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: inventory_mailpit
+        restart: unless-stopped
+        ports:
+            - '8025:8025'
+            - '1025:1025'
+        networks:
+            - inventory_network
+        environment:
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+            TZ: '${APP_TIMEZONE:-Asia/Jakarta}'
+
+    redis:
+        image: redis:7-alpine
+        container_name: inventory_redis
+        restart: unless-stopped
+        ports:
+            - '6379:6379'
+        volumes:
+            - redis_data:/data
+        networks:
+            - inventory_network
+
+networks:
+    inventory_network:
+        driver: bridge
+
+volumes:
+    mysql_data:
+        driver: local
+    redis_data:
+        driver: local

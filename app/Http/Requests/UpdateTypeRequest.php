@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\Models\Role;
+use App\Models\Type;
+use App\Rules\UniqueRule;
+use App\Rules\ValidItemTitle;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdateTypeRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        $user = $this->user();
+        $type = $this->route('type');
+
+        if (Role::isSuperAdmin($user->level)) {
+            return true;
+        }
+
+        if (Role::isManagerial($user->level)) {
+            return $type->group === Type::GROUP_PRODUCT && $this->input('group') === Type::GROUP_PRODUCT;
+        }
+
+        return false;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:50', new ValidItemTitle, (new UniqueRule('types', $this->type->id))->where('group', $this->group)],
+            'group' => ['required', Rule::in(array_keys(Type::getAvailableGroups()))],
+            'code' => ['nullable', 'string', 'max:50', (new UniqueRule('types'))->where('group', $this->group)->where('deleted_at', null)],
+            'level' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:100',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (Role::isSuperAdmin($this->user()->level)) {
+                        return;
+                    }
+                    if ($value < $this->user()->level) {
+                        $fail(__('messages.cannot_change_level_above'));
+                    }
+                },
+                Rule::requiredIf(fn () => in_array($this->group, [Type::GROUP_USER_ROLE, Type::GROUP_LOCATION])),
+            ],
+        ];
+    }
+}
