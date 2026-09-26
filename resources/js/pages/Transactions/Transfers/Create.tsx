@@ -1,0 +1,127 @@
+import { Link, useForm } from '@inertiajs/react';
+import ContentPageLayout from '@/components/ContentPageLayout';
+import TransferItemManager from './Partials/TransferItemManager';
+import TransferDetailsManager from './Partials/TransferDetailsManager';
+import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/utils';
+import { useMemo } from 'react';
+import useTranslation from '@/hooks/useTranslation';
+
+export default function Create({
+    auth,
+    source_locations,
+    destination_locations,
+    products,
+}) {
+    const { t } = useTranslation();
+    const { data, setData, post, processing, errors, isDirty } = useForm({
+        from_location_id: '',
+        to_location_id: '',
+        notes: '',
+        items: [{ product_id: '', quantity: 1, unit: '' }],
+    });
+
+    const isDetailsLocked =
+        !data.from_location_id || !data.items[0]?.product_id;
+    const isItemManagerLocked = !data.from_location_id;
+
+    const selectedProductIds = data.items
+        .map((item) => item.product_id)
+        .filter(Boolean);
+
+    const availableProducts = useMemo(() => {
+        if (!data.from_location_id) {
+            return [];
+        }
+
+        return (products?.data || []).filter((product) =>
+            product.locations?.some(
+                (loc) => loc.id?.toString() === data.from_location_id
+            )
+        );
+    }, [data.from_location_id, products?.data]);
+
+    const calculateTotals = () => {
+        const totalItems = data.items.filter((item) => item.product_id).length;
+        const totalQuantity = data.items.reduce(
+            (sum, item) => sum + Number(item.quantity || 0),
+            0
+        );
+        return { totalItems, totalQuantity };
+    };
+
+    const { totalItems, totalQuantity } = calculateTotals();
+
+    const isFormValid = () => {
+        if (!data.from_location_id || !data.to_location_id) return false;
+        if (data.items.length === 0) return false;
+
+        const hasEmptyProduct = data.items.some((item) => !item.product_id);
+        if (hasEmptyProduct) return false;
+
+        const hasInvalidQuantity = data.items.some(
+            (item) => !item.quantity || Number(item.quantity) <= 0
+        );
+        if (hasInvalidQuantity) return false;
+
+        return true;
+    };
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route('transactions.transfers.store'), {});
+    };
+
+    return (
+        <ContentPageLayout
+            auth={auth}
+            title={t('ui.create_transfer')}
+            backRoute="transactions.index"
+        >
+            <form onSubmit={submit} className="space-y-4">
+                <TransferDetailsManager
+                    data={data}
+                    setData={setData}
+                    errors={errors}
+                    sourceLocations={source_locations}
+                    destinationLocations={destination_locations}
+                    isDetailsLocked={isDetailsLocked}
+                />
+                <TransferItemManager
+                    items={data.items}
+                    setData={setData}
+                    products={availableProducts}
+                    errors={errors}
+                    selectedProductIds={selectedProductIds}
+                    fromLocationId={data.from_location_id}
+                    isLocked={isItemManagerLocked}
+                />
+                <div className="flex items-center justify-between gap-3">
+                    <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                        {t('ui.total_items_label')}: {totalItems} | {t('ui.qty_label')}:{' '}
+                        {formatNumber(totalQuantity)}
+                    </div>
+                    <div className="flex gap-2">
+                        <Link href={route('transactions.index')}>
+                            <Button
+                                variant="outline"
+                                type="button"
+                                size="sm"
+                                className="px-3 py-1"
+                            >
+                                {t('ui.cancel')}
+                            </Button>
+                        </Link>
+                        <Button
+                            size="sm"
+                            className="px-3 py-1"
+                            disabled={processing || !isDirty || !isFormValid()}
+                        >
+                            {processing ? t('ui.saving') : t('ui.save')}
+                        </Button>
+                    </div>
+                </div>
+            </form>
+        </ContentPageLayout>
+    );
+}
